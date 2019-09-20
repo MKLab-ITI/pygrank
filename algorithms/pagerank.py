@@ -27,7 +27,7 @@ class PageRank:
 
 
 class HeatKernel:
-    def __init__(self, t=5, normalization='auto', msq_error=0.00001, convergence_manager=None):
+    def __init__(self, t=5, normalization='auto', convergence_manager=None):
         self.t = t
         self.normalization = normalization
         self.convergence = algorithms.utils.ConvergenceManager() if convergence_manager is None else convergence_manager
@@ -47,7 +47,7 @@ class HeatKernel:
         while not self.convergence.has_converged(ranks):
             coefficient *= self.t/(self.convergence.iteration+1)
             Mpower *= M
-            ranks += ranks*Mpower
+            ranks += personalization*Mpower
 
         ranks = dict(zip(G.nodes(), map(float, ranks)))
         return ranks
