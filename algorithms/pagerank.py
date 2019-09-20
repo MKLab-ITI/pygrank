@@ -17,7 +17,7 @@ class PageRank:
         ranks = personalization if warm_start is None else scipy.array([warm_start.get(n, 0) for n in G], dtype=float)
 
         is_dangling = scipy.where(degrees == 0)[0]
-        self.convergence.reset()
+        self.convergence.start()
         while not self.convergence.has_converged(ranks):
             ranks = self.alpha * (ranks * M + sum(ranks[is_dangling]) * personalization) + (1 - self.alpha) * personalization
             ranks = ranks/ranks.sum()
@@ -42,7 +42,7 @@ class HeatKernel:
         coefficient = np.exp(-self.t)
         ranks = personalization*coefficient
 
-        self.convergence.reset()
+        self.convergence.start()
         Mpower = M
         while not self.convergence.has_converged(ranks):
             coefficient *= self.t/(self.convergence.iteration+1)

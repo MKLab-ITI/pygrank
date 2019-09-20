@@ -2,21 +2,26 @@ import networkx as nx
 import sklearn.preprocessing
 import scipy
 import numpy as np
+import time
 
 
 class ConvergenceManager:
-    def __init__(self, tol=1.E-6, error_type="mabs", max_iters=100, allow_reset=True):
+    def __init__(self, tol=1.E-6, error_type="mabs", max_iters=100, allow_restart=True):
         self.tol = tol
         self.error_type = error_type.lower()
         self.max_iters = max_iters
-        self.allow_reset = allow_reset
+        self.allow_restart = allow_restart
         self.iteration = 0
         self.last_ranks = None
+        self._start_time = None
+        self.elapsed_time = None
 
-    def reset(self):
-        if self.allow_reset:
+    def start(self):
+        if self.allow_restart or self.last_ranks is None:
             self.iteration = 0
             self.last_ranks = None
+            self._start_time = time.clock()
+            self.elapsed_time = None
 
     def has_converged(self, new_ranks):
         self.iteration += 1
@@ -24,6 +29,9 @@ class ConvergenceManager:
             raise Exception("Could not converge within", self.max_iters, "iterations")
         converged = False if self.last_ranks is None else self._has_converged(self.last_ranks, new_ranks)
         self.last_ranks = new_ranks
+        if self._start_time is None:
+            raise Exception("Need to start() the convergence manager")
+        self.elapsed_time = time.clock()-self._start_time
         return converged
 
     def _has_converged(self, prev_ranks, ranks):

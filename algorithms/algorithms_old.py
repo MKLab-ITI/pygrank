@@ -97,50 +97,11 @@ class BiasedKernel:
             if msq/len(G.nodes())<self._msq_error:
                 break
         return ranks
-    
-    
-class HeatKernel:
-    def __init__(self, normalization='Laplacian', alpha = 0.99, msq_error=0.00001, t=5):
-        self._alpha = alpha
-        self._msq_error = msq_error
-        self._t = t
-        if isinstance(normalization, str):
-            if normalization=='Row':
-                self._p = 1
-            elif normalization=='Laplacian':
-                self._p = 0.5
-            else:
-                raise Exception("Supported normalization methods are 'Laplacian', 'Row' and number")
-        else:
-            self._p = normalization
-
-    def rank(self, G, prior_ranks):
-        ranks = prior_ranks
-        degv = {v : float(len(list(G.neighbors(v))))**self._p for v in G.nodes()}
-        degu = {u : float(len(list(G.neighbors(u))))**(1-self._p) for u in G.nodes()}
-        k = 1
-        t = self._t
-        a = self._alpha*math.exp(-t)
-        sum_ranks = {u: ranks[u]*math.exp(-t) for u in G.nodes()}
-        while True:
-            a = a*t/k
-            msq = 0
-            next_ranks = {}
-            for u in G.nodes():
-                rank = sum(ranks[v]/degv[v]/degu[u] for v in G.neighbors(u))
-                next_ranks[u] = rank
-                sum_ranks[u] += a*next_ranks[u]
-                msq += (next_ranks[u]-ranks[u])*(next_ranks[u]-ranks[u])
-            ranks = next_ranks
-            #print(msq/len(G.nodes())*a)
-            k += 1
-            if msq/len(G.nodes())*a<self._msq_error:
-                break
-        return ranks
 
 
 class Tautology:
     def __init__(self):
         pass
+
     def rank(self, G, prior_ranks):
         return prior_ranks

@@ -43,14 +43,15 @@ class BoostedSeedOversampling:
         RN = self.ranker.rank(G, r0_N)
         a_N = 1
         suma_N = 1
+        self.weight_convergence.start()
         while not self.weight_convergence.has_converged(a_N):
             if self.oversample_from_iteration == 'previous':
-                threshold = min(RN[u] for u in r0_N if r0_N[u]==1)
+                threshold = min(RN[u] for u in r0_N if r0_N[u] == 1)
             elif self.oversample_from_iteration == 'original':
-                threshold = min(RN[u] for u in prior_ranks if prior_ranks[u]==1)
+                threshold = min(RN[u] for u in prior_ranks if prior_ranks[u] == 1)
             else:
                 raise Exception("Boosting only supports oversampling from iterations: previous, original")
-            r0_N = {u: 1 for u in RN if RN[u]>=threshold}
+            r0_N = {u: 1 for u in RN if RN[u] >= threshold}
             Rr0_N = self.ranker.rank(G, r0_N)
             a_N = self._boosting_weight(r0_N, Rr0_N, RN)
             for u in G.nodes():
