@@ -1,4 +1,4 @@
-import algorithms
+from algorithms import algorithms_old
 import sklearn.metrics
 
 """
@@ -61,9 +61,9 @@ def extract_topics(algorithm, G, training, seed_size=1, group_names=None, normal
         else:
             print(group_names[group_id])
         group = [v for v in group if v in G.nodes()]
-        prior_ranks = algorithms.convert_to_ranks(G, group[:int(len(group) * seed_size)])
+        prior_ranks = algorithms_old.convert_to_ranks(G, group[:int(len(group) * seed_size)])
         ranks = algorithm.rank(G, prior_ranks)
-        ranks = algorithms.normalize(ranks)
+        ranks = algorithms_old.normalize(ranks)
         for v in ranks.keys():
             topics[v][group_id] = ranks[v]
             
@@ -269,9 +269,9 @@ def evaluate_clusters(algorithm, G, groups, clusters):
         print('----- Group',groupid,'-----')
         print('Size : ', len(group))
         group = [v for v in group if v in G.nodes()]
-        prior_ranks = algorithms.convert_to_ranks(G, group)
+        prior_ranks = algorithms_old.convert_to_ranks(G, group)
         ranks = algorithm.rank(G, prior_ranks)
-        ranks = algorithms.normalize(ranks)
+        ranks = algorithms_old.normalize(ranks)
         for v in ranks.keys():
             topics[v][groupid] = ranks[v]
     overall_similarity = list()

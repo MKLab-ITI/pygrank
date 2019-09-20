@@ -10,13 +10,14 @@ Dependencies: sklearn, scipy, networkx
 ## Usage
 ```python
 import networkx as nx
-import algorithms as algs
+from algorithms.pagerank import PageRank as Ranker
+from algorithms.oversampling import SeedOversampling as Oversampler
 
 G = nx.Graph()
 seeds = list()
-... # insert graph nodes and select some of them as seeds
+... # insert graph nodes and select some of them as seeds (e.g. see tests.py)
 
-algorithm = algs.OversamplingRank(algs.PageRank(alpha=0.99))
+algorithm = Oversampler(Ranker(alpha=0.99))
 ranks = algorithm.rank(G, {v: 1 for v in seeds})
 ```
 
