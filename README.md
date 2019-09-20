@@ -1,4 +1,4 @@
-# pyrank
+# pygrank
 Recommendation algorithms for large graphs.
 
 ## Installation

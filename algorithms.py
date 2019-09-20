@@ -1,4 +1,6 @@
 import math
+import networkx as nx
+import scipy
 
 
 def normalize(ranks, method="L1", keep=None):
@@ -188,7 +190,43 @@ class PageRank:
                 raise Exception("Supported normalization methods are 'Laplacian', 'Row', 'None' and number")
         else:
             self._p = normalization
-    def rank(self, G, prior_ranks):
+    def rank(self, G, prior_ranks, warm_start=None):
+        N = len(G)
+        nodelist = list(G)
+        if self._p is None:
+            degv = {v: len(G.nodes()) for v in G.nodes()}
+            degu = degv
+        else:
+            degv = {v : float(len(list(G.neighbors(v))))**(self._p_symmetric*self._p) for v in G.nodes()}
+            degu = {u : float(len(list(G.neighbors(u))))**(self._p_symmetric*(1-self._p)) for u in G.nodes()}
+        for v,u,d in G.edges(data=True):
+            d['weight'] = 1.0/degv[v]/degu[u]
+        M = nx.to_scipy_sparse_matrix(G, nodelist=nodelist, weight="weight", dtype=float)
+
+        S = scipy.array(M.sum(axis=1)).flatten()
+        S[S != 0] = 1.0 / S[S != 0]
+        Q = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
+        M = Q * M
+
+        ranks = scipy.repeat(1.0 / N, N) if warm_start is None else scipy.array(
+            [warm_start.get(n, 0) for n in nodelist], dtype=float)
+        personalization = scipy.repeat(1.0, N) if prior_ranks is None else scipy.array(
+            [prior_ranks.get(n, 0) for n in nodelist], dtype=float)
+        # personalization = personalization / personalization.sum()
+
+
+        dangling_weights = personalization
+        is_dangling = scipy.where(S == 0)[0]
+        prev_msq = float('inf')
+        while True:
+            prev_ranks = ranks
+            ranks = self.alpha * (ranks * M + sum(ranks[is_dangling]) * dangling_weights) + (1 - self.alpha) * personalization
+            msq = scipy.absolute(ranks - prev_ranks).sum() / N
+            if msq < self.msq_error:
+                break
+            prev_msq = msq
+        ranks = dict(zip(nodelist, map(float, ranks)))
+    def rank_native(self, G, prior_ranks):
         ranks = prior_ranks
         alpha = self._alpha
         one_class = self._one_class
