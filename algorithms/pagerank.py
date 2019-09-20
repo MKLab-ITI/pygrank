@@ -47,7 +47,7 @@ class HeatKernel:
         while not self.convergence.has_converged(ranks):
             coefficient *= self.t/(self.convergence.iteration+1)
             Mpower *= M
-            ranks += ranks*M
+            ranks += ranks*Mpower
 
         ranks = dict(zip(G.nodes(), map(float, ranks)))
         return ranks

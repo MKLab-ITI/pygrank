@@ -3,8 +3,8 @@ import networkx as nx
 import time
 
 
-def create_test_graph():
-    G = nx.Graph()
+def create_test_graph(directed=False):
+    G = nx.DiGraph() if directed else nx.Graph()
     G.add_edge("A", "B")
     G.add_edge("B", "C")
     G.add_edge("C", "D")
@@ -53,7 +53,7 @@ class Test(unittest.TestCase):
         personalization = {"A": 1, "B": 1}
         pagerank = PageRank().rank(G, personalization)
         heatkernel = HeatKernel().rank(G, personalization)
-        # check with node I that is far from A and B both in the directed and in the undirected setting (e.g. D is not far in an undirected setting)
+        self.assertLess(heatkernel['D']/sum(heatkernel.values()), pagerank['D']/sum(pagerank.values()), msg="HeatKernel more local than PageRank")
         self.assertLess(heatkernel['I']/sum(heatkernel.values()), pagerank['I']/sum(pagerank.values()), msg="HeatKernel more local than PageRank")
 
     def test_oversampling_importance(self):
