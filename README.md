@@ -1,11 +1,7 @@
 # pygrank
 Recommendation algorithms for large graphs.
 
-## Installation
-- *algorithms.py* - can be used as a standalone
-- *metrics.py*
-
-Dependencies: sklearn, scipy, networkx
+*Dependencies: sklearn, scipy, networkx*
 
 ## Usage
 ```python
