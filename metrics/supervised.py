@@ -6,7 +6,7 @@ import warnings
 class NDCG:
     def __init__(self, known_ranks):
         self.known_ranks = known_ranks
-        warnings.warn("NDCG is still under development (its implementation may be incorrect)")
+        warnings.warn("NDCG is still under development (its implementation may be incorrect)", stacklevel=2)
 
     def evaluate(self, ranks):
         DCG = 0

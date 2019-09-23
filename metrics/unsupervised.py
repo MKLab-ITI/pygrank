@@ -35,7 +35,7 @@ class FastSweep:
     def __init__(self, G, base_metric=None):
         self.G = G
         self.base_metric = Conductance(G) if base_metric is None else base_metric
-        warnings.warn("FastSweep is still under development (its implementation may be incorrect)")
+        warnings.warn("FastSweep is still under development (its implementation may be incorrect)", stacklevel=2)
 
     def evaluate(self, ranks):
         ranks = {v: ranks[v] / self.G.degree(v) for v in ranks}
