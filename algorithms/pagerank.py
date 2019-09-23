@@ -1,6 +1,7 @@
 import scipy
 import algorithms.utils
 import numpy as np
+import warnings
 
 
 class PageRank:
@@ -35,7 +36,6 @@ class HeatKernel:
 
     def rank(self, G, personalization=None):
         M = algorithms.utils.to_scipy_sparse_matrix(G, self.normalization)
-        degrees = scipy.array(M.sum(axis=1)).flatten()
 
         personalization = scipy.repeat(1.0, len(G)) if personalization is None else scipy.array([personalization.get(n, 0) for n in G], dtype=float)
         personalization = personalization / personalization.sum()
@@ -51,4 +51,39 @@ class HeatKernel:
             ranks += personalization*Mpower
 
         ranks = dict(zip(G.nodes(), map(float, ranks)))
+        return ranks
+
+
+class BiasedKernel:
+    def __init__(self, alpha=0.85, t=5, normalization='auto', convergence_manager=None):
+        self.alpha = alpha
+        self.normalization = normalization
+        self.convergence = algorithms.utils.ConvergenceManager() if convergence_manager is None else convergence_manager
+        warnings.warn("BiasedKernel is still under development (its implementation may be incorrect)", stacklevel=2)
+        warnings.warn("BiasedKernel is a low-quality heuristic", stacklevel=2)
+
+    def rank(self, G, personalization=None, warm_start=None):
+        M = algorithms.utils.to_scipy_sparse_matrix(G, self.normalization)
+        degrees = scipy.array(M.sum(axis=1)).flatten()
+
+        personalization = scipy.repeat(1.0, len(G)) if personalization is None else scipy.array([personalization.get(n, 0) for n in G], dtype=float)
+        personalization = personalization / personalization.sum()
+        ranks = personalization if warm_start is None else scipy.array([warm_start.get(n, 0) for n in G], dtype=float)
+
+        is_dangling = scipy.where(degrees == 0)[0]
+        self.convergence.start()
+        while not self.convergence.has_converged(ranks):
+            a = self.alpha*self.t/self.convergence.iteration
+            ranks = np.exp(-self.t) * personalization + a * ((ranks * M + sum(ranks[is_dangling]) * personalization) - ranks)
+            ranks = ranks/ranks.sum()
+
+        ranks = dict(zip(G.nodes(), map(float, ranks)))
+        return ranks
+
+
+class Tautology:
+    def __init__(self):
+        pass
+
+    def rank(self, ranks):
         return ranks
