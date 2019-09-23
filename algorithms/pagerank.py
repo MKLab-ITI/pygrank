@@ -2,6 +2,7 @@ import scipy
 import algorithms.utils
 import numpy as np
 
+
 class PageRank:
     def __init__(self, alpha=0.85, normalization='auto', convergence_manager=None):
         self.alpha = alpha

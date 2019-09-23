@@ -65,3 +65,8 @@ def assert_binary(ranks):
     for v in ranks.values():
         if v not in [0, 1]:
             raise Exception('Binary ranks required')
+
+
+def normalize(ranks):
+    max_rank = max(ranks.values())
+    return {node: rank / max_rank for node, rank in ranks.items()}
