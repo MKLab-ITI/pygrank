@@ -6,7 +6,7 @@ import warnings
 
 class PageRank:
     def __init__(self, alpha=0.85, normalization='auto', convergence_manager=None):
-        self.alpha = alpha
+        self.alpha = float(alpha) # typecast to make sure that a graph is not accidentally the first argument
         self.normalization = normalization
         self.convergence = algorithms.utils.ConvergenceManager() if convergence_manager is None else convergence_manager
 

@@ -20,6 +20,6 @@ class MultiSupervised:
         self.metrics = {group_id: metric_type(group_truth) for group_id, group_truth in ground_truth.items()}
 
     def evaluate(self, ranks):
-        evaluations = [self.metric[group_id].evaluate(group_ranks) for group_id, group_ranks in ranks.items()]
+        evaluations = [self.metrics[group_id].evaluate(group_ranks) for group_id, group_ranks in ranks.items()]
         return sum(evaluations) / len(evaluations)
 

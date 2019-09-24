@@ -27,9 +27,13 @@ def split_groups(groups, fraction_of_training=0.99):
 
 
 def remove_group_edges_from_graph(G, group):
-    for v in group:
-        for u in group:
-            if G.has_edge(v,u):
-                G.remove_edge(v,u)
-            if G.has_edge(u, v):
-                G.remove_edge(u,v)
+    if isinstance(group, collections.Mapping):
+        for actual_group in group.values():
+            remove_group_edges_from_graph(G, actual_group)
+    else:
+        for v in group:
+            for u in group:
+                if G.has_edge(v,u):
+                    G.remove_edge(v,u)
+                if G.has_edge(u, v):
+                    G.remove_edge(u,v)

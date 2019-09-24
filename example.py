@@ -2,9 +2,9 @@ import networkx as nx
 import metrics.utils
 import metrics.unsupervised
 import metrics.supervised
-import algorithms.utils
+import metrics.multigroup
+import algorithms.postprocess
 import algorithms.pagerank
-import algorithms.oversampling
 
 
 def import_SNAP_data(pair_file='data/pairs.txt', group_file='data/groups.txt', directed=False, min_group_size=10):
@@ -29,19 +29,16 @@ def import_SNAP_data(pair_file='data/pairs.txt', group_file='data/groups.txt', d
 # setting up experiment data
 G, groups = import_SNAP_data()
 training_groups, test_groups = metrics.utils.split_groups(groups)
-for group in test_groups.values():
-    metrics.utils.remove_group_edges_from_graph(G, group)
+metrics.utils.remove_group_edges_from_graph(G, test_groups)
 
 # run algorithms
-algorithm = algorithms.pagerank.PageRank()
+algorithm = algorithms.postprocess.Normalize(algorithms.pagerank.PageRank())
 ranks = {group_id: algorithm.rank(G, {v: 1 for v in group}) for group_id, group in training_groups.items()}
 
 # print Conductance evaluation
-ranks = {group_id: algorithms.utils.normalize(group_ranks) for group_id, group_ranks in ranks.items()}
-metric = metrics.unsupervised.FastSweep
-evaluations = {group_id: metric(G).evaluate(group_ranks) for group_id, group_ranks in ranks.items()}
-print(evaluations)
+metric = metrics.multigroup.MultiUnsupervised(metrics.unsupervised.Conductance, G)
+print(metric.evaluate(ranks))
 
-metric = metrics.supervised.AUC
-evaluations = {group_id: metric({v: 1 for v in test_groups[group_id]}).evaluate(group_ranks) for group_id, group_ranks in ranks.items()}
-print(evaluations)
+# print AUC evaluation
+metric = metrics.multigroup.MultiSupervised(metrics.supervised.AUC, metrics.utils.to_seeds(test_groups))
+print(metric.evaluate(ranks))

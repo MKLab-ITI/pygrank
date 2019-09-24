@@ -50,7 +50,9 @@ import networkx as nx
 from algorithms.pagerank import PageRank as Ranker
 from algorithms.postprocess import Normalize as Normalizer
 from algorithms.oversampling import BoostedSeedOversampling as Oversampler
-import algorithms.utils
+import metrics.supervised
+import metrics.unsupervised
+import metrics.multigroup
 
 # Construct data
 G = nx.Graph()
@@ -58,16 +60,27 @@ groups = {}
 groups["group1"] = list()
 ... 
 
+# Split to training and test data
+training_groups, test_groups = metrics.utils.split_groups(groups)
+metrics.utils.remove_group_edges_from_graph(G, test_groups)
+
 # Calculate ranks and put them in a map
 algorithm = Normalizer(Oversampler(Ranker(alpha=0.99)))
 ranks = {group_id: algorithm.rank(G, {v: 1 for v in group}) 
-        for group_id, group in groups.items()}
+        for group_id, group in training_groups.items()}
+        
+
+# Evaluation with Conductance
+conductance = metrics.multigroup.MultiUnsupervised(metrics.unsupervised.Conductance, G)
+print(conductance.evaluate(ranks))
 
 # Evaluation with LinkAUC
-import metrics.unsupervised
-import metrics.multigroup
-metric = metrics.multigroup.LinkAUC(G)
-print(metric.evaluate())
+link_AUC = metrics.multigroup.LinkAUC(G)
+print(link_AUC.evaluate(ranks))
+
+# Evaluation with AUC
+auc = metrics.multigroup.MultiSupervised(metrics.supervised.AUC, metrics.utils.to_seeds(test_groups))
+print(auc.evaluate(ranks))
         
 ```
 
