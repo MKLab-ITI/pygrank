@@ -42,7 +42,7 @@ metric = pygrank.metrics.multigroup.MultiUnsupervised(pygrank.metrics.unsupervis
 print(metric.evaluate(ranks))
 
 # print LinkAUC evaluation
-metric = pygrank.metrics.multigroup.LinkAUC(G)
+metric = pygrank.metrics.multigroup.LinkAUC(G, pygrank.metrics.utils.to_nodes(test_groups))
 print(metric.evaluate(ranks))
 
 # print AUC evaluation

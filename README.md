@@ -80,7 +80,7 @@ conductance = MultiUnsupervised(Conductance, G)
 print(conductance.evaluate(ranks))
 
 # Evaluation with LinkAUC
-link_AUC = LinkAUC(G)
+link_AUC = LinkAUC(G, pygrank.metrics.utils.to_nodes(test_groups))
 print(link_AUC.evaluate(ranks))
 
 # Evaluation with AUC

@@ -8,6 +8,15 @@ def to_seeds(groups):
     return {group_id: {v: 1 for v in group} for group_id, group in groups.items()}
 
 
+def to_nodes(groups):
+    if not isinstance(groups, collections.Mapping):
+        return list(set(groups))
+    all_nodes = list()
+    for group in groups.values():
+        all_nodes.extend(group)
+    return list(set(all_nodes))
+
+
 def split_groups(groups, fraction_of_training=0.99):
     if fraction_of_training == 1:
         return groups, groups
