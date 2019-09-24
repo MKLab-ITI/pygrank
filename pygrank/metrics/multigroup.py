@@ -1,4 +1,4 @@
-class LinkAuc:
+class LinkAUC:
     def __init__(self, G):
         self.G = G
 

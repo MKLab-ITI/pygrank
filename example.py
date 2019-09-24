@@ -1,10 +1,7 @@
 import networkx as nx
-import metrics.utils
-import metrics.unsupervised
-import metrics.supervised
-import metrics.multigroup
-import algorithms.postprocess
-import algorithms.pagerank
+import pygrank.metrics.multigroup
+from pygrank import algorithms
+import pygrank.algorithms.pagerank
 
 
 def import_SNAP_data(pair_file='data/pairs.txt', group_file='data/groups.txt', directed=False, min_group_size=10):
@@ -28,17 +25,17 @@ def import_SNAP_data(pair_file='data/pairs.txt', group_file='data/groups.txt', d
 
 # setting up experiment data
 G, groups = import_SNAP_data()
-training_groups, test_groups = metrics.utils.split_groups(groups)
-metrics.utils.remove_group_edges_from_graph(G, test_groups)
+training_groups, test_groups = pygrank.metrics.utils.split_groups(groups)
+pygrank.metrics.utils.remove_group_edges_from_graph(G, test_groups)
 
 # run algorithms
-algorithm = algorithms.postprocess.Normalize(algorithms.pagerank.PageRank())
+algorithm = pygrank.algorithms.postprocess.Normalize(pygrank.algorithms.pagerank.PageRank())
 ranks = {group_id: algorithm.rank(G, {v: 1 for v in group}) for group_id, group in training_groups.items()}
 
 # print Conductance evaluation
-metric = metrics.multigroup.MultiUnsupervised(metrics.unsupervised.Conductance, G)
+metric = pygrank.metrics.multigroup.MultiUnsupervised(pygrank.metrics.unsupervised.Conductance, G)
 print(metric.evaluate(ranks))
 
 # print AUC evaluation
-metric = metrics.multigroup.MultiSupervised(metrics.supervised.AUC, metrics.utils.to_seeds(test_groups))
+metric = pygrank.metrics.multigroup.MultiSupervised(pygrank.metrics.supervised.AUC, pygrank.metrics.utils.to_seeds(test_groups))
 print(metric.evaluate(ranks))

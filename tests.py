@@ -28,7 +28,7 @@ def create_test_graph(directed=False):
 
 class Test(unittest.TestCase):
     def test_rank_results(self):
-        from algorithms.pagerank import PageRank as Ranker
+        from pygrank.algorithms import PageRank as Ranker
         G = create_test_graph()
         test_result = Ranker(normalization='col').rank(G)
         nx_result = nx.pagerank_scipy(G)
@@ -36,7 +36,7 @@ class Test(unittest.TestCase):
         self.assertAlmostEqual(abs_diffs, 0, places=16, msg="PageRank compliance with nx results")
 
     def test_rank_time(self):
-        from algorithms.pagerank import PageRank as ranker
+        from pygrank.algorithms import PageRank as ranker
         G = create_test_graph()
         tic = time.clock()
         ranker(normalization='col').rank(G)
@@ -47,8 +47,8 @@ class Test(unittest.TestCase):
         # self.assertLessEqual(test_time, nx_time, msg="PageRank time comparable to nx") # sometimes fails due to varying machine load
 
     def test_heat_kernel_locality(self):
-        from algorithms.pagerank import PageRank
-        from algorithms.pagerank import HeatKernel
+        from pygrank.algorithms import PageRank
+        from pygrank.algorithms import HeatKernel
         G = create_test_graph()
         personalization = {"A": 1, "B": 1}
         pagerank = PageRank().rank(G, personalization)
@@ -57,8 +57,8 @@ class Test(unittest.TestCase):
         self.assertLess(heatkernel['I']/sum(heatkernel.values()), pagerank['I']/sum(pagerank.values()), msg="HeatKernel more local than PageRank")
 
     def test_oversampling_importance(self):
-        from algorithms.pagerank import PageRank as Ranker
-        from algorithms.oversampling import SeedOversampling as Oversampler
+        from pygrank.algorithms import PageRank as Ranker
+        from pygrank.algorithms import SeedOversampling as Oversampler
         G = create_test_graph()
         personalization = {"A": 1, "B": 1}
         ranks = Ranker().rank(G, personalization)
@@ -66,9 +66,9 @@ class Test(unittest.TestCase):
         self.assertLess(oversampled['A'], ranks['A'], msg="Oversampling affects ranks")
 
     def test_oversampling_importance(self):
-        from algorithms.pagerank import PageRank as Ranker
-        from algorithms.oversampling import SeedOversampling as Oversampler
-        from algorithms.oversampling import BoostedSeedOversampling as BoostedOversampler
+        from pygrank.algorithms import PageRank as Ranker
+        from pygrank.algorithms import SeedOversampling as Oversampler
+        from pygrank.algorithms import BoostedSeedOversampling as BoostedOversampler
         G = create_test_graph()
         personalization = {"A": 1, "B": 1}
         oversampled = Oversampler(Ranker()).rank(G, personalization)

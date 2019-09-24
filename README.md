@@ -1,14 +1,17 @@
 # pygrank
 Recommendation algorithms for large graphs.
 
-*Dependencies: sklearn, scipy, networkx*
+## Installation
+```
+pip install pygrank
+```
 
 ## Usage
 ###### How to run a PageRank algorithm
 ```python
 import networkx as nx
-from algorithms.pagerank import PageRank as Ranker
-from algorithms.oversampling import SeedOversampling as Oversampler
+from pygrank.algorithms.pagerank import PageRank as Ranker
+from pygrank.algorithms.oversampling import SeedOversampling as Oversampler
 
 G = nx.Graph()
 seeds = list()
@@ -20,39 +23,41 @@ ranks = algorithm.rank(G, {v: 1 for v in seeds})
 
 ###### How to evaluate with an unsupervised metric
 ```python
-import algorithms.postprocess
-import metrics.unsupervised
+from pygrank.algorithms.postprocess import Normalize
+from pygrank.metrics.unsupervised import Conductance
 
 G, ranks = ... # calculate as per the first example
-normalized_ranks = algorithms.postprocess.Normalize().rank(ranks)
+normalized_ranks = Normalize().rank(ranks)
 
-metric = metrics.unsupervised.Conductance(G)
+metric = Conductance(G)
 print(metric.evaluate(normalized_ranks))
 ```
 
 ###### How to evaluate with a supervised metric
 ```python
-import metrics.supervised
+from pygrank.metrics.supervised import AUC
+import pygrank.metrics.utils
 
 G, seeds, algorithm = ... # as per the first example
-seeds, ground_truth = metrics.utils.split_groups(seeds, fraction_of_training=0.5)
+seeds, ground_truth = pygrank.metrics.utils.split_groups(seeds, fraction_of_training=0.5)
 
-metrics.utils.remove_group_edges_from_graph(G, ground_truth)
+pygrank.metrics.utils.remove_group_edges_from_graph(G, ground_truth)
 ranks = algorithm.rank(G, {v: 1 for v in seeds})
 
-metric = metrics.supervised.AUC({v: 1 for v in ground_truth})
+metric = AUC({v: 1 for v in ground_truth})
 print(metric.evaluate(ranks))
 ```
 
 ###### How to evaluate multiple ranks
 ```python
 import networkx as nx
-from algorithms.pagerank import PageRank as Ranker
-from algorithms.postprocess import Normalize as Normalizer
-from algorithms.oversampling import BoostedSeedOversampling as Oversampler
-import metrics.supervised
-import metrics.unsupervised
-import metrics.multigroup
+from pygrank.algorithms.pagerank import PageRank as Ranker
+from pygrank.algorithms.postprocess import Normalize as Normalizer
+from pygrank.algorithms.oversampling import BoostedSeedOversampling as Oversampler
+from pygrank.metrics.unsupervised import Conductance
+from pygrank.metrics.supervised import AUC
+from pygrank.metrics.multigroup import MultiUnsupervised, MultiSupervised, LinkAUC
+import pygrank.metrics.utils
 
 # Construct data
 G = nx.Graph()
@@ -61,8 +66,8 @@ groups["group1"] = list()
 ... 
 
 # Split to training and test data
-training_groups, test_groups = metrics.utils.split_groups(groups)
-metrics.utils.remove_group_edges_from_graph(G, test_groups)
+training_groups, test_groups = pygrank.metrics.utils.split_groups(groups)
+pygrank.metrics.utils.remove_group_edges_from_graph(G, test_groups)
 
 # Calculate ranks and put them in a map
 algorithm = Normalizer(Oversampler(Ranker(alpha=0.99)))
@@ -71,22 +76,21 @@ ranks = {group_id: algorithm.rank(G, {v: 1 for v in group})
         
 
 # Evaluation with Conductance
-conductance = metrics.multigroup.MultiUnsupervised(metrics.unsupervised.Conductance, G)
+conductance = MultiUnsupervised(Conductance, G)
 print(conductance.evaluate(ranks))
 
 # Evaluation with LinkAUC
-link_AUC = metrics.multigroup.LinkAUC(G)
+link_AUC = LinkAUC(G)
 print(link_AUC.evaluate(ranks))
 
 # Evaluation with AUC
-auc = metrics.multigroup.MultiSupervised(metrics.supervised.AUC, metrics.utils.to_seeds(test_groups))
+auc = MultiSupervised(AUC, pygrank.metrics.utils.to_seeds(test_groups))
 print(auc.evaluate(ranks))
         
 ```
 
 
 ## References
-###### *OversamplingRank*, *BoostingRank*
 ```
 @article{krasanakis2019boosted,
   title={Boosted seed oversampling for local community ranking},

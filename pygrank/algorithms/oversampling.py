@@ -1,13 +1,10 @@
-import algorithms.utils
-
-
 class SeedOversampling:
     def __init__(self, ranker, method='safe'):
         self.ranker = ranker
         self.method = method.lower()
 
     def rank(self, G, personalization):
-        algorithms.utils.assert_binary(personalization)
+        pygrank.algorithms.utils.assert_binary(personalization)
         if self.method == 'safe':
             ranks = self.ranker.rank(G, personalization)
             threshold = min(ranks[u] for u in personalization if personalization[u] == 1)
@@ -26,7 +23,7 @@ class BoostedSeedOversampling:
         self.ranker = ranker
         self.objective = objective.lower()
         self.oversample_from_iteration = oversample_from_iteration.lower()
-        self.weight_convergence = algorithms.utils.ConvergenceManager(error_type="small_value", tol=0.001, max_iters=100) if weight_convergence_manager is None else weight_convergence_manager
+        self.weight_convergence = pygrank.algorithms.utils.ConvergenceManager(error_type="small_value", tol=0.001, max_iters=100) if weight_convergence_manager is None else weight_convergence_manager
 
     def _boosting_weight(self, r0_N, Rr0_N, RN):
         if self.objective == 'partial':
