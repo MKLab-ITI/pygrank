@@ -1,6 +1,7 @@
 import scipy
 import numpy as np
 import warnings
+import pygrank.algorithms.utils
 
 
 class PageRank:

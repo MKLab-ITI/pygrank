@@ -1,6 +1,10 @@
 import networkx as nx
 import pygrank.metrics.multigroup
-from pygrank import algorithms
+import pygrank.metrics.utils
+import pygrank.metrics.unsupervised
+import pygrank.metrics.supervised
+import pygrank.algorithms
+import pygrank.algorithms.postprocess
 import pygrank.algorithms.pagerank
 
 
@@ -25,6 +29,7 @@ def import_SNAP_data(pair_file='data/pairs.txt', group_file='data/groups.txt', d
 
 # setting up experiment data
 G, groups = import_SNAP_data()
+print(len(groups), "groups", 6000)
 training_groups, test_groups = pygrank.metrics.utils.split_groups(groups)
 pygrank.metrics.utils.remove_group_edges_from_graph(G, test_groups)
 
@@ -34,6 +39,10 @@ ranks = {group_id: algorithm.rank(G, {v: 1 for v in group}) for group_id, group 
 
 # print Conductance evaluation
 metric = pygrank.metrics.multigroup.MultiUnsupervised(pygrank.metrics.unsupervised.Conductance, G)
+print(metric.evaluate(ranks))
+
+# print LinkAUC evaluation
+metric = pygrank.metrics.multigroup.LinkAUC(G)
 print(metric.evaluate(ranks))
 
 # print AUC evaluation

@@ -1,5 +1,7 @@
 import setuptools
-# Reminder: build with python setup.py bdist_wheel, deploy with twine upload dist/*
+# Reminder:
+# - build  : python setup.py bdist_wheel
+# - deploy : twine upload dist/*
 
 with open("README.md", "r") as file:
     long_description = file.read()
@@ -9,7 +11,7 @@ setuptools.setup(
     version='0.1.2',
     author="Emmanouil Krasanakis",
     author_email="maniospas@hotmail.com",
-    description="Recommendation algorithms for large graphs",
+    description="Recommendation algorithms for large graphs on networkx",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/maniospas/pygrank",
@@ -20,6 +22,6 @@ setuptools.setup(
          "Operating System :: OS Independent",
      ],
     install_requires=[
-          'sklearn', 'scipy', 'numpy', 'networkx',
+          'tqdm', 'sklearn', 'scipy', 'numpy', 'networkx',
       ],
  )

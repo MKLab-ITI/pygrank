@@ -1,9 +1,45 @@
+import numpy as np
+import warnings
+import sklearn.metrics
+import tqdm
+
+
 class LinkAUC:
     def __init__(self, G):
         self.G = G
+        if self.G.is_directed():
+            warnings.warn("LinkAUC is designed for undirected graphs", stacklevel=2)
+        warnings.warn("LinkAUC is designed for undirected graphs", stacklevel=2)
 
-    def evaluate(self, ranks):
-        raise Exception("LinkAUC not yet implemented")
+    def _similarity(self, v, u, ranks):
+        dot = 0
+        l2v = 0
+        l2u = 0
+        for group_ranks in ranks.values():
+            l2u += group_ranks.get(u, 0)**2
+            l2v += group_ranks.get(v, 0)**2
+            dot = group_ranks.get(u, 0)*group_ranks.get(v, 0)
+        if l2u == 0 or l2v == 0:
+            return 0
+        return dot / (l2u*l2v)**0.5
+
+    def evaluate(self, ranks, max_negative_samples=200):
+        negative_candidates = list(self.G)
+        if len(negative_candidates) > max_negative_samples:
+            negative_candidates = np.random.choice(negative_candidates, max_negative_samples)
+        real = list()
+        predicted = list()
+        for node in tqdm.tqdm(self.G, desc="LinkAUC"):
+            neighbors = self.G._adj[node]
+            for positive in neighbors:
+                real.append(1)
+                predicted.append(self._similarity(node, positive, ranks))
+            for negative in negative_candidates:
+                if negative != node and negative not in neighbors:
+                    real.append(0)
+                    predicted.append(self._similarity(node, negative, ranks))
+        fpr, tpr, _ = sklearn.metrics.roc_curve(real, predicted)
+        return sklearn.metrics.auc(fpr, tpr)
 
 
 class MultiUnsupervised:
