@@ -9,6 +9,7 @@ class NDCG:
         warnings.warn("NDCG is still under development (its implementation may be incorrect)", stacklevel=2)
 
     def evaluate(self, ranks):
+        # TODO: check implementation
         DCG = 0
         IDCG = 0
         for i, v in enumerate(sorted(ranks, key=ranks.get, reverse=True)):

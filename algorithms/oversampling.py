@@ -38,8 +38,8 @@ class BoostedSeedOversampling:
             raise Exception("Supported boosting objectives: partial, naive")
         return a_N
 
-    def rank(self, G, prior_ranks):
-        r0_N = prior_ranks.copy()
+    def rank(self, G, personalization):
+        r0_N = personalization.copy()
         RN = self.ranker.rank(G, r0_N)
         a_N = 1
         suma_N = 1
@@ -48,7 +48,7 @@ class BoostedSeedOversampling:
             if self.oversample_from_iteration == 'previous':
                 threshold = min(RN[u] for u in r0_N if r0_N[u] == 1)
             elif self.oversample_from_iteration == 'original':
-                threshold = min(RN[u] for u in prior_ranks if prior_ranks[u] == 1)
+                threshold = min(RN[u] for u in personalization if personalization[u] == 1)
             else:
                 raise Exception("Boosting only supports oversampling from iterations: previous, original")
             r0_N = {u: 1 for u in RN if RN[u] >= threshold}

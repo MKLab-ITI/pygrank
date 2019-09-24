@@ -1,9 +1,20 @@
 import random
+import collections
+
+
+def to_seeds(groups):
+    if not isinstance(groups, collections.Mapping):
+        return {v: 1 for v in groups}
+    return {group_id: {v: 1 for v in group} for group_id, group in groups.items()}
 
 
 def split_groups(groups, fraction_of_training=0.99):
     if fraction_of_training == 1:
         return groups, groups
+    if not isinstance(groups, collections.Mapping):
+        group = list(groups)
+        splt = int(len(group)*fraction_of_training)
+        return group[:splt], group[splt:]
     clusters = {}
     training = {}
     for group_id, group in groups.items():

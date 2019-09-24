@@ -79,11 +79,3 @@ class BiasedKernel:
 
         ranks = dict(zip(G.nodes(), map(float, ranks)))
         return ranks
-
-
-class Tautology:
-    def __init__(self):
-        pass
-
-    def rank(self, ranks):
-        return ranks

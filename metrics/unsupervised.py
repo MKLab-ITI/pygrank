@@ -38,6 +38,7 @@ class FastSweep:
         warnings.warn("FastSweep is still under development (its implementation may be incorrect)", stacklevel=2)
 
     def evaluate(self, ranks):
+        # TODO: check implementation
         ranks = {v: ranks[v] / self.G.degree(v) for v in ranks}
         max_diff = 0
         max_diff_val = 0
