@@ -8,7 +8,7 @@ with open("README.md", "r") as file:
 
 setuptools.setup(
     name='pygrank',
-    version='0.1.2',
+    version='0.1.3',
     author="Emmanouil Krasanakis",
     author_email="maniospas@hotmail.com",
     description="Recommendation algorithms for large graphs on networkx",
@@ -18,7 +18,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     classifiers=[
          "Programming Language :: Python :: 3",
-         "License :: OSI Approved :: MIT License",
+         "License :: OSI Approved :: Apache Software License",
          "Operating System :: OS Independent",
      ],
     install_requires=[
