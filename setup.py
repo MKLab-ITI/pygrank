@@ -8,13 +8,13 @@ with open("README.md", "r") as file:
 
 setuptools.setup(
     name='pygrank',
-    version='0.1.3',
+    version='0.1.4',
     author="Emmanouil Krasanakis",
     author_email="maniospas@hotmail.com",
     description="Recommendation algorithms for large graphs on networkx",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/maniospas/pygrank",
+    url="https://github.com/MKLab-ITI/pygrank",
     packages=setuptools.find_packages(),
     classifiers=[
          "Programming Language :: Python :: 3",

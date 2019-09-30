@@ -6,6 +6,17 @@ import time
 
 
 class ConvergenceManager:
+    """ Used to keep previous iteration and generally manage convergence of a variables.
+
+    Examples:
+        >>> convergence = ConvergenceManager()
+        >>> convergence.start()
+        >>> var = None
+        >>> while not convergence.has_converged(var):
+        >>>     ...
+        >>>     var = ...
+    """
+
     def __init__(self, tol=1.E-6, error_type="mabs", max_iters=100, allow_restart=True):
         self.tol = tol
         self.error_type = error_type.lower()
@@ -41,12 +52,20 @@ class ConvergenceManager:
         elif self.error_type == "mabs":
             return scipy.absolute(ranks - prev_ranks).sum()/ranks.size < self.tol
         elif self.error_type == "small_value":
-            return (scipy.absolute(ranks).sum()/ranks.size) < self.tol
+            return scipy.absolute(ranks).sum()/ranks.size < self.tol
         else:
             raise Exception("Supported error types: msqrt, mabs")
 
 
 def to_scipy_sparse_matrix(G, normalization="auto", weight="weight"):
+    """ Used to normalize a graph and produce a sparse matrix representation.
+
+    Attributes:
+        G: A networkx graph
+        normalization: The type of normalization can be "col", "symmetric" or "auto" (default). The latter selects
+             one of the previous normalization depending on whether the graph is directed or not respectively.
+        weight: The weight attribute of the graph's edges.
+    """
     normalization = normalization.lower()
     M = nx.to_scipy_sparse_matrix(G, weight=weight, dtype=float)
     if normalization == "auto":
@@ -62,6 +81,7 @@ def to_scipy_sparse_matrix(G, normalization="auto", weight="weight"):
 
 
 def assert_binary(ranks):
+    """ Assert that ranks.values() are only 0 or 1 ."""
     for v in ranks.values():
         if v not in [0, 1]:
             raise Exception('Binary ranks required')

@@ -34,7 +34,7 @@ training_groups, test_groups = pygrank.metrics.utils.split_groups(groups)
 pygrank.metrics.utils.remove_group_edges_from_graph(G, test_groups)
 
 # run algorithms
-algorithm = pygrank.algorithms.postprocess.Normalize(pygrank.algorithms.pagerank.PageRank())
+algorithm = pygrank.algorithms.postprocess.Normalize(pygrank.algorithms.pagerank.Fast(pygrank.algorithms.pagerank.PageRank(alpha=0.99)))
 ranks = {group_id: algorithm.rank(G, {v: 1 for v in group}) for group_id, group in training_groups.items()}
 
 # print Conductance evaluation
