@@ -101,6 +101,7 @@ class Fast:
     def __init__(self, ranker, enabled=True):
         self.ranker = ranker
         self.enabled = enabled
+        warnings.warn("Fast implementation of PageRank still under development (could be slower)", stacklevel=2)
 
     def rank(self, G, personalization):
         if self.enabled:
