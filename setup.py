@@ -1,5 +1,6 @@
 import setuptools
 # Reminder:
+# - install: wheel, twine
 # - build  : python setup.py bdist_wheel
 # - deploy : twine upload dist/*
 
@@ -8,7 +9,7 @@ with open("README.md", "r") as file:
 
 setuptools.setup(
     name='pygrank',
-    version='0.1.4',
+    version='0.1.5',
     author="Emmanouil Krasanakis",
     author_email="maniospas@hotmail.com",
     description="Recommendation algorithms for large graphs on networkx",
