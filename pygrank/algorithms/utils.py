@@ -73,8 +73,10 @@ def to_scipy_sparse_matrix(G, normalization="auto", weight="weight"):
     if normalization == "col":
         M = sklearn.preprocessing.normalize(M, "l1", axis=1, copy=False)
     elif normalization == "symmetric":
-        M = sklearn.preprocessing.normalize(M, "l2", axis=0, copy=False)
-        M = sklearn.preprocessing.normalize(M, "l2", axis=1, copy=False)
+        sum_rows = M.sum(axis=0)
+        sum_cols = M.sum(axis=1)
+        M = M / np.sqrt(sum_rows)
+        M = M / np.sqrt(sum_cols)
     elif normalization != "none":
         raise Exception("Supported normalizations: none, col, symmetric, auto")
     return M
