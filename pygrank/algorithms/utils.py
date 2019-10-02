@@ -1,5 +1,4 @@
 import networkx as nx
-import sklearn.preprocessing
 import scipy
 import numpy as np
 import time
@@ -67,16 +66,22 @@ def to_scipy_sparse_matrix(G, normalization="auto", weight="weight"):
         weight: The weight attribute of the graph's edges.
     """
     normalization = normalization.lower()
-    M = nx.to_scipy_sparse_matrix(G, weight=weight, dtype=float)
     if normalization == "auto":
         normalization = "col" if G.is_directed() else "symmetric"
+    M = nx.to_scipy_sparse_matrix(G, weight=weight, dtype=float)
     if normalization == "col":
-        M = sklearn.preprocessing.normalize(M, "l1", axis=1, copy=False)
+        S = scipy.array(M.sum(axis=1)).flatten()
+        S[S != 0] = 1.0 / S[S != 0]
+        Q = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
+        M = Q * M
     elif normalization == "symmetric":
-        sum_rows = M.sum(axis=0)
-        sum_cols = M.sum(axis=1)
-        M = M / np.sqrt(sum_rows)
-        M = M / np.sqrt(sum_cols)
+        S = scipy.array(np.sqrt(M.sum(axis=1))).flatten()
+        S[S != 0] = 1.0 / S[S != 0]
+        Qleft = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
+        S = scipy.array(np.sqrt(M.sum(axis=0))).flatten()
+        S[S != 0] = 1.0 / S[S != 0]
+        Qright = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
+        M = Qleft * M * Qright
     elif normalization != "none":
         raise Exception("Supported normalizations: none, col, symmetric, auto")
     return M
