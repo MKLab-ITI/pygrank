@@ -56,7 +56,7 @@ class HeatKernel:
 
         Example:
             >>> from pygrank.algorithms import pagerank
-            >>> algorithm = pagerank.PageRank(alpha=0.99, tol=1.E-9) # tol passed to the ConvergenceManager
+            >>> algorithm = pagerank.HeatKernel(t=5, tol=1.E-9) # tol passed to the ConvergenceManager
         """
         self.t = t
         self.normalization = normalization
