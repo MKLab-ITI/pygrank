@@ -38,14 +38,27 @@ class Test(unittest.TestCase):
 
     def test_rank_time(self):
         from pygrank.algorithms.pagerank import PageRank as ranker
-        G = create_test_graph()
-        tic = time.clock()
-        ranker(normalization='col').rank(G)
-        test_time = time.clock()-tic
-        tic = time.clock()
-        nx.pagerank_scipy(G)
-        nx_time = time.clock()-tic
-        # self.assertLessEqual(test_time, nx_time, msg="PageRank time comparable to nx") # sometimes fails due to varying machine load
+        import scipy.stats
+        nx_time = list()
+        test_time = list()
+        repeats = 50
+        for _ in range(repeats):
+            G = create_test_graph()
+            tic = time.clock()
+            ranker(normalization='col').rank(G)
+            test_time.append(time.clock()-tic)
+            tic = time.clock()
+            nx.pagerank_scipy(G)
+            nx_time.append(time.clock()-tic)
+        self.assertLessEqual(scipy.stats.ttest_ind(nx_time, test_time)[1], 0.001, msg="PageRank time comparable to nx with p-value<0.001")
+
+    def test_symmetric_normalization_symmetricity(self):
+        from pygrank.algorithms.utils import to_scipy_sparse_matrix
+        G = create_test_graph(directed=False)
+        M = to_scipy_sparse_matrix(G, "symmetric").todense()
+        for i in range(len(G)):
+            for j in range(len(G)):
+                self.assertEqual(M[i,j], M[j,i], msg="Symmetricity of symmetric normalization")
 
     def test_heat_kernel_locality(self):
         from pygrank.algorithms.pagerank import PageRank
