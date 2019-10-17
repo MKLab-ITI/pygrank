@@ -5,7 +5,7 @@ import time
 
 
 class ConvergenceManager:
-    """ Used to keep previous iteration and generally manage convergence of a variables.
+    """ Used to keep previous iteration and generally manage convergence of variables.
 
     Examples:
         >>> convergence = ConvergenceManager()
@@ -93,3 +93,35 @@ def assert_binary(ranks):
         if v not in [0, 1]:
             raise Exception('Binary ranks required')
 
+
+class MethodHasher:
+    """ Used to hash methods."""
+
+    def __init__(self, method, assume_immutability=True):
+        self.assume_immutability = assume_immutability
+        self._method = method
+        self._stored = {}
+
+    def __call__(self, *args, **kwargs):
+        if self.assume_immutability:
+            desc = str(args)+str(kwargs)
+            if desc in self._stored:
+                return self._stored[desc]
+            value = self._method(*args, **kwargs)
+            self._stored[desc] = value
+            return value
+        else:
+            return to_scipy_sparse_matrix(*args, **kwargs)
+
+
+def preprocessor(normalization="auto", assume_immutability=False):
+    """ Wrapper function that generates lambda expressions for the method to_scipy_sparse_matrix.
+
+    Attributes:
+        normalization: Normalization parameter for to_scipy_sparse_matrix (default is "auto").
+        assume_immutability: If True, then the output is further wrapped through a MethodHasher to avoid redundant
+            calls. Default is False, as graph immutability needs be explicitly assumed but cannot be guaranteed.
+    """
+    if assume_immutability:
+        return MethodHasher(preprocessor(normalization, False))
+    return lambda G: to_scipy_sparse_matrix(G, normalization=normalization)
