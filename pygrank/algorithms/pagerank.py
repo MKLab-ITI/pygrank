@@ -7,18 +7,22 @@ import pygrank.algorithms.utils
 class PageRank:
     """A Personalized PageRank power method algorithm. Supports warm start."""
 
-    def __init__(self, alpha=0.85, normalization='auto', convergence=None):
+    def __init__(self, alpha=0.85, normalization='auto', convergence=None, **kwargs):
         """ Initializes the PageRank scheme parameters.
 
         Attributes:
             alpha: Optional. 1-alpha is the bias towards the personalization. Default value is 0.85.
             normalization: Optional. The normalization parameter used by pygrank.algorithms.utils.to_scipy_sparse_matrix.
             convergence: Optional. The ConvergenceManager that determines when iterations stop. If None (default),
-                the default ConvergenceManager() is used.
+                a ConvergenceManager with the additional keyword arguments is constructed.
+
+        Example:
+            >>> from pygrank.algorithms import pagerank
+            >>> algorithm = pagerank.PageRank(alpha=0.99, tol=1.E-9) # tol passed to the ConvergenceManager
         """
         self.alpha = float(alpha) # typecast to make sure that a graph is not accidentally the first argument
         self.normalization = normalization
-        self.convergence = pygrank.algorithms.utils.ConvergenceManager() if convergence is None else convergence
+        self.convergence = pygrank.algorithms.utils.ConvergenceManager(**kwargs) if convergence is None else convergence
 
     def rank(self, G, personalization=None, warm_start=None):
         M = pygrank.algorithms.utils.to_scipy_sparse_matrix(G, self.normalization)
@@ -41,10 +45,22 @@ class PageRank:
 class HeatKernel:
     """ Heat kernel filter."""
 
-    def __init__(self, t=5, normalization='auto', convergence=None):
+    def __init__(self, t=5, normalization='auto', convergence=None, **kwargs):
+        """ Initializes the HearKernel filter parameters.
+
+        Attributes:
+            t: Optional. How many hops until the importance of new nodes starts decreasing. Default value is 5.
+            normalization: Optional. The normalization parameter used by pygrank.algorithms.utils.to_scipy_sparse_matrix.
+            convergence: Optional. The ConvergenceManager that determines when iterations stop. If None (default),
+                a ConvergenceManager with the additional keyword arguments is constructed.
+
+        Example:
+            >>> from pygrank.algorithms import pagerank
+            >>> algorithm = pagerank.PageRank(alpha=0.99, tol=1.E-9) # tol passed to the ConvergenceManager
+        """
         self.t = t
         self.normalization = normalization
-        self.convergence = pygrank.algorithms.utils.ConvergenceManager() if convergence is None else convergence
+        self.convergence = pygrank.algorithms.utils.ConvergenceManager(**kwargs) if convergence is None else convergence
 
     def rank(self, G, personalization=None):
         M = pygrank.algorithms.utils.to_scipy_sparse_matrix(G, self.normalization)
@@ -69,10 +85,10 @@ class HeatKernel:
 class BiasedKernel:
     """ Heuristic kernel-like method that places emphasis on shorter random walks."""
 
-    def __init__(self, alpha=0.85, t=5, normalization='auto', convergence=None):
+    def __init__(self, alpha=0.85, t=5, normalization='auto', convergence=None, **kwargs):
         self.alpha = alpha
         self.normalization = normalization
-        self.convergence = pygrank.algorithms.utils.ConvergenceManager() if convergence is None else convergence
+        self.convergence = pygrank.algorithms.utils.ConvergenceManager(**kwargs) if convergence is None else convergence
         warnings.warn("BiasedKernel is still under development (its implementation may be incorrect)", stacklevel=2)
         warnings.warn("BiasedKernel is a low-quality heuristic", stacklevel=2)
 
