@@ -17,8 +17,24 @@ G = nx.Graph()
 seeds = list()
 ... # insert graph nodes and select some of them as seeds (e.g. see tests.py)
 
-algorithm = Oversampler(Ranker(alpha=0.99))
+algorithm = Oversampler(Ranker(alpha=0.85, tol=1.E-6, max_iters=100)) # default values used
 ranks = algorithm.rank(G, {v: 1 for v in seeds})
+```
+
+###### Hash graph normalization
+```python
+import networkx as nx
+from pygrank.algorithms.pagerank import PageRank as Ranker
+from pygrank.algorithms.utils import preprocessor
+
+G = nx.Graph()
+seeds1 = list()
+seeds2 = list()
+... # insert graph nodes and select some of them as seeds (e.g. see tests.py)
+
+algorithm = Ranker(alpha=0.8, to_scipy=preprocessor(normalization="col", assume_immutability=True))
+ranks = algorithm.rank(G, {v: 1 for v in seeds1})
+ranks = algorithm.rank(G, {v: 1 for v in seeds2}) # does not re-compute the normalization
 ```
 
 ###### How to evaluate with an unsupervised metric

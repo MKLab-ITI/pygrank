@@ -18,7 +18,7 @@ class PageRank:
         """
         self.alpha = float(alpha) # typecast to make sure that a graph is not accidentally the first argument
         self.normalization = normalization
-        self.convergence = pygrank.algorithms.utils.ConvergenceManager(max_iters=int(10.0/(1.-alpha))) if convergence is None else convergence
+        self.convergence = pygrank.algorithms.utils.ConvergenceManager() if convergence is None else convergence
 
     def rank(self, G, personalization=None, warm_start=None):
         M = pygrank.algorithms.utils.to_scipy_sparse_matrix(G, self.normalization)
@@ -101,7 +101,7 @@ class Fast:
     def __init__(self, ranker, enabled=True):
         self.ranker = ranker
         self.enabled = enabled
-        # warnings.warn("Fast implementation of PageRank still under development (could be slower)", stacklevel=2)
+        warnings.warn("Fast implementation of PageRank still under development (could be slower)", stacklevel=2)
 
     def rank(self, G, personalization):
         if self.enabled:
@@ -111,19 +111,17 @@ class Fast:
             self.ranker.convergence.allow_restart = False
             alpha = target_alpha * 0.8
             beta = 0.5
-            self.ranker.convergence.tol = 0.01
             while True:
-                alpha = target_alpha * beta + alpha * (1 - beta)
-                if abs(alpha - target_alpha) < 1 - target_alpha and alpha!=target_alpha:
-                    alpha = target_alpha
-                    self.ranker.convergence.tol = target_tol
-                    self.ranker.convergence.force_next_iteration()
-                print(self.ranker.convergence.iteration, alpha)
+                self.ranker.convergence.tol = target_tol * np.exp(2*np.log(alpha) / np.log(target_alpha)-1)
+                print(self.ranker.convergence.tol)
                 ranks = self.ranker.rank(G, personalization, warm_start=self.ranker.convergence.rank)
                 if alpha == target_alpha:
                     break
+                alpha = target_alpha * beta + alpha * (1 - beta)
+                if abs(alpha - target_alpha) < 1 - target_alpha:
+                    alpha = target_alpha
             self.ranker.convergence.allow_restart = True
         else:
             ranks = self.ranker.rank(G, personalization, warm_start=None)
-        #print(self.ranker.convergence.elapsed_time, 'time,', self.ranker.convergence.iteration, 'iterations')
+        print(self.ranker.convergence.elapsed_time, 'time,', self.ranker.convergence.iteration, 'iterations')
         return ranks
