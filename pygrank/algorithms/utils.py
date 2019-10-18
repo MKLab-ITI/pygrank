@@ -20,6 +20,7 @@ class ConvergenceManager:
         self.tol = tol
         self.error_type = error_type.lower()
         self.max_iters = max_iters
+        self.min_iters = 0
         self.allow_restart = allow_restart
         self.iteration = 0
         self.last_ranks = None
@@ -32,9 +33,15 @@ class ConvergenceManager:
             self.last_ranks = None
             self._start_time = time.clock()
             self.elapsed_time = None
+            self.min_iters = 0
+
+    def force_next_iteration(self):
+        self.min_iters = self.iteration+1
 
     def has_converged(self, new_ranks):
         self.iteration += 1
+        if self.iteration<=self.min_iters:
+            return True
         if self.iteration>self.max_iters:
             raise Exception("Could not converge within", self.max_iters, "iterations")
         if self._start_time is None:
@@ -45,6 +52,8 @@ class ConvergenceManager:
         return converged
 
     def _has_converged(self, prev_ranks, ranks):
+        if self.error_type == "const":
+            return True
         ranks = np.array(ranks)
         if self.error_type == "msqrt":
             return (scipy.square(ranks - prev_ranks).sum()/ranks.size)**0.5 < self.tol
@@ -53,7 +62,7 @@ class ConvergenceManager:
         elif self.error_type == "small_value":
             return scipy.absolute(ranks).sum()/ranks.size < self.tol
         else:
-            raise Exception("Supported error types: msqrt, mabs")
+            raise Exception("Supported error types: msqrt, mabs, const")
 
 
 def to_scipy_sparse_matrix(G, normalization="auto", weight="weight"):
