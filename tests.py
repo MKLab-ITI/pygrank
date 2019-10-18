@@ -30,14 +30,16 @@ def create_test_graph(directed=False):
 class Test(unittest.TestCase):
     def test_rank_results(self):
         from pygrank.algorithms.pagerank import PageRank as Ranker
+        from pygrank.algorithms.utils import preprocessor
         G = create_test_graph()
-        test_result = Ranker(normalization='col').rank(G)
+        test_result = Ranker(to_scipy=preprocessor('col')).rank(G)
         nx_result = nx.pagerank_scipy(G)
         abs_diffs = sum(abs(test_result[v]-nx_result[v]) for v in nx_result.keys())/len(nx_result)
         self.assertAlmostEqual(abs_diffs, 0, places=16, msg="PageRank compliance with nx results")
 
     def test_rank_time(self):
         from pygrank.algorithms.pagerank import PageRank as ranker
+        from pygrank.algorithms.utils import preprocessor
         import scipy.stats
         nx_time = list()
         test_time = list()
@@ -45,12 +47,33 @@ class Test(unittest.TestCase):
         for _ in range(repeats):
             G = create_test_graph()
             tic = time.clock()
-            ranker(normalization='col').rank(G)
+            ranker(to_scipy=preprocessor('col')).rank(G)
             test_time.append(time.clock()-tic)
             tic = time.clock()
             nx.pagerank_scipy(G)
             nx_time.append(time.clock()-tic)
         self.assertLessEqual(scipy.stats.ttest_ind(nx_time, test_time)[1], 0.001, msg="PageRank time comparable to nx with p-value<0.001")
+
+
+    def test_immutability_speedup(self):
+        from pygrank.algorithms.pagerank import PageRank as Ranker
+        from pygrank.algorithms.utils import preprocessor
+        import scipy.stats
+        nx_time = list()
+        test_time = list()
+        repeats = 50
+        G = create_test_graph()
+        ranker = Ranker(to_scipy=preprocessor('col'))
+        tic = time.clock()
+        for _ in range(repeats):
+            ranker.rank(G)
+        unhashed_time = time.clock()-tic
+        ranker = Ranker(to_scipy=preprocessor('col', assume_immutability=True))
+        tic = time.clock()
+        for _ in range(repeats):
+            ranker.rank(G)
+        hashed_time = time.clock()-tic
+        self.assertLessEqual(hashed_time, unhashed_time, msg="Hashing speedup")
 
     def test_symmetric_normalization_symmetricity(self):
         from pygrank.algorithms.utils import to_scipy_sparse_matrix
