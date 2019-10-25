@@ -64,6 +64,9 @@ class ConvergenceManager:
         else:
             raise Exception("Supported error types: msqrt, mabs, const")
 
+    def __str__(self):
+        return str(self.iteration)+" iterations ("+str(self.elapsed_time)+" sec)"
+
 
 def to_scipy_sparse_matrix(G, normalization="auto", weight="weight"):
     """ Used to normalize a graph and produce a sparse matrix representation.
