@@ -4,26 +4,48 @@ import sklearn.metrics
 import tqdm
 
 
+def _cos_similarity(self, v, u, ranks):
+    dot = 0
+    l2v = 0
+    l2u = 0
+    for group_ranks in ranks.values():
+        ui = group_ranks.get(u, 0)
+        vi = group_ranks.get(v, 0)
+        l2u += ui * ui
+        l2v += vi * vi
+        dot = ui * vi
+    if l2u == 0 or l2v == 0:
+        return 0
+    return dot / np.sqrt(l2u * l2v)
+
+
+def _dot_similarity(self, v, u, ranks):
+    dot = 0
+    for group_ranks in ranks.values():
+        ui = group_ranks.get(u, 0)
+        vi = group_ranks.get(v, 0)
+        dot = ui * vi
+    return dot
+
+
 class LinkAUC:
-    def __init__(self, G, nodes=None):
+
+    """ Normalizes ranks by dividing with their maximal value.
+
+    Attributes:
+        ranker: Optional. The ranking algorithm.
+    """
+    def __init__(self, G, nodes=None, similarity="cos"):
         self.G = G
         self.nodes = list(G) if nodes is None else list(set(list(nodes)))
         if self.G.is_directed():
             warnings.warn("LinkAUC is designed for undirected graphs", stacklevel=2)
-
-    def _similarity(self, v, u, ranks):
-        dot = 0
-        l2v = 0
-        l2u = 0
-        for group_ranks in ranks.values():
-            ui = group_ranks.get(u, 0)
-            vi = group_ranks.get(v, 0)
-            l2u += ui*ui
-            l2v += vi*vi
-            dot = ui*vi
-        if l2u == 0 or l2v == 0:
-            return 0
-        return dot / np.sqrt(l2u*l2v)
+        if similarity=="cos":
+            self.similarity = _cos_similarity
+        elif similarity=="dot":
+            self.similarity = _dot_similarity
+        else:
+            self.similarity = similarity
 
     def evaluate(self, ranks, max_negative_samples=2000):
         negative_candidates = list(self.G)
@@ -60,4 +82,3 @@ class MultiSupervised:
     def evaluate(self, ranks):
         evaluations = [self.metrics[group_id].evaluate(group_ranks) for group_id, group_ranks in ranks.items()]
         return sum(evaluations) / len(evaluations)
-

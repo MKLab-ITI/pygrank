@@ -112,34 +112,6 @@ class Test(unittest.TestCase):
         # need to assert 5 places precision since default tol=1.E-6
         self.assertAlmostEqual(boosted_oversampled['B']/boosted_oversampled['A'], oversampled['B']/oversampled['A'], places=5, msg="Boosting ranks can find relative oversampling ranks")
 
-    def test_fast_rank_time(self):
-        from pygrank.algorithms.pagerank import PageRank
-        from pygrank.algorithms.pagerank import Fast
-        from pygrank.algorithms.utils import preprocessor
-        import scipy.stats
-        normal_time = list()
-        fast_time = list()
-        repeats = 1
-        tol = 1.E-6
-        alpha = 0.99
-        errors = list()
-        personalization = {"A": 1, "B": 1}
-        pre = preprocessor('col', assume_immutability=True)
-        G = create_test_graph()
-        pre(G) # do this one to make the hash storage not affect anything elese
-        for _ in range(repeats):
-            tic = time.clock()
-            ranks_page = PageRank(alpha=alpha, to_scipy=pre, tol=tol, max_iters=200).rank(G, personalization)
-            normal_time.append(time.clock()-tic)
-            tic = time.clock()
-            ranks_fast = Fast(alpha=alpha, to_scipy=pre, tol=tol, max_iters=200).rank(G, personalization)
-            fast_time.append(time.clock()-tic)
-            errors.append(sum(abs(ranks_page[v]-ranks_fast[v])/len(ranks_page) for v in ranks_page))
-        print(sum(normal_time), sum(fast_time))
-        print(sum(errors)/len(errors))
-        self.assertLessEqual(sum(fast_time), sum(normal_time), msg="Fast at worst speed to PageRank")
-        self.assertLessEqual(sum(errors)/len(errors), tol, msg="Fast ranks within tol ranks of PageRank")
-
 
 if __name__ == '__main__':
     unittest.main()

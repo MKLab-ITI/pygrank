@@ -7,7 +7,7 @@ import pygrank.algorithms.utils
 class PageRank:
     """A Personalized PageRank power method algorithm. Supports warm start."""
 
-    def __init__(self, alpha=0.85, to_scipy=None, convergence=None, **kwargs):
+    def __init__(self, alpha=0.85, to_scipy=None, convergence=None, use_quotient=True, **kwargs):
         """ Initializes the PageRank scheme parameters.
 
         Attributes:
@@ -16,6 +16,9 @@ class PageRank:
                 If None (default), pygrank.algorithms.utils.to_scipy_sparse_matrix with default arguments is used.
             convergence: Optional. The ConvergenceManager that determines when iterations stop. If None (default),
                 a ConvergenceManager with the additional keyword arguments is constructed.
+            use_quotient: Optional. If True (default) performs a L1 re-normalization of ranks after each iteration.
+                This significantly speeds ups the convergence speed of symmetric normalization (col normalization
+                preserves the L1 norm during computations on its own).
 
         Example:
             >>> from pygrank.algorithms import pagerank
@@ -24,6 +27,7 @@ class PageRank:
         self.alpha = float(alpha) # typecast to make sure that a graph is not accidentally the first argument
         self.to_scipy = pygrank.algorithms.utils.to_scipy_sparse_matrix if to_scipy is None else to_scipy
         self.convergence = pygrank.algorithms.utils.ConvergenceManager(**kwargs) if convergence is None else convergence
+        self.use_quotient = use_quotient
 
     def rank(self, G, personalization=None, warm_start=None):
         M = self.to_scipy(G)
@@ -37,7 +41,8 @@ class PageRank:
         self.convergence.start()
         while not self.convergence.has_converged(ranks):
             ranks = self.alpha * (ranks * M + sum(ranks[is_dangling]) * personalization) + (1 - self.alpha) * personalization
-            ranks = ranks/ranks.sum()
+            if self.use_quotient:
+                ranks = ranks/ranks.sum()
 
         ranks = dict(zip(G.nodes(), map(float, ranks)))
         return ranks
@@ -110,50 +115,5 @@ class BiasedKernel:
             ranks = np.exp(-self.t) * personalization + a * ((ranks * M + sum(ranks[is_dangling]) * personalization) - ranks)
             ranks = ranks/ranks.sum()
 
-        ranks = dict(zip(G.nodes(), map(float, ranks)))
-        return ranks
-
-
-class Fast:
-    """ Fast computation of PageRank with progressively lower restart probabilities."""
-
-    def __init__(self, alpha=0.85, to_scipy=None, convergence=None, error_adaptation=0.1, **kwargs):
-        """ Initializes the PageRank scheme parameters.
-
-        Attributes:
-            alpha: Optional. 1-alpha is the bias towards the personalization. Default value is 0.85.
-            to_scipy: Optional. Method to extract a scipy sparse matrix from a networkx graph.
-                If None (default), pygrank.algorithms.utils.to_scipy_sparse_matrix with default arguments is used.
-            convergence: Optional. The ConvergenceManager that determines when iterations stop. If None (default),
-                a ConvergenceManager with the additional keyword arguments is constructed.
-
-        Example:
-            >>> from pygrank.algorithms import pagerank
-            >>> algorithm = pagerank.PageRank(alpha=0.99, tol=1.E-9) # tol passed to the ConvergenceManager
-        """
-        self.alpha = float(alpha) # typecast to make sure that a graph is not accidentally the first argument
-        self.error_adaptation = float(error_adaptation)
-        self.to_scipy = pygrank.algorithms.utils.to_scipy_sparse_matrix if to_scipy is None else to_scipy
-        self.convergence = pygrank.algorithms.utils.ConvergenceManager(**kwargs) if convergence is None else convergence
-
-    def rank(self, G, personalization=None, warm_start=None):
-        M = self.to_scipy(G)
-        degrees = scipy.array(M.sum(axis=1)).flatten()
-
-        personalization = scipy.repeat(1.0, len(G)) if personalization is None else scipy.array([personalization.get(n, 0) for n in G], dtype=float)
-        personalization = personalization / personalization.sum()
-        ranks = personalization if warm_start is None else scipy.array([warm_start.get(n, 0) for n in G], dtype=float)
-
-        is_dangling = scipy.where(degrees == 0)[0]
-        alpha_manager = pygrank.algorithms.utils.ConvergenceManager(tol=1.E-6, max_iters=self.convergence.max_iters)
-        alpha_manager.start()
-        self.convergence.start()
-        alpha = self.alpha*0.8
-        while not self.convergence.has_converged(ranks) or not alpha_manager.has_converged(alpha):
-            prev_ranks = ranks
-            ranks = alpha * (ranks * M + sum(ranks[is_dangling]) * personalization) + (1 - alpha) * personalization
-            ranks = ranks/ranks.sum()
-            beta = np.exp(-self.error_adaptation*(scipy.square(ranks - prev_ranks).sum()/ranks.size)**0.5/self.convergence.tol)
-            alpha = self.alpha*beta + alpha*(1-beta)
         ranks = dict(zip(G.nodes(), map(float, ranks)))
         return ranks

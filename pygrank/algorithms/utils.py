@@ -16,24 +16,23 @@ class ConvergenceManager:
         >>>     var = ...
     """
 
-    def __init__(self, tol=1.E-6, error_type="mabs", max_iters=100, allow_restart=True):
+    def __init__(self, tol=1.E-6, error_type="mabs", max_iters=100):
         self.tol = tol
         self.error_type = error_type.lower()
         self.max_iters = max_iters
         self.min_iters = 0
-        self.allow_restart = allow_restart
         self.iteration = 0
         self.last_ranks = None
         self._start_time = None
         self.elapsed_time = None
 
-    def start(self):
-        if self.allow_restart or self.last_ranks is None:
-            self.iteration = 0
-            self.last_ranks = None
+    def start(self, restart_timer=True):
+        if restart_timer or self._start_time is None:
             self._start_time = time.clock()
             self.elapsed_time = None
+            self.iteration = 0
             self.min_iters = 0
+        self.last_ranks = None
 
     def force_next_iteration(self):
         self.min_iters = self.iteration+1
@@ -43,6 +42,8 @@ class ConvergenceManager:
         if self.iteration<=self.min_iters:
             return True
         if self.iteration>self.max_iters:
+            if self.error_type=="iters":
+                return True
             raise Exception("Could not converge within", self.max_iters, "iterations")
         if self._start_time is None:
             raise Exception("Need to start() the convergence manager")
@@ -52,6 +53,8 @@ class ConvergenceManager:
         return converged
 
     def _has_converged(self, prev_ranks, ranks):
+        if self.error_type == "iters":
+            return False
         if self.error_type == "const":
             return True
         ranks = np.array(ranks)
@@ -62,7 +65,7 @@ class ConvergenceManager:
         elif self.error_type == "small_value":
             return scipy.absolute(ranks).sum()/ranks.size < self.tol
         else:
-            raise Exception("Supported error types: msqrt, mabs, const")
+            raise Exception("Supported error types: msqrt, mabs, const, small_value, iters")
 
     def __str__(self):
         return str(self.iteration)+" iterations ("+str(self.elapsed_time)+" sec)"
