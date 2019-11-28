@@ -54,7 +54,6 @@ class Test(unittest.TestCase):
             nx_time.append(time.clock()-tic)
         self.assertLessEqual(scipy.stats.ttest_ind(nx_time, test_time)[1], 0.001, msg="PageRank time comparable to nx with p-value<0.001")
 
-
     def test_immutability_speedup(self):
         from pygrank.algorithms.pagerank import PageRank as Ranker
         from pygrank.algorithms.utils import preprocessor
@@ -112,7 +111,6 @@ class Test(unittest.TestCase):
         boosted_oversampled = BoostedOversampler(Ranker()).rank(G, personalization)
         # need to assert 5 places precision since default tol=1.E-6
         self.assertAlmostEqual(boosted_oversampled['B']/boosted_oversampled['A'], oversampled['B']/oversampled['A'], places=5, msg="Boosting ranks can find relative oversampling ranks")
-
 
 
 if __name__ == '__main__':
