@@ -9,7 +9,7 @@ with open("README.md", "r") as file:
 
 setuptools.setup(
     name='pygrank',
-    version='0.1.10',
+    version='0.1.12',
     author="Emmanouil Krasanakis",
     author_email="maniospas@hotmail.com",
     description="Recommendation algorithms for large graphs on networkx",

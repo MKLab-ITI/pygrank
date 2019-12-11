@@ -112,6 +112,14 @@ class Test(unittest.TestCase):
         # need to assert 5 places precision since default tol=1.E-6
         self.assertAlmostEqual(boosted_oversampled['B']/boosted_oversampled['A'], oversampled['B']/oversampled['A'], places=5, msg="Boosting ranks can find relative oversampling ranks")
 
+    def test_link_auc(self):
+        from pygrank.algorithms.pagerank import PageRank as Ranker
+        from pygrank.metrics.multigroup import LinkAUC as LinkAUC
+        G = create_test_graph()
+        ranks1 = Ranker().rank(G, personalization = {"A": 1, "B": 1})
+        ranks2 = Ranker().rank(G, personalization = {"F": 1, "G": 1})
+        print('LinkAUC', LinkAUC(G).evaluate({"group1": ranks1, "groups2": ranks2}))
+
 
 if __name__ == '__main__':
     unittest.main()

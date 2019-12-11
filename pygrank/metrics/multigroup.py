@@ -4,7 +4,7 @@ import sklearn.metrics
 import tqdm
 
 
-def _cos_similarity(self, v, u, ranks):
+def _cos_similarity(v, u, ranks):
     dot = 0
     l2v = 0
     l2u = 0
@@ -19,7 +19,7 @@ def _cos_similarity(self, v, u, ranks):
     return dot / np.sqrt(l2u * l2v)
 
 
-def _dot_similarity(self, v, u, ranks):
+def _dot_similarity(v, u, ranks):
     dot = 0
     for group_ranks in ranks.values():
         ui = group_ranks.get(u, 0)
@@ -34,15 +34,16 @@ class LinkAUC:
 
     Attributes:
         ranker: Optional. The ranking algorithm.
+        nodes: The list of nodes whose edges are used in for evaluation. If None (default) all graph nodes are used.
     """
     def __init__(self, G, nodes=None, similarity="cos"):
         self.G = G
         self.nodes = list(G) if nodes is None else list(set(list(nodes)))
         if self.G.is_directed():
             warnings.warn("LinkAUC is designed for undirected graphs", stacklevel=2)
-        if similarity=="cos":
+        if similarity == "cos":
             self._similarity = _cos_similarity
-        elif similarity=="dot":
+        elif similarity == "dot":
             self._similarity = _dot_similarity
         else:
             self._similarity = similarity
