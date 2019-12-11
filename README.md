@@ -21,7 +21,7 @@ algorithm = Oversampler(Ranker(alpha=0.85, tol=1.E-6, max_iters=100)) # default 
 ranks = algorithm.rank(G, {v: 1 for v in seeds})
 ```
 
-###### Hash the outcome of graph normalization
+###### Hash the outcome of graph normalization to speed up multiple calls on the same graph
 ```python
 import networkx as nx
 from pygrank.algorithms.pagerank import PageRank as Ranker

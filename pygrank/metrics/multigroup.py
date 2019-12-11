@@ -41,11 +41,11 @@ class LinkAUC:
         if self.G.is_directed():
             warnings.warn("LinkAUC is designed for undirected graphs", stacklevel=2)
         if similarity=="cos":
-            self.similarity = _cos_similarity
+            self._similarity = _cos_similarity
         elif similarity=="dot":
-            self.similarity = _dot_similarity
+            self._similarity = _dot_similarity
         else:
-            self.similarity = similarity
+            self._similarity = similarity
 
     def evaluate(self, ranks, max_negative_samples=2000):
         negative_candidates = list(self.G)

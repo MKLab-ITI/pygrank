@@ -11,6 +11,9 @@ class Tautology:
     def __init__(self):
         pass
 
+    def transform(self, ranks):
+        return ranks
+
     def rank(self, _, personalization):
         return personalization
 
@@ -37,15 +40,18 @@ class Normalize:
         """
         self.ranker = Tautology() if ranker is None else ranker
 
-    def transform(self, ranks):
-        if not isinstance(self.ranker, Tautology):
-            raise Exception("transform(ranks) only makes sense for Tautology base ranker. Consider using rank(G, personalization) instead.")
+    def _transform(self, ranks):
         max_rank = max(ranks.values())
         return {node: rank / max_rank for node, rank in ranks.items()}
 
+    def transform(self, ranks):
+        if not isinstance(self.ranker, Tautology):
+            raise Exception("transform(ranks) only makes sense for Tautology base ranker. Consider using rank(G, personalization) instead.")
+        return self._transform(ranks)
+
     def rank(self, G, personalization):
         ranks = self.ranker.rank(G, personalization)
-        return self.transform(ranks)
+        return self._transform(ranks)
 
 
 class Ordinals:
@@ -62,14 +68,17 @@ class Ordinals:
         """
         self.ranker = Tautology() if ranker is None else ranker
 
+    def _transform(self, ranks):
+        return {v: ord+1 for ord, v in enumerate(sorted(ranks, key=ranks.get, reverse=False))}
+
     def transform(self, ranks):
         if not isinstance(self.ranker, Tautology):
             raise Exception("transform(ranks) only makes sense for Tautology base ranker. Consider using rank(G, personalization) instead.")
-        return {v: ord+1 for ord, v in enumerate(sorted(ranks, key=ranks.get, reverse=False))}
+        return self._transform(ranks)
 
     def rank(self, G, personalization):
         ranks = self.ranker.rank(G, personalization)
-        return self.transform(ranks)
+        return self._transform(ranks)
 
 
 class Threshold:
@@ -98,9 +107,7 @@ class Threshold:
         self.ranker = Tautology() if ranker is None else ranker
         self.threshold = threshold
 
-    def transform(self, ranks):
-        if not isinstance(self.ranker, Tautology):
-            raise Exception("transform(ranks) only makes sense for Tautology base ranker. Consider using rank(G, personalization) instead.")
+    def _transform(self, ranks):
         threshold = self.threshold
         if threshold=="gap":
             warnings.warn("gap-determined threshold is still under development (its implementation may be incorrect)", stacklevel=2)
@@ -117,6 +124,11 @@ class Threshold:
                 prev_rank = ranks[v]
         return self.base_metric.evaluate({v: 1 for v in ranks.keys() if ranks[v] >= threshold})
 
+    def transform(self, ranks):
+        if not isinstance(self.ranker, Tautology):
+            raise Exception("transform(ranks) only makes sense for Tautology base ranker. Consider using rank(G, personalization) instead.")
+        return self._transform(ranks)
+
     def rank(self, G, personalization):
         ranks = self.ranker.rank(G, personalization)
-        return self.transform(ranks)
+        return self._transform(ranks)
