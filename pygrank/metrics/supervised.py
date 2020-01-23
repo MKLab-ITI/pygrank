@@ -1,6 +1,5 @@
 import numpy as np
 import sklearn.metrics
-import warnings
 
 
 class NDCG:

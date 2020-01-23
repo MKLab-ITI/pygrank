@@ -4,27 +4,7 @@ from pygrank.algorithms.pagerank import PageRank
 from pygrank.algorithms.utils import preprocessor
 from scipy.stats import spearmanr
 import numpy as np
-
-
-def import_SNAP_data(dataset='',path='data/', pair_file='pairs.txt', group_file='groups.txt', directed=False, min_group_size=10):
-    G = nx.DiGraph() if directed else nx.Graph()
-    groups = {}
-    with open(path+dataset+'/'+pair_file, 'r', encoding='utf-8') as file:
-        for line in file:
-            if len(line) != 0 and line[0] != '#':
-                splt = line[:-1].split('\t')
-                if len(splt) == 0:
-                    continue
-                G.add_edge(splt[0], splt[1])
-    with open(path+dataset+'/'+group_file, 'r', encoding='utf-8') as file:
-        for line in file:
-            if line[0] != '#':
-                group = [item for item in line[:-1].split('\t') if len(item) > 0 and item in G]
-                if len(group) >= min_group_size:
-                    groups[len(groups)] = group
-                    break
-    return G, groups
-
+from evaluations import import_SNAP_data
 
 G, groups = import_SNAP_data('youtube')
 
@@ -33,6 +13,7 @@ alpha = 0.99
 errors = list()
 pre = preprocessor('col', assume_immutability=True)
 pre(G)  # do this one to make the hash storage not affect anything else
+
 
 def evaluate(fast_rank, page_rank, group_id=0):
     normal_time = list()
@@ -76,7 +57,5 @@ def evaluate(fast_rank, page_rank, group_id=0):
 
 
 page = PageRank(alpha=alpha, to_scipy=pre, tol=tol, max_iters=10000)
-#fast = PageRank(alpha=alpha, to_scipy=pre, tol=1.E-8, max_iters=2000)
 fast = PageRank(alpha=alpha, to_scipy=pre, tol=tol, max_iters=int(2./(1-alpha)), error_type="iters")
-#fast = PageRank(alpha=alpha*0.95, to_scipy=pre, tol=tol, max_iters=2000, error_type="iters")
 evaluate(fast, page)
