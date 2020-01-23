@@ -21,7 +21,7 @@ algorithm = Oversampler(Ranker(alpha=0.85, tol=1.E-6, max_iters=100)) # default 
 ranks = algorithm.rank(G, {v: 1 for v in seeds})
 ```
 
-###### Hash the outcome of graph normalization
+###### Hash the outcome of graph normalization to speed up multiple calls on the same graph
 ```python
 import networkx as nx
 from pygrank.algorithms.pagerank import PageRank as Ranker
@@ -119,13 +119,11 @@ print(auc.evaluate(ranks))
 ```
 ```
 @inproceedings{krasanakis2019linkauc,
-  title={Boosted seed oversampling for local community ranking},
+  title={LinkAUC: Unsupervised Evaluation of Multiple Network Node Ranks Using Link Prediction},
   author={Krasanakis, Emmanouil and Papadopoulos, Symeon and Kompatsiaris, Yiannis},
-  booktitle={Complex Networks and Their Applications VIII},
-  booksubtitle={Proceedings of the Eighth International Conference on Complex Networks and Their Applications COMPLEX NETWORKS 2019},
-  pages={3-14},
-  volume={1},
+  booktitle={International Conference on Complex Networks and Their Applications},
+  pages={3--14},
   year={2019},
-  publisher={Springer}
+  organization={Springer}
 }
 ```

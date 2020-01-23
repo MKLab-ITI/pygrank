@@ -34,6 +34,7 @@ class LinkAUC:
 
     Attributes:
         ranker: Optional. The ranking algorithm.
+        nodes: The list of nodes whose edges are used in for evaluation. If None (default) all graph nodes are used.
     """
     def __init__(self, G, nodes=None, similarity="cos", max_positive_samples=2000, max_negative_samples=2000):
         self.G = G
