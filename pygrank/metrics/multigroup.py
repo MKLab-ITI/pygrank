@@ -1,6 +1,7 @@
 import numpy as np
 import warnings
 import sklearn.metrics
+import networkx as nx
 import tqdm
 
 
@@ -59,7 +60,7 @@ class LinkAUC:
             negative_candidates = np.random.choice(negative_candidates, self.max_negative_samples)
         real = list()
         predicted = list()
-        for node in tqdm.tqdm(positive_candidates, desc="LinkAUC"):
+        for node in positive_candidates:#tqdm.tqdm(positive_candidates, desc="LinkAUC"):
             neighbors = self.G._adj[node]
             for positive in neighbors:
                 real.append(1)

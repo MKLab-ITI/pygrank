@@ -1,4 +1,3 @@
-import networkx as nx
 import time
 from pygrank.algorithms.pagerank import PageRank
 from pygrank.algorithms.utils import preprocessor

@@ -1,4 +1,6 @@
 import warnings
+import networkx as nx
+import numpy as np
 
 
 class Conductance:
@@ -74,3 +76,23 @@ class Density:
         if internal_edges == 0:
             return 0
         return internal_edges / expected_edges
+
+
+class Modularity:
+    def __init__(self, G, max_rank=1, max_positive_samples=2000):
+        self.G = G
+        self.max_positive_samples = max_positive_samples
+        self.max_rank = max_rank
+
+    def evaluate(self, ranks):
+        positive_candidates = list(self.G)
+        if len(positive_candidates) > self.max_positive_samples:
+            positive_candidates = np.random.choice(positive_candidates, self.max_positive_samples)
+        m = self.G.number_of_edges()
+        Q = 0
+        for v in positive_candidates:
+            for u in positive_candidates:
+                Avu = 1 if self.G.has_edge(v,u) else 0
+                Avu -= self.G.degree[v]*self.G.degree[u]/2/m
+                Q += Avu*(ranks[v]/self.max_rank)*(ranks[u]/self.max_rank)
+        return Q/2/m
