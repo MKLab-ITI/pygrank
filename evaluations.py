@@ -9,6 +9,7 @@ import pygrank.metrics.supervised
 import pygrank.metrics.multigroup
 import scipy.stats
 
+
 def import_SNAP_data(dataset, path='data/', pair_file='pairs.txt', group_file='groups.txt', directed=False, min_group_size=10, max_group_number=10):
     G = nx.DiGraph() if directed else nx.Graph()
     groups = {}
@@ -30,36 +31,48 @@ def import_SNAP_data(dataset, path='data/', pair_file='pairs.txt', group_file='g
     return G, groups
 
 measure_evaluations = {}
-datasets = ["amazon"]
+datasets = ['amazon']
 for dataset_name in datasets:
-    dataset_name = 'amazon'
-    G, groups = import_SNAP_data(dataset_name, min_group_size=3000)
-    pre = preprocessor('col', assume_immutability=True)
-    pre(G)
-    print('Number of groups', len(groups))
-
-    base_algorithms = {"PPR 0.85": pygrank.algorithms.pagerank.PageRank(alpha=0.85, to_scipy=pre, max_iters=1000),
-                  "PPR 0.90": pygrank.algorithms.pagerank.PageRank(alpha=0.9, to_scipy=pre, max_iters=1000),
-                  "PPR 0.95": pygrank.algorithms.pagerank.PageRank(alpha=0.95, to_scipy=pre, max_iters=1000),
-                  "PPR 0.99": pygrank.algorithms.pagerank.PageRank(alpha=0.99, to_scipy=pre, max_iters=1000),
-                  "HK": pygrank.algorithms.pagerank.HeatKernel(to_scipy=pre, max_iters=1000)}
-    algorithms = dict()
-    for alg_name, alg in base_algorithms.items():
-        algorithms[alg_name] = alg
-        algorithms[alg_name+" SO"] = pygrank.algorithms.oversampling.SeedOversampling(alg, method="Neighbors")
-        algorithms[alg_name+" I"] = pygrank.algorithms.oversampling.SeedOversampling(alg, method="Neighbors")
+    G, groups = import_SNAP_data(dataset_name, min_group_size=1000)
     seeds = [0.001, 0.01, 0.1]
-    experiments = list()
-
+    print('Number of groups', len(groups))
     for seed in seeds:
+        pre = preprocessor('col', assume_immutability=True)
+        preL = preprocessor('symmetric', assume_immutability=True)
+        pre(G)
+
+        base_algorithms = {"PPRL 0.85": pygrank.algorithms.pagerank.PageRank(alpha=0.85, to_scipy=preL, max_iters=1000),
+                      "PPRL 0.90": pygrank.algorithms.pagerank.PageRank(alpha=0.9, to_scipy=preL, max_iters=1000),
+                      "PPRL 0.95": pygrank.algorithms.pagerank.PageRank(alpha=0.95, to_scipy=preL, max_iters=1000),
+                      "PPRL 0.99": pygrank.algorithms.pagerank.PageRank(alpha=0.99, to_scipy=preL, max_iters=1000),
+                       "PPR 0.85": pygrank.algorithms.pagerank.PageRank(alpha=0.85, to_scipy=pre, max_iters=1000),
+                       "PPR 0.90": pygrank.algorithms.pagerank.PageRank(alpha=0.9, to_scipy=pre, max_iters=1000),
+                       "PPR 0.95": pygrank.algorithms.pagerank.PageRank(alpha=0.95, to_scipy=pre, max_iters=1000),
+                       "PPR 0.99": pygrank.algorithms.pagerank.PageRank(alpha=0.99, to_scipy=pre, max_iters=1000),
+                      "HK1": pygrank.algorithms.pagerank.HeatKernel(t=1, to_scipy=pre, max_iters=1000),
+                      "HK3": pygrank.algorithms.pagerank.HeatKernel(t=3, to_scipy=pre, max_iters=1000),
+                      "HK5": pygrank.algorithms.pagerank.HeatKernel(t=5, to_scipy=pre, max_iters=1000),
+                      "HK7": pygrank.algorithms.pagerank.HeatKernel(t=7, to_scipy=pre, max_iters=1000),
+                      "HKL1": pygrank.algorithms.pagerank.HeatKernel(t=1, to_scipy=preL, max_iters=1000),
+                      "HKL3": pygrank.algorithms.pagerank.HeatKernel(t=3, to_scipy=preL, max_iters=1000),
+                      "HKL5": pygrank.algorithms.pagerank.HeatKernel(t=5, to_scipy=preL, max_iters=1000),
+                      "HKL7": pygrank.algorithms.pagerank.HeatKernel(t=7, to_scipy=preL, max_iters=1000)}
+        algorithms = dict()
+        for alg_name, alg in base_algorithms.items():
+            algorithms[alg_name] = alg
+            algorithms[alg_name+" SO"] = pygrank.algorithms.oversampling.SeedOversampling(alg, method="safe")
+            algorithms[alg_name+" I"] = pygrank.algorithms.oversampling.SeedOversampling(alg, method="neighbors")
+        experiments = list()
+
         training_groups, test_groups = pygrank.metrics.utils.split_groups(groups, fraction_of_training=seed)
         test_group_ranks = pygrank.metrics.utils.to_seeds(test_groups)
         measures = {"AUC": pygrank.metrics.multigroup.MultiSupervised(pygrank.metrics.supervised.AUC, test_group_ranks),
                     "NDCG": pygrank.metrics.multigroup.MultiSupervised(pygrank.metrics.supervised.NDCG, test_group_ranks),
                     "Conductance": pygrank.metrics.multigroup.MultiUnsupervised(pygrank.metrics.unsupervised.Conductance, G),
                     "Density": pygrank.metrics.multigroup.MultiUnsupervised(pygrank.metrics.unsupervised.Density, G),
-                    "Modularity": pygrank.metrics.multigroup.MultiUnsupervised(pygrank.metrics.unsupervised.Modularity, G),
-                    "LinkAUC": pygrank.metrics.multigroup.LinkAUC(G)}
+                    #"Modularity": pygrank.metrics.multigroup.MultiUnsupervised(pygrank.metrics.unsupervised.Modularity, G),
+                    "LinkAUC": pygrank.metrics.multigroup.LinkAUC(G),
+                    "HopAUC": pygrank.metrics.multigroup.LinkAUC(G, hops=2)}
         if len(measure_evaluations)==0:
             for measure_name in measures.keys():
                 measure_evaluations[measure_name] = list()
@@ -80,13 +93,15 @@ for name, eval in measure_evaluations.items():
     print(name, eval)
 print('-----')
 print("AUC vs LinkAUC", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["LinkAUC"]))
+print("AUC vs HopAUC", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["HopAUC"]))
 print("AUC vs Conductance", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["Conductance"]))
 print("AUC vs Density", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["Density"]))
-print("AUC vs Modularity", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["Modularity"]))
+#print("AUC vs Modularity", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["Modularity"]))
 print('-----')
 print("NDCG vs LinkAUC", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["LinkAUC"]))
+print("NDCG vs HopAUC", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["HopAUC"]))
 print("NDCG vs Conductance", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["Conductance"]))
 print("NDCG vs Density", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["Density"]))
-print("NDCG vs Modularity", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["Modularity"]))
+#print("NDCG vs Modularity", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["Modularity"]))
 print('-----')
-print("NaiveLinkAUC vs Density", scipy.stats.spearmanr(measure_evaluations["LinkAUC"], measure_evaluations["Density"]))
+print("LinkAUC vs Density", scipy.stats.spearmanr(measure_evaluations["LinkAUC"], measure_evaluations["Density"]))

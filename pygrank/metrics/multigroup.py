@@ -37,11 +37,12 @@ class LinkAUC:
         ranker: Optional. The ranking algorithm.
         nodes: The list of nodes whose edges are used in for evaluation. If None (default) all graph nodes are used.
     """
-    def __init__(self, G, nodes=None, similarity="cos", max_positive_samples=2000, max_negative_samples=2000):
+    def __init__(self, G, nodes=None, similarity="cos", max_positive_samples=2000, max_negative_samples=2000, hops=1):
         self.G = G
         self.nodes = list(G) if nodes is None else list(set(list(nodes)))
         self.max_positive_samples = max_positive_samples
         self.max_negative_samples = max_negative_samples
+        self.hops = hops
         if self.G.is_directed():
             warnings.warn("LinkAUC is designed for undirected graphs", stacklevel=2)
         if similarity == "cos":
@@ -60,16 +61,30 @@ class LinkAUC:
             negative_candidates = np.random.choice(negative_candidates, self.max_negative_samples)
         real = list()
         predicted = list()
+        weights = list()
         for node in positive_candidates:#tqdm.tqdm(positive_candidates, desc="LinkAUC"):
-            neighbors = self.G._adj[node]
+            neighbors = {node: 0.}
+            pending = [node]
+            while len(pending) != 0:
+                next_node = pending.pop()
+                hops = neighbors[next_node]
+                if hops < self.hops:
+                    for neighbor in self.G._adj[next_node]:
+                        if neighbor not in neighbors:
+                            neighbors[neighbor] = hops + 1
+                            pending.append(neighbor)
             for positive in neighbors:
-                real.append(1)
-                predicted.append(self._similarity(node, positive, ranks))
+                if positive != node:
+                    real.append(1)
+                    predicted.append(self._similarity(node, positive, ranks))
+                    #weights.append(1)
+                    weights.append(1.-(neighbors[positive]-1)/self.hops)
             for negative in negative_candidates:
                 if negative != node and negative not in neighbors:
                     real.append(0)
                     predicted.append(self._similarity(node, negative, ranks))
-        fpr, tpr, _ = sklearn.metrics.roc_curve(real, predicted)
+                    weights.append(1)
+        fpr, tpr, _ = sklearn.metrics.roc_curve(real, predicted, sample_weight=weights)
         return sklearn.metrics.auc(fpr, tpr)
 
 
