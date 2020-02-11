@@ -59,7 +59,8 @@ for dataset_name in datasets:
                     "Conductance": pygrank.metrics.multigroup.MultiUnsupervised(pygrank.metrics.unsupervised.Conductance, G),
                     "Density": pygrank.metrics.multigroup.MultiUnsupervised(pygrank.metrics.unsupervised.Density, G),
                     "Modularity": pygrank.metrics.multigroup.MultiUnsupervised(pygrank.metrics.unsupervised.Modularity, G),
-                    "LinkAUC": pygrank.metrics.multigroup.LinkAUC(G)}
+                    "LinkAUC": pygrank.metrics.multigroup.LinkAUC(G),
+                    "PathAUC": pygrank.metrics.multigroup.PathAUC(G)}
         if len(measure_evaluations)==0:
             for measure_name in measures.keys():
                 measure_evaluations[measure_name] = list()
@@ -79,14 +80,16 @@ for dataset_name in datasets:
 for name, eval in measure_evaluations.items():
     print(name, eval)
 print('-----')
+print("AUC vs PathAUC", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["PathAUC"]))
 print("AUC vs LinkAUC", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["LinkAUC"]))
 print("AUC vs Conductance", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["Conductance"]))
 print("AUC vs Density", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["Density"]))
 print("AUC vs Modularity", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["Modularity"]))
 print('-----')
+print("NDCG vs PathAUC", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["PathAUC"]))
 print("NDCG vs LinkAUC", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["LinkAUC"]))
 print("NDCG vs Conductance", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["Conductance"]))
 print("NDCG vs Density", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["Density"]))
 print("NDCG vs Modularity", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["Modularity"]))
 print('-----')
-print("NaiveLinkAUC vs Density", scipy.stats.spearmanr(measure_evaluations["LinkAUC"], measure_evaluations["Density"]))
+print("LinkAUC vs Density", scipy.stats.spearmanr(measure_evaluations["LinkAUC"], measure_evaluations["Density"]))
