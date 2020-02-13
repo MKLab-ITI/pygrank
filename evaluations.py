@@ -34,7 +34,7 @@ measure_evaluations = {}
 datasets = ['amazon']
 for dataset_name in datasets:
     G, groups = import_SNAP_data(dataset_name, min_group_size=1000)
-    seeds = [0.001, 0.01, 0.1]
+    seeds = [0.001, 0.01, 0.1, 0.25, 0.5]
     print('Number of groups', len(groups))
     for seed in seeds:
         pre = preprocessor('col', assume_immutability=True)
@@ -91,24 +91,26 @@ for dataset_name in datasets:
             print(experiment_outcome)
             print("-----")
 
+            print("AUC vs CosLinkAUC", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["CosLinkAUC"]))
+            print("AUC vs DotLinkAUC", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["DotLinkAUC"]))
+            print("AUC vs HopAUC", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["HopAUC"]))
+            print("AUC vs ClusteringCoefficient", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["ClusteringCoefficient"]))
+            print("AUC vs Conductance", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["Conductance"]))
+            print("AUC vs Density", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["Density"]))
+            print("AUC vs Modularity", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["Modularity"]))
+            print('-----')
+            print("NDCG vs CosLinkAUC", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["CosLinkAUC"]))
+            print("NDCG vs DotLinkAUC", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["DotLinkAUC"]))
+            print("NDCG vs HopAUC", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["HopAUC"]))
+            print("NDCG vs ClusteringCoefficient", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["ClusteringCoefficient"]))
+            print("NDCG vs Conductance", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["Conductance"]))
+            print("NDCG vs Density", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["Density"]))
+            print("NDCG vs Modularity", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["Modularity"]))
+            print('-----')
+            print("CosLinkAUC vs Density", scipy.stats.spearmanr(measure_evaluations["CosLinkAUC"], measure_evaluations["Density"]))
+            print("DotLinkAUC vs Density", scipy.stats.spearmanr(measure_evaluations["DotLinkAUC"], measure_evaluations["Density"]))
+
+
+print('-----')
 for name, eval in measure_evaluations.items():
     print(name, eval)
-print('-----')
-print("AUC vs CosLinkAUC", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["CosLinkAUC"]))
-print("AUC vs DotLinkAUC", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["DotLinkAUC"]))
-print("AUC vs HopAUC", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["HopAUC"]))
-print("AUC vs ClusteringCoefficient", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["ClusteringCoefficient"]))
-print("AUC vs Conductance", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["Conductance"]))
-print("AUC vs Density", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["Density"]))
-print("AUC vs Modularity", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["Modularity"]))
-print('-----')
-print("NDCG vs CosLinkAUC", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["CosLinkAUC"]))
-print("NDCG vs DotLinkAUC", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["DotLinkAUC"]))
-print("NDCG vs HopAUC", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["HopAUC"]))
-print("NDCG vs ClusteringCoefficient", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["ClusteringCoefficient"]))
-print("NDCG vs Conductance", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["Conductance"]))
-print("NDCG vs Density", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["Density"]))
-print("NDCG vs Modularity", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["Modularity"]))
-print('-----')
-print("CosLinkAUC vs Density", scipy.stats.spearmanr(measure_evaluations["CosLinkAUC"], measure_evaluations["Density"]))
-print("DotLinkAUC vs Density", scipy.stats.spearmanr(measure_evaluations["DotLinkAUC"], measure_evaluations["Density"]))
