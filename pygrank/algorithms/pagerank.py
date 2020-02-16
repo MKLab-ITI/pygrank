@@ -96,7 +96,7 @@ class HeatKernel:
 class BiasedKernel:
     """ Heuristic kernel-like method that places emphasis on shorter random walks."""
 
-    def __init__(self, alpha=0.85, t=5, to_scipy=None, convergence=None, **kwargs):
+    def __init__(self, alpha=0.85, t=1, to_scipy=None, convergence=None, **kwargs):
         self.alpha = alpha
         self.t = t
         self.to_scipy = pygrank.algorithms.utils.to_scipy_sparse_matrix if to_scipy is None else to_scipy
@@ -118,7 +118,7 @@ class BiasedKernel:
         self.convergence.start()
         while not self.convergence.has_converged(ranks):
             a = self.alpha*self.t/self.convergence.iteration
-            ranks = np.exp(-self.t) * personalization + a * ((ranks * M + sum(ranks[is_dangling]) * personalization) - ranks)
+            ranks = personalization + a * ((ranks * M + sum(ranks[is_dangling]) * personalization) - ranks)
             ranks = ranks/ranks.sum()
 
         ranks = dict(zip(G.nodes(), map(float, ranks)))
