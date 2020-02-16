@@ -28,6 +28,8 @@ def split_groups(groups, fraction_of_training=0.99):
     training = {}
     for group_id, group in groups.items():
         splt = int(len(group)*fraction_of_training)
+        if splt < 1:
+            splt = 1
         # group = list(group) # not really needed if data are already imported as lists
         random.shuffle(group)
         training[group_id] = group[:splt]

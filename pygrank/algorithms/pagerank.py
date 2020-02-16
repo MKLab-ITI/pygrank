@@ -34,6 +34,8 @@ class PageRank:
         degrees = scipy.array(M.sum(axis=1)).flatten()
 
         personalization = scipy.repeat(1.0, len(G)) if personalization is None else scipy.array([personalization.get(n, 0) for n in G], dtype=float)
+        if personalization.sum() == 0:
+            raise Exception("The personalization vector should contain at least one non-zero entity")
         personalization = personalization / personalization.sum()
         ranks = personalization if warm_start is None else scipy.array([warm_start.get(n, 0) for n in G], dtype=float)
 
@@ -73,6 +75,8 @@ class HeatKernel:
         M = self.to_scipy(G)
 
         personalization = scipy.repeat(1.0, len(G)) if personalization is None else scipy.array([personalization.get(n, 0) for n in G], dtype=float)
+        if personalization.sum() == 0:
+            raise Exception("The personalization vector should contain at least one non-zero entity")
         personalization = personalization / personalization.sum()
 
         coefficient = np.exp(-self.t)
@@ -105,6 +109,8 @@ class BiasedKernel:
         degrees = scipy.array(M.sum(axis=1)).flatten()
 
         personalization = scipy.repeat(1.0, len(G)) if personalization is None else scipy.array([personalization.get(n, 0) for n in G], dtype=float)
+        if personalization.sum() == 0:
+            raise Exception("The personalization vector should contain at least one non-zero entity")
         personalization = personalization / personalization.sum()
         ranks = personalization if warm_start is None else scipy.array([warm_start.get(n, 0) for n in G], dtype=float)
 

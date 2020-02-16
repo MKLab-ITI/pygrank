@@ -36,12 +36,13 @@ class LinkAUC:
         ranker: Optional. The ranking algorithm.
         nodes: The list of nodes whose edges are used in for evaluation. If None (default) all graph nodes are used.
     """
-    def __init__(self, G, nodes=None, similarity="cos", max_positive_samples=2000, max_negative_samples=2000, hops=1):
+    def __init__(self, G, nodes=None, similarity="cos", max_positive_samples=2000, max_negative_samples=2000, hops=1, seed=1):
         self.G = G
         self.nodes = list(G) if nodes is None else list(set(list(nodes)))
         self.max_positive_samples = max_positive_samples
         self.max_negative_samples = max_negative_samples
         self.hops = hops
+        self.seed = seed
         if self.G.is_directed():
             warnings.warn("LinkAUC is designed for undirected graphs", stacklevel=2)
         if similarity == "cos":
@@ -52,6 +53,7 @@ class LinkAUC:
             self._similarity = similarity
 
     def evaluate(self, ranks):
+        np.random.seed(self.seed)
         positive_candidates = list(self.G)
         if len(positive_candidates) > self.max_positive_samples:
             positive_candidates = np.random.choice(positive_candidates, self.max_positive_samples)
@@ -89,8 +91,10 @@ class LinkAUC:
 
 class ClusteringCoefficient:
     """https://www.albany.edu/~ravi/pdfs/opsahl_etal_2009.pdf"""
-    def __init__(self, G, similarity="cos"):
+    def __init__(self, G, similarity="cos", max_positive_samples=2000, seed=1):
         self.G = G
+        self.max_positive_samples = max_positive_samples
+        self.seed = seed
         if self.G.is_directed():
             warnings.warn("ClusteringCoefficient is designed for undirected graphs", stacklevel=2)
         if similarity == "cos":
@@ -101,22 +105,28 @@ class ClusteringCoefficient:
             self._similarity = similarity
 
     def evaluate(self, ranks):
+        np.random.seed(self.seed)
+        positive_candidates = list(self.G)
+        if len(positive_candidates) > self.max_positive_samples:
+            positive_candidates = np.random.choice(positive_candidates, self.max_positive_samples)
         existing_triplet_values = 0.
         total_triplet_values = 0
-        for v in self.G:
+        for v in positive_candidates:
             for u1 in self.G.neighbors(v):
                 for u2 in self.G.neighbors(v):
                     value = self._similarity(u1, u2, ranks)
                     if u2 in self.G.neighbors(u1):
                         existing_triplet_values += value
                     total_triplet_values += value
+        if total_triplet_values == 0:
+            return 0
         return existing_triplet_values / total_triplet_values
 
 
 
 class MultiUnsupervised:
-    def __init__(self, metric_type, G):
-        self.metric = metric_type(G)
+    def __init__(self, metric_type, G, **kwargs):
+        self.metric = metric_type(G, **kwargs)
 
     def evaluate(self, ranks):
         evaluations = [self.metric.evaluate(group_ranks) for group_ranks in ranks.values()]
