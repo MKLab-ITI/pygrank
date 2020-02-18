@@ -34,7 +34,7 @@ def import_SNAP_data(dataset, path='data/', pair_file='pairs.txt', group_file='g
     return G, groups
 
 measure_evaluations = {}
-datasets = ['citeseer']
+datasets = ['blockmodel']
 max_iters = 1000
 for dataset_name in datasets:
     G, groups = import_SNAP_data(dataset_name, min_group_size=1)#12000 for dblp
@@ -45,7 +45,6 @@ for dataset_name in datasets:
         preL = preprocessor('symmetric', assume_immutability=True)
         pre(G)
 
-<<<<<<< HEAD
         base_algorithms = {"PPRL 0.85": pygrank.algorithms.pagerank.PageRank(alpha=0.85, to_scipy=preL, max_iters=max_iters),
                       "PPRL 0.90": pygrank.algorithms.pagerank.PageRank(alpha=0.9, to_scipy=preL, max_iters=max_iters),
                       "PPRL 0.95": pygrank.algorithms.pagerank.PageRank(alpha=0.95, to_scipy=preL, max_iters=max_iters),
@@ -61,33 +60,15 @@ for dataset_name in datasets:
                       "HKL1": pygrank.algorithms.pagerank.HeatKernel(t=1, to_scipy=preL, max_iters=max_iters),
                       "HKL3": pygrank.algorithms.pagerank.HeatKernel(t=3, to_scipy=preL, max_iters=max_iters),
                       "HKL5": pygrank.algorithms.pagerank.HeatKernel(t=5, to_scipy=preL, max_iters=max_iters),
-                      "HKL7": pygrank.algorithms.pagerank.HeatKernel(t=7, to_scipy=preL, max_iters=max_iters)}
-=======
-        base_algorithms = {"PPRL 0.85": pygrank.algorithms.pagerank.PageRank(alpha=0.85, to_scipy=preL, max_iters=1000),
-                      "PPRL 0.90": pygrank.algorithms.pagerank.PageRank(alpha=0.9, to_scipy=preL, max_iters=1000),
-                      "PPRL 0.95": pygrank.algorithms.pagerank.PageRank(alpha=0.95, to_scipy=preL, max_iters=1000),
-                      "PPRL 0.99": pygrank.algorithms.pagerank.PageRank(alpha=0.99, to_scipy=preL, max_iters=1000),
-                       "PPR 0.85": pygrank.algorithms.pagerank.PageRank(alpha=0.85, to_scipy=pre, max_iters=1000),
-                       "PPR 0.90": pygrank.algorithms.pagerank.PageRank(alpha=0.9, to_scipy=pre, max_iters=1000),
-                       "PPR 0.95": pygrank.algorithms.pagerank.PageRank(alpha=0.95, to_scipy=pre, max_iters=1000),
-                       "PPR 0.99": pygrank.algorithms.pagerank.PageRank(alpha=0.99, to_scipy=pre, max_iters=1000),
-                       "HPRL 0.85": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.85, to_scipy=preL, max_iters=1000),
-                       "HPRL 0.90": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.9, to_scipy=preL, max_iters=1000),
-                       "HPRL 0.95": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.95, to_scipy=preL, max_iters=1000),
-                       "HPRL 0.99": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.99, to_scipy=preL, max_iters=1000),
-                       "HPR 0.85": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.85, to_scipy=pre, max_iters=1000),
-                       "HPR 0.90": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.9, to_scipy=pre, max_iters=1000),
-                       "HPR 0.95": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.95, to_scipy=pre, max_iters=1000),
-                       "HPR 0.99": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.99, to_scipy=pre, max_iters=1000),
-                      "HK1": pygrank.algorithms.pagerank.HeatKernel(t=1, to_scipy=pre, max_iters=1000),
-                      "HK3": pygrank.algorithms.pagerank.HeatKernel(t=3, to_scipy=pre, max_iters=1000),
-                      "HK5": pygrank.algorithms.pagerank.HeatKernel(t=5, to_scipy=pre, max_iters=1000),
-                      "HK7": pygrank.algorithms.pagerank.HeatKernel(t=7, to_scipy=pre, max_iters=1000),
-                      "HKL1": pygrank.algorithms.pagerank.HeatKernel(t=1, to_scipy=preL, max_iters=1000),
-                      "HKL3": pygrank.algorithms.pagerank.HeatKernel(t=3, to_scipy=preL, max_iters=1000),
-                      "HKL5": pygrank.algorithms.pagerank.HeatKernel(t=5, to_scipy=preL, max_iters=1000),
-                      "HKL7": pygrank.algorithms.pagerank.HeatKernel(t=7, to_scipy=preL, max_iters=1000)}
->>>>>>> 4dac2fa09180ab3edee08238d1b7f8d2a082b745
+                      "HKL7": pygrank.algorithms.pagerank.HeatKernel(t=7, to_scipy=preL, max_iters=max_iters),
+                       "HPRL 0.85": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.85, to_scipy=preL, max_iters=max_iters),
+                       "HPRL 0.90": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.9, to_scipy=preL, max_iters=max_iters),
+                       "HPRL 0.95": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.95, to_scipy=preL, max_iters=max_iters),
+                       "HPRL 0.99": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.99, to_scipy=preL, max_iters=max_iters),
+                       "HPR 0.85": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.85, to_scipy=pre, max_iters=max_iters),
+                       "HPR 0.90": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.9, to_scipy=pre, max_iters=max_iters),
+                       "HPR 0.95": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.95, to_scipy=pre, max_iters=max_iters),
+                       "HPR 0.99": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.99, to_scipy=pre, max_iters=max_iters),}
         algorithms = dict()
         for alg_name, alg in base_algorithms.items():
             algorithms[alg_name] = alg
@@ -95,7 +76,7 @@ for dataset_name in datasets:
             algorithms[alg_name+" I"] = pygrank.algorithms.oversampling.SeedOversampling(alg, method="neighbors")
         experiments = list()
 
-        max_positive_samples = 200
+        max_positive_samples = 2000
         training_groups, test_groups = pygrank.metrics.utils.split_groups(groups, fraction_of_training=seed)
         test_group_ranks = pygrank.metrics.utils.to_seeds(test_groups)
         measures = {"AUC": pygrank.metrics.multigroup.MultiSupervised(pygrank.metrics.supervised.AUC, test_group_ranks),

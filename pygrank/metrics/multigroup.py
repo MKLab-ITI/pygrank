@@ -62,30 +62,45 @@ class LinkAUC:
             negative_candidates = np.random.choice(negative_candidates, self.max_negative_samples)
         real = list()
         predicted = list()
-        weights = list()
-        for node in positive_candidates:#tqdm.tqdm(positive_candidates, desc="LinkAUC"):
-            neighbors = {node: 0.}
-            pending = [node]
-            while len(pending) != 0:
-                next_node = pending.pop()
-                hops = neighbors[next_node]
-                if hops < self.hops:
-                    for neighbor in self.G._adj[next_node]:
-                        if neighbor not in neighbors:
-                            neighbors[neighbor] = hops + 1
-                            pending.append(neighbor)
-            for positive in neighbors:
-                if positive != node:
+        if self.hops == -1:
+            for v in positive_candidates:
+                for u in self.G._adj[v]:
                     real.append(1)
-                    predicted.append(self._similarity(node, positive, ranks))
-                    #weights.append(1)
-                    weights.append(1.-(neighbors[positive]-1)/self.hops)
-            for negative in negative_candidates:
-                if negative != node and negative not in neighbors:
-                    real.append(0)
-                    predicted.append(self._similarity(node, negative, ranks))
-                    weights.append(1)
-        fpr, tpr, _ = sklearn.metrics.roc_curve(real, predicted, sample_weight=weights)
+                    predicted.append(self._similarity(v, u, ranks))
+                    for negative in self.G._adj[v]:
+                        if not self.G.has_edge(u, negative):
+                            real.append(0)
+                            predicted.append(self._similarity(u, negative, ranks))
+                    for negative in self.G._adj[u]:
+                        if not self.G.has_edge(v, negative):
+                            real.append(0)
+                            predicted.append(self._similarity(v, negative, ranks))
+                    fpr, tpr, _ = sklearn.metrics.roc_curve(real, predicted)
+        else:
+            weights = list()
+            for node in positive_candidates:#tqdm.tqdm(positive_candidates, desc="LinkAUC"):
+                neighbors = {node: 0.}
+                pending = [node]
+                while len(pending) != 0:
+                    next_node = pending.pop()
+                    hops = neighbors[next_node]
+                    if hops < self.hops:
+                        for neighbor in self.G._adj[next_node]:
+                            if neighbor not in neighbors:
+                                neighbors[neighbor] = hops + 1
+                                pending.append(neighbor)
+                for positive in neighbors:
+                    if positive != node:
+                        real.append(1)
+                        predicted.append(self._similarity(node, positive, ranks))
+                        weights.append(1)
+                        #weights.append(1.-(neighbors[positive]-1)/self.hops)
+                for negative in negative_candidates:
+                    if negative != node and negative not in neighbors:
+                        real.append(0)
+                        predicted.append(self._similarity(node, negative, ranks))
+                        weights.append(1)
+            fpr, tpr, _ = sklearn.metrics.roc_curve(real, predicted, sample_weight=weights)
         return sklearn.metrics.auc(fpr, tpr)
 
 
@@ -114,7 +129,7 @@ class ClusteringCoefficient:
         for v in positive_candidates:
             for u1 in self.G.neighbors(v):
                 for u2 in self.G.neighbors(v):
-                    value = self._similarity(u1, u2, ranks)
+                    value = self._similarity(u1, u2, ranks)*self._similarity(v, u2, ranks)*self._similarity(v, u2, ranks)
                     if u2 in self.G.neighbors(u1):
                         existing_triplet_values += value
                     total_triplet_values += value

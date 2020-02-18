@@ -101,7 +101,6 @@ class BiasedKernel:
         self.t = t
         self.to_scipy = pygrank.algorithms.utils.to_scipy_sparse_matrix if to_scipy is None else to_scipy
         self.convergence = pygrank.algorithms.utils.ConvergenceManager(**kwargs) if convergence is None else convergence
-        warnings.warn("BiasedKernel is still under development (its implementation may be incorrect)", stacklevel=2)
         warnings.warn("BiasedKernel is a low-quality heuristic", stacklevel=2)
 
     def rank(self, G, personalization=None, warm_start=None):
