@@ -129,10 +129,15 @@ class ClusteringCoefficient:
         for v in positive_candidates:
             for u1 in self.G.neighbors(v):
                 for u2 in self.G.neighbors(v):
+                    """
                     value = self._similarity(u1, u2, ranks)*self._similarity(v, u2, ranks)*self._similarity(v, u2, ranks)
                     if u2 in self.G.neighbors(u1):
                         existing_triplet_values += value
                     total_triplet_values += value
+                    """
+                    if u2 in self.G.neighbors(u1):
+                        total_triplet_values += 1
+                    existing_triplet_values += self._similarity(u1, u2, ranks)
         if total_triplet_values == 0:
             return 0
         return existing_triplet_values / total_triplet_values

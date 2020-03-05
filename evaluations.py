@@ -22,6 +22,7 @@ def import_SNAP_data(dataset, path='data/', pair_file='pairs.txt', group_file='g
                 G.add_edge(splt[0], splt[1])
     if import_label_file:
         pass
+
     else:
         with open(path+dataset+'/'+group_file, 'r', encoding='utf-8') as file:
             for line in file:
@@ -34,10 +35,15 @@ def import_SNAP_data(dataset, path='data/', pair_file='pairs.txt', group_file='g
     return G, groups
 
 measure_evaluations = {}
-datasets = ['blockmodel']
-max_iters = 1000
+datasets = ['dblp']
+max_iters = 10000
 for dataset_name in datasets:
-    G, groups = import_SNAP_data(dataset_name, min_group_size=1)#12000 for dblp
+    G, groups = import_SNAP_data(dataset_name, min_group_size=12000)#12000 for dblp, 5000 for amazon
+    group_sets = [set(group) for group in groups.values()]
+    for group in group_sets:
+        print(len(group))
+    count = sum(1 for u, v in G.edges() if sum(1 for group in group_sets if u in group and v in group) > 0)
+    print('Homophily', count / float(G.number_of_edges()))
     seeds = [0.001, 0.01, 0.1, 0.25, 0.5]
     print('Number of groups', len(groups))
     for seed in seeds:
@@ -45,30 +51,30 @@ for dataset_name in datasets:
         preL = preprocessor('symmetric', assume_immutability=True)
         pre(G)
 
-        base_algorithms = {"PPRL 0.85": pygrank.algorithms.pagerank.PageRank(alpha=0.85, to_scipy=preL, max_iters=max_iters),
-                      "PPRL 0.90": pygrank.algorithms.pagerank.PageRank(alpha=0.9, to_scipy=preL, max_iters=max_iters),
-                      "PPRL 0.95": pygrank.algorithms.pagerank.PageRank(alpha=0.95, to_scipy=preL, max_iters=max_iters),
-                      "PPRL 0.99": pygrank.algorithms.pagerank.PageRank(alpha=0.99, to_scipy=preL, max_iters=max_iters),
-                       "PPR 0.85": pygrank.algorithms.pagerank.PageRank(alpha=0.85, to_scipy=pre, max_iters=max_iters),
-                       "PPR 0.90": pygrank.algorithms.pagerank.PageRank(alpha=0.9, to_scipy=pre, max_iters=max_iters),
-                       "PPR 0.95": pygrank.algorithms.pagerank.PageRank(alpha=0.95, to_scipy=pre, max_iters=max_iters),
-                       "PPR 0.99": pygrank.algorithms.pagerank.PageRank(alpha=0.99, to_scipy=pre, max_iters=max_iters),
-                      "HK1": pygrank.algorithms.pagerank.HeatKernel(t=1, to_scipy=pre, max_iters=max_iters),
-                      "HK3": pygrank.algorithms.pagerank.HeatKernel(t=3, to_scipy=pre, max_iters=max_iters),
-                      "HK5": pygrank.algorithms.pagerank.HeatKernel(t=5, to_scipy=pre, max_iters=max_iters),
-                      "HK7": pygrank.algorithms.pagerank.HeatKernel(t=7, to_scipy=pre, max_iters=max_iters),
-                      "HKL1": pygrank.algorithms.pagerank.HeatKernel(t=1, to_scipy=preL, max_iters=max_iters),
-                      "HKL3": pygrank.algorithms.pagerank.HeatKernel(t=3, to_scipy=preL, max_iters=max_iters),
-                      "HKL5": pygrank.algorithms.pagerank.HeatKernel(t=5, to_scipy=preL, max_iters=max_iters),
-                      "HKL7": pygrank.algorithms.pagerank.HeatKernel(t=7, to_scipy=preL, max_iters=max_iters),
-                       "HPRL 0.85": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.85, to_scipy=preL, max_iters=max_iters),
-                       "HPRL 0.90": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.9, to_scipy=preL, max_iters=max_iters),
-                       "HPRL 0.95": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.95, to_scipy=preL, max_iters=max_iters),
-                       "HPRL 0.99": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.99, to_scipy=preL, max_iters=max_iters),
-                       "HPR 0.85": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.85, to_scipy=pre, max_iters=max_iters),
-                       "HPR 0.90": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.9, to_scipy=pre, max_iters=max_iters),
-                       "HPR 0.95": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.95, to_scipy=pre, max_iters=max_iters),
-                       "HPR 0.99": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.99, to_scipy=pre, max_iters=max_iters),}
+        base_algorithms = {"PPRL 0.85": pygrank.algorithms.pagerank.PageRank(alpha=0.85, to_scipy=preL, max_iters=max_iters, tol=1.E-9),
+                      "PPRL 0.90": pygrank.algorithms.pagerank.PageRank(alpha=0.9, to_scipy=preL, max_iters=max_iters, tol=1.E-9),
+                      "PPRL 0.95": pygrank.algorithms.pagerank.PageRank(alpha=0.95, to_scipy=preL, max_iters=max_iters, tol=1.E-9),
+                      "PPRL 0.99": pygrank.algorithms.pagerank.PageRank(alpha=0.99, to_scipy=preL, max_iters=max_iters, tol=1.E-9),
+                       "PPR 0.85": pygrank.algorithms.pagerank.PageRank(alpha=0.85, to_scipy=pre, max_iters=max_iters, tol=1.E-9),
+                       "PPR 0.90": pygrank.algorithms.pagerank.PageRank(alpha=0.9, to_scipy=pre, max_iters=max_iters, tol=1.E-9),
+                       "PPR 0.95": pygrank.algorithms.pagerank.PageRank(alpha=0.95, to_scipy=pre, max_iters=max_iters, tol=1.E-9),
+                       "PPR 0.99": pygrank.algorithms.pagerank.PageRank(alpha=0.99, to_scipy=pre, max_iters=max_iters, tol=1.E-9),
+                      "HK1": pygrank.algorithms.pagerank.HeatKernel(t=1, to_scipy=pre, max_iters=max_iters, tol=1.E-9),
+                      "HK3": pygrank.algorithms.pagerank.HeatKernel(t=3, to_scipy=pre, max_iters=max_iters, tol=1.E-9),
+                      "HK5": pygrank.algorithms.pagerank.HeatKernel(t=5, to_scipy=pre, max_iters=max_iters, tol=1.E-9),
+                      "HK7": pygrank.algorithms.pagerank.HeatKernel(t=7, to_scipy=pre, max_iters=max_iters, tol=1.E-9),
+                      "HKL1": pygrank.algorithms.pagerank.HeatKernel(t=1, to_scipy=preL, max_iters=max_iters, tol=1.E-9),
+                      "HKL3": pygrank.algorithms.pagerank.HeatKernel(t=3, to_scipy=preL, max_iters=max_iters, tol=1.E-9),
+                      "HKL5": pygrank.algorithms.pagerank.HeatKernel(t=5, to_scipy=preL, max_iters=max_iters, tol=1.E-9),
+                      "HKL7": pygrank.algorithms.pagerank.HeatKernel(t=7, to_scipy=preL, max_iters=max_iters, tol=1.E-9),
+                       "HPRL 0.85": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.85, to_scipy=preL, max_iters=max_iters, tol=1.E-9),
+                       "HPRL 0.90": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.9, to_scipy=preL, max_iters=max_iters, tol=1.E-9),
+                       "HPRL 0.95": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.95, to_scipy=preL, max_iters=max_iters, tol=1.E-9),
+                       "HPRL 0.99": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.99, to_scipy=preL, max_iters=max_iters, tol=1.E-9),
+                       "HPR 0.85": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.85, to_scipy=pre, max_iters=max_iters, tol=1.E-9),
+                       "HPR 0.90": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.9, to_scipy=pre, max_iters=max_iters, tol=1.E-9),
+                       "HPR 0.95": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.95, to_scipy=pre, max_iters=max_iters, tol=1.E-9),
+                       "HPR 0.99": pygrank.algorithms.pagerank.BiasedKernel(alpha=0.99, to_scipy=pre, max_iters=max_iters, tol=1.E-9),}
         algorithms = dict()
         for alg_name, alg in base_algorithms.items():
             algorithms[alg_name] = alg
@@ -104,25 +110,14 @@ for dataset_name in datasets:
                 experiment_outcome += " & "+str(measure_outcome)
             #print(experiment_outcome)
         print("-----")
-        print("NDCG vs CosLinkAUC", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["CosLinkAUC"]))
-        print("NDCG vs DotLinkAUC", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["DotLinkAUC"]))
-        print("NDCG vs HopAUC", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["HopAUC"]))
-        print("NDCG vs ClusteringCoefficient", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["ClusteringCoefficient"]))
-        print("NDCG vs Conductance", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["Conductance"]))
-        print("NDCG vs Density", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["Density"]))
-        print("NDCG vs Modularity", scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations["Modularity"]))
+        for measure in measure_evaluations:
+            if measure != 'NDCG' and measure != 'AUC':
+                print("NDCG vs", measure, scipy.stats.spearmanr(measure_evaluations["NDCG"], measure_evaluations[measure]))
         print('-----')
-        print("AUC vs CosLinkAUC", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["CosLinkAUC"]))
-        print("AUC vs DotLinkAUC", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["DotLinkAUC"]))
-        print("AUC vs HopAUC", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["HopAUC"]))
-        print("AUC vs ClusteringCoefficient", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["ClusteringCoefficient"]))
-        print("AUC vs Conductance", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["Conductance"]))
-        print("AUC vs Density", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["Density"]))
-        print("AUC vs Modularity", scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations["Modularity"]))
-        print('-----')
-        print("CosLinkAUC vs Density", scipy.stats.spearmanr(measure_evaluations["CosLinkAUC"], measure_evaluations["Density"]))
-        #print("DotLinkAUC vs Density", scipy.stats.spearmanr(measure_evaluations["DotLinkAUC"], measure_evaluations["Density"]))
-
+        for measure in measure_evaluations:
+            if measure != 'NDCG' and measure != 'AUC':
+                print("AUC vs", measure, scipy.stats.spearmanr(measure_evaluations["AUC"], measure_evaluations[measure]))
+        print('This is the latest version')
 
         print('-----')
         for name, eval in measure_evaluations.items():
