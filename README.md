@@ -7,7 +7,7 @@ pip install pygrank
 ```
 
 ## Usage
-###### How to run a PageRank algorithm
+###### Run a PageRank algorithm with seed oversampling
 ```python
 import networkx as nx
 from pygrank.algorithms.pagerank import PageRank as Ranker
@@ -17,11 +17,26 @@ G = nx.Graph()
 seeds = list()
 ... # insert graph nodes and select some of them as seeds (e.g. see tests.py)
 
-algorithm = Oversampler(Ranker(alpha=0.85, tol=1.E-6, max_iters=100)) # default values used
+algorithm = Oversampler(Ranker(alpha=0.85, tol=1.E-6, max_iters=100)) # these are the default values
 ranks = algorithm.rank(G, {v: 1 for v in seeds})
 ```
 
-###### Hash the outcome of graph normalization to speed up multiple calls on the same graph
+###### Run a PageRank algorithm and make it converge to a robust node order
+```python
+import networkx as nx
+from pygrank.algorithms.pagerank import PageRank as Ranker
+from pygrank.algorithms.utils import RankOrderConvergenceManager
+
+G = nx.Graph()
+seeds = list()
+... # insert graph nodes and select some of them as seeds (e.g. see tests.py)
+alpha = 0.85
+
+algorithm = Ranker(alpha=alpha, convergence=RankOrderConvergenceManager(alpha))
+ranks = algorithm.rank(G, {v: 1 for v in seeds})
+```
+
+###### Hash the outcome of graph normalization to speed up multiple calls to the same graph
 ```python
 import networkx as nx
 from pygrank.algorithms.pagerank import PageRank as Ranker
@@ -125,5 +140,14 @@ print(auc.evaluate(ranks))
   pages={3--14},
   year={2019},
   organization={Springer}
+}
+```
+
+```
+@unpublished{krasanakis2020stopping,
+  title={Stopping Personalized PageRank without an Error Tolerance Parameter},
+  author={Krasanakis, Emmanouil and Papadopoulos, Symeon and Kompatsiaris, Ioannis},
+  year={2020},
+  note = {unpublished}
 }
 ```
