@@ -118,7 +118,25 @@ class Test(unittest.TestCase):
         G = create_test_graph()
         ranks1 = Ranker().rank(G, personalization = {"A": 1, "B": 1})
         ranks2 = Ranker().rank(G, personalization = {"F": 1, "G": 1})
-        print('LinkAUC', LinkAUC(G).evaluate({"group1": ranks1, "groups2": ranks2}))
+        print('LinkAUC', LinkAUC(G, hops=2).evaluate({"group1": ranks1, "groups2": ranks2}))
+        print('HopAUC', LinkAUC(G, hops=2).evaluate({"group1": ranks1, "groups2": ranks2}))
+
+    def test_absorbing(self):
+        from pygrank.algorithms.pagerank import AbsorbingRank as Ranker
+        G = create_test_graph()
+        ranks1 = Ranker(max_iters=1000).rank(G, personalization={"A": 1, "B": 1})
+        ranks2 = Ranker(max_iters=1000).rank(G, personalization={"F": 1, "G": 1})
+        from pygrank.metrics.multigroup import LinkAUC as LinkAUC
+        print('Absorbing HopAUC', LinkAUC(G, hops=2).evaluate({"group1": ranks1, "groups2": ranks2}))
+
+    def test_oversampling_top(self):
+        from pygrank.algorithms.pagerank import AbsorbingRank as Ranker
+        from pygrank.algorithms.oversampling import SeedOversampling
+        G = create_test_graph()
+        ranks1 = SeedOversampling(Ranker(max_iters=1000), method="top").rank(G, personalization={"A": 1, "B": 1})
+        ranks2 = SeedOversampling(Ranker(max_iters=1000), method="top").rank(G, personalization={"F": 1, "G": 1})
+        from pygrank.metrics.multigroup import LinkAUC as LinkAUC
+        print('Top Oversampling + Absorbing HopAUC', LinkAUC(G, hops=2).evaluate({"group1": ranks1, "groups2": ranks2}))
 
 
 if __name__ == '__main__':

@@ -93,6 +93,56 @@ class HeatKernel:
         return ranks
 
 
+class AbsorbingRank:
+    """ Implementation of partial absorbing random walks for Lambda = aI
+    Wu, Xiao-Ming, et al. "Learning with partially absorbing random walks." Advances in neural information processing systems. 2012.
+    """
+
+    def __init__(self, alpha=1-1.E-6, to_scipy=None, use_quotient=True, convergence=None, **kwargs):
+        """ Initializes the AbsorbingRank filter parameters.
+
+        Attributes:
+            alpha: Optional. (1-alpha)/alpha is the absorbsion rate of the random walk. This is chosen to yield the
+                same underlying meaning as PageRank (for which Lambda = a Diag(degrees) instead of aI)
+            to_scipy: Optional. Method to extract a scipy sparse matrix from a networkx graph.
+                If None (default), pygrank.algorithms.utils.to_scipy_sparse_matrix with default arguments is used.
+            convergence: Optional. The ConvergenceManager that determines when iterations stop. If None (default),
+                a ConvergenceManager with the additional keyword arguments is constructed.
+            use_quotient: Optional. If True (default) performs a L1 re-normalization of ranks after each iteration.
+                This significantly speeds ups the convergence speed.
+
+        Example:
+            >>> from pygrank.algorithms import pagerank
+            >>> algorithm = pagerank.HeatKernel(t=5, tol=1.E-9) # tol passed to the ConvergenceManager
+        """
+        self.alpha = float(alpha) # typecast to make sure that a graph is not accidentally the first argument
+        self.to_scipy = pygrank.algorithms.utils.to_scipy_sparse_matrix if to_scipy is None else to_scipy
+        self.convergence = pygrank.algorithms.utils.ConvergenceManager(**kwargs) if convergence is None else convergence
+        self.use_quotient = use_quotient
+
+
+    def rank(self, G, personalization=None, warm_start=None):
+        M = self.to_scipy(G)
+        degrees = scipy.array(M.sum(axis=1)).flatten()
+
+        personalization = scipy.repeat(1.0, len(G)) if personalization is None else scipy.array([personalization.get(n, 0) for n in G], dtype=float)
+        if personalization.sum() == 0:
+            raise Exception("The personalization vector should contain at least one non-zero entity")
+        personalization = personalization / personalization.sum()
+        ranks = personalization if warm_start is None else scipy.array([warm_start.get(n, 0) for n in G], dtype=float)
+
+        is_dangling = scipy.where(degrees == 0)[0]
+        self.convergence.start()
+        a = (1-self.alpha)/self.alpha
+        while not self.convergence.has_converged(ranks):
+            ranks = (ranks * M + sum(ranks[is_dangling]) * personalization)*degrees/(a+degrees) + personalization*a/(a+degrees)
+            if self.use_quotient:
+                ranks = ranks/ranks.sum()
+
+        ranks = dict(zip(G.nodes(), map(float, ranks)))
+        return ranks
+
+
 class BiasedKernel:
     """ Heuristic kernel-like method that places emphasis on shorter random walks."""
 

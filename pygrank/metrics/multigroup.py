@@ -36,13 +36,14 @@ class LinkAUC:
         ranker: Optional. The ranking algorithm.
         nodes: The list of nodes whose edges are used in for evaluation. If None (default) all graph nodes are used.
     """
-    def __init__(self, G, nodes=None, similarity="cos", max_positive_samples=2000, max_negative_samples=2000, hops=1, seed=1):
+    def __init__(self, G, nodes=None, evaluation="AUC", similarity="cos", max_positive_samples=2000, max_negative_samples=2000, hops=1, seed=1):
         self.G = G
         self.nodes = list(G) if nodes is None else list(set(list(nodes)))
         self.max_positive_samples = max_positive_samples
         self.max_negative_samples = max_negative_samples
         self.hops = hops
         self.seed = seed
+        self.evaluation = evaluation
         if self.G.is_directed():
             warnings.warn("LinkAUC is designed for undirected graphs", stacklevel=2)
         if similarity == "cos":
@@ -100,8 +101,13 @@ class LinkAUC:
                         real.append(0)
                         predicted.append(self._similarity(node, negative, ranks))
                         weights.append(1)
+        if self.evaluation == "AUC":
             fpr, tpr, _ = sklearn.metrics.roc_curve(real, predicted, sample_weight=weights)
-        return sklearn.metrics.auc(fpr, tpr)
+            return sklearn.metrics.auc(fpr, tpr)
+        elif self.evaluation == "CrossEntropy":
+            return sum(-weights[i]*(np.log(predicted[i]+1.E-12) if real[i] == 1 else np.log(1-predicted[i]+1.E-12)) for i in range(len(real)))
+        else:
+            raise Exception("Invalid evaluation function (only AUC and CrossEntropy are accepted)")
 
 
 class ClusteringCoefficient:
