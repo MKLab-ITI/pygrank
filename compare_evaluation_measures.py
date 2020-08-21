@@ -1,3 +1,7 @@
+"""
+This file covers the experiments of the paper: Unsupervised evaluation of multiple node ranks by reconstructing local structures
+"""
+
 import networkx as nx
 from pygrank.algorithms.utils import preprocessor
 import pygrank.algorithms.pagerank
@@ -35,10 +39,10 @@ def import_SNAP_data(dataset, path='data/', pair_file='pairs.txt', group_file='g
     return G, groups
 
 measure_evaluations = {}
-datasets = ['dblp']
+datasets = ['amazon']
 max_iters = 10000
 for dataset_name in datasets:
-    G, groups = import_SNAP_data(dataset_name, min_group_size=12000)#12000 for dblp, 5000 for amazon
+    G, groups = import_SNAP_data(dataset_name, min_group_size=5000)#12000 for dblp, 5000 for amazon
     group_sets = [set(group) for group in groups.values()]
     for group in group_sets:
         print(len(group))
@@ -50,7 +54,7 @@ for dataset_name in datasets:
         pre = preprocessor('col', assume_immutability=True)
         preL = preprocessor('symmetric', assume_immutability=True)
         pre(G)
-        tol = 1.E-9
+        tol = 1.E-6
         base_algorithms = {"PPRL 0.85": pygrank.algorithms.pagerank.PageRank(alpha=0.85, to_scipy=preL, max_iters=max_iters, tol=tol),
                       "PPRL 0.90": pygrank.algorithms.pagerank.PageRank(alpha=0.9, to_scipy=preL, max_iters=max_iters, tol=tol),
                       "PPRL 0.95": pygrank.algorithms.pagerank.PageRank(alpha=0.95, to_scipy=preL, max_iters=max_iters, tol=tol),
@@ -89,7 +93,7 @@ for dataset_name in datasets:
             algorithms[alg_name] = alg
             algorithms[alg_name+" SO"] = pygrank.algorithms.oversampling.SeedOversampling(alg, method="safe")
             algorithms[alg_name+" I"] = pygrank.algorithms.oversampling.SeedOversampling(alg, method="neighbors")
-            algorithms[alg_name+" T"] = pygrank.algorithms.oversampling.SeedOversampling(alg, method="top")
+            #algorithms[alg_name+" T"] = pygrank.algorithms.oversampling.SeedOversampling(alg, method="top")
         experiments = list()
 
         max_positive_samples = 2000
@@ -101,13 +105,13 @@ for dataset_name in datasets:
                     "ClusteringCoefficient": pygrank.metrics.multigroup.ClusteringCoefficient(G, similarity="cos", max_positive_samples=max_positive_samples),
                     "Density": pygrank.metrics.multigroup.MultiUnsupervised(pygrank.metrics.unsupervised.Density, G),
                     "Modularity": pygrank.metrics.multigroup.MultiUnsupervised(pygrank.metrics.unsupervised.Modularity, G, max_positive_samples=max_positive_samples),
-                    "DotLinkAUC": pygrank.metrics.multigroup.LinkAUC(G, similarity="dot", max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples),
+                    #"DotLinkAUC": pygrank.metrics.multigroup.LinkAUC(G, similarity="dot", max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples),
                     "CosLinkAUC": pygrank.metrics.multigroup.LinkAUC(G, similarity="cos", max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples),
                     "HopAUC": pygrank.metrics.multigroup.LinkAUC(G, similarity="cos", hops=2,max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples),
                     "LinkCE": pygrank.metrics.multigroup.LinkAUC(G, evaluation="CrossEntropy", similarity="cos", hops=1,max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples),
                     "HopCE": pygrank.metrics.multigroup.LinkAUC(G, evaluation="CrossEntropy", similarity="cos", hops=2,max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples)
                     }
-        if len(measure_evaluations)==0:
+        if len(measure_evaluations) == 0:
             for measure_name in measures.keys():
                 measure_evaluations[measure_name] = list()
         for alg_name, alg in algorithms.items():
@@ -118,7 +122,7 @@ for dataset_name in datasets:
             for measure_name, measure in measures.items():
                 measure_outcome = measure.evaluate(ranks)
                 measure_evaluations[measure_name].append(measure_outcome)
-                #print("\t", measure_name, measure_outcome)
+                print("\t", measure_name, measure_outcome)
                 experiment_outcome += " & "+str(measure_outcome)
             #print(experiment_outcome)
         print("-----")

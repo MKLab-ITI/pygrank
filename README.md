@@ -123,6 +123,26 @@ print(auc.evaluate(ranks))
 
 ## References
 ```
+@article{krasanakis2020unsupervised,
+  title={Unsupervised evaluation of multiple node ranks by reconstructing local structures},
+  author={Krasanakis, Emmanouil and Papadopoulos, Symeon and Kompatsiaris, Yiannis},
+  journal={Applied Network Science},
+  volume={5},
+  number={1},
+  pages={1--32},
+  year={2020},
+  publisher={Springer}
+}
+```
+```
+@unpublished{krasanakis2020stopping,
+  title={Stopping Personalized PageRank without an Error Tolerance Parameter},
+  author={Krasanakis, Emmanouil and Papadopoulos, Symeon and Kompatsiaris, Ioannis},
+  year={2020},
+  note = {unpublished}
+}
+```
+```
 @article{krasanakis2019boosted,
   title={Boosted seed oversampling for local community ranking},
   author={Krasanakis, Emmanouil and Schinas, Emmanouil and Papadopoulos, Symeon and Kompatsiaris, Yiannis and Symeonidis, Andreas},
@@ -142,12 +162,12 @@ print(auc.evaluate(ranks))
   organization={Springer}
 }
 ```
-
 ```
-@unpublished{krasanakis2020stopping,
-  title={Stopping Personalized PageRank without an Error Tolerance Parameter},
-  author={Krasanakis, Emmanouil and Papadopoulos, Symeon and Kompatsiaris, Ioannis},
-  year={2020},
-  note = {unpublished}
+@inproceedings{krasanakis2018venuerank,
+  title={VenueRank: Identifying Venues that Contribute to Artist Popularity.},
+  author={Krasanakis, Emmanouil and Schinas, Emmanouil and Papadopoulos, Symeon and Kompatsiaris, Yiannis and Mitkas, Pericles A},
+  booktitle={ISMIR},
+  pages={702--708},
+  year={2018}
 }
 ```

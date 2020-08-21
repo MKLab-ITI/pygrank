@@ -59,8 +59,6 @@ class LinkAUC:
         if len(positive_candidates) > self.max_positive_samples:
             positive_candidates = np.random.choice(positive_candidates, self.max_positive_samples)
         negative_candidates = list(self.G)
-        if len(negative_candidates) > self.max_negative_samples:
-            negative_candidates = np.random.choice(negative_candidates, self.max_negative_samples)
         real = list()
         predicted = list()
         if self.hops == -1:
@@ -96,7 +94,7 @@ class LinkAUC:
                         predicted.append(self._similarity(node, positive, ranks))
                         weights.append(1)
                         #weights.append(1.-(neighbors[positive]-1)/self.hops)
-                for negative in negative_candidates:
+                for negative in np.random.choice(negative_candidates, min(self.max_negative_samples, len(negative_candidates))):
                     if negative != node and negative not in neighbors:
                         real.append(0)
                         predicted.append(self._similarity(node, negative, ranks))
@@ -105,7 +103,8 @@ class LinkAUC:
             fpr, tpr, _ = sklearn.metrics.roc_curve(real, predicted, sample_weight=weights)
             return sklearn.metrics.auc(fpr, tpr)
         elif self.evaluation == "CrossEntropy":
-            return sum(-weights[i]*(np.log(predicted[i]+1.E-12) if real[i] == 1 else np.log(1-predicted[i]+1.E-12)) for i in range(len(real)))
+            total_weight = len(weights)
+            return sum(-weights[i]/total_weight*(np.log(predicted[i]) if real[i] == 1 else np.log(1-predicted[i])) for i in range(len(real)) if predicted[i]>0 and predicted[i]<1)
         else:
             raise Exception("Invalid evaluation function (only AUC and CrossEntropy are accepted)")
 

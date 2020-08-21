@@ -7,7 +7,7 @@ import pygrank.algorithms.utils
 class PageRank:
     """A Personalized PageRank power method algorithm. Supports warm start."""
 
-    def __init__(self, alpha=0.85, to_scipy=None, convergence=None, use_quotient=True, **kwargs):
+    def __init__(self, alpha=0.85, to_scipy=None, convergence=None, use_quotient=True, converge_to_eigenvectors=False, **kwargs):
         """ Initializes the PageRank scheme parameters.
 
         Attributes:
@@ -19,6 +19,13 @@ class PageRank:
             use_quotient: Optional. If True (default) performs a L1 re-normalization of ranks after each iteration.
                 This significantly speeds ups the convergence speed of symmetric normalization (col normalization
                 preserves the L1 norm during computations on its own).
+            converge_to_eigenvectors: Optional. If True (default is False) the outcome of ranking does not depend on
+                the alpha parameters and only weakly on potential personalization. Instead ranking strongly biased
+                towards the principal eigenvector. If more than one near-max eigenvalues of to_scipy(graph) exist
+                then this scheme selects one based on the personalization scheme, otherwise the principal eigenvector
+                is outputted. When the graph is bipartite, using this and the argument use_quotient=False
+                effectively toggles the behavior described in
+                `VenueRank: Identifying Venues that Contribute to Artist Popularity`.
 
         Example:
             >>> from pygrank.algorithms import pagerank
@@ -28,6 +35,7 @@ class PageRank:
         self.to_scipy = pygrank.algorithms.utils.to_scipy_sparse_matrix if to_scipy is None else to_scipy
         self.convergence = pygrank.algorithms.utils.ConvergenceManager(**kwargs) if convergence is None else convergence
         self.use_quotient = use_quotient
+        self.converge_to_eigenvectors = converge_to_eigenvectors
 
     def rank(self, G, personalization=None, warm_start=None):
         M = self.to_scipy(G)
@@ -45,6 +53,8 @@ class PageRank:
             ranks = self.alpha * (ranks * M + sum(ranks[is_dangling]) * personalization) + (1 - self.alpha) * personalization
             if self.use_quotient:
                 ranks = ranks/ranks.sum()
+            if self.converge_to_eigenvectors:
+                personalization = ranks
 
         ranks = dict(zip(G.nodes(), map(float, ranks)))
         return ranks
@@ -120,8 +130,7 @@ class AbsorbingRank:
         self.convergence = pygrank.algorithms.utils.ConvergenceManager(**kwargs) if convergence is None else convergence
         self.use_quotient = use_quotient
 
-
-    def rank(self, G, personalization=None, warm_start=None):
+    def rank(self, G, personalization=None, absorbtion=None, warm_start=None):
         M = self.to_scipy(G)
         degrees = scipy.array(M.sum(axis=1)).flatten()
 
@@ -133,9 +142,9 @@ class AbsorbingRank:
 
         is_dangling = scipy.where(degrees == 0)[0]
         self.convergence.start()
-        a = (1-self.alpha)/self.alpha
+        diag_of_lamda = (1-self.alpha)/self.alpha * (scipy.repeat(1.0, len(G)) if absorbtion is None else scipy.array([absorbtion.get(n, 0) for n in G], dtype=float))
         while not self.convergence.has_converged(ranks):
-            ranks = (ranks * M + sum(ranks[is_dangling]) * personalization)*degrees/(a+degrees) + personalization*a/(a+degrees)
+            ranks = (ranks * M + sum(ranks[is_dangling]) * personalization)*degrees/(diag_of_lamda+degrees) + personalization*diag_of_lamda/(diag_of_lamda+degrees)
             if self.use_quotient:
                 ranks = ranks/ranks.sum()
 

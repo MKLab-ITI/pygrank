@@ -1,4 +1,7 @@
-import time
+"""
+This file covers the experiments of the paper: Stopping Personalized PageRank without an Error Tolerance Parameter
+"""
+
 from pygrank.algorithms.pagerank import PageRank
 from pygrank.algorithms.utils import preprocessor, RankOrderConvergenceManager
 from scipy.stats import spearmanr
@@ -57,14 +60,15 @@ def show_correlations(ranks, ground_truth):
     plt.show()
 
 
-specific_ids = [1723]
-dataset = 'snap_amazon'
+# CHANGE THE FOLLOWING BLOCK TO SELECT DATASET
+specific_ids = [1723] # community ids
+dataset = 'snap_amazon' # dataset
 dataset_name = dataset
 
 
 G, groups = import_SNAP_data(dataset, specific_ids=specific_ids)#left one is amazon, right is dblp
-pre = preprocessor('col', assume_immutability=True)
-pre(G)
+pre = preprocessor('col', assume_immutability=True) # a preprocessor that hashes the outcome of normalization for faster running time of the same algoriths
+pre(G) # run once the preprocessor to not affect potential time measurements
 
 result_spearmans = ""
 result_iterations = ""
@@ -79,7 +83,7 @@ for group_number in range(len(groups)):
         result_iterations += " & "+str(ground_truth_ranker.convergence.iteration)
         print("Found ground truth ranks ("+str(ground_truth_ranker.convergence.iteration)+" iterations)")
         compared_rankers = list()
-        for tol in [1.E-8]:#[1.E-6, 1.E-7, 1.E-8, 1.E-9, 1.E-10, 1.E-11, 1.E-12]:
+        for tol in [1.E-6, 1.E-7, 1.E-8, 1.E-9, 1.E-10, 1.E-11, 1.E-12]:
             compared_rankers.append(PageRank(alpha=alpha, to_scipy=pre, tol=tol, max_iters=30000, use_quotient=False))
         compared_rankers.append(PageRank(alpha=alpha, to_scipy=pre, tol=tol, max_iters=estimate_mixing(alpha), error_type="iters"))
         compared_rankers.append(PageRank(alpha=alpha, to_scipy=pre, use_quotient=False, convergence=RankOrderConvergenceManager(alpha, confidence=0.99, criterion="fraction_of_walks")))
