@@ -129,6 +129,7 @@ class Test(unittest.TestCase):
         from pygrank.metrics.multigroup import LinkAUC as LinkAUC
         print('Absorbing HopAUC', LinkAUC(G, hops=2).evaluate({"group1": ranks1, "groups2": ranks2}))
 
+
     def test_oversampling_top(self):
         from pygrank.algorithms.pagerank import AbsorbingRank as Ranker
         from pygrank.algorithms.oversampling import SeedOversampling
@@ -138,6 +139,19 @@ class Test(unittest.TestCase):
         from pygrank.metrics.multigroup import LinkAUC as LinkAUC
         print('Top Oversampling + Absorbing HopAUC', LinkAUC(G, hops=2).evaluate({"group1": ranks1, "groups2": ranks2}))
 
+    def test_venuerank(self):
+        from pygrank.algorithms.pagerank import PageRank
+        from pygrank.algorithms.postprocess import Ordinals
+        G = nx.fast_gnp_random_graph(600, 0.001, seed=1)
+        ranker1 = PageRank(alpha=0.9, max_iters=10000, converge_to_eigenvectors=True, tol=1.E-12)
+        ranks1 = ranker1.rank(G, personalization={0: 1, 1: 1})
+        ranker2 = PageRank(alpha=0.99, max_iters=10000, tol=1.E-12)
+        ranks2 = ranker2.rank(G, personalization={0: 1, 1: 1})
+        self.assertLess(ranker1.convergence.iteration, ranker2.convergence.iteration/10, msg="converge_to_eigenvectors (VenueRank) should be much faster in difficult-to-rank graphs")
+
+        from scipy.stats import spearmanr
+        corr = spearmanr(list(Ordinals().transform(ranks1).values()), list(Ordinals().transform(ranks2).values()))
+        self.assertAlmostEqual(corr[0], 1., 4)
 
 if __name__ == '__main__':
     unittest.main()

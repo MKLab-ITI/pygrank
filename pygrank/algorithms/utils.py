@@ -148,6 +148,7 @@ def to_scipy_sparse_matrix(G, normalization="auto", weight="weight"):
         normalization: The type of normalization can be "col", "symmetric" or "auto" (default). The latter selects
              one of the previous normalization depending on whether the graph is directed or not respectively.
         weight: The weight attribute of the graph's edges.
+        sensitive: The sensitivity attribute of the graph's nodes.
     """
     normalization = normalization.lower()
     if normalization == "auto":
@@ -195,7 +196,7 @@ class MethodHasher:
             self._stored[desc] = value
             return value
         else:
-            return to_scipy_sparse_matrix(*args, **kwargs)
+            return self._method(*args, **kwargs)
 
 
 def preprocessor(normalization="auto", assume_immutability=False):

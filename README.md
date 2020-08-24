@@ -36,6 +36,22 @@ algorithm = Ranker(alpha=alpha, convergence=RankOrderConvergenceManager(alpha))
 ranks = algorithm.rank(G, {v: 1 for v in seeds})
 ```
 
+:bulb: Since the node order is more important than the specific rank values,
+a post-processing step to map nodes to that order can be added to the algorithm as:
+
+```python
+from pygrank.algorithms.pagerank import PageRank as Ranker
+from pygrank.algorithms.utils import RankOrderConvergenceManager
+from pygrank.algorithms.postprocess import Ordinals
+
+...
+alpha = 0.85
+algorithm = Ranker(alpha=alpha, convergence=RankOrderConvergenceManager(alpha))
+algorithm = Ordinals(algorithm)
+...
+```
+
+
 ###### Hash the outcome of graph normalization to speed up multiple calls to the same graph
 ```python
 import networkx as nx
@@ -47,10 +63,31 @@ seeds1 = list()
 seeds2 = list()
 ... # insert graph nodes and select some of them as seeds (e.g. see tests.py)
 
-algorithm = Ranker(alpha=0.8, to_scipy=preprocessor(normalization="col", assume_immutability=True))
+pre = preprocessor(normalization="col", assume_immutability=True)
+algorithm = Ranker(alpha=0.8, to_scipy=pre)
 ranks = algorithm.rank(G, {v: 1 for v in seeds1})
 ranks = algorithm.rank(G, {v: 1 for v in seeds2}) # does not re-compute the normalization
 ```
+
+:bulb: Now preprocessor arguments can also be passed to the constructors of ranking algorithms.
+This will make the ranking algorithm create its own preprocessor with the given arguments.
+
+```python
+import networkx as nx
+from pygrank.algorithms.pagerank import PageRank as Ranker
+
+G = nx.Graph()
+seeds1 = list()
+seeds2 = list()
+... # insert graph nodes and select some of them as seeds (e.g. see tests.py)
+
+algorithm = Ranker(alpha=0.8, normalization="col", assume_immutability=True)
+ranks = algorithm.rank(G, {v: 1 for v in seeds1})
+ranks = algorithm.rank(G, {v: 1 for v in seeds2}) # does not re-compute the normalization
+```
+
+:warning: If the normalization is not specified, it is set to "auto", which performs
+"symmetric" normalization for undirected graphs and "col" normalization for directed ones.
 
 ###### How to evaluate with an unsupervised metric
 ```python

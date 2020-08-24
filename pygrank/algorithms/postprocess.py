@@ -21,11 +21,12 @@ class Tautology:
 class Normalize:
     """ Normalizes ranks by dividing with their maximal value."""
 
-    def __init__(self, ranker=None):
+    def __init__(self, ranker=None, method="max"):
         """ Initializes the class with a base ranker instance.
 
         Attributes:
             ranker: The base ranker instance. A Tautology() ranker is created if None (default) was specified.
+            method: Divide ranks either by their "max" (default) or by their "sum"
 
         Example:
             >>> from pygrank.algorithms.postprocess import Threshold
@@ -39,9 +40,15 @@ class Normalize:
             >>> ranks = Normalize(0.5).transform(algorithm.rank(G, seed_values))
         """
         self.ranker = Tautology() if ranker is None else ranker
+        self.method = method
 
     def _transform(self, ranks):
-        max_rank = max(ranks.values())
+        if self.method=="max":
+            max_rank = max(ranks.values())
+        elif self.method=="sum":
+            max_rank = sum(ranks.values())
+        else:
+            raise Exception("Can only normalize towards max or sum")
         return {node: rank / max_rank for node, rank in ranks.items()}
 
     def transform(self, ranks):
@@ -49,8 +56,8 @@ class Normalize:
             raise Exception("transform(ranks) only makes sense for Tautology base ranker. Consider using rank(G, personalization) instead.")
         return self._transform(ranks)
 
-    def rank(self, G, personalization):
-        ranks = self.ranker.rank(G, personalization)
+    def rank(self, G, personalization, **kwargs):
+        ranks = self.ranker.rank(G, personalization, **kwargs)
         return self._transform(ranks)
 
 

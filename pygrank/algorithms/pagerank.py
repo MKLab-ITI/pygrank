@@ -2,6 +2,43 @@ import scipy
 import numpy as np
 import warnings
 import pygrank.algorithms.utils
+import inspect
+
+
+def _call(method, kwargs):
+    """
+    This method wraps an argument extraction process that passes only the valid arguments of a given dict to a method.
+    This is equivalent to calling method(**kwargs) while ignoring unused arguments.
+
+    Example:
+        >>> def func1(arg1):
+        >>>     print(arg1)
+        >>> def func2(arg2):
+        >>>     print(arg2)
+        >>> def func(**kwargs):
+        >>>     _call(func1, kwargs)
+        >>>     _call(func2, kwargs)
+        >>> func(arg1="passed to func 1", arg2="passed to func 2")
+    """
+    return method(**{argname: kwargs[argname] for argname in inspect.signature(method).parameters if argname in kwargs})
+
+
+def _ensure_all_used(kwargs, methods):
+    """
+    Makes sure that all named arguments passed to a method reside in the callee methods.
+
+    Example:
+        >>> def func(**kwargs):
+        >>>     _call(func1, kwargs)
+        >>>     _call(func2, kwargs)
+        >>>     _ensure_all_used(kwargs, [func1, func2])
+    """
+    all_args = list()
+    for method in methods:
+        all_args.extend(inspect.signature(method).parameters.keys())
+    missing = set(kwargs.keys())-set(all_args)
+    if len(missing) != 0:
+        raise Exception("No usage of argument(s) "+str(missing)+" found")
 
 
 class PageRank:
@@ -13,9 +50,10 @@ class PageRank:
         Attributes:
             alpha: Optional. 1-alpha is the bias towards the personalization. Default value is 0.85.
             to_scipy: Optional. Method to extract a scipy sparse matrix from a networkx graph.
-                If None (default), pygrank.algorithms.utils.to_scipy_sparse_matrix with default arguments is used.
+                If None (default), pygrank.algorithms.utils.preprocessor is used with the keyword arguments
+                given to this constructor.
             convergence: Optional. The ConvergenceManager that determines when iterations stop. If None (default),
-                a ConvergenceManager with the additional keyword arguments is constructed.
+                a ConvergenceManager with the keyword arguments given to this constructor is created.
             use_quotient: Optional. If True (default) performs a L1 re-normalization of ranks after each iteration.
                 This significantly speeds ups the convergence speed of symmetric normalization (col normalization
                 preserves the L1 norm during computations on its own).
@@ -32,8 +70,9 @@ class PageRank:
             >>> algorithm = pagerank.PageRank(alpha=0.99, tol=1.E-9) # tol passed to the ConvergenceManager
         """
         self.alpha = float(alpha) # typecast to make sure that a graph is not accidentally the first argument
-        self.to_scipy = pygrank.algorithms.utils.to_scipy_sparse_matrix if to_scipy is None else to_scipy
-        self.convergence = pygrank.algorithms.utils.ConvergenceManager(**kwargs) if convergence is None else convergence
+        self.to_scipy = _call(pygrank.algorithms.utils.preprocessor, kwargs) if to_scipy is None else to_scipy
+        self.convergence = _call(pygrank.algorithms.utils.ConvergenceManager, kwargs) if convergence is None else convergence
+        _ensure_all_used(kwargs, [pygrank.algorithms.utils.preprocessor, pygrank.algorithms.utils.ConvergenceManager])
         self.use_quotient = use_quotient
         self.converge_to_eigenvectors = converge_to_eigenvectors
 
@@ -69,17 +108,19 @@ class HeatKernel:
         Attributes:
             t: Optional. How many hops until the importance of new nodes starts decreasing. Default value is 5.
             to_scipy: Optional. Method to extract a scipy sparse matrix from a networkx graph.
-                If None (default), pygrank.algorithms.utils.to_scipy_sparse_matrix with default arguments is used.
+                If None (default), pygrank.algorithms.utils.preprocessor is used with the keyword arguments
+                given to this constructor.
             convergence: Optional. The ConvergenceManager that determines when iterations stop. If None (default),
-                a ConvergenceManager with the additional keyword arguments is constructed.
+                a ConvergenceManager with the keyword arguments given to this constructor is created.
 
         Example:
             >>> from pygrank.algorithms import pagerank
             >>> algorithm = pagerank.HeatKernel(t=5, tol=1.E-9) # tol passed to the ConvergenceManager
         """
         self.t = t
-        self.to_scipy = pygrank.algorithms.utils.to_scipy_sparse_matrix if to_scipy is None else to_scipy
-        self.convergence = pygrank.algorithms.utils.ConvergenceManager(**kwargs) if convergence is None else convergence
+        self.to_scipy = _call(pygrank.algorithms.utils.preprocessor, kwargs) if to_scipy is None else to_scipy
+        self.convergence = _call(pygrank.algorithms.utils.ConvergenceManager, kwargs) if convergence is None else convergence
+        _ensure_all_used(kwargs, [pygrank.algorithms.utils.preprocessor, pygrank.algorithms.utils.ConvergenceManager])
 
     def rank(self, G, personalization=None):
         M = self.to_scipy(G)
@@ -104,7 +145,7 @@ class HeatKernel:
 
 
 class AbsorbingRank:
-    """ Implementation of partial absorbing random walks for Lambda = aI
+    """ Implementation of partial absorbing random walks for Lambda = diag(absorbtion vector), e.g. Lambda = aI
     Wu, Xiao-Ming, et al. "Learning with partially absorbing random walks." Advances in neural information processing systems. 2012.
     """
 
@@ -113,11 +154,12 @@ class AbsorbingRank:
 
         Attributes:
             alpha: Optional. (1-alpha)/alpha is the absorbsion rate of the random walk. This is chosen to yield the
-                same underlying meaning as PageRank (for which Lambda = a Diag(degrees) instead of aI)
+                same underlying meaning as PageRank (for which Lambda = a Diag(degrees) )
             to_scipy: Optional. Method to extract a scipy sparse matrix from a networkx graph.
-                If None (default), pygrank.algorithms.utils.to_scipy_sparse_matrix with default arguments is used.
+                If None (default), pygrank.algorithms.utils.preprocessor is used with the keyword arguments
+                given to this constructor.
             convergence: Optional. The ConvergenceManager that determines when iterations stop. If None (default),
-                a ConvergenceManager with the additional keyword arguments is constructed.
+                a ConvergenceManager with the keyword arguments given to this constructor is created.
             use_quotient: Optional. If True (default) performs a L1 re-normalization of ranks after each iteration.
                 This significantly speeds ups the convergence speed.
 
@@ -126,11 +168,12 @@ class AbsorbingRank:
             >>> algorithm = pagerank.HeatKernel(t=5, tol=1.E-9) # tol passed to the ConvergenceManager
         """
         self.alpha = float(alpha) # typecast to make sure that a graph is not accidentally the first argument
-        self.to_scipy = pygrank.algorithms.utils.to_scipy_sparse_matrix if to_scipy is None else to_scipy
-        self.convergence = pygrank.algorithms.utils.ConvergenceManager(**kwargs) if convergence is None else convergence
+        self.to_scipy = _call(pygrank.algorithms.utils.preprocessor, kwargs) if to_scipy is None else to_scipy
+        self.convergence = _call(pygrank.algorithms.utils.ConvergenceManager, kwargs) if convergence is None else convergence
+        _ensure_all_used(kwargs, [pygrank.algorithms.utils.preprocessor, pygrank.algorithms.utils.ConvergenceManager])
         self.use_quotient = use_quotient
 
-    def rank(self, G, personalization=None, absorbtion=None, warm_start=None):
+    def rank(self, G, personalization=None, attraction=None, absorption=None, warm_start=None):
         M = self.to_scipy(G)
         degrees = scipy.array(M.sum(axis=1)).flatten()
 
@@ -142,9 +185,12 @@ class AbsorbingRank:
 
         is_dangling = scipy.where(degrees == 0)[0]
         self.convergence.start()
-        diag_of_lamda = (1-self.alpha)/self.alpha * (scipy.repeat(1.0, len(G)) if absorbtion is None else scipy.array([absorbtion.get(n, 0) for n in G], dtype=float))
+        attract = scipy.repeat(1.0, len(G)) if attraction is None else scipy.array([attraction.get(n, 0) for n in G], dtype=float)
+        diag_of_lamda = (1-self.alpha)/self.alpha * (scipy.repeat(1.0, len(G)) if absorption is None else scipy.array([absorption.get(n, 0) for n in G], dtype=float))
+
         while not self.convergence.has_converged(ranks):
-            ranks = (ranks * M + sum(ranks[is_dangling]) * personalization)*degrees/(diag_of_lamda+degrees) + personalization*diag_of_lamda/(diag_of_lamda+degrees)
+            ranks = (ranks * M * attract + sum(ranks[is_dangling]) * personalization)*degrees/(diag_of_lamda+degrees) + personalization*diag_of_lamda/(diag_of_lamda+degrees)
+            ranks = ranks
             if self.use_quotient:
                 ranks = ranks/ranks.sum()
 
@@ -158,8 +204,9 @@ class BiasedKernel:
     def __init__(self, alpha=0.85, t=1, to_scipy=None, convergence=None, **kwargs):
         self.alpha = alpha
         self.t = t
-        self.to_scipy = pygrank.algorithms.utils.to_scipy_sparse_matrix if to_scipy is None else to_scipy
-        self.convergence = pygrank.algorithms.utils.ConvergenceManager(**kwargs) if convergence is None else convergence
+        self.to_scipy = _call(pygrank.algorithms.utils.preprocessor, kwargs) if to_scipy is None else to_scipy
+        self.convergence = _call(pygrank.algorithms.utils.ConvergenceManager, kwargs) if convergence is None else convergence
+        _ensure_all_used(kwargs, [pygrank.algorithms.utils.preprocessor, pygrank.algorithms.utils.ConvergenceManager])
         warnings.warn("BiasedKernel is a low-quality heuristic", stacklevel=2)
 
     def rank(self, G, personalization=None, warm_start=None):
