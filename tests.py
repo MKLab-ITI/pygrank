@@ -89,7 +89,7 @@ class Test(unittest.TestCase):
         personalization = {"A": 1, "B": 1}
         pagerank = PageRank().rank(G, personalization)
         heatkernel = HeatKernel().rank(G, personalization)
-        self.assertLess(pagerank['D']/sum(pagerank.values()), heatkernel['D']/sum(heatkernel.values()), msg="HeatKernel more local than PageRank")
+        self.assertLess(pagerank['A']/sum(pagerank.values()), heatkernel['A']/sum(heatkernel.values()), msg="HeatKernel more local than PageRank")
         self.assertLess(heatkernel['I']/sum(heatkernel.values()), pagerank['I']/sum(pagerank.values()), msg="HeatKernel more local than PageRank")
 
     def test_oversampling_importance(self):

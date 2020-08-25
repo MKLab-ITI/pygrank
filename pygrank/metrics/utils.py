@@ -22,6 +22,7 @@ def split_groups(groups, fraction_of_training=0.99):
         return groups, groups
     if not isinstance(groups, collections.Mapping):
         group = list(groups)
+        random.shuffle(group)
         splt = int(len(group)*fraction_of_training)
         return group[:splt], group[splt:]
     clusters = {}

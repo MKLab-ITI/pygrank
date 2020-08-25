@@ -102,7 +102,7 @@ class PageRank:
 class HeatKernel:
     """ Heat kernel filter."""
 
-    def __init__(self, t=5, to_scipy=None, convergence=None, **kwargs):
+    def __init__(self, t=3, to_scipy=None, convergence=None, **kwargs):
         """ Initializes the HearKernel filter parameters.
 
         Attributes:
@@ -138,7 +138,8 @@ class HeatKernel:
         while not self.convergence.has_converged(ranks):
             coefficient *= self.t/(self.convergence.iteration+1)
             Mpower *= M
-            ranks += personalization*Mpower
+            ranks += personalization*Mpower*coefficient
+        ranks = ranks/ranks.sum()
 
         ranks = dict(zip(G.nodes(), map(float, ranks)))
         return ranks

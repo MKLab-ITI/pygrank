@@ -83,8 +83,8 @@ class Ordinals:
             raise Exception("transform(ranks) only makes sense for Tautology base ranker. Consider using rank(G, personalization) instead.")
         return self._transform(ranks)
 
-    def rank(self, G, personalization):
-        ranks = self.ranker.rank(G, personalization)
+    def rank(self, G, personalization, **kwargs):
+        ranks = self.ranker.rank(G, personalization, **kwargs)
         return self._transform(ranks)
 
 
@@ -116,7 +116,7 @@ class Threshold:
 
     def _transform(self, ranks):
         threshold = self.threshold
-        if threshold=="gap":
+        if threshold == "gap":
             warnings.warn("gap-determined threshold is still under development (its implementation may be incorrect)", stacklevel=2)
             ranks = {v: ranks[v] / self.G.degree(v) for v in ranks}
             max_diff = 0
@@ -136,6 +136,6 @@ class Threshold:
             raise Exception("transform(ranks) only makes sense for Tautology base ranker. Consider using rank(G, personalization) instead.")
         return self._transform(ranks)
 
-    def rank(self, G, personalization):
-        ranks = self.ranker.rank(G, personalization)
+    def rank(self, G, personalization, **kwargs):
+        ranks = self.ranker.rank(G, personalization, **kwargs)
         return self._transform(ranks)
