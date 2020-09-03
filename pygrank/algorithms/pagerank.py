@@ -76,7 +76,7 @@ class PageRank:
         self.use_quotient = use_quotient
         self.converge_to_eigenvectors = converge_to_eigenvectors
 
-    def rank(self, G, personalization=None, warm_start=None):
+    def rank(self, G, personalization=None, warm_start=None, fairness_residuals=None):
         M = self.to_scipy(G)
         degrees = scipy.array(M.sum(axis=1)).flatten()
 
@@ -86,10 +86,24 @@ class PageRank:
         personalization = personalization / personalization.sum()
         ranks = personalization if warm_start is None else scipy.array([warm_start.get(n, 0) for n in G], dtype=float)
 
+        if fairness_residuals is not None:
+            fairness_residuals = [(scipy.array([residual.get(n, 0) for n in G], dtype=float),
+                                   scipy.array([1 if residual.get(n, 0) != 0 else 0 for n in G], dtype=float))
+                                  for residual in fairness_residuals if len(residual) != 0]
+
         is_dangling = scipy.where(degrees == 0)[0]
         self.convergence.start()
         while not self.convergence.has_converged(ranks):
             ranks = self.alpha * (ranks * M + sum(ranks[is_dangling]) * personalization) + (1 - self.alpha) * personalization
+
+            if fairness_residuals is not None:
+                for residual, mask in fairness_residuals:
+                    masked_ranks = np.multiply(mask , ranks)
+                    masked_rank_sum = masked_ranks.sum()
+                    if masked_rank_sum != 0:
+                        masked_ranks /= masked_ranks.sum()
+                    ranks += self.alpha * np.dot(residual, ranks) * masked_ranks
+
             if self.use_quotient:
                 ranks = ranks/ranks.sum()
             if self.converge_to_eigenvectors:
@@ -174,7 +188,7 @@ class AbsorbingRank:
         _ensure_all_used(kwargs, [pygrank.algorithms.utils.preprocessor, pygrank.algorithms.utils.ConvergenceManager])
         self.use_quotient = use_quotient
 
-    def rank(self, G, personalization=None, attraction=None, absorption=None, warm_start=None):
+    def rank(self, G, personalization=None, attraction=None, absorption=None, warm_start=None, residuals=None):
         M = self.to_scipy(G)
         degrees = scipy.array(M.sum(axis=1)).flatten()
 
@@ -189,12 +203,23 @@ class AbsorbingRank:
         attract = scipy.repeat(1.0, len(G)) if attraction is None else scipy.array([attraction.get(n, 0) for n in G], dtype=float)
         diag_of_lamda = (1-self.alpha)/self.alpha * (scipy.repeat(1.0, len(G)) if absorption is None else scipy.array([absorption.get(n, 0) for n in G], dtype=float))
 
+        if residuals is not None:
+            residuals = [( scipy.array([residual.get(n, 0) for n in G], dtype=float),
+                           scipy.array([1 if residual.get(n, 0)!=0 else 0 for n in G], dtype=float) )
+                          for residual in residuals]
+
         while not self.convergence.has_converged(ranks):
-            ranks = (ranks * M * attract + sum(ranks[is_dangling]) * personalization)*degrees/(diag_of_lamda+degrees) + personalization*diag_of_lamda/(diag_of_lamda+degrees)
-            ranks = ranks
+            Mfair = M
+            if residuals is not None:
+                for residual, mask in residuals:
+                    masked_ranks = mask*ranks
+                    masked_rank_sum = masked_ranks.sum()
+                    if masked_rank_sum != 0:
+                        masked_ranks /= masked_ranks.sum()
+                    Mfair += np.cross(residual, masked_ranks)
+            ranks = (ranks * attract * Mfair + sum(ranks[is_dangling]) * personalization)*degrees/(diag_of_lamda+degrees) + personalization*diag_of_lamda/(diag_of_lamda+degrees)
             if self.use_quotient:
                 ranks = ranks/ranks.sum()
-
         ranks = dict(zip(G.nodes(), map(float, ranks)))
         return ranks
 
