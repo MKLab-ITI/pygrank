@@ -43,7 +43,8 @@ class Test(unittest.TestCase):
         G = create_test_graph()
         ranker1 = Ranker1(normalization="symmetric", use_quotient=False)
         test_result1 = ranker1.rank(G)
-        test_result2 = Ranker2(normalization="symmetric", weights=[(1-ranker1.alpha)*ranker1.alpha**n for n in range(ranker1.convergence.iteration)], krylov_space_degree=3).rank(G)
+        ranker2 = Ranker2(normalization="symmetric", weights=[(1-ranker1.alpha)*ranker1.alpha**n for n in range(ranker1.convergence.iteration*30)], krylov_space_degree=5)
+        test_result2 = ranker2.rank(G)
         abs_diffs = sum(abs(test_result1[v] - test_result2[v]) for v in test_result1.keys()) / len(test_result1)
         self.assertAlmostEqual(abs_diffs, 0, places=2, msg="Krylov space analysis compliance with PageRank")
 

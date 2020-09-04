@@ -27,12 +27,12 @@ class LanczosFilter:
             next_v = w-v*a
             if j > 0:
                 next_v -= base[j-1]*base_norms[j-1]
-            next_v_norm = norm(next_v,2)
+            next_v_norm = norm(next_v, 2)
             base_norms.append(next_v_norm)
-            if j!=self.krylov_space_degree-1:
+            if j != self.krylov_space_degree-1:
                 base.append(next_v/next_v_norm)
             alphas.append(a)
-        H = scipy.sparse.diags([alphas, base_norms, base_norms], [0,-1,1])
+        H = scipy.sparse.diags([alphas, base_norms, base_norms], [0, -1, 1])
         return base, H
 
     def rank(self, G, personalization=None, **kwargs):
@@ -40,6 +40,8 @@ class LanczosFilter:
         #degrees = scipy.array(M.sum(axis=1)).flatten()
         #M = scipy.sparse.diags(scipy.repeat(1.0, len(G))) - M
         personalization = scipy.repeat(1.0, len(G)) if personalization is None else scipy.array([personalization.get(n, 0) for n in G], dtype=float)
+        if personalization.sum() == 0:
+            raise Exception("The personalization vector should contain at least one non-zero entity")
         if self.fraction_of_training == 1:
             training_choice = 1
             test_choice = 1

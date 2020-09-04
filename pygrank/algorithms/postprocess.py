@@ -56,8 +56,8 @@ class Normalize:
             raise Exception("transform(ranks) only makes sense for Tautology base ranker. Consider using rank(G, personalization) instead.")
         return self._transform(ranks)
 
-    def rank(self, G, personalization, **kwargs):
-        ranks = self.ranker.rank(G, personalization, **kwargs)
+    def rank(self, G, *args, **kwargs):
+        ranks = self.ranker.rank(G, *args, **kwargs)
         return self._transform(ranks)
 
 
@@ -83,8 +83,8 @@ class Ordinals:
             raise Exception("transform(ranks) only makes sense for Tautology base ranker. Consider using rank(G, personalization) instead.")
         return self._transform(ranks)
 
-    def rank(self, G, personalization, **kwargs):
-        ranks = self.ranker.rank(G, personalization, **kwargs)
+    def rank(self, G, *args, **kwargs):
+        ranks = self.ranker.rank(G, *args, **kwargs)
         return self._transform(ranks)
 
 
@@ -139,8 +139,8 @@ class Threshold:
             raise Exception("transform(ranks) only makes sense for Tautology base ranker. Consider using rank(G, personalization) instead.")
         return self._transform(ranks)
 
-    def rank(self, G, personalization, **kwargs):
-        ranks = self.ranker.rank(G, personalization, **kwargs)
+    def rank(self, G, *args, **kwargs):
+        ranks = self.ranker.rank(G, *args, **kwargs)
         return self._transform(ranks, G)
 
 
