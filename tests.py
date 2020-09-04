@@ -37,6 +37,16 @@ class Test(unittest.TestCase):
         abs_diffs = sum(abs(test_result[v]-nx_result[v]) for v in nx_result.keys())/len(nx_result)
         self.assertAlmostEqual(abs_diffs, 0, places=16, msg="PageRank compliance with nx results")
 
+    def test_rank_results(self):
+        from pygrank.algorithms.pagerank import PageRank as Ranker1
+        from pygrank.algorithms.filter import LanczosFilter as Ranker2
+        G = create_test_graph()
+        ranker1 = Ranker1(normalization="symmetric", use_quotient=False)
+        test_result1 = ranker1.rank(G)
+        test_result2 = Ranker2(normalization="symmetric", weights=[(1-ranker1.alpha)*ranker1.alpha**n for n in range(ranker1.convergence.iteration)], krylov_space_degree=3).rank(G)
+        abs_diffs = sum(abs(test_result1[v] - test_result2[v]) for v in test_result1.keys()) / len(test_result1)
+        self.assertAlmostEqual(abs_diffs, 0, places=2, msg="Krylov space analysis compliance with PageRank")
+
     def test_rank_time(self):
         from pygrank.algorithms.pagerank import PageRank as ranker
         from pygrank.algorithms.utils import preprocessor

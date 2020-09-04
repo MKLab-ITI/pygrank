@@ -109,6 +109,7 @@ class PageRank:
             if self.converge_to_eigenvectors:
                 personalization = ranks
 
+        ranks = ranks/ranks.sum()
         ranks = dict(zip(G.nodes(), map(float, ranks)))
         return ranks
 

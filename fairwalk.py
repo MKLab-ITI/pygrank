@@ -1,7 +1,7 @@
 from data.facebook_fairness.importer import load
 from pygrank.algorithms.pagerank import AbsorbingRank, PageRank
 from pygrank.algorithms.postprocess import Normalize, Threshold, Fair
-from pygrank.algorithms.oversampling import BoostedSeedOversampling
+from pygrank.algorithms.filter import LanczosFilter
 from pygrank.metrics.utils import split_groups
 from sklearn import metrics
 
@@ -21,14 +21,15 @@ treatment = list()
 mistreatment = list()
 
 eps = 1.E-12
-algorithm = Threshold("none", Normalize(Fair(PageRank(alpha=0.85, max_iters=10000, tol=1.E-6, assume_immutability=True, normalization="col"), "N")))
+#algorithm = Threshold("none", Normalize(Fair(PageRank(alpha=0.85, max_iters=10000, tol=1.E-6, assume_immutability=True, normalization="col"), "none")))
+algorithm = LanczosFilter(normalization="symmetric")
 
 for _ in range(100):
     attraction = {v: (1 if sensitive[v]==0 else 1) for v in G}
     #absorption = {v: (1 if sensitive[v]==0 else 1) for v in G}
     #absorption = {v: (G.degree[v] if sensitive[v]==0 else G.degree[v]) for v in G}
     positive_label = 1
-    seeds, _ = split_groups([v for v in G if labels[v]==1], fraction_of_training=0.2)
+    seeds, _ = split_groups([v for v in G if labels[v]==positive_label], fraction_of_training=0.5)
     evaluation = [v for v in G if v not in seeds]
     ranks = algorithm.rank(G, {v: 1 for v in G}, sensitive=sensitive)
     negative_label = 1-positive_label
@@ -48,4 +49,4 @@ for _ in range(100):
 
     mistreatment.append(abs(fpr1-fpr2))
 
-    print('Acc', int(sum(accuracy)/len(accuracy)*1000)/1000., '\tDisp. Impact', int(sum(treatment)/len(treatment)*1000)/1000., '\tDisp. Misreatment', int(sum(mistreatment)/len(mistreatment)*1000)/1000.)
+    print('AUC', int(sum(accuracy)/len(accuracy)*1000)/1000., '\tDisp. Impact', int(sum(treatment)/len(treatment)*1000)/1000., '\tDisp. Misreatment', int(sum(mistreatment)/len(mistreatment)*1000)/1000.)
