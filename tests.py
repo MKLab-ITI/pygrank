@@ -39,7 +39,7 @@ class Test(unittest.TestCase):
 
     def test_rank_results(self):
         from pygrank.algorithms.pagerank import PageRank as Ranker1
-        from pygrank.algorithms.filter import LanczosFilter as Ranker2
+        from pygrank.algorithms.filters import LanczosFilter as Ranker2
         G = create_test_graph()
         ranker1 = Ranker1(normalization="symmetric", use_quotient=False)
         test_result1 = ranker1.rank(G)
@@ -163,6 +163,27 @@ class Test(unittest.TestCase):
         from scipy.stats import spearmanr
         corr = spearmanr(list(Ordinals().transform(ranks1).values()), list(Ordinals().transform(ranks2).values()))
         self.assertAlmostEqual(corr[0], 1., 4)
+
+    def test_optimizer(self):
+        from pygrank.algorithms.parameter_optimization import optimize
+
+        # a simple function
+        p = optimize(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4, max_vals=[5, 5])
+        self.assertAlmostEqual(p[0], 2, places=6, msg="Optimizer should easily optimize convex function")
+        self.assertAlmostEqual(p[1], 1, places=6, msg="Optimizer should easily optimize convex function")
+
+        # https://en.wikipedia.org/wiki/Test_functions_for_optimization
+
+        # Beale function
+        p = optimize(loss=lambda p: (1.5-p[0]+p[0]*p[1])**2+(2.25-p[0]+p[0]*p[1]**2)**2+(2.625-p[0]+p[0]*p[1]**3)**2, max_vals=[4.5, 4.5], min_vals=[-4.5, -4.5])
+        self.assertAlmostEqual(p[0], 3, places=6, msg="Optimizer should optimize the Beale function")
+        self.assertAlmostEqual(p[1], 0.5, places=6, msg="Optimizer should optimize the Beale function")
+
+        # Booth function
+        p = optimize(loss=lambda p: (p[0]+2*p[1]-7)**2+(2*p[0]+p[1]-5)**2, max_vals=[10, 10], min_vals=[-10, -10])
+        self.assertAlmostEqual(p[0], 1, places=6, msg="Optimizer should optimize the Booth function")
+        self.assertAlmostEqual(p[1], 3, places=6, msg="Optimizer should optimize the Booth function")
+
 
 if __name__ == '__main__':
     unittest.main()

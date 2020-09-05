@@ -121,7 +121,7 @@ class Threshold:
         if threshold == "none":
             return ranks
         if threshold == "gap":
-            #ranks = {v: ranks[v] / G.degree(v) for v in ranks}
+            ranks = {v: ranks[v] / G.degree(v) for v in ranks}
             max_diff = 0
             threshold = 0
             prev_rank = 0
