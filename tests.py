@@ -168,21 +168,34 @@ class Test(unittest.TestCase):
         from pygrank.algorithms.parameter_optimization import optimize
 
         # a simple function
-        p = optimize(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4, max_vals=[5, 5])
+        p = optimize(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4, max_vals=[5, 5], parameter_tol=1.E-8)
         self.assertAlmostEqual(p[0], 2, places=6, msg="Optimizer should easily optimize convex function")
         self.assertAlmostEqual(p[1], 1, places=6, msg="Optimizer should easily optimize convex function")
 
         # https://en.wikipedia.org/wiki/Test_functions_for_optimization
 
         # Beale function
-        p = optimize(loss=lambda p: (1.5-p[0]+p[0]*p[1])**2+(2.25-p[0]+p[0]*p[1]**2)**2+(2.625-p[0]+p[0]*p[1]**3)**2, max_vals=[4.5, 4.5], min_vals=[-4.5, -4.5])
+        p = optimize(loss=lambda p: (1.5-p[0]+p[0]*p[1])**2+(2.25-p[0]+p[0]*p[1]**2)**2+(2.625-p[0]+p[0]*p[1]**3)**2, max_vals=[4.5, 4.5], min_vals=[-4.5, -4.5], parameter_tol=1.E-8)
         self.assertAlmostEqual(p[0], 3, places=6, msg="Optimizer should optimize the Beale function")
         self.assertAlmostEqual(p[1], 0.5, places=6, msg="Optimizer should optimize the Beale function")
 
         # Booth function
-        p = optimize(loss=lambda p: (p[0]+2*p[1]-7)**2+(2*p[0]+p[1]-5)**2, max_vals=[10, 10], min_vals=[-10, -10])
+        p = optimize(loss=lambda p: (p[0]+2*p[1]-7)**2+(2*p[0]+p[1]-5)**2, max_vals=[10, 10], min_vals=[-10, -10], parameter_tol=1.E-8)
         self.assertAlmostEqual(p[0], 1, places=6, msg="Optimizer should optimize the Booth function")
         self.assertAlmostEqual(p[1], 3, places=6, msg="Optimizer should optimize the Booth function")
+
+    def test_use_quotient_filter(self):
+        from pygrank.algorithms.pagerank import PageRank
+        from pygrank.algorithms.postprocess import Normalize
+
+        G = create_test_graph()
+        personalization = {"A": 1, "B": 1}
+
+        ranks1 = PageRank(use_quotient=True).rank(G, personalization)
+        ranks2 = PageRank(use_quotient=Normalize(method="sum")).rank(G, personalization)
+
+        err = sum(abs(ranks1[v]-ranks2[v]) for v in G)
+        self.assertAlmostEqual(err, 0, places=15, msg="use_quotient=Normalize(method='sum') should yield the same results (albeit a little slower than) True")
 
 
 if __name__ == '__main__':

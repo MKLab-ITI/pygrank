@@ -1,4 +1,7 @@
 import warnings
+from pygrank.algorithms.parameter_optimization import optimize
+from math import exp
+import random
 
 
 class Tautology:
@@ -39,6 +42,10 @@ class Normalize:
             >>> G, seed_values, algorithm = ...
             >>> ranks = Normalize(0.5).transform(algorithm.rank(G, seed_values))
         """
+        if ranker is not None and not callable(getattr(ranker, "rank", None)):
+            ranker, method = method, ranker
+            if not callable(getattr(ranker, "rank", None)):
+                ranker = None
         self.ranker = Tautology() if ranker is None else ranker
         self.method = method
 
@@ -51,14 +58,11 @@ class Normalize:
             raise Exception("Can only normalize towards max or sum")
         return {node: rank / max_rank for node, rank in ranks.items()}
 
-    def transform(self, ranks):
-        if not isinstance(self.ranker, Tautology):
-            raise Exception("transform(ranks) only makes sense for Tautology base ranker. Consider using rank(G, personalization) instead.")
-        return self._transform(ranks)
+    def transform(self, ranks, *args, **kwargs):
+        return self._transform(self.ranker.transform(ranks, *args, **kwargs))
 
-    def rank(self, G, *args, **kwargs):
-        ranks = self.ranker.rank(G, *args, **kwargs)
-        return self._transform(ranks)
+    def rank(self, G, personalization, *args, **kwargs):
+        return self._transform(self.ranker.rank(G, personalization, *args, **kwargs))
 
 
 class Ordinals:
@@ -78,14 +82,11 @@ class Ordinals:
     def _transform(self, ranks):
         return {v: ord+1 for ord, v in enumerate(sorted(ranks, key=ranks.get, reverse=False))}
 
-    def transform(self, ranks):
-        if not isinstance(self.ranker, Tautology):
-            raise Exception("transform(ranks) only makes sense for Tautology base ranker. Consider using rank(G, personalization) instead.")
-        return self._transform(ranks)
+    def transform(self, ranks, *args, **kwargs):
+        return self._transform(self.ranker.transform(ranks, *args, **kwargs))
 
-    def rank(self, G, *args, **kwargs):
-        ranks = self.ranker.rank(G, *args, **kwargs)
-        return self._transform(ranks)
+    def rank(self, G, personalization, *args, **kwargs):
+        return self._transform(self.ranker.rank(G, personalization, *args, **kwargs))
 
 
 class Threshold:
@@ -111,6 +112,10 @@ class Threshold:
             >>> G, seed_values, algorithm = ...
             >>> ranks = Threshold(0.5).transform(algorithm.rank(G, seed_values))
         """
+        if ranker is not None and not callable(getattr(ranker, "rank", None)):
+            ranker, threshold = threshold, ranker
+            if not callable(getattr(ranker, "rank", None)):
+                ranker = None
         self.ranker = Tautology() if ranker is None else ranker
         self.threshold = threshold
         if threshold == "gap":
@@ -134,56 +139,134 @@ class Threshold:
                 prev_rank = ranks[v]
         return {v: 1  if ranks[v] >= threshold else 0 for v in ranks.keys()}
 
-    def transform(self, ranks):
-        if not isinstance(self.ranker, Tautology):
-            raise Exception("transform(ranks) only makes sense for Tautology base ranker. Consider using rank(G, personalization) instead.")
-        return self._transform(ranks)
+    def transform(self, ranks, *args, **kwargs):
+        return self._transform(self.ranker.transform(ranks, *args, **kwargs))
 
-    def rank(self, G, *args, **kwargs):
-        ranks = self.ranker.rank(G, *args, **kwargs)
-        return self._transform(ranks, G)
+    def rank(self, G, personalization, *args, **kwargs):
+        return self._transform(self.ranker.rank(G, personalization, *args, **kwargs))
+
+
+class Sweep:
+    def __init__(self, ranker, uniform_ranker=None):
+        self.ranker = ranker
+        self.uniform_ranker = ranker if uniform_ranker is None else uniform_ranker
+
+    def rank(self, G, personalization, *args, **kwargs):
+        ranks = self.ranker.rank(G, personalization, *args, **kwargs)
+        uniforms = self.uniform_ranker.rank(G, {v: 1 for v in G}, *args, **kwargs)
+        return {v: ranks[v]/uniforms[v] for v in G}
+
+
+class FairSweep:
+    def __init__(self, ranker, uniform_ranker=None):
+        self.ranker = ranker
+        self.uniform_ranker = ranker if uniform_ranker is None else uniform_ranker
+        warnings.warn("FairSweep is not yet optimize to run with scipy and may be much slower than the ranking algorithm", stacklevel=2)
+
+    def rank(self, G, personalization, sensitive, *args, **kwargs):
+        ranks = self.ranker.rank(G, personalization, *args, **kwargs)
+        uniforms = self.uniform_ranker.rank(G, {v: 1 for v in G}, *args, **kwargs)
+        phi = sum(sensitive.values())/len(ranks)
+        sumR = sum(ranks[v] * sensitive.get(v, 0) for v in ranks)
+        sumB = sum(ranks[v] * (1 - sensitive.get(v, 0)) for v in ranks)
+        numR = sum(sensitive.values())
+        numB = len(ranks) - numR
+        return {v: ranks[v]/uniforms[v]*((phi*sensitive[v]/sumR)+(1-phi)*(1-sensitive[v])/sumB) for v in G}
+
+
+class CULEP:
+    def __init__(self, ranker):
+        self.ranker = ranker
+
+    def __culep(self, ranks, sensitive, params):
+        a_sensitive = params[0]
+        a_nonsensitive = params[1]
+        b_sensitive = params[2]
+        b_nonsensitive = params[3]
+        a = {v: sensitive.get(v, 0)*a_sensitive+(1-sensitive.get(v, 0))*a_nonsensitive for v in ranks}
+        b = {v: sensitive.get(v, 0)*b_sensitive+(1-sensitive.get(v, 0))*b_nonsensitive for v in ranks}
+        max_rank = max(ranks.values())
+        return {v: ranks[v]*(a[v]*exp(-b[v]*ranks[v]/max_rank)+(1-a[v])*exp(-b[v]*ranks[v]/max_rank)) for v in ranks}
+
+    def __prule_loss(self, ranks, original_ranks, sensitive):
+        eps = 1.E-12
+        p1 = sum([ranks[v] for v in ranks if sensitive[v] == 0]) / (eps+sum([1 for v in ranks if sensitive[v] == 0]))
+        p2 = sum([ranks[v] for v in ranks if sensitive[v] == 1]) / (eps+sum([1 for v in ranks if sensitive[v] == 1]))
+        max_ranks = max(ranks.values())
+        max_original_ranks = max(original_ranks.values())
+        return sum(abs(ranks[v]/max_ranks-original_ranks[v]/max_original_ranks) for v in ranks)/len(ranks)-min(p1,p2)/(eps+max(p1,p2))
+
+    def rank(self, G, personalization, sensitive, *args, **kwargs):
+        ranks = self.ranker.rank(G, personalization, *args, **kwargs)
+        params = optimize(lambda params: self.__prule_loss(self.__culep(ranks, sensitive, params), ranks, sensitive), [1, 1, 10, 10], min_vals=[0, 0, 0, 0], tol=1.E-3, divide_range=2, partitions=10)
+        #print(params)
+        return self.__culep(ranks, sensitive, params)
 
 
 class Fair:
-    def __init__(self, ranker, method="N"):
-        self.ranker = ranker
+    def __init__(self, ranker=None, method="O"):
+        if ranker is not None and not callable(getattr(ranker, "rank", None)):
+            ranker, method = method, ranker
+            if not callable(getattr(ranker, "rank", None)):
+                ranker = None
+        self.ranker = Tautology() if ranker is None else ranker
         self.method = method
 
-    def rank(self, G, personalization, sensitive,  **kwargs):
-        if self.method == "none":
-            return self.ranker.rank(G, personalization, **kwargs)
-        G = G.to_directed()
-        phi = 1-sum(sensitive.values()) / len(sensitive)
-        d0 = {}
-        d1 = {}
-        num0 = len([u for u in G if sensitive[u] == 0])
-        num1 = len([u for u in G if sensitive[u] == 0])
-        for v in G:
-            sum0 = len([u for u in G.successors(v) if sensitive[u] == 0])
-            sum1 = len([u for u in G.successors(v) if sensitive[u] == 1])
-            if self.method == "equal":
-                for u in list(G.successors(v)):
-                    G.add_edge(v, u, weight=phi / sum0 if sensitive[u] == 0 else (1 - phi) / sum1)
-            elif self.method == "N":
-                if sum0 == 0 and sensitive[v] == 0:
-                    for u in G:
-                        if sensitive[u] != 0:
-                            G.add_edge(v, u, weight=phi / num0)
-                elif sum1 == 0 and sensitive[v] == 1:
-                    for u in G:
-                        if sensitive[u] != 0:
-                            G.add_edge(v, u, weight=(1-phi) / num1)
-                else:
-                    for u in list(G.successors(v)):
-                        G.add_edge(v, u, weight=phi / sum0 if sensitive[u] == 0 else (1 - phi) / sum1)
-            elif self.method == "P":
-                if (1 - phi)*sum0 < phi*sum1:
-                    for u in list(G.successors(v)):
-                        G.add_edge(v, u, weight=(1 - phi)/sum1)
-                    d0[v] = phi - (1 - phi) * sum0 / sum1
-                else:
-                    for u in list(G.successors(v)):
-                        G.add_edge(v, u, weight=phi/sum0)
-                    d1[v] = phi - (1 - phi) * sum1 / sum0
-        personalization = {v: (1 - phi)*personalization[v]*(1-sensitive[v])+phi*personalization[v]*sensitive[v] for v in personalization}
-        return self.ranker.rank(G, personalization, fairness_residuals=[d0, d1], **kwargs)
+    def __distribute(self, DR, ranks, sensitive):
+        #ranks = {v: ranks[v] * sensitive.get(v, 0) for v in ranks if ranks[v] * sensitive.get(v, 0) > 1.E-6}
+        while True:
+            ranks = {v: ranks[v] * sensitive.get(v, 0) for v in ranks if ranks[v] * sensitive.get(v, 0) != 0}
+            d = DR / len(ranks)
+            min_rank = min(val for val in ranks.values())
+            if min_rank > d:
+                ranks = {v: val - d for v, val in ranks.items()}
+                break
+            ranks = {v: val - min_rank for v, val in ranks.items()}
+            DR -= len(ranks) * min_rank
+        return ranks
+
+    def __reweight(self, G, sensitive):
+        if not getattr(self, "reweights", None):
+            self.reweights = dict()
+        if G not in self.reweights:
+            phi = sum(sensitive.values())/len(G)
+            Gnew = G.copy()
+            for u, v, d in Gnew.edges(data=True):
+                d["weight"] = 1./(sensitive[u]*phi+(1-sensitive[u])*(1-phi))
+            self.reweights[G] = Gnew
+        return self.reweights[G]
+
+    def _transform(self, ranks, sensitive):
+        phi = sum(sensitive.values())/len(ranks)
+        if self.method == "O":
+            ranks = Normalize(method="sum").transform(ranks)
+            sumR = sum(ranks[v] * sensitive.get(v, 0) for v in ranks)
+            sumB = sum(ranks[v] * (1 - sensitive.get(v, 0)) for v in ranks)
+            numR = sum(sensitive.values())
+            numB = len(ranks) - numR
+            if sumR < phi:
+                red = self.__distribute(phi - sumR, ranks, {v: 1 - sensitive.get(v, 0) for v in ranks})
+                ranks = {v: red.get(v, ranks[v] + (phi - sumR) / numR) for v in ranks}
+            elif sumB < 1-phi:
+                red = self.__distribute(1-phi - sumB, ranks, {v: sensitive.get(v, 0) for v in ranks})
+                ranks = {v: red.get(v, ranks[v] + (1-phi - sumB) / numB) for v in ranks}
+        elif self.method == "B":
+            sumR = sum(ranks[v]*sensitive.get(v, 0) for v in ranks)
+            sumB = sum(ranks[v]*(1-sensitive.get(v, 0)) for v in ranks)
+            sum_total = sumR + sumB
+            sumR /= sum_total
+            sumB /= sum_total
+            ranks = {v: ranks[v]*(phi*sensitive.get(v, 0)/sumR+(1-phi)*(1-sensitive.get(v, 0))/sumB) for v in ranks}
+        else:
+            raise Exception("Invalid fairness postprocessing method", self.method)
+        return ranks
+
+    def transform(self, ranks, sensitive, *args, **kwargs):
+        if self.method == "reweight":
+            raise Exception("Reweighting can only occur by preprocessing the graph")
+        return self._transform(self.ranker.transform(ranks, *args, **kwargs), sensitive)
+
+    def rank(self, G, personalization, sensitive, *args, **kwargs):
+        if self.method == "reweight":
+            return self.ranker.rank(self.__reweight(G, sensitive), personalization, *args, **kwargs)
+        return self._transform(self.ranker.rank(G, personalization, *args, **kwargs), sensitive)

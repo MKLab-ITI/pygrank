@@ -56,7 +56,10 @@ class PageRank:
                 a ConvergenceManager with the keyword arguments given to this constructor is created.
             use_quotient: Optional. If True (default) performs a L1 re-normalization of ranks after each iteration.
                 This significantly speeds ups the convergence speed of symmetric normalization (col normalization
-                preserves the L1 norm during computations on its own).
+                preserves the L1 norm during computations on its own). Can also pass a pygrank.algorithm.postprocess
+                filter to perform any kind of normalization through its postprocess method. Note that these can slow
+                down computations due to needing to convert ranks between skipy and maps after each iteration.
+                Can pass False or None to ignore this parameter's functionality.
             converge_to_eigenvectors: Optional. If True (default is False) the outcome of ranking does not depend on
                 the alpha parameters and only weakly on potential personalization. Instead ranking strongly biased
                 towards the principal eigenvector. If more than one near-max eigenvalues of to_scipy(graph) exist
@@ -73,10 +76,10 @@ class PageRank:
         self.to_scipy = _call(pygrank.algorithms.utils.preprocessor, kwargs) if to_scipy is None else to_scipy
         self.convergence = _call(pygrank.algorithms.utils.ConvergenceManager, kwargs) if convergence is None else convergence
         _ensure_all_used(kwargs, [pygrank.algorithms.utils.preprocessor, pygrank.algorithms.utils.ConvergenceManager])
-        self.use_quotient = use_quotient
+        self.use_quotient = None if use_quotient == False else use_quotient
         self.converge_to_eigenvectors = converge_to_eigenvectors
 
-    def rank(self, G, personalization=None, warm_start=None, fairness_residuals=None):
+    def rank(self, G, personalization=None, warm_start=None, *args, **kwargs):
         M = self.to_scipy(G)
         degrees = scipy.array(M.sum(axis=1)).flatten()
 
@@ -86,26 +89,17 @@ class PageRank:
         personalization = personalization / personalization.sum()
         ranks = personalization if warm_start is None else scipy.array([warm_start.get(n, 0) for n in G], dtype=float)
 
-        if fairness_residuals is not None:
-            fairness_residuals = [(scipy.array([residual.get(n, 0) for n in G], dtype=float),
-                                   scipy.array([1 if residual.get(n, 0) != 0 else 0 for n in G], dtype=float))
-                                  for residual in fairness_residuals if len(residual) != 0]
-
         is_dangling = scipy.where(degrees == 0)[0]
         self.convergence.start()
         while not self.convergence.has_converged(ranks):
             ranks = self.alpha * (ranks * M + sum(ranks[is_dangling]) * personalization) + (1 - self.alpha) * personalization
-
-            if fairness_residuals is not None:
-                for residual, mask in fairness_residuals:
-                    masked_ranks = np.multiply(mask , ranks)
-                    masked_rank_sum = masked_ranks.sum()
-                    if masked_rank_sum != 0:
-                        masked_ranks /= masked_ranks.sum()
-                    ranks += self.alpha * np.dot(residual, ranks) * masked_ranks
-
-            if self.use_quotient:
+            if self.use_quotient == True:
                 ranks = ranks/ranks.sum()
+            elif self.use_quotient is not None:
+                ranks = dict(zip(G.nodes(), map(float, ranks)))
+                ranks = self.use_quotient.transform(ranks, *args, **kwargs)
+                ranks = scipy.array([ranks.get(n, 0) for n in G], dtype=float)
+
             if self.converge_to_eigenvectors:
                 personalization = ranks
 
@@ -177,7 +171,11 @@ class AbsorbingRank:
             convergence: Optional. The ConvergenceManager that determines when iterations stop. If None (default),
                 a ConvergenceManager with the keyword arguments given to this constructor is created.
             use_quotient: Optional. If True (default) performs a L1 re-normalization of ranks after each iteration.
-                This significantly speeds ups the convergence speed.
+                This significantly speeds ups the convergence speed of symmetric normalization (col normalization
+                preserves the L1 norm during computations on its own). Can also pass a pygrank.algorithm.postprocess
+                filter to perform any kind of normalization through its postprocess method. Note that these can slow
+                down computations due to needing to convert ranks between skipy and maps after each iteration.
+                Can pass False or None to ignore this parameter's functionality.
 
         Example:
             >>> from pygrank.algorithms import pagerank
@@ -187,9 +185,9 @@ class AbsorbingRank:
         self.to_scipy = _call(pygrank.algorithms.utils.preprocessor, kwargs) if to_scipy is None else to_scipy
         self.convergence = _call(pygrank.algorithms.utils.ConvergenceManager, kwargs) if convergence is None else convergence
         _ensure_all_used(kwargs, [pygrank.algorithms.utils.preprocessor, pygrank.algorithms.utils.ConvergenceManager])
-        self.use_quotient = use_quotient
+        self.use_quotient = None if use_quotient == False else use_quotient
 
-    def rank(self, G, personalization=None, attraction=None, absorption=None, warm_start=None, residuals=None):
+    def rank(self, G, personalization=None, attraction=None, absorption=None, warm_start=None, residuals=None, *args, **kwargs):
         M = self.to_scipy(G)
         degrees = scipy.array(M.sum(axis=1)).flatten()
 
@@ -219,8 +217,12 @@ class AbsorbingRank:
                         masked_ranks /= masked_ranks.sum()
                     Mfair += np.cross(residual, masked_ranks)
             ranks = (ranks * attract * Mfair + sum(ranks[is_dangling]) * personalization)*degrees/(diag_of_lamda+degrees) + personalization*diag_of_lamda/(diag_of_lamda+degrees)
-            if self.use_quotient:
+            if self.use_quotient == True:
                 ranks = ranks/ranks.sum()
+            elif self.use_quotient is not None:
+                ranks = dict(zip(G.nodes(), map(float, ranks)))
+                ranks = self.use_quotient.transform(ranks, *args, **kwargs)
+                ranks = scipy.array([ranks.get(n, 0) for n in G], dtype=float)
         ranks = dict(zip(G.nodes(), map(float, ranks)))
         return ranks
 

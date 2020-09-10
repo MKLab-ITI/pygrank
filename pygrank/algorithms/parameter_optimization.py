@@ -14,7 +14,7 @@ def __add(weights, index, increment, max_val, min_val):
     return weights
 
 
-def optimize(loss, max_vals=[1 for _ in range(10)], min_vals=None, tol=1.E-8, divide_range=1.01, partitions = 3):
+def optimize(loss, max_vals=[1 for _ in range(10)], min_vals=None, tol=1.E-8, divide_range=1.01, partitions = 3, parameter_tol=float('inf'), depth=1):
     """
     Implements a coordinate descent algorithm for optimizing the argument vector of the given loss function.
     Arguments:
@@ -40,19 +40,24 @@ def optimize(loss, max_vals=[1 for _ in range(10)], min_vals=None, tol=1.E-8, di
     weights = [(min_val+max_val)/2 for min_val, max_val in zip(min_vals, max_vals)]
     range_search = [(max_val-min_val)/2 for min_val, max_val in zip(min_vals, max_vals)]
     curr_variable = 0
-    print("first loss", loss(weights))
+    #print("first loss", loss(weights))
     iter = 0
+    range_deviations = [float('inf')]*len(max_vals)
     while True:
         candidate_weights = [__add(weights, curr_variable, range_search[curr_variable]*(part/partitions-1), max_vals[curr_variable], min_vals[curr_variable]) for part in range(2*partitions+1)]
-        weights = min([w for w in candidate_weights if w is not None], key=lambda w: loss(w))
+        loss_pairs = [(w,loss(w)) for w in candidate_weights if w is not None]
+        weights, _ = min(loss_pairs, key=lambda pair: pair[1])
         range_search[curr_variable] /= divide_range
-        if max(range_search) < tol:
+        range_deviations[curr_variable] = max([loss for _, loss in loss_pairs])-min([loss for _, loss in loss_pairs])
+        if max(range_deviations) < tol and max(range_search) < parameter_tol:
             break
         # move to next var
         iter += 1
-        #print(weights, loss(weights), max(range_search))
+        #print(weights, loss(weights), max(range_deviations), max(range_search))
         curr_variable += 1
         if curr_variable >= len(max_vals):
             curr_variable -= len(max_vals)
-    print("trained weights in", iter, "iterations", weights, "weight loss", loss(weights))
+    #print("trained weights in", iter, "iterations", weights, "final loss", loss(weights))
+    if depth > 1:
+        (loss, max_vals, min_vals, tol, divide_range, partitions, parameter_tol, depth-1)
     return weights
