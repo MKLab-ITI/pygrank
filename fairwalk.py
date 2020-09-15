@@ -1,5 +1,5 @@
 from pygrank.algorithms.pagerank import AbsorbingRank, PageRank, HeatKernel
-from pygrank.algorithms.postprocess import Normalize, Fair, Sweep, PersonalizationFair
+from pygrank.algorithms.postprocess import Normalize, FairPostprocessor, Sweep, FairPersonalizer
 from pygrank.metrics.utils import split_groups
 from sklearn import metrics
 import random
@@ -71,14 +71,14 @@ for dataset in datasets:
     algorithms = {
                     #"FairSweep": Normalize(Sweep(Fair(ppr, "B"))),#FairSweep(ppr),
                     "None": ppr,
-                    "Mult": Fair(ppr, "B"),
-                    "LFRPO": Fair(ppr, "O"),
+                    "Mult": FairPostprocessor(ppr, "B"),
+                    "LFRPO": FairPostprocessor(ppr, "O"),
                     "Sweep": Normalize(Sweep(ppr)),
-                    "FP": Normalize(PersonalizationFair(ppr)),
-                    "CFP": Normalize(PersonalizationFair(ppr, .80,pRule_weight=10)),
-                    "SweepLFRPO": Normalize(Fair(Sweep(ppr), "O")),
-                    "SweepFP": Normalize(PersonalizationFair(Sweep(ppr))),
-                    "SweepCFP": Normalize(PersonalizationFair(Sweep(ppr),.80,pRule_weight=10)),
+                    "FP": Normalize(FairPersonalizer(ppr)),
+                    "CFP": Normalize(FairPersonalizer(ppr, .80,pRule_weight=10)),
+                    "SweepLFRPO": Normalize(FairPostprocessor(Sweep(ppr), "O")),
+                    "SweepFP": Normalize(FairPersonalizer(Sweep(ppr))),
+                    "SweepCFP": Normalize(FairPersonalizer(Sweep(ppr),.80,pRule_weight=10)),
                     #"FPSweep": Normalize(Sweep(PersonalizationFair(ppr))),
                     #"CFPSweep": Normalize(Sweep(PersonalizationFair(ppr,.80,retain_rank_weight=.1))),
                   }

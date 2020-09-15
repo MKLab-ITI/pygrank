@@ -57,8 +57,8 @@ class PageRank:
             use_quotient: Optional. If True (default) performs a L1 re-normalization of ranks after each iteration.
                 This significantly speeds ups the convergence speed of symmetric normalization (col normalization
                 preserves the L1 norm during computations on its own). Can also pass a pygrank.algorithm.postprocess
-                filter to perform any kind of normalization through its postprocess method. Note that these can slow
-                down computations due to needing to convert ranks between skipy and maps after each iteration.
+                rank editing mechanism to perform any kind of normalization through its postprocess method. This slows
+                down computations due to needing to convert ranks between scipy and dicts after each iteration.
                 Can pass False or None to ignore this parameter's functionality.
             converge_to_eigenvectors: Optional. If True (default is False) the outcome of ranking does not depend on
                 the alpha parameters and only weakly on potential personalization. Instead ranking strongly biased
