@@ -1,27 +1,83 @@
 # pygrank
 Recommendation algorithms for large graphs.
 
+## Table of Contents
+* [Table of Contents](#table-of-contents)
+* [Installation](#installation)
+* [Usage](#usage)
+    + [Ranking Algorithms](#ranking-algorithms)
+    + [Adjacency Matrix Normalization](#adjacency-matrix-normalization)
+    + [Convergence Criteria](#convergence-criteria)
+    + [Improving Ranking Outcome](#improving-ranking-outcome)
+    + [Evaluation](#evaluation)
+* [References](#references)
+    + [Method References](#method-references)
+    + [Published](#publications)
+    + [Under Review](#under-review)
+    + [Related](#related)
+
 ## Installation
 ```
 pip install pygrank
 ```
 
 ## Usage
-###### Run a PageRank algorithm with seed oversampling
+
+### Ranking Algorithms
+Ranking algorithms assume that there exists a networkx graph `G`
+and a non-negative personalization dictionary of node importances
+(missing nodes are considered to have 0 importance). For example,
+if we consider a list `edges` of edge tuples and a list `seedS` of
+nodes towards which to consider structural importance, the graph
+and personalization can be constructed as:
 ```python
 import networkx as nx
-from pygrank.algorithms.pagerank import PageRank as Ranker
-from pygrank.algorithms.oversampling import SeedOversampling as Oversampler
-
+edges, seeds = ...
 G = nx.Graph()
-seeds = list()
-... # insert graph nodes and select some of them as seeds (e.g. see tests.py)
-
-algorithm = Oversampler(Ranker(alpha=0.85, tol=1.E-6, max_iters=100)) # these are the default values
-ranks = algorithm.rank(G, {v: 1 for v in seeds})
+for u, v in edges:
+    G.add_edge(u, v)
+personalization = {v: 1 for v in seeds}
 ```
 
-###### Run a PageRank algorithm and make it converge to a robust node order
+Given the above way of creating a graph and a personalization
+dictionary (which is equivalent to the personalization vector
+referred to the literature), one can instantiate a ranking algorithm
+class and call its `rank(G, personalization)` method to capture
+node ranks in a given graph with the given personalization. This
+method exists for all ranking algorithms and potential wrappers
+that aim to augment ranks in some way 
+(see [Improving Ranking Outcome](#improving-ranking-outcome)). 
+Algorithmic parameters, such as convergence critertia and
+the type of adjacency matrix normalization, are passed to the
+constructor of the ranking algorithm. As an example, running a
+personalized PageRank algorithm with diffusion rate `alpha=0.85`
+with absolute rank error tolerance `tol=1.E-6` (its default parameters)
+and printing its node ranks can be done as follows:
+
+```python
+from pygrank.algorithms.pagerank import PageRank
+G, personalization = ...
+ranker = PageRank(alpha=0.85, tol=1.E-6)
+ranks = ranker.rank(G, personalization)
+print('Convergence report:', str(ranker.convergence))
+for v, rank in ranks.items():
+    print('The rank of node', v, 'is', rank)
+```
+
+
+:bulb: For general-purpose usage, we recommend trying
+`PageRank(0.85)`, `PageRank(0.95)` or `HeatKernel(3)`,
+all of which capture some commonly found types of 
+rank propagation. If these are used on large graphs (with
+thousands or milions of nodes), we recommend passing a
+stricter tolerance parameter  `tol1.E-9` to these constructors
+to make sure that the poersonalization is propagated to most nodes.
+
+
+### Adjacency Matrix Normalization
+
+### Convergence Criteria
+Run a PageRank algorithm and make it converge to a robust node order
 ```python
 import networkx as nx
 from pygrank.algorithms.pagerank import PageRank as Ranker
@@ -49,6 +105,22 @@ alpha = 0.85
 algorithm = Ranker(alpha=alpha, convergence=RankOrderConvergenceManager(alpha))
 algorithm = Ordinals(algorithm)
 ...
+```
+
+
+### Improving Ranking Outcome
+PageRank with seed oversampling
+```python
+import networkx as nx
+from pygrank.algorithms.pagerank import PageRank as Ranker
+from pygrank.algorithms.oversampling import SeedOversampling as Oversampler
+
+G = nx.Graph()
+seeds = list()
+... # insert graph nodes and select some of them as seeds (e.g. see tests.py)
+
+algorithm = Oversampler(Ranker(alpha=0.85, tol=1.E-6, max_iters=100)) # these are the default values
+ranks = algorithm.rank(G, {v: 1 for v in seeds})
 ```
 
 
@@ -88,6 +160,8 @@ ranks = algorithm.rank(G, {v: 1 for v in seeds2}) # does not re-compute the norm
 
 :warning: If the normalization is not specified, it is set to "auto", which performs
 "symmetric" normalization for undirected graphs and "col" normalization for directed ones.
+
+### Evaluation
 
 ###### How to evaluate with an unsupervised metric
 ```python
@@ -159,6 +233,18 @@ print(auc.evaluate(ranks))
 
 
 ## References
+### Method References
+The following methods can be used to improve a base ranking algorithm `ranker`.
+
+Instantiation | Method Name | Citation
+--- | --- | --- 
+`pygrank.algorithms.oversampling.SeedOversampling(ranker)` | Seed O | krasanakis2019boosted
+`pygrank.algorithms.oversampling.BoostedSeedOversampling(ranker)` | Seed BO | krasanakis2019boosted
+`pygrank.algorithms.postprocess.fairness.FairPostprocessor(ranker,'O')` | LFPRO | tsioutsiouliklis2020fairness
+`pygrank.algorithms.postprocess.fairness.FairPersonalizer(ranker)` | FP | krasanakis2020fairconstr
+`pygrank.algorithms.postprocess.fairness.FairPersonalizer(ranker,0.8)` | CFP | krasanakis2020fairconstr
+
+### Publications
 ```
 @article{krasanakis2020unsupervised,
   title={Unsupervised evaluation of multiple node ranks by reconstructing local structures},
@@ -169,14 +255,6 @@ print(auc.evaluate(ranks))
   pages={1--32},
   year={2020},
   publisher={Springer}
-}
-```
-```
-@unpublished{krasanakis2020stopping,
-  title={Stopping Personalized PageRank without an Error Tolerance Parameter},
-  author={Krasanakis, Emmanouil and Papadopoulos, Symeon and Kompatsiaris, Ioannis},
-  year={2020},
-  note = {unpublished}
 }
 ```
 ```
@@ -206,5 +284,36 @@ print(auc.evaluate(ranks))
   booktitle={ISMIR},
   pages={702--708},
   year={2018}
+}
+```
+
+
+### Under Review
+```
+@unpublished{krasanakis2020stopping,
+  title={Stopping Personalized PageRank without an Error Tolerance Parameter},
+  author={Krasanakis, Emmanouil and Papadopoulos, Symeon and Kompatsiaris, Ioannis},
+  year={2020},
+  note = {unpublished}
+}
+```
+
+```
+@unpublished{krasanakis2020fairconstr,
+  title={Applying Fairness Constraints on Graph Node Ranks under Personalization Bias},
+  author={Krasanakis, Emmanouil and Papadopoulos, Symeon and Kompatsiaris, Ioannis},
+  year={2020},
+  note = {unpublished}
+}
+```
+
+### Related
+Here, we list additional publications whose methods are implemented in this library.
+```
+@article{tsioutsiouliklis2020fairness,
+  title={Fairness-Aware Link Analysis},
+  author={Tsioutsiouliklis, Sotiris and Pitoura, Evaggelia and Tsaparas, Panayiotis and Kleftakis, Ilias and Mamoulis, Nikos},
+  journal={arXiv preprint arXiv:2005.14431},
+  year={2020}
 }
 ```
