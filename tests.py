@@ -165,7 +165,7 @@ class Test(unittest.TestCase):
         self.assertAlmostEqual(corr[0], 1., 4)
 
     def test_optimizer(self):
-        from pygrank.algorithms.parameter_optimization import optimize
+        from pygrank.algorithms.utils import optimize
 
         # a simple function
         p = optimize(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4, max_vals=[5, 5], parameter_tol=1.E-8)

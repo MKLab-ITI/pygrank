@@ -1,5 +1,5 @@
 import warnings
-from pygrank.algorithms.parameter_optimization import optimize
+from pygrank.algorithms.utils import optimize
 from math import exp
 import random
 
@@ -178,29 +178,63 @@ class CULEP:
     def __init__(self, ranker):
         self.ranker = ranker
 
-    def __culep(self, ranks, sensitive, params):
+    def __culep(self, ranks, sensitive, params, original_ranks):
         a_sensitive = params[0]
         a_nonsensitive = params[1]
         b_sensitive = params[2]
         b_nonsensitive = params[3]
         a = {v: sensitive.get(v, 0)*a_sensitive+(1-sensitive.get(v, 0))*a_nonsensitive for v in ranks}
         b = {v: sensitive.get(v, 0)*b_sensitive+(1-sensitive.get(v, 0))*b_nonsensitive for v in ranks}
-        max_rank = max(ranks.values())
-        return {v: ranks[v]*(a[v]*exp(-b[v]*ranks[v]/max_rank)+(1-a[v])*exp(-b[v]*ranks[v]/max_rank)) for v in ranks}
-
-    def __prule_loss(self, ranks, original_ranks, sensitive):
-        eps = 1.E-12
-        p1 = sum([ranks[v] for v in ranks if sensitive[v] == 0]) / (eps+sum([1 for v in ranks if sensitive[v] == 0]))
-        p2 = sum([ranks[v] for v in ranks if sensitive[v] == 1]) / (eps+sum([1 for v in ranks if sensitive[v] == 1]))
         max_ranks = max(ranks.values())
         max_original_ranks = max(original_ranks.values())
-        return sum(abs(ranks[v]/max_ranks-original_ranks[v]/max_original_ranks) for v in ranks)/len(ranks)-min(p1,p2)/(eps+max(p1,p2))
+        return {v: ranks[v]*((1-a[v])*exp(b[v]*(ranks[v]/max_ranks-original_ranks.get(v,0)/max_original_ranks))+a[v]*exp(-b[v]*(ranks[v]/max_ranks-original_ranks.get(v,0)/max_original_ranks))) for v in ranks}
+
+    def __prule_loss(self, ranks, original_ranks, sensitive, personalization):
+        eps = 1.E-12
+        p1 = sum([ranks[v] for v in ranks if sensitive[v] == 0 and v not in personalization]) / (eps+sum([1 for v in ranks if sensitive[v] == 0 and v not in personalization]))
+        p2 = sum([ranks[v] for v in ranks if sensitive[v] == 1 and v not in personalization]) / (eps+sum([1 for v in ranks if sensitive[v] == 1 and v not in personalization]))
+        p1o = sum([ranks[v] for v in ranks if sensitive[v] == 0]) / (eps + sum([1 for v in ranks if sensitive[v] == 0]))
+        p2o = sum([ranks[v] for v in ranks if sensitive[v] == 1]) / (eps + sum([1 for v in ranks if sensitive[v] == 1]))
+        max_ranks = max(ranks.values())#/len(ranks)
+        max_original_ranks = max(original_ranks.values())#/len(original_ranks)
+        return sum(abs(ranks[v]/max_ranks-original_ranks[v]/max_original_ranks)/len(original_ranks) for v in ranks)-min(p1o,p2o)/(eps+max(p1o,p2o))
 
     def rank(self, G, personalization, sensitive, *args, **kwargs):
         ranks = self.ranker.rank(G, personalization, *args, **kwargs)
-        params = optimize(lambda params: self.__prule_loss(self.__culep(ranks, sensitive, params), ranks, sensitive), [1, 1, 10, 10], min_vals=[0, 0, 0, 0], tol=1.E-3, divide_range=2, partitions=10)
+        #original_ranks = {v: personalization.get(v,0) for v in G}
+        original_ranks = {v: 1 for v in G}
+        params = optimize(lambda params: self.__prule_loss(self.__culep(ranks, sensitive, params, original_ranks), ranks, sensitive, personalization), [1, 1, 10, 10], min_vals=[0, 0, -10, -10], tol=1.E-3, divide_range=2, partitions=10)
         #print(params)
-        return self.__culep(ranks, sensitive, params)
+        return self.__culep(ranks, sensitive, params, personalization)
+
+class PersonalizationFair:
+    def __init__(self, ranker, target_pRule=1, retain_rank_weight=1, pRule_weight=1):
+        self.ranker = ranker
+        self.target_pRule = target_pRule
+        self.retain_rank_weight = retain_rank_weight
+        self.pRule_weight = pRule_weight
+
+    def __culep(self, personalization, sensitive, ranks, params):
+        a = {v: sensitive.get(v, 0)*params[0]+(1-sensitive.get(v, 0))*params[1] for v in ranks}
+        b = {v: sensitive.get(v, 0)*params[2]+(1-sensitive.get(v, 0))*params[3] for v in ranks}
+        max_ranks = max(ranks.values())
+        max_personalization = max(personalization.values())
+
+        return {v: (1 - a[v]) * exp(b[v]*(ranks[v]/max_ranks - personalization.get(v, 0) / max_personalization))
+                               + a[v] * exp(-b[v]*(ranks[v] / max_ranks - personalization.get(v, 0) / max_personalization)) for v in ranks}
+
+    def __prule_loss(self, ranks, original_ranks, sensitive, personalization):
+        eps = 1.E-12
+        p1 = sum([ranks[v] for v in ranks if sensitive[v] == 0]) / (eps + sum([1 for v in ranks if sensitive[v] == 0]))
+        p2 = sum([ranks[v] for v in ranks if sensitive[v] == 1]) / (eps + sum([1 for v in ranks if sensitive[v] == 1]))
+        max_ranks = max(ranks.values())#/len(ranks)
+        max_original_ranks = max(original_ranks.values())#/len(original_ranks)
+        return self.retain_rank_weight*sum(abs(ranks[v]/max_ranks-original_ranks[v]/max_original_ranks)/len(original_ranks) for v in ranks)-self.pRule_weight*min(self.target_pRule,min(p1,p2)/(eps+max(p1,p2)))
+
+    def rank(self, G, personalization, sensitive, *args, **kwargs):
+        ranks = self.ranker.rank(G, personalization, *args, **kwargs)
+        params = optimize(lambda params: self.__prule_loss(self.ranker.rank(G, personalization=self.__culep(personalization, sensitive, ranks, params), *args, **kwargs), ranks, sensitive, personalization), [1, 1, 10, 10], min_vals=[0, 0, -10, -10], tol=1.E-3, divide_range=2, partitions=10)
+        return self.ranker.rank(G, personalization=self.__culep(personalization, sensitive, ranks, params), *args, **kwargs)
 
 
 class Fair:

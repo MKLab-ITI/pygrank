@@ -81,15 +81,15 @@ class PageRank:
 
     def rank(self, G, personalization=None, warm_start=None, *args, **kwargs):
         M = self.to_scipy(G)
-        degrees = scipy.array(M.sum(axis=1)).flatten()
+        degrees = np.array(M.sum(axis=1)).flatten()
 
-        personalization = scipy.repeat(1.0, len(G)) if personalization is None else scipy.array([personalization.get(n, 0) for n in G], dtype=float)
+        personalization = np.repeat(1.0, len(G)) if personalization is None else np.array([personalization.get(n, 0) for n in G], dtype=float)
         if personalization.sum() == 0:
             raise Exception("The personalization vector should contain at least one non-zero entity")
         personalization = personalization / personalization.sum()
-        ranks = personalization if warm_start is None else scipy.array([warm_start.get(n, 0) for n in G], dtype=float)
+        ranks = personalization if warm_start is None else np.array([warm_start.get(n, 0) for n in G], dtype=float)
 
-        is_dangling = scipy.where(degrees == 0)[0]
+        is_dangling = np.where(degrees == 0)[0]
         self.convergence.start()
         while not self.convergence.has_converged(ranks):
             ranks = self.alpha * (ranks * M + sum(ranks[is_dangling]) * personalization) + (1 - self.alpha) * personalization
@@ -98,7 +98,7 @@ class PageRank:
             elif self.use_quotient is not None:
                 ranks = dict(zip(G.nodes(), map(float, ranks)))
                 ranks = self.use_quotient.transform(ranks, *args, **kwargs)
-                ranks = scipy.array([ranks.get(n, 0) for n in G], dtype=float)
+                ranks = np.array([ranks.get(n, 0) for n in G], dtype=float)
 
             if self.converge_to_eigenvectors:
                 personalization = ranks
@@ -131,10 +131,10 @@ class HeatKernel:
         self.convergence = _call(pygrank.algorithms.utils.ConvergenceManager, kwargs) if convergence is None else convergence
         _ensure_all_used(kwargs, [pygrank.algorithms.utils.preprocessor, pygrank.algorithms.utils.ConvergenceManager])
 
-    def rank(self, G, personalization=None):
+    def rank(self, G, personalization=None, *args, **kwargs):
         M = self.to_scipy(G)
 
-        personalization = scipy.repeat(1.0, len(G)) if personalization is None else scipy.array([personalization.get(n, 0) for n in G], dtype=float)
+        personalization = np.repeat(1.0, len(G)) if personalization is None else np.array([personalization.get(n, 0) for n in G], dtype=float)
         if personalization.sum() == 0:
             raise Exception("The personalization vector should contain at least one non-zero entity")
         personalization = personalization / personalization.sum()
@@ -189,22 +189,22 @@ class AbsorbingRank:
 
     def rank(self, G, personalization=None, attraction=None, absorption=None, warm_start=None, residuals=None, *args, **kwargs):
         M = self.to_scipy(G)
-        degrees = scipy.array(M.sum(axis=1)).flatten()
+        degrees = np.array(M.sum(axis=1)).flatten()
 
-        personalization = scipy.repeat(1.0, len(G)) if personalization is None else scipy.array([personalization.get(n, 0) for n in G], dtype=float)
+        personalization = np.repeat(1.0, len(G)) if personalization is None else np.array([personalization.get(n, 0) for n in G], dtype=float)
         if personalization.sum() == 0:
             raise Exception("The personalization vector should contain at least one non-zero entity")
         personalization = personalization / personalization.sum()
-        ranks = personalization if warm_start is None else scipy.array([warm_start.get(n, 0) for n in G], dtype=float)
+        ranks = personalization if warm_start is None else np.array([warm_start.get(n, 0) for n in G], dtype=float)
 
-        is_dangling = scipy.where(degrees == 0)[0]
+        is_dangling = np.where(degrees == 0)[0]
         self.convergence.start()
-        attract = scipy.repeat(1.0, len(G)) if attraction is None else scipy.array([attraction.get(n, 0) for n in G], dtype=float)
-        diag_of_lamda = (1-self.alpha)/self.alpha * (scipy.repeat(1.0, len(G)) if absorption is None else scipy.array([absorption.get(n, 0) for n in G], dtype=float))
+        attract = np.repeat(1.0, len(G)) if attraction is None else np.array([attraction.get(n, 0) for n in G], dtype=float)
+        diag_of_lamda = (1-self.alpha)/self.alpha * (np.repeat(1.0, len(G)) if absorption is None else np.array([absorption.get(n, 0) for n in G], dtype=float))
 
         if residuals is not None:
-            residuals = [( scipy.array([residual.get(n, 0) for n in G], dtype=float),
-                           scipy.array([1 if residual.get(n, 0)!=0 else 0 for n in G], dtype=float) )
+            residuals = [( np.array([residual.get(n, 0) for n in G], dtype=float),
+                           np.array([1 if residual.get(n, 0)!=0 else 0 for n in G], dtype=float) )
                           for residual in residuals]
 
         while not self.convergence.has_converged(ranks):
@@ -222,7 +222,7 @@ class AbsorbingRank:
             elif self.use_quotient is not None:
                 ranks = dict(zip(G.nodes(), map(float, ranks)))
                 ranks = self.use_quotient.transform(ranks, *args, **kwargs)
-                ranks = scipy.array([ranks.get(n, 0) for n in G], dtype=float)
+                ranks = np.array([ranks.get(n, 0) for n in G], dtype=float)
         ranks = dict(zip(G.nodes(), map(float, ranks)))
         return ranks
 
@@ -240,13 +240,13 @@ class BiasedKernel:
 
     def rank(self, G, personalization=None, warm_start=None):
         M = self.to_scipy(G)
-        degrees = scipy.array(M.sum(axis=1)).flatten()
+        degrees = np.array(M.sum(axis=1)).flatten()
 
-        personalization = scipy.repeat(1.0, len(G)) if personalization is None else scipy.array([personalization.get(n, 0) for n in G], dtype=float)
+        personalization = np.repeat(1.0, len(G)) if personalization is None else np.array([personalization.get(n, 0) for n in G], dtype=float)
         if personalization.sum() == 0:
             raise Exception("The personalization vector should contain at least one non-zero entity")
         personalization = personalization / personalization.sum()
-        ranks = personalization if warm_start is None else scipy.array([warm_start.get(n, 0) for n in G], dtype=float)
+        ranks = personalization if warm_start is None else np.array([warm_start.get(n, 0) for n in G], dtype=float)
 
         is_dangling = scipy.where(degrees == 0)[0]
         self.convergence.start()

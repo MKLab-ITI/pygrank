@@ -1,8 +1,6 @@
 import numpy as np
 import warnings
 import sklearn.metrics
-import networkx as nx
-import tqdm
 
 
 def _cos_similarity(v, u, ranks):

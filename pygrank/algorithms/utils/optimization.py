@@ -14,7 +14,7 @@ def __add(weights, index, increment, max_val, min_val):
     return weights
 
 
-def optimize(loss, max_vals=[1 for _ in range(10)], min_vals=None, tol=1.E-8, divide_range=1.01, partitions = 3, parameter_tol=float('inf'), depth=1):
+def optimize(loss, max_vals=[1 for _ in range(10)], min_vals=None, tol=1.E-8, divide_range=1.01, partitions = 3, parameter_tol=float('inf'), depth=1, weights=None):
     """
     Implements a coordinate descent algorithm for optimizing the argument vector of the given loss function.
     Arguments:
@@ -37,7 +37,8 @@ def optimize(loss, max_vals=[1 for _ in range(10)], min_vals=None, tol=1.E-8, di
         if min_val > max_val:
             raise Exception("Empty parameter range ["+str(min_val)+","+str(max_val)+"]")
     #weights = [1./dims for i in range(dims)]
-    weights = [(min_val+max_val)/2 for min_val, max_val in zip(min_vals, max_vals)]
+    if weights is None:
+        weights = [(min_val+max_val)/2 for min_val, max_val in zip(min_vals, max_vals)]
     range_search = [(max_val-min_val)/2 for min_val, max_val in zip(min_vals, max_vals)]
     curr_variable = 0
     #print("first loss", loss(weights))
@@ -59,5 +60,5 @@ def optimize(loss, max_vals=[1 for _ in range(10)], min_vals=None, tol=1.E-8, di
             curr_variable -= len(max_vals)
     #print("trained weights in", iter, "iterations", weights, "final loss", loss(weights))
     if depth > 1:
-        (loss, max_vals, min_vals, tol, divide_range, partitions, parameter_tol, depth-1)
+        return optimize(loss, max_vals, min_vals, tol, divide_range, partitions, parameter_tol, depth-1, weights)
     return weights

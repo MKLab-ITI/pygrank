@@ -4,7 +4,7 @@ from numpy.linalg import norm
 from numpy import dot
 from numpy.random import choice
 import numpy as np
-from pygrank.algorithms.parameter_optimization import optimize
+from pygrank.algorithms.utils import optimize
 
 
 class GraphFilter:
@@ -92,7 +92,7 @@ class LanczosFilter:
             powH *= H
         if sum(weights)!=0:
             filterH /= sum(weights)
-        e1 = scipy.repeat(0.0, self.krylov_space_degree)
+        e1 = np.repeat(0.0, self.krylov_space_degree)
         e1[0] = 1
         ranks = (V*filterH)@e1
         if ranks.sum() != 0:
@@ -103,8 +103,8 @@ class LanczosFilter:
         M = self.to_scipy(G)
         #degrees = scipy.array(M.sum(axis=1)).flatten()
         #M = scipy.sparse.diags(scipy.repeat(1.0, len(G))) - M
-        is_known = scipy.repeat(1.0, len(G)) if personalization is None else scipy.array([1 if n in personalization else 0 for n in G], dtype=float)
-        personalization = scipy.repeat(1.0, len(G)) if personalization is None else scipy.array([personalization.get(n, 0) for n in G], dtype=float)
+        is_known = np.repeat(1.0, len(G)) if personalization is None else np.array([1 if n in personalization else 0 for n in G], dtype=float)
+        personalization = np.repeat(1.0, len(G)) if personalization is None else np.array([personalization.get(n, 0) for n in G], dtype=float)
         if personalization.sum() == 0:
             raise Exception("The personalization vector should contain at least one non-zero entity")
 
