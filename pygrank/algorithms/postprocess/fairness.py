@@ -4,6 +4,19 @@ from pygrank.algorithms.utils import optimize
 from math import exp
 
 
+def to_fairwalk(G, sensitive):
+    eps = 1.E-12
+    G = G.to_directed()
+    sensitive_sum = {u: 0 for u in G}
+    degrees = {u: 0 for u in G}
+    for u, v in G.edges():
+        sensitive_sum[u] += sensitive.get(v, 0)
+        degrees[u] += 1
+    for u, v, d in G.edges(data=True):
+        d["weight"] = sensitive.get(v, 0) * degrees[u]/(eps+sensitive_sum[u]) + (1 - sensitive.get(v, 0)) * degrees[u]/(eps+degrees[u]-sensitive_sum[u])
+    return G
+
+
 class FairSweep:
     def __init__(self, ranker, uniform_ranker=None):
         self.ranker = ranker

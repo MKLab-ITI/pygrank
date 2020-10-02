@@ -7,9 +7,9 @@ Recommendation algorithms for large graphs.
 * [Usage](#usage)
     + [Ranking Algorithms](#ranking-algorithms)
     + [Adjacency Matrix Normalization](#adjacency-matrix-normalization)
+    + [Augmenting Node Ranks](#augmenting-node-ranks)
     + [Convergence Criteria](#convergence-criteria)
-    + [Improving Ranking Outcome](#improving-ranking-outcome)
-    + [Evaluation](#evaluation)
+    + [Rank Quality Evaluation](#rank-quality-evaluation)
 * [References](#references)
     + [Method References](#method-references)
     + [Published](#publications)
@@ -75,40 +75,78 @@ to make sure that the poersonalization is propagated to most nodes.
 
 
 ### Adjacency Matrix Normalization
+Node ranking algorithms all use the same default scheme
+that performs symmetric (i.e. Lalplacian-like) normalization 
+for undirected graphs and column-wise normalization that
+follows a true probabilistic formulation of transition probabilities
+for directed graphs, such as `DiGraph` instances. The type of
+normalization can be manually edited by passing a `normalization`
+argument to the constructor of ranking algorithms, which can assume
+values of "auto" for the default behavior, "col" for column-wise
+normalization, "symmetric" for symmetric normalization and "none"
+for avoiding any normalization, for example because it was performed
+and set to edge weights.
 
-### Convergence Criteria
-Run a PageRank algorithm and make it converge to a robust node order
+In all cases, graph normalization calculation involves the
+computationally  intensive operations of converting the graph 
+into a scipy sparse  matrix and is recomputed each time 
+the `rank(G, personalization)` method of ranking algorithms is 
+called. The *pygrank* library provides a way to avoid recomputing
+it during large-scale experiments by the same algorithm for 
+the same graphs by passing an argument `assume_immutability=True`
+to the algorithms's constructor, which indicates that
+the the graph does not change between runs of the algorithm
+and hence computes the normalization only once for each given
+graph, a process known as hashing.
+
+:warning: Do not alter graph objects after passing them to
+a `rank(...)` method of algorithms with
+`assume_immutability=True` for the first time. If altering the
+graph is necessary midway through your code, create a copy
+instance with one of *networkx*'s in-built methods and
+edit that one.
+
+For example, hashing the outcome of graph normalization to
+speed up multiple calls to the same graph can be achieved
+as per the following code:
 ```python
-import networkx as nx
-from pygrank.algorithms.pagerank import PageRank as Ranker
-from pygrank.algorithms.utils import RankOrderConvergenceManager
-
-G = nx.Graph()
-seeds = list()
-... # insert graph nodes and select some of them as seeds (e.g. see tests.py)
-alpha = 0.85
-
-algorithm = Ranker(alpha=alpha, convergence=RankOrderConvergenceManager(alpha))
-ranks = algorithm.rank(G, {v: 1 for v in seeds})
+from pygrank.algorithms.pagerank import PageRank
+G, personalization1, personalization2 = ...
+algorithm = PageRank(alpha=0.85, normalization="col", assume_immutability=True)
+ranks = algorithm.rank(G, personalization1)
+ranks = algorithm.rank(G, personalization2) # does not re-compute the normalization
 ```
 
-:bulb: Since the node order is more important than the specific rank values,
-a post-processing step to map nodes to that order can be added to the algorithm as:
+Sometimes, many different algorithms are applied on the
+same graph. In this case, to prevent each algorithm
+from recomputing the hashing already calculated by others,
+they can be made to share the same normalization method. This 
+can be done by using a shared instance of the (hashed) 
+normalization preprocessing, which can be passed as the
+`to_scipy` argument to their constructor instead of using
+the previous. 
 
+:bulb: Basically, when the default value `to_scipy=None`
+is given, ranking algorithms create a new preprocessing instance
+with the `normalization` and `assume_immutability` values passed
+to their constructor. These two arguments are completely ignored
+if a preprocessor instance is passed to the ranking algorithm.
+
+For example, using the outcome of graph normalization 
+to speed up multiple rank calls to the same graph by
+different ranking algorithms can be done as:
 ```python
-from pygrank.algorithms.pagerank import PageRank as Ranker
-from pygrank.algorithms.utils import RankOrderConvergenceManager
-from pygrank.algorithms.postprocess import Ordinals
-
-...
-alpha = 0.85
-algorithm = Ranker(alpha=alpha, convergence=RankOrderConvergenceManager(alpha))
-algorithm = Ordinals(algorithm)
-...
+from pygrank.algorithms.pagerank import PageRank, HeatKernel
+from pygrank.algorithms.utils import preprocessor
+G, personalization1, personalization2 = ...
+pre = preprocessor(normalization="col", assume_immutability=True)
+ranker1 = PageRank(alpha=0.85, to_scipy=pre)
+ranker2 = HeatKernel(alpha=0.85, to_scipy=pre)
+ranks1 = ranker1.rank(G, personalization1)
+ranks2 = ranker2.rank(G, personalization2) # does not re-compute the normalization
 ```
 
-
-### Improving Ranking Outcome
+### Augmenting Node Ranks
 PageRank with seed oversampling
 ```python
 import networkx as nx
@@ -123,45 +161,26 @@ algorithm = Oversampler(Ranker(alpha=0.85, tol=1.E-6, max_iters=100)) # these ar
 ranks = algorithm.rank(G, {v: 1 for v in seeds})
 ```
 
-
-###### Hash the outcome of graph normalization to speed up multiple calls to the same graph
+### Convergence Criteria
+Run a PageRank algorithm and make it converge to a robust node order
 ```python
-import networkx as nx
-from pygrank.algorithms.pagerank import PageRank as Ranker
-from pygrank.algorithms.utils import preprocessor
+from pygrank.algorithms.pagerank import PageRank
+from pygrank.algorithms.utils import RankOrderConvergenceManager
+from pygrank.algorithms.postprocess import Ordinals
 
-G = nx.Graph()
-seeds1 = list()
-seeds2 = list()
-... # insert graph nodes and select some of them as seeds (e.g. see tests.py)
-
-pre = preprocessor(normalization="col", assume_immutability=True)
-algorithm = Ranker(alpha=0.8, to_scipy=pre)
-ranks = algorithm.rank(G, {v: 1 for v in seeds1})
-ranks = algorithm.rank(G, {v: 1 for v in seeds2}) # does not re-compute the normalization
+G, personalization = ...
+alpha = 0.85
+ordered_ranker = PageRank(alpha=alpha, convergence=RankOrderConvergenceManager(alpha))
+ordered_ranker = Ordinals(ordered_ranker)
+ordered_ranks = ordered_ranker.rank(G, personalization)
 ```
 
-:bulb: Now preprocessor arguments can also be passed to the constructors of ranking algorithms.
-This will make the ranking algorithm create its own preprocessor with the given arguments.
+:bulb: Since the node order is more important than the specific rank values,
+a post-processing step to map nodes to that order can be added to the algorithm as:
 
-```python
-import networkx as nx
-from pygrank.algorithms.pagerank import PageRank as Ranker
 
-G = nx.Graph()
-seeds1 = list()
-seeds2 = list()
-... # insert graph nodes and select some of them as seeds (e.g. see tests.py)
 
-algorithm = Ranker(alpha=0.8, normalization="col", assume_immutability=True)
-ranks = algorithm.rank(G, {v: 1 for v in seeds1})
-ranks = algorithm.rank(G, {v: 1 for v in seeds2}) # does not re-compute the normalization
-```
-
-:warning: If the normalization is not specified, it is set to "auto", which performs
-"symmetric" normalization for undirected graphs and "col" normalization for directed ones.
-
-### Evaluation
+### Rank Quality Evaluation
 
 ###### How to evaluate with an unsupervised metric
 ```python
@@ -234,17 +253,24 @@ print(auc.evaluate(ranks))
 
 ## References
 ### Method References
-The following methods can be used to improve a base ranking algorithm `ranker`.
 
-Instantiation | Method Name | Citation
+Instantiation or Usage | Method Name | Citation
 --- | --- | --- 
-`pygrank.algorithms.oversampling.SeedOversampling(ranker)` | Seed O | krasanakis2019boosted
-`pygrank.algorithms.oversampling.BoostedSeedOversampling(ranker)` | Seed BO | krasanakis2019boosted
+`pygrank.algorithms.oversampling.SeedOversampling(ranker)` | SeedO | krasanakis2019boosted
+`pygrank.algorithms.oversampling.BoostedSeedOversampling(ranker)` | SeedBO | krasanakis2019boosted
+`pygrank.algorithms.pagerank.PageRank(converge_to_eigenvectors=True)` | VenueRank | krasanakis2018venuerank
+`G = pygrank.postprocess.fairness.to_fairwalk(G, sensitive)` | FairWalk |rahman2019fairwalk
 `pygrank.algorithms.postprocess.fairness.FairPostprocessor(ranker,'O')` | LFPRO | tsioutsiouliklis2020fairness
 `pygrank.algorithms.postprocess.fairness.FairPersonalizer(ranker)` | FP | krasanakis2020fairconstr
 `pygrank.algorithms.postprocess.fairness.FairPersonalizer(ranker,0.8)` | CFP | krasanakis2020fairconstr
+`pygrank.metrics.multigroup.LinkAUC(G, hops=1)` | LinkAUC | krasanakis2019linkauc
+`pygrank.metrics.multigroup.LinkAUC(G, hops=2)` | HopAUC | krasanakis2020unsupervised
+`pygrank.algorithms.utils.RankOrderConvergenceManager(alpha, confidence=0.99, criterion="fraction_of_walks"))` | | krasanakis2020stopping
+`pygrank.algorithms.utils.RankOrderConvergenceManager(alpha))` | | krasanakis2020stopping
 
 ### Publications
+The publications that have led to the development of various aspects of
+this library are presented in reverse chronological order.
 ```
 @article{krasanakis2020unsupervised,
   title={Unsupervised evaluation of multiple node ranks by reconstructing local structures},
@@ -315,5 +341,14 @@ Here, we list additional publications whose methods are implemented in this libr
   author={Tsioutsiouliklis, Sotiris and Pitoura, Evaggelia and Tsaparas, Panayiotis and Kleftakis, Ilias and Mamoulis, Nikos},
   journal={arXiv preprint arXiv:2005.14431},
   year={2020}
+}
+```
+```
+@inproceedings{rahman2019fairwalk,
+  title={Fairwalk: Towards Fair Graph Embedding.},
+  author={Rahman, Tahleen A and Surma, Bartlomiej and Backes, Michael and Zhang, Yang},
+  booktitle={IJCAI},
+  pages={3289--3295},
+  year={2019}
 }
 ```

@@ -34,7 +34,7 @@ class LinkAUC:
         ranker: Optional. The ranking algorithm.
         nodes: The list of nodes whose edges are used in for evaluation. If None (default) all graph nodes are used.
     """
-    def __init__(self, G, nodes=None, evaluation="AUC", similarity="cos", max_positive_samples=2000, max_negative_samples=2000, hops=1, seed=1):
+    def __init__(self, G, nodes=None, evaluation="AUC", similarity="cos", hops=1, max_positive_samples=2000, max_negative_samples=2000, seed=None):
         self.G = G
         self.nodes = list(G) if nodes is None else list(set(list(nodes)))
         self.max_positive_samples = max_positive_samples
@@ -52,7 +52,8 @@ class LinkAUC:
             self._similarity = similarity
 
     def evaluate(self, ranks):
-        np.random.seed(self.seed)
+        if self.seed is not None:
+            np.random.seed(self.seed)
         positive_candidates = list(self.G)
         if len(positive_candidates) > self.max_positive_samples:
             positive_candidates = np.random.choice(positive_candidates, self.max_positive_samples)

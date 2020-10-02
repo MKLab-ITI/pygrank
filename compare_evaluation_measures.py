@@ -106,10 +106,10 @@ for dataset_name in datasets:
                     "Density": pygrank.metrics.multigroup.MultiUnsupervised(pygrank.metrics.unsupervised.Density, G),
                     "Modularity": pygrank.metrics.multigroup.MultiUnsupervised(pygrank.metrics.unsupervised.Modularity, G, max_positive_samples=max_positive_samples),
                     #"DotLinkAUC": pygrank.metrics.multigroup.LinkAUC(G, similarity="dot", max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples),
-                    "CosLinkAUC": pygrank.metrics.multigroup.LinkAUC(G, similarity="cos", max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples),
-                    "HopAUC": pygrank.metrics.multigroup.LinkAUC(G, similarity="cos", hops=2,max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples),
-                    "LinkCE": pygrank.metrics.multigroup.LinkAUC(G, evaluation="CrossEntropy", similarity="cos", hops=1,max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples),
-                    "HopCE": pygrank.metrics.multigroup.LinkAUC(G, evaluation="CrossEntropy", similarity="cos", hops=2,max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples)
+                    "CosLinkAUC": pygrank.metrics.multigroup.LinkAUC(G, similarity="cos", max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples, seed=1),
+                    "HopAUC": pygrank.metrics.multigroup.LinkAUC(G, similarity="cos", hops=2,max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples, seed=1),
+                    "LinkCE": pygrank.metrics.multigroup.LinkAUC(G, evaluation="CrossEntropy", similarity="cos", hops=1,max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples, seed=1),
+                    "HopCE": pygrank.metrics.multigroup.LinkAUC(G, evaluation="CrossEntropy", similarity="cos", hops=2,max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples, seed=1)
                     }
         if len(measure_evaluations) == 0:
             for measure_name in measures.keys():

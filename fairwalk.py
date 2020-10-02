@@ -1,5 +1,5 @@
 from pygrank.algorithms.pagerank import AbsorbingRank, PageRank, HeatKernel
-from pygrank.algorithms.postprocess import Normalize, FairPostprocessor, Sweep, FairPersonalizer
+from pygrank.algorithms.postprocess import Normalize, FairPostprocessor, Sweep, FairPersonalizer, to_fairwalk
 from pygrank.metrics.utils import split_groups
 from sklearn import metrics
 import random
@@ -24,6 +24,8 @@ def experiments(algorithm, seed_size, dataset):
         repeats = 5
     else:
         raise Exception("Invalid dataset name")
+
+    G = to_fairwalk(G, sensitive) # COMMENT THIS LINE WHEN NOT RUNNING EXPLICITLY FAIRWALK
 
     eps = 1.E-12
     p1 = sum([labels[v] for v in G if sensitive[v] == 0]) / (eps + sum([1 for v in G if sensitive[v] == 0]))
@@ -63,22 +65,22 @@ for dataset in datasets:
     print('%', dataset)
     points = 10
 
-    #ppr = PageRank(alpha=0.85, max_iters=10000, tol=1.E-9, assume_immutability=True, normalization="symmetric")
-    ppr = HeatKernel(t=3, max_iters=10000, tol=1.E-9, assume_immutability=True, normalization="symmetric")
+    ppr = PageRank(alpha=0.85, max_iters=10000, tol=1.E-9, assume_immutability=True, normalization="symmetric")
+    #ppr = HeatKernel(t=3, max_iters=10000, tol=1.E-9, assume_immutability=True, normalization="symmetric")
     seeds = [(1.+i)/points for i in range(points) if (1.+i)/points<=0.9 and (1.+i)/points>=0.1]
     seeds = seeds[:3]
 
     algorithms = {
                     #"FairSweep": Normalize(Sweep(Fair(ppr, "B"))),#FairSweep(ppr),
                     "None": ppr,
-                    "Mult": FairPostprocessor(ppr, "B"),
-                    "LFRPO": FairPostprocessor(ppr, "O"),
-                    "Sweep": Normalize(Sweep(ppr)),
-                    "FP": Normalize(FairPersonalizer(ppr)),
-                    "CFP": Normalize(FairPersonalizer(ppr, .80,pRule_weight=10)),
-                    "SweepLFRPO": Normalize(FairPostprocessor(Sweep(ppr), "O")),
-                    "SweepFP": Normalize(FairPersonalizer(Sweep(ppr))),
-                    "SweepCFP": Normalize(FairPersonalizer(Sweep(ppr),.80,pRule_weight=10)),
+                    #"Mult": FairPostprocessor(ppr, "B"),
+                    #"LFRPO": FairPostprocessor(ppr, "O"),
+                    #"Sweep": Normalize(Sweep(ppr)),
+                    #"FP": Normalize(FairPersonalizer(ppr)),
+                    #"CFP": Normalize(FairPersonalizer(ppr, .80,pRule_weight=10)),
+                    #"SweepLFRPO": Normalize(FairPostprocessor(Sweep(ppr), "O")),
+                    #"SweepFP": Normalize(FairPersonalizer(Sweep(ppr))),
+                    #"SweepCFP": Normalize(FairPersonalizer(Sweep(ppr),.80,pRule_weight=10)),
                     #"FPSweep": Normalize(Sweep(PersonalizationFair(ppr))),
                     #"CFPSweep": Normalize(Sweep(PersonalizationFair(ppr,.80,retain_rank_weight=.1))),
                   }
