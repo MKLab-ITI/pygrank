@@ -87,12 +87,12 @@ normalization, "symmetric" for symmetric normalization and "none"
 for avoiding any normalization, for example because it was performed
 and set to edge weights.
 
-In all cases, graph normalization calculation involves the
-computationally  intensive operations of converting the graph 
-into a scipy sparse  matrix and is recomputed each time 
-the `rank(G, personalization)` method of ranking algorithms is 
-called. The *pygrank* library provides a way to avoid recomputing
-it during large-scale experiments by the same algorithm for 
+In all cases, ajacency matrix normalization involves the
+computationally intensive operations of converting the graph 
+into a scipy sparse matrix each time  the `rank(G, personalization)`
+method of ranking algorithms is  called. The *pygrank* library
+provides a way to avoid recomputing the normalization
+during large-scale experiments by the same algorithm for 
 the same graphs by passing an argument `assume_immutability=True`
 to the algorithms's constructor, which indicates that
 the the graph does not change between runs of the algorithm
@@ -147,18 +147,32 @@ ranks2 = ranker2.rank(G, personalization2) # does not re-compute the normalizati
 ```
 
 ### Augmenting Node Ranks
-PageRank with seed oversampling
+Several approaches aim to postprocess the outcome of node ranking
+algorithms. This postprocessing may vary from simple normalization
+to more complex processes.
+
+The first type of
+
 ```python
-import networkx as nx
-from pygrank.algorithms.pagerank import PageRank as Ranker
-from pygrank.algorithms.oversampling import SeedOversampling as Oversampler
+from pygrank.algorithms.postprocess import Ordinals
 
-G = nx.Graph()
-seeds = list()
-... # insert graph nodes and select some of them as seeds (e.g. see tests.py)
+G, personalization = ...
+base_algorithm = ... # e.g. PageRank
 
-algorithm = Oversampler(Ranker(alpha=0.85, tol=1.E-6, max_iters=100)) # these are the default values
-ranks = algorithm.rank(G, {v: 1 for v in seeds})
+algorithm = Ordinals(base_algorithm)
+ordinals = algorithm.rank(G, personalization)
+```
+
+
+An additional type of methods
+```python
+from pygrank.algorithms.oversampling import SeedOversampling
+
+G, personalization = ...
+base_algorithm = ... # e.g. PageRank
+
+algorithm = SeedOversampling(base_algorithm)
+ranks = algorithm.rank(G, personalization)
 ```
 
 ### Convergence Criteria
@@ -265,8 +279,8 @@ Instantiation or Usage | Method Name | Citation
 `pygrank.algorithms.postprocess.fairness.FairPersonalizer(ranker,0.8)` | CFP | krasanakis2020fairconstr
 `pygrank.metrics.multigroup.LinkAUC(G, hops=1)` | LinkAUC | krasanakis2019linkauc
 `pygrank.metrics.multigroup.LinkAUC(G, hops=2)` | HopAUC | krasanakis2020unsupervised
-`pygrank.algorithms.utils.RankOrderConvergenceManager(alpha, confidence=0.99, criterion="fraction_of_walks"))` | | krasanakis2020stopping
-`pygrank.algorithms.utils.RankOrderConvergenceManager(alpha))` | | krasanakis2020stopping
+`pygrank.algorithms.utils.RankOrderConvergenceManager(alpha, confidence=0.99, criterion="fraction_of_walks")` | | krasanakis2020stopping
+`pygrank.algorithms.utils.RankOrderConvergenceManager(alpha)` | | krasanakis2020stopping
 
 ### Publications
 The publications that have led to the development of various aspects of

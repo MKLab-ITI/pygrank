@@ -60,6 +60,7 @@ class FairPersonalizer:
     def rank(self, G, personalization, sensitive, *args, **kwargs):
         ranks = self.ranker.rank(G, personalization, *args, **kwargs)
         params = optimize(lambda params: self.__prule_loss(self.ranker.rank(G, personalization=self.__culep(personalization, sensitive, ranks, params), *args, **kwargs), ranks, sensitive, personalization), [1, 1, 10, 10], min_vals=[0, 0, -10, -10], tol=1.E-3, divide_range=2, partitions=10)
+        #params = [0.5, 0.5, 10, 10]
         return self.ranker.rank(G, personalization=self.__culep(personalization, sensitive, ranks, params), *args, **kwargs)
 
 

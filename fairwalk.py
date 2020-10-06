@@ -11,7 +11,14 @@ def perc(num):
 
 def experiments(algorithm, seed_size, dataset):
     random.seed(1)
-    if "twitter" in dataset:
+    if "amazon" in dataset:
+        from compare_evaluation_measures import import_SNAP_data
+        G, groups = import_SNAP_data("snap_amazon")
+        sensitive_set = set(groups[0])
+        sensitive = {v: 1 if v in sensitive_set else 0 for v in G}
+        labels = {v: 1-sensitive[v] for v in G}
+        repeats = 1
+    elif "twitter" in dataset:
         import data.twitter_fairness.importer
         G, sensitive, labels = data.twitter_fairness.importer.load()
         repeats = 5
@@ -25,11 +32,11 @@ def experiments(algorithm, seed_size, dataset):
     else:
         raise Exception("Invalid dataset name")
 
-    G = to_fairwalk(G, sensitive) # COMMENT THIS LINE WHEN NOT RUNNING EXPLICITLY FAIRWALK
+    #G = to_fairwalk(G, sensitive) # COMMENT THIS LINE WHEN NOT RUNNING EXPLICITLY FAIRWALK
 
     eps = 1.E-12
-    p1 = sum([labels[v] for v in G if sensitive[v] == 0]) / (eps + sum([1 for v in G if sensitive[v] == 0]))
-    p2 = sum([labels[v] for v in G if sensitive[v] == 1]) / (eps + sum([1 for v in G if sensitive[v] == 1]))
+    #p1 = sum([labels[v] for v in G if sensitive[v] == 0]) / (eps + sum([1 for v in G if sensitive[v] == 0]))
+    #p2 = sum([labels[v] for v in G if sensitive[v] == 1]) / (eps + sum([1 for v in G if sensitive[v] == 1]))
     #print("dataset pRule", min(p1,p2)/max(p1,p2), sum(sensitive.values())/len(G), sum(labels.values())/len(G), len(G), G.number_of_edges())
 
     accuracy = list()
@@ -60,29 +67,26 @@ def experiments(algorithm, seed_size, dataset):
     return sum(accuracy)/len(accuracy), sum(treatment)/len(treatment), sum(mistreatment)/len(mistreatment), sum(treatment_overtrained)/len(treatment_overtrained)
 
 
-datasets = ["facebook 0", "facebook 686", "facebook 0 extreme", "facebook 686 extreme", "twitter extreme"]
+datasets = ["facebook 0", "facebook 686", "facebook 0 extreme", "facebook 686 extreme", "twitter extreme", "amazon"]
 for dataset in datasets:
     print('%', dataset)
     points = 10
 
-    ppr = PageRank(alpha=0.85, max_iters=10000, tol=1.E-9, assume_immutability=True, normalization="symmetric")
-    #ppr = HeatKernel(t=3, max_iters=10000, tol=1.E-9, assume_immutability=True, normalization="symmetric")
+    ppr = PageRank(alpha=0.99, max_iters=10000, tol=1.E-9, assume_immutability=True, normalization="symmetric")
+    #ppr = HeatKernel(t=5, max_iters=10000, tol=1.E-9, assume_immutability=True, normalization="symmetric")
     seeds = [(1.+i)/points for i in range(points) if (1.+i)/points<=0.9 and (1.+i)/points>=0.1]
     seeds = seeds[:3]
 
     algorithms = {
-                    #"FairSweep": Normalize(Sweep(Fair(ppr, "B"))),#FairSweep(ppr),
                     "None": ppr,
-                    #"Mult": FairPostprocessor(ppr, "B"),
-                    #"LFRPO": FairPostprocessor(ppr, "O"),
-                    #"Sweep": Normalize(Sweep(ppr)),
-                    #"FP": Normalize(FairPersonalizer(ppr)),
-                    #"CFP": Normalize(FairPersonalizer(ppr, .80,pRule_weight=10)),
-                    #"SweepLFRPO": Normalize(FairPostprocessor(Sweep(ppr), "O")),
-                    #"SweepFP": Normalize(FairPersonalizer(Sweep(ppr))),
-                    #"SweepCFP": Normalize(FairPersonalizer(Sweep(ppr),.80,pRule_weight=10)),
-                    #"FPSweep": Normalize(Sweep(PersonalizationFair(ppr))),
-                    #"CFPSweep": Normalize(Sweep(PersonalizationFair(ppr,.80,retain_rank_weight=.1))),
+                    "Mult": FairPostprocessor(ppr, "B"),
+                    "LFRPO": FairPostprocessor(ppr, "O"),
+                    "Sweep": Normalize(Sweep(ppr)),
+                    "FP": Normalize(FairPersonalizer(ppr)),
+                    "CFP": Normalize(FairPersonalizer(ppr, .80,pRule_weight=10)),
+                    "SweepLFRPO": Normalize(FairPostprocessor(Sweep(ppr), "O")),
+                    "SweepFP": Normalize(FairPersonalizer(Sweep(ppr))),
+                    "SweepCFP": Normalize(FairPersonalizer(Sweep(ppr),.80,pRule_weight=10)),
                   }
 
     #print("clear all\nfigure(1);\nclf\nseeds = ["+",".join([str(seed) for seed in seeds])+"];\n")
