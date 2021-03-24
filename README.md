@@ -329,6 +329,8 @@ Instantiation or Usage | Method Name | Citation
 `pygrank.algorithms.postprocess.fairness.FairPostprocessor(ranker,'O')` | LFPRO | tsioutsiouliklis2020fairness
 `pygrank.algorithms.postprocess.fairness.FairPersonalizer(ranker, error_type="mabs", max_residual=0)` | FP | krasanakis2020fairconstr
 `pygrank.algorithms.postprocess.fairness.FairPersonalizer(ranker, 0.8, 10, error_type="mabs", max_residual=0)` | CFP | krasanakis2020fairconstr
+`pygrank.algorithms.postprocess.fairness.FairPersonalizer(ranker)` | FairEdit | krasanakis2020prioredit
+`pygrank.algorithms.postprocess.fairness.FairPersonalizer(ranker, 0.8, 10)` | FairEditC | krasanakis2020prioredit
 `pygrank.metrics.multigroup.LinkAUC(G, hops=1)` | LinkAUC | krasanakis2019linkauc
 `pygrank.metrics.multigroup.LinkAUC(G, hops=2)` | HopAUC | krasanakis2020unsupervised
 `pygrank.algorithms.utils.RankOrderConvergenceManager(alpha, confidence=0.99, criterion="fraction_of_walks")` | | krasanakis2020stopping
@@ -392,6 +394,15 @@ this library are presented in reverse chronological order.
   booktitle={ISMIR},
   pages={702--708},
   year={2018}
+}
+```
+
+### Under Review
+```
+@inproceedings{krasanakis2020prioredit,
+  title={Prior Signal Editing for Graph Filter Posterior Fairness Constraints},
+  author={Krasanakis, Emmanouil and Papadopoulos, Symeon and Kompatsiaris, Ioannis},
+  booktitle={under review},
 }
 ```
 
