@@ -1,5 +1,9 @@
 # pygrank
-Recommendation algorithms for large graphs.
+Fast recommendation algorithms for large graphs based on link analysis.
+This library implements popular graph filters to perform node
+recommendation, postprocessing approaches to improve recommendation quality 
+and make its outcome fairer, as well as supervised and unsupervised
+measures of recommendation quality.
 
 ## Table of Contents
 * [Table of Contents](#table-of-contents)
@@ -11,6 +15,7 @@ Recommendation algorithms for large graphs.
     + [Convergence Criteria](#convergence-criteria)
     + [Rank Quality Evaluation](#rank-quality-evaluation)
 * [References](#references)
+    + [Glossary](#glossary)
     + [Method References](#method-references)
     + [Published](#publications)
     + [Under Review](#under-review)
@@ -73,6 +78,17 @@ rank propagation. If these are used on large graphs (with
 thousands or milions of nodes), we recommend passing a
 stricter tolerance parameter  `tol1.E-9` to constructors
 to make sure that the personalization is propagated to most nodes.
+
+
+:bulb: For even faster running speeds that avoid conversion of
+dictionaries to numpy arrays and conversely,
+pass the argument ``as_dict=False`` to  the``rank(...)`` 
+method of graph ranking algorithms to make them output a numpy
+array (with elements in the same order as the order of nodes 
+in the networkx graph, e.g. the order of traversing ``for u in G``).
+Similarly, numpy arrays can also be passed to that method instead
+of the personalization dictionary to also avoid these conversions.
+**This optimization is not supported by some post-processing schemes.**
 
 
 ### Adjacency Matrix Normalization
@@ -221,13 +237,13 @@ argument to indicate the numerical tolerance level required for convergence.
 
 Sometimes, it suffices to reach a robust node rank order  instead of precise 
 values. To cover such cases we have implemented a different convergence criterion
-``pygrank.algorithms.utils.RankOrderConvergenceManager'' that stops 
+``pygrank.algorithms.utils.RankOrderConvergenceManager`` that stops 
 at a robust node order \[krasanakis2020stopping\].
 
 
 :warning: This criterion is specifically intended to be used with PageRank 
 as the base ranking algorithm and needs to know that algorithm's diffusion
-parameter.
+rate ``alpha``, which is passed as its first argument.
 
 ```python
 from pygrank.algorithms.pagerank import PageRank
@@ -243,12 +259,22 @@ ordered_ranks = ordered_ranker.rank(G, personalization)
 
 :bulb: Since the node order is more important than the specific rank values,
 a post-processing step has been added throught the wrapping expression
-``ordered_ranker = Ordinals(ordered_ranker)'' to output rank order. 
+``ordered_ranker = Ordinals(ordered_ranker)`` to output rank order. 
 
 
 ### Rank Quality Evaluation
+There are two types of node rank evaluations; supervised and unsupervised.
+The evaluation process assumes that nodes form structural or ground truth
+communities out of which a few seed nodes are known. If other nodes are also
+known, they can be used for supervised evaluation, otherwise unsupervised 
+metrics need to be selected.
 
-###### How to evaluate with an unsupervised metric
+:bulb: Supervised metrics can also evaluate numpy arrays obtained from the
+``as_dict=False`` ranking argument but support for this feature is still
+limited for ther metrics. More extensive documentation of this feature
+will be provided in the future.
+
+###### How to evaluate ranks with an unsupervised metric
 ```python
 from pygrank.algorithms.postprocess import Normalize
 from pygrank.metrics.unsupervised import Conductance
@@ -260,7 +286,7 @@ metric = Conductance(G)
 print(metric.evaluate(normalized_ranks))
 ```
 
-###### How to evaluate with a supervised metric
+###### How to evaluate ranks with a supervised metric
 ```python
 from pygrank.metrics.supervised import AUC
 import pygrank.metrics.utils
@@ -318,6 +344,14 @@ print(auc.evaluate(ranks))
 
 
 ## References
+### Glossary
+- *Seeds.* Example nodes that are known to belong to a community.
+- *Ranks.* Scores (not ordinalities) assigned to nodes. They typically assume
+values in the range \[0,1\].
+- *Personalization.* A hashmap between seeds and scores to be passed to graph ranking algorithms. This is also known as a personalization vector
+or graph signal priors. 
+- *Node ranking algorithm.* An algorithm that starts with a graph and personalization and outputs a hashmap of node scores.
+
 ### Method References
 
 Instantiation or Usage | Method Name | Citation
