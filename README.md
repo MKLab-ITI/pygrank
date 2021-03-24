@@ -40,9 +40,10 @@ personalization = {v: 1 for v in seeds}
 ```
 
 Given the above way of creating a graph and a personalization
-dictionary (which is equivalent to the personalization vector
-referred to the literature), one can instantiate a ranking algorithm
-class and call its `rank(G, personalization)` method to capture
+dictionary (which is the programming artifact equivalent to what
+the literature referred to as a graph signal or personalization vector), 
+one can instantiate a ranking algorithm class 
+and call its `rank(G, personalization)` method to capture
 node ranks in a given graph with the given personalization. This
 method exists for all ranking algorithms and potential wrappers
 that aim to augment ranks in some way 
@@ -70,8 +71,8 @@ for v, rank in ranks.items():
 all of which capture some commonly found types of 
 rank propagation. If these are used on large graphs (with
 thousands or milions of nodes), we recommend passing a
-stricter tolerance parameter  `tol1.E-9` to these constructors
-to make sure that the poersonalization is propagated to most nodes.
+stricter tolerance parameter  `tol1.E-9` to constructors
+to make sure that the personalization is propagated to most nodes.
 
 
 ### Adjacency Matrix Normalization
@@ -81,16 +82,18 @@ for undirected graphs and column-wise normalization that
 follows a true probabilistic formulation of transition probabilities
 for directed graphs, such as `DiGraph` instances. The type of
 normalization can be manually edited by passing a `normalization`
-argument to the constructor of ranking algorithms, which can assume
-values of "auto" for the default behavior, "col" for column-wise
-normalization, "symmetric" for symmetric normalization and "none"
-for avoiding any normalization, for example because it was performed
-and set to edge weights.
+argument to constructors of ranking algorithms. This parameter can 
+assume values of "auto" for the above-described default behavior, 
+"col" for column-wise normalization, "symmetric" for symmetric 
+normalization and "none" for avoiding any normalization, 
+for example because edge weights already hold the normalization
+(e.g. this is used to rank graphs after FairWalk is used to
+preprocess edge weights).
 
-In all cases, ajacency matrix normalization involves the
-computationally intensive operations of converting the graph 
+In all cases, adjacency matrix normalization involves the
+computationally intensive operation of converting the graph 
 into a scipy sparse matrix each time  the `rank(G, personalization)`
-method of ranking algorithms is  called. The *pygrank* library
+method of ranking algorithms is called. The *pygrank* library
 provides a way to avoid recomputing the normalization
 during large-scale experiments by the same algorithm for 
 the same graphs by passing an argument `assume_immutability=True`
@@ -99,8 +102,12 @@ the the graph does not change between runs of the algorithm
 and hence computes the normalization only once for each given
 graph, a process known as hashing.
 
+:warning: Hashing only uses the Python object's hash method, 
+so a different instance of the same graph will recompute the 
+normalization if it points at a different memory location.
+
 :warning: Do not alter graph objects after passing them to
-a `rank(...)` method of algorithms with
+`rank(...)` methods of algorithms with
 `assume_immutability=True` for the first time. If altering the
 graph is necessary midway through your code, create a copy
 instance with one of *networkx*'s in-built methods and
@@ -118,13 +125,16 @@ ranks = algorithm.rank(G, personalization2) # does not re-compute the normalizat
 ```
 
 Sometimes, many different algorithms are applied on the
-same graph. In this case, to prevent each algorithm
+same graph. In this case, to prevent each one
 from recomputing the hashing already calculated by others,
 they can be made to share the same normalization method. This 
-can be done by using a shared instance of the (hashed) 
-normalization preprocessing, which can be passed as the
-`to_scipy` argument to their constructor instead of using
-the previous. 
+can be done by using a shared instance of the 
+normalization preprocessing class `preprocessor`, 
+which can be passed as the `to_scipy` argument of ranking algorithm
+constructors. In this case, the `normalization` and `assume_immutability`
+arguments should be passed to the preprocessor and will be ignored by the
+constructors (what would otherwise happen is that the constructors
+would create a prerpocessor with these arguments).
 
 :bulb: Basically, when the default value `to_scipy=None`
 is given, ranking algorithms create a new preprocessing instance
@@ -147,11 +157,16 @@ ranks2 = ranker2.rank(G, personalization2) # does not re-compute the normalizati
 ```
 
 ### Augmenting Node Ranks
-Several approaches aim to postprocess the outcome of node ranking
-algorithms. This postprocessing may vary from simple normalization
-to more complex processes.
+It is often desirable to postprocess the outcome of node ranking
+algorithms. This can be some simple normalization or involve more 
+complex procedures, such as making ranks protect a group of sensitive
+nodes (hence making them fairness-aware).
 
-The first type of
+The simpler postprocessing mechanisms only aim to transform
+outputted ranks, for example by normalizing them or outputting
+their ordinality. For example, the following code wraps the base algorithm
+with a preprocessor that assigns rank 1 to the highest scored node,
+2 to the second highest, etc:
 
 ```python
 from pygrank.algorithms.postprocess import Ordinals
@@ -163,8 +178,28 @@ algorithm = Ordinals(base_algorithm)
 ordinals = algorithm.rank(G, personalization)
 ```
 
+For ease of use, this type of postprocessing also provides a transformation
+method that can be directly used to transform ranks without wrapping the
+base algotithm. For example, the following code performs the same operation
+as the previous one:
 
-An additional type of methods
+```python
+from pygrank.algorithms.postprocess import Ordinals
+
+G, personalization = ...
+base_algorithm = ... # e.g. PageRank
+
+ordinals = Ordinals().transform(base_algorithm.rank(G, personalization))
+```
+
+
+A second type of postprocessing uses computed ranks to change (e.g. edit)
+the personalization before re-running the ranking algorithms, sometimes 
+multiple times. For example, the following seed oversampling scheme we first
+introduced in \[krasanakis2019boosted\] uses a ``base_algorithm`` to rank nodes
+and then sets seeds to one for nodes with higher ranks than any of the original seeds
+and then reruns that algorithm with updated seeds:
+
 ```python
 from pygrank.algorithms.oversampling import SeedOversampling
 
@@ -176,7 +211,24 @@ ranks = algorithm.rank(G, personalization)
 ```
 
 ### Convergence Criteria
-Run a PageRank algorithm and make it converge to a robust node order
+Most base ranking algorithm constructors allow ``convergence`` argument that
+indicates an object to help determing their convergence criteria, such as type of
+error and tolerance for numerical convergence. If no such argument is passed
+to the constructor, a ``pygrank.algorithms.utils.ConvergenceManager`` object
+is automatically instantiated by borrowing whichever extra arguments it can
+from those passed to the constructors. Most frequently used is the ``tol``
+argument to indicate the numerical tolerance level required for convergence.
+
+Sometimes, it suffices to reach a robust node rank order  instead of precise 
+values. To cover such cases we have implemented a different convergence criterion
+``pygrank.algorithms.utils.RankOrderConvergenceManager'' that stops 
+at a robust node order \[krasanakis2020stopping\].
+
+
+:warning: This criterion is specifically intended to be used with PageRank 
+as the base ranking algorithm and needs to know that algorithm's diffusion
+parameter.
+
 ```python
 from pygrank.algorithms.pagerank import PageRank
 from pygrank.algorithms.utils import RankOrderConvergenceManager
@@ -190,8 +242,8 @@ ordered_ranks = ordered_ranker.rank(G, personalization)
 ```
 
 :bulb: Since the node order is more important than the specific rank values,
-a post-processing step to map nodes to that order can be added to the algorithm as:
-
+a post-processing step has been added throught the wrapping expression
+``ordered_ranker = Ordinals(ordered_ranker)'' to output rank order. 
 
 
 ### Rank Quality Evaluation
@@ -202,7 +254,7 @@ from pygrank.algorithms.postprocess import Normalize
 from pygrank.metrics.unsupervised import Conductance
 
 G, ranks = ... # calculate as per the first example
-normalized_ranks = Normalize().rank(ranks)
+normalized_ranks = Normalize().transform(ranks)
 
 metric = Conductance(G)
 print(metric.evaluate(normalized_ranks))
@@ -275,8 +327,8 @@ Instantiation or Usage | Method Name | Citation
 `pygrank.algorithms.pagerank.PageRank(converge_to_eigenvectors=True)` | VenueRank | krasanakis2018venuerank
 `G = pygrank.postprocess.fairness.to_fairwalk(G, sensitive)` | FairWalk |rahman2019fairwalk
 `pygrank.algorithms.postprocess.fairness.FairPostprocessor(ranker,'O')` | LFPRO | tsioutsiouliklis2020fairness
-`pygrank.algorithms.postprocess.fairness.FairPersonalizer(ranker)` | FP | krasanakis2020fairconstr
-`pygrank.algorithms.postprocess.fairness.FairPersonalizer(ranker,0.8)` | CFP | krasanakis2020fairconstr
+`pygrank.algorithms.postprocess.fairness.FairPersonalizer(ranker, error_type="mabs", max_residual=0)` | FP | krasanakis2020fairconstr
+`pygrank.algorithms.postprocess.fairness.FairPersonalizer(ranker, 0.8, 10, error_type="mabs", max_residual=0)` | CFP | krasanakis2020fairconstr
 `pygrank.metrics.multigroup.LinkAUC(G, hops=1)` | LinkAUC | krasanakis2019linkauc
 `pygrank.metrics.multigroup.LinkAUC(G, hops=2)` | HopAUC | krasanakis2020unsupervised
 `pygrank.algorithms.utils.RankOrderConvergenceManager(alpha, confidence=0.99, criterion="fraction_of_walks")` | | krasanakis2020stopping
@@ -308,6 +360,22 @@ this library are presented in reverse chronological order.
 }
 ```
 ```
+@inproceedings{krasanakis2020stopping,
+  title={Stopping Personalized PageRank without an Error Tolerance Parameter},
+  author={Krasanakis, Emmanouil and Papadopoulos, Symeon and Kompatsiaris, Ioannis},
+  year={2020},
+  booktitle={ASONAM},
+}
+```
+```
+@inproceedings{krasanakis2020fairconstr,
+  title={Applying Fairness Constraints on Graph Node Ranks under Personalization Bias},
+  author={Krasanakis, Emmanouil and Papadopoulos, Symeon and Kompatsiaris, Ioannis},
+  year={2020},
+  booktitle={Complex Networks},
+}
+```
+```
 @inproceedings{krasanakis2019linkauc,
   title={LinkAUC: Unsupervised Evaluation of Multiple Network Node Ranks Using Link Prediction},
   author={Krasanakis, Emmanouil and Papadopoulos, Symeon and Kompatsiaris, Yiannis},
@@ -319,7 +387,7 @@ this library are presented in reverse chronological order.
 ```
 ```
 @inproceedings{krasanakis2018venuerank,
-  title={VenueRank: Identifying Venues that Contribute to Artist Popularity.},
+  title={VenueRank: Identifying Venues that Contribute to Artist Popularity},
   author={Krasanakis, Emmanouil and Schinas, Emmanouil and Papadopoulos, Symeon and Kompatsiaris, Yiannis and Mitkas, Pericles A},
   booktitle={ISMIR},
   pages={702--708},
@@ -327,28 +395,8 @@ this library are presented in reverse chronological order.
 }
 ```
 
-
-### Under Review
-```
-@unpublished{krasanakis2020stopping,
-  title={Stopping Personalized PageRank without an Error Tolerance Parameter},
-  author={Krasanakis, Emmanouil and Papadopoulos, Symeon and Kompatsiaris, Ioannis},
-  year={2020},
-  note = {unpublished}
-}
-```
-
-```
-@unpublished{krasanakis2020fairconstr,
-  title={Applying Fairness Constraints on Graph Node Ranks under Personalization Bias},
-  author={Krasanakis, Emmanouil and Papadopoulos, Symeon and Kompatsiaris, Ioannis},
-  year={2020},
-  note = {unpublished}
-}
-```
-
 ### Related
-Here, we list additional publications whose methods are implemented in this library.
+Here, we list additional publications whose methods are fully or partially implemented in this library.
 ```
 @article{tsioutsiouliklis2020fairness,
   title={Fairness-Aware Link Analysis},

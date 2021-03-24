@@ -2,56 +2,24 @@ import scipy
 import numpy as np
 import warnings
 import pygrank.algorithms.utils
-import inspect
+from pygrank.algorithms.utils import _call, _ensure_all_used
 
-
-def _call(method, kwargs):
-    """
-    This method wraps an argument extraction process that passes only the valid arguments of a given dict to a method.
-    This is equivalent to calling method(**kwargs) while ignoring unused arguments.
-
-    Example:
-        >>> def func1(arg1):
-        >>>     print(arg1)
-        >>> def func2(arg2):
-        >>>     print(arg2)
-        >>> def func(**kwargs):
-        >>>     _call(func1, kwargs)
-        >>>     _call(func2, kwargs)
-        >>> func(arg1="passed to func 1", arg2="passed to func 2")
-    """
-    return method(**{argname: kwargs[argname] for argname in inspect.signature(method).parameters if argname in kwargs})
-
-
-def _ensure_all_used(kwargs, methods):
-    """
-    Makes sure that all named arguments passed to a method reside in the callee methods.
-
-    Example:
-        >>> def func(**kwargs):
-        >>>     _call(func1, kwargs)
-        >>>     _call(func2, kwargs)
-        >>>     _ensure_all_used(kwargs, [func1, func2])
-    """
-    all_args = list()
-    for method in methods:
-        all_args.extend(inspect.signature(method).parameters.keys())
-    missing = set(kwargs.keys())-set(all_args)
-    if len(missing) != 0:
-        raise Exception("No usage of argument(s) "+str(missing)+" found")
 
 
 class PageRank:
     """A Personalized PageRank power method algorithm. Supports warm start."""
 
-    def __init__(self, alpha=0.85, to_scipy=None, convergence=None, use_quotient=True, converge_to_eigenvectors=False, **kwargs):
+    def __init__(self, alpha=0.85, to_scipy=None, to_numpy=None, convergence=None, use_quotient=True, converge_to_eigenvectors=False, **kwargs):
         """ Initializes the PageRank scheme parameters.
 
         Attributes:
             alpha: Optional. 1-alpha is the bias towards the personalization. Default value is 0.85.
             to_scipy: Optional. Method to extract a scipy sparse matrix from a networkx graph.
-                If None (default), pygrank.algorithms.utils.preprocessor is used with the keyword arguments
-                given to this constructor.
+                If None (default), pygrank.algorithms.utils.preprocessor is used with the keyword arguments is
+                used by this constructor.
+            to_numpy: Optional. Method to extract a personalization from a dictionary of graph nodes.
+                If None (default), pygrank.algorithms.utils.vectorize is used with the keyword arguments is
+                used by this constructor.
             convergence: Optional. The ConvergenceManager that determines when iterations stop. If None (default),
                 a ConvergenceManager with the keyword arguments given to this constructor is created.
             use_quotient: Optional. If True (default) performs a L1 re-normalization of ranks after each iteration.
@@ -74,51 +42,46 @@ class PageRank:
         """
         self.alpha = float(alpha) # typecast to make sure that a graph is not accidentally the first argument
         self.to_scipy = _call(pygrank.algorithms.utils.preprocessor, kwargs) if to_scipy is None else to_scipy
+        self.to_numpy = _call(pygrank.algorithms.utils.vectorize, kwargs) if to_numpy is None else to_numpy
         self.convergence = _call(pygrank.algorithms.utils.ConvergenceManager, kwargs) if convergence is None else convergence
-        _ensure_all_used(kwargs, [pygrank.algorithms.utils.preprocessor, pygrank.algorithms.utils.ConvergenceManager])
+        _ensure_all_used(kwargs, [pygrank.algorithms.utils.preprocessor, pygrank.algorithms.utils.vectorize, pygrank.algorithms.utils.ConvergenceManager])
         self.use_quotient = None if use_quotient == False else use_quotient
         self.converge_to_eigenvectors = converge_to_eigenvectors
 
-    def rank(self, G, personalization=None, warm_start=None, *args, **kwargs):
+    def rank(self, G, personalization=None, warm_start=None, as_dict=True, *args, **kwargs):
         M = self.to_scipy(G)
-        degrees = np.array(M.sum(axis=1)).flatten()
-
-        personalization = np.repeat(1.0, len(G)) if personalization is None else np.array([personalization.get(n, 0) for n in G], dtype=float)
-        if personalization.sum() == 0:
-            raise Exception("The personalization vector should contain at least one non-zero entity")
-        personalization = personalization / personalization.sum()
-        ranks = personalization if warm_start is None else np.array([warm_start.get(n, 0) for n in G], dtype=float)
-
-        is_dangling = np.where(degrees == 0)[0]
+        personalization = self.to_numpy(G, personalization)
+        ranks = personalization if warm_start is None else self.to_numpy(G, warm_start)
+        is_dangling = np.where(np.array(M.sum(axis=1)).flatten() == 0)[0]
         self.convergence.start()
         while not self.convergence.has_converged(ranks):
-            ranks = self.alpha * (ranks * M + sum(ranks[is_dangling]) * personalization) + (1 - self.alpha) * personalization
+            ranks = self.alpha * (ranks * M + np.sum(ranks[is_dangling]) * personalization) + (1 - self.alpha) * personalization
+            #ranks = self.alpha * (ranks * M) + (1 - self.alpha) * personalization
             if self.use_quotient == True:
-                ranks = ranks/ranks.sum()
+                ranks = ranks / ranks.sum()
             elif self.use_quotient is not None:
                 ranks = dict(zip(G.nodes(), map(float, ranks)))
                 ranks = self.use_quotient.transform(ranks, *args, **kwargs)
                 ranks = np.array([ranks.get(n, 0) for n in G], dtype=float)
-
             if self.converge_to_eigenvectors:
                 personalization = ranks
-
-        ranks = ranks/ranks.sum()
-        ranks = dict(zip(G.nodes(), map(float, ranks)))
-        return ranks
+        return dict(zip(G.nodes(), map(float, ranks))) if as_dict else ranks
 
 
 class HeatKernel:
     """ Heat kernel filter."""
 
-    def __init__(self, t=3, to_scipy=None, convergence=None, **kwargs):
+    def __init__(self, t=3, to_scipy=None, to_numpy=None, convergence=None, **kwargs):
         """ Initializes the HearKernel filter parameters.
 
         Attributes:
             t: Optional. How many hops until the importance of new nodes starts decreasing. Default value is 5.
             to_scipy: Optional. Method to extract a scipy sparse matrix from a networkx graph.
-                If None (default), pygrank.algorithms.utils.preprocessor is used with the keyword arguments
-                given to this constructor.
+                If None (default), pygrank.algorithms.utils.preprocessor is used with the keyword arguments is
+                used by this constructor.
+            to_numpy: Optional. Method to extract a personalization from a dictionary of graph nodes.
+                If None (default), pygrank.algorithms.utils.vectorize is used with the keyword arguments is
+                used by this constructor.
             convergence: Optional. The ConvergenceManager that determines when iterations stop. If None (default),
                 a ConvergenceManager with the keyword arguments given to this constructor is created.
 
@@ -129,19 +92,14 @@ class HeatKernel:
         self.t = t
         self.to_scipy = _call(pygrank.algorithms.utils.preprocessor, kwargs) if to_scipy is None else to_scipy
         self.convergence = _call(pygrank.algorithms.utils.ConvergenceManager, kwargs) if convergence is None else convergence
-        _ensure_all_used(kwargs, [pygrank.algorithms.utils.preprocessor, pygrank.algorithms.utils.ConvergenceManager])
+        self.to_numpy = _call(pygrank.algorithms.utils.vectorize, kwargs) if to_numpy is None else to_numpy
+        _ensure_all_used(kwargs, [pygrank.algorithms.utils.preprocessor, pygrank.algorithms.utils.vectorize, pygrank.algorithms.utils.ConvergenceManager])
 
-    def rank(self, G, personalization=None, *args, **kwargs):
+    def rank(self, G, personalization=None, *args, as_dict=True, **kwargs):
         M = self.to_scipy(G)
-
-        personalization = np.repeat(1.0, len(G)) if personalization is None else np.array([personalization.get(n, 0) for n in G], dtype=float)
-        if personalization.sum() == 0:
-            raise Exception("The personalization vector should contain at least one non-zero entity")
-        personalization = personalization / personalization.sum()
-
+        personalization = self.to_numpy(G, personalization)
         coefficient = np.exp(-self.t)
         ranks = personalization*coefficient
-
         self.convergence.start()
         Mpower = M
         while not self.convergence.has_converged(ranks):
@@ -149,9 +107,7 @@ class HeatKernel:
             Mpower *= M
             ranks += personalization*Mpower*coefficient
         ranks = ranks/ranks.sum()
-
-        ranks = dict(zip(G.nodes(), map(float, ranks)))
-        return ranks
+        return dict(zip(G.nodes(), map(float, ranks))) if as_dict else ranks
 
 
 class AbsorbingRank:
@@ -159,15 +115,18 @@ class AbsorbingRank:
     Wu, Xiao-Ming, et al. "Learning with partially absorbing random walks." Advances in neural information processing systems. 2012.
     """
 
-    def __init__(self, alpha=1-1.E-6, to_scipy=None, use_quotient=True, convergence=None, **kwargs):
+    def __init__(self, alpha=1-1.E-6, to_scipy=None, to_numpy=None, use_quotient=True, convergence=None, **kwargs):
         """ Initializes the AbsorbingRank filter parameters.
 
         Attributes:
             alpha: Optional. (1-alpha)/alpha is the absorbsion rate of the random walk. This is chosen to yield the
                 same underlying meaning as PageRank (for which Lambda = a Diag(degrees) )
             to_scipy: Optional. Method to extract a scipy sparse matrix from a networkx graph.
-                If None (default), pygrank.algorithms.utils.preprocessor is used with the keyword arguments
-                given to this constructor.
+                If None (default), pygrank.algorithms.utils.preprocessor is used with the keyword arguments is
+                used by this constructor.
+            to_numpy: Optional. Method to extract a personalization from a dictionary of graph nodes.
+                If None (default), pygrank.algorithms.utils.vectorize is used with the keyword arguments is
+                used by this constructor.
             convergence: Optional. The ConvergenceManager that determines when iterations stop. If None (default),
                 a ConvergenceManager with the keyword arguments given to this constructor is created.
             use_quotient: Optional. If True (default) performs a L1 re-normalization of ranks after each iteration.
@@ -184,22 +143,19 @@ class AbsorbingRank:
         self.alpha = float(alpha) # typecast to make sure that a graph is not accidentally the first argument
         self.to_scipy = _call(pygrank.algorithms.utils.preprocessor, kwargs) if to_scipy is None else to_scipy
         self.convergence = _call(pygrank.algorithms.utils.ConvergenceManager, kwargs) if convergence is None else convergence
-        _ensure_all_used(kwargs, [pygrank.algorithms.utils.preprocessor, pygrank.algorithms.utils.ConvergenceManager])
+        self.to_numpy = _call(pygrank.algorithms.utils.vectorize, kwargs) if to_numpy is None else to_numpy
+        _ensure_all_used(kwargs, [pygrank.algorithms.utils.preprocessor, pygrank.algorithms.utils.vectorize, pygrank.algorithms.utils.ConvergenceManager])
         self.use_quotient = None if use_quotient == False else use_quotient
 
-    def rank(self, G, personalization=None, attraction=None, absorption=None, warm_start=None, residuals=None, *args, **kwargs):
+    def rank(self, G, personalization=None, attraction=None, absorption=None, warm_start=None, residuals=None, *args, as_dict=False, **kwargs):
         M = self.to_scipy(G)
         degrees = np.array(M.sum(axis=1)).flatten()
+        personalization = self.to_numpy(G, personalization)
+        ranks = personalization if warm_start is None else self.to_numpy(G, warm_start)
 
-        personalization = np.repeat(1.0, len(G)) if personalization is None else np.array([personalization.get(n, 0) for n in G], dtype=float)
-        if personalization.sum() == 0:
-            raise Exception("The personalization vector should contain at least one non-zero entity")
-        personalization = personalization / personalization.sum()
-        ranks = personalization if warm_start is None else np.array([warm_start.get(n, 0) for n in G], dtype=float)
-
-        is_dangling = np.where(degrees == 0)[0]
+        #is_dangling = np.where(degrees == 0)[0]
         self.convergence.start()
-        attract = np.repeat(1.0, len(G)) if attraction is None else np.array([attraction.get(n, 0) for n in G], dtype=float)
+        attract = np.repeat(1.0, len(G)) if attraction is None else self.to_numpy(G, attraction)
         diag_of_lamda = (1-self.alpha)/self.alpha * (np.repeat(1.0, len(G)) if absorption is None else np.array([absorption.get(n, 0) for n in G], dtype=float))
 
         if residuals is not None:
@@ -216,15 +172,15 @@ class AbsorbingRank:
                     if masked_rank_sum != 0:
                         masked_ranks /= masked_ranks.sum()
                     Mfair += np.cross(residual, masked_ranks)
-            ranks = (ranks * attract * Mfair + sum(ranks[is_dangling]) * personalization)*degrees/(diag_of_lamda+degrees) + personalization*diag_of_lamda/(diag_of_lamda+degrees)
+            #ranks = (ranks * attract * Mfair + sum(ranks[is_dangling]) * personalization)*degrees/(diag_of_lamda+degrees) + personalization*diag_of_lamda/(diag_of_lamda+degrees)
+            ranks = (ranks * attract * Mfair) * degrees / (diag_of_lamda + degrees) + personalization * diag_of_lamda / (diag_of_lamda + degrees)
             if self.use_quotient == True:
                 ranks = ranks/ranks.sum()
             elif self.use_quotient is not None:
                 ranks = dict(zip(G.nodes(), map(float, ranks)))
                 ranks = self.use_quotient.transform(ranks, *args, **kwargs)
                 ranks = np.array([ranks.get(n, 0) for n in G], dtype=float)
-        ranks = dict(zip(G.nodes(), map(float, ranks)))
-        return ranks
+        return dict(zip(G.nodes(), map(float, ranks))) if as_dict else ranks
 
 
 class BiasedKernel:

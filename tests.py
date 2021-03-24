@@ -169,8 +169,8 @@ class Test(unittest.TestCase):
 
         # a simple function
         p = optimize(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4, max_vals=[5, 5], parameter_tol=1.E-8)
-        self.assertAlmostEqual(p[0], 2, places=6, msg="Optimizer should easily optimize convex function")
-        self.assertAlmostEqual(p[1], 1, places=6, msg="Optimizer should easily optimize convex function")
+        self.assertAlmostEqual(p[0], 2, places=6, msg="Optimizer should easily optimize a convex function")
+        self.assertAlmostEqual(p[1], 1, places=6, msg="Optimizer should easily optimize a convex function")
 
         # https://en.wikipedia.org/wiki/Test_functions_for_optimization
 

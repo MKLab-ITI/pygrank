@@ -1,4 +1,6 @@
 import warnings
+import numpy as np
+from pygrank.algorithms.utils import MethodHasher
 
 
 class Tautology:
@@ -47,13 +49,17 @@ class Normalize:
         self.method = method
 
     def _transform(self, ranks):
-        if self.method == "max":
+        min_rank = 0
+        if self.method == "range":
+            max_rank = max(ranks.values())
+            min_rank = min(ranks.values())
+        elif self.method == "max":
             max_rank = max(ranks.values())
         elif self.method == "sum":
             max_rank = sum(ranks.values())
         else:
             raise Exception("Can only normalize towards max or sum")
-        return {node: rank / max_rank for node, rank in ranks.items()}
+        return {node: (rank-min_rank) / (max_rank-min_rank) for node, rank in ranks.items()}
 
     def transform(self, ranks, *args, **kwargs):
         return self._transform(self.ranker.transform(ranks, *args, **kwargs))
@@ -147,8 +153,11 @@ class Sweep:
     def __init__(self, ranker, uniform_ranker=None):
         self.ranker = ranker
         self.uniform_ranker = ranker if uniform_ranker is None else uniform_ranker
+        self.centrality = MethodHasher(lambda G, *args, **kwargs: self.uniform_ranker.rank(G, np.repeat(1, len(G)), *args, **kwargs))
 
     def rank(self, G, personalization, *args, **kwargs):
         ranks = self.ranker.rank(G, personalization, *args, **kwargs)
-        uniforms = self.uniform_ranker.rank(G, {v: 1 for v in G}, *args, **kwargs)
-        return {v: ranks[v]/uniforms[v] for v in G}
+        uniforms = self.centrality(G, *args, **kwargs)
+        if isinstance(ranks, np.ndarray):
+            return ranks/(1.E-12+uniforms)
+        return {v: ranks[v]/(1.E-12 + uniforms.get(v,0)) for v in G}

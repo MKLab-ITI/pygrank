@@ -1,9 +1,18 @@
 import warnings
 import networkx as nx
 import numpy as np
+from .utils import (__Metric__)
 
 
-class Conductance:
+class Mean(__Metric__):
+    def __init__(self):
+        pass
+
+    def evaluate(self, ranks):
+        return sum(ranks.values())/len(ranks)
+
+
+class Conductance(__Metric__):
     """ Graph conductance (information flow) of ranks.
 
     Assumes a fuzzy set of subgraphs whose nodes are included with probability proportional to their ranks,
@@ -47,7 +56,7 @@ class Conductance:
         return external_edges / internal_edges
 
 
-class Density:
+class Density(__Metric__):
     """ Extension of graph density that can account for ranks.
 
     Assumes a fuzzy set of subgraphs whose nodes are included with probability proportional to their ranks,
@@ -78,7 +87,7 @@ class Density:
         return internal_edges / expected_edges
 
 
-class Modularity:
+class Modularity(__Metric__):
     def __init__(self, G, max_rank=1, max_positive_samples=2000):
         self.G = G
         self.max_positive_samples = max_positive_samples

@@ -12,38 +12,14 @@ import pygrank.metrics.unsupervised
 import pygrank.metrics.supervised
 import pygrank.metrics.multigroup
 import scipy.stats
-
-
-def import_SNAP_data(dataset, path='data/', pair_file='pairs.txt', group_file='groups.txt', directed=False, min_group_size=10, max_group_number=10, import_label_file=False):
-    G = nx.DiGraph() if directed else nx.Graph()
-    groups = {}
-    with open(path+dataset+'/'+pair_file, 'r', encoding='utf-8') as file:
-        for line in file:
-            if len(line) != 0 and line[0] != '#':
-                splt = line[:-1].split('\t')
-                if len(splt) == 0:
-                    continue
-                G.add_edge(splt[0], splt[1])
-    if import_label_file:
-        pass
-
-    else:
-        with open(path+dataset+'/'+group_file, 'r', encoding='utf-8') as file:
-            for line in file:
-                if line[0] != '#':
-                    group = [item for item in line[:-1].split('\t') if len(item) > 0 and item in G]
-                    if len(group) >= min_group_size:
-                        groups[len(groups)] = group
-                        if len(groups) >= max_group_number:
-                            break
-    return G, groups
+from experiments.importer import import_SNAP
 
 if __name__ == "__main__":
     measure_evaluations = {}
     datasets = ['amazon']
     max_iters = 10000
     for dataset_name in datasets:
-        G, groups = import_SNAP_data(dataset_name, min_group_size=5000)#12000 for dblp, 5000 for amazon
+        G, groups = import_SNAP(dataset_name, min_group_size=5000)#12000 for dblp, 5000 for amazon
         group_sets = [set(group) for group in groups.values()]
         for group in group_sets:
             print(len(group))

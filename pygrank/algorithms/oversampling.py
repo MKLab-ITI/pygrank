@@ -26,22 +26,22 @@ class SeedOversampling:
     def rank(self, G, personalization, **kwargs):
         pygrank.algorithms.utils.assert_binary(personalization)
         if self.method == 'safe':
-            prev_to_scipy = self.ranker.to_scipy
-            self.ranker.to_scipy = pygrank.algorithms.utils.MethodHasher(self.ranker.to_scipy)
+            #prev_to_scipy = self.ranker.to_scipy
+            #self.ranker.to_scipy = pygrank.algorithms.utils.MethodHasher(self.ranker.to_scipy)
             ranks = self.ranker.rank(G, personalization, **kwargs)
             threshold = min(ranks[u] for u in personalization if personalization[u] == 1)
             personalization = {v: 1 for v in G.nodes() if ranks[v] >= threshold}
             ranks = self.ranker.rank(G, personalization, **kwargs)
-            self.ranker.to_scipy = prev_to_scipy
+            #self.ranker.to_scipy = prev_to_scipy
             return ranks
         elif self.method == 'top':
-            prev_to_scipy = self.ranker.to_scipy
-            self.ranker.to_scipy = pygrank.algorithms.utils.MethodHasher(self.ranker.to_scipy)
+            #prev_to_scipy = self.ranker.to_scipy
+            #self.ranker.to_scipy = pygrank.algorithms.utils.MethodHasher(self.ranker.to_scipy)
             ranks = self.ranker.rank(G, personalization, **kwargs)
             threshold = np.sort(list(ranks.values()))[len(ranks)-int(G.number_of_nodes()*G.number_of_nodes()/G.number_of_edges())] # get top rank
             personalization = {v: 1 for v in G.nodes() if ranks[v] >= threshold or personalization.get(v,0)==1} # add only this top rank
             ranks = self.ranker.rank(G, personalization, **kwargs)
-            self.ranker.to_scipy = prev_to_scipy
+            #self.ranker.to_scipy = prev_to_scipy
             return ranks
         elif self.method == 'neighbors':
             for u in [u for u in personalization if personalization[u] == 1]:
@@ -90,8 +90,8 @@ class BoostedSeedOversampling:
         return a_N
 
     def rank(self, G, personalization, **kwargs):
-        prev_to_scipy = self.ranker.to_scipy
-        self.ranker.to_scipy = pygrank.algorithms.utils.MethodHasher(self.ranker.to_scipy)
+        #prev_to_scipy = self.ranker.to_scipy
+        #self.ranker.to_scipy = pygrank.algorithms.utils.MethodHasher(self.ranker.to_scipy)
         r0_N = personalization.copy()
         RN = self.ranker.rank(G, r0_N, **kwargs)
         a_N = 1
@@ -110,5 +110,5 @@ class BoostedSeedOversampling:
             for u in G.nodes():
                 RN[u] = RN.get(u,0) + a_N*Rr0_N[u]
             suma_N += a_N
-        self.ranker.to_scipy = prev_to_scipy
+        #self.ranker.to_scipy = prev_to_scipy
         return RN

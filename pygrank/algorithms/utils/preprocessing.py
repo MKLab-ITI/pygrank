@@ -2,6 +2,29 @@ import networkx as nx
 import numpy as np
 import scipy
 
+
+def to_numpy_idx(nodes, queries):
+    queries = set(queries)
+    return [i for i, v in enumerate(nodes) if v in queries]
+
+
+def to_numpy(nodes, node2values, normalization=True, autocomplete=True):
+    if isinstance(node2values, np.ndarray):
+        if node2values.size != len(nodes):
+            raise Exception("A preconverted numpy vector with different than the desired size is used", node2values.size, 'vs', len(nodes))
+        if normalization:
+            return node2values / node2values.sum()
+        return node2values
+    if not autocomplete:
+        nodes = [n for n in nodes if n in node2values]
+    vector = np.repeat(1.0, len(nodes)) if node2values is None else np.array([node2values.get(n, 0) for n in nodes], dtype=float)
+    if normalization:
+        if vector.sum() == 0:
+            raise Exception("The personalization vector should contain at least one non-zero entity")
+        vector = vector / vector.sum()
+    return vector
+
+
 def to_scipy_sparse_matrix(G, normalization="auto", weight="weight"):
     """ Used to normalize a graph and produce a sparse matrix representation.
 
@@ -41,17 +64,24 @@ def assert_binary(ranks):
             raise Exception('Binary ranks required')
 
 
+def _idfier(*args, **kwargs):
+    return "["+",".join(str(id(arg)) for arg in args)+"]"+"{"+",".join(v+":"+str(id(kwargs[v])) for v in kwargs)+"}"
+
+
 class MethodHasher:
     """ Used to hash methods."""
 
     def __init__(self, method, assume_immutability=True):
         self.assume_immutability = assume_immutability
         self._method = method
-        self._stored = {}
+        self._stored = dict()
+
+    def clear_hashed(self):
+        self._stored = dict()
 
     def __call__(self, *args, **kwargs):
         if self.assume_immutability:
-            desc = str(args)+str(kwargs)
+            desc = _idfier(*args, **kwargs)
             if desc in self._stored:
                 return self._stored[desc]
             value = self._method(*args, **kwargs)
@@ -72,3 +102,9 @@ def preprocessor(normalization="auto", assume_immutability=False):
     if assume_immutability:
         return MethodHasher(preprocessor(normalization, False))
     return lambda G: to_scipy_sparse_matrix(G, normalization=normalization)
+
+
+def vectorize(normalize_vectors=True, autocomplete=True, assume_immutability=False):
+    #if assume_immutability:
+    #    return MethodHasher(vectorize(normalize_vectors, autocomplete, False))
+    return lambda G, dictionary: to_numpy(G, dictionary, normalization=normalize_vectors, autocomplete=autocomplete)
