@@ -6,16 +6,16 @@ and make its outcome fairer, as well as supervised and unsupervised
 measures of recommendation quality.
 
 ## Table of Contents
-* [Table of Contents](#table-of-contents)
-* [Installation](#installation)
-* [Usage](#usage)
+1. [Table of Contents](#table-of-contents)
+2. [Installation](#installation)
+3. [Usage](#usage)
+    + [Glossary](#glossary)
     + [Ranking Algorithms](#ranking-algorithms)
     + [Adjacency Matrix Normalization](#adjacency-matrix-normalization)
     + [Augmenting Node Ranks](#augmenting-node-ranks)
     + [Convergence Criteria](#convergence-criteria)
     + [Rank Quality Evaluation](#rank-quality-evaluation)
-* [References](#references)
-    + [Glossary](#glossary)
+4. [References](#references)
     + [Method References](#method-references)
     + [Published](#publications)
     + [Under Review](#under-review)
@@ -28,11 +28,20 @@ pip install pygrank
 
 ## Usage
 
+### Glossary
+- *Seeds.* Example nodes that are known to belong to a community.
+- *Ranks.* Scores (not ordinalities) assigned to nodes. They typically assume
+values in the range \[0,1\].
+- *Personalization.* A hashmap between seeds and scores to be passed to graph ranking algorithms. This is also known as a personalization vector
+or graph signal priors. 
+- *Node ranking algorithm.* An algorithm that starts with a graph and personalization and outputs a hashmap of node scores.
+
+
 ### Ranking Algorithms
 Ranking algorithms assume that there exists a networkx graph `G`
-and a non-negative personalization dictionary of node importances
+and a personalization dictionary of non-negative node importances
 (missing nodes are considered to have 0 importance). For example,
-if we consider a list `edges` of edge tuples and a list `seedS` of
+if we consider a list `edges` of edge tuples and a list `seeds` of
 nodes towards which to consider structural importance, the graph
 and personalization can be constructed as:
 ```python
@@ -46,7 +55,7 @@ personalization = {v: 1 for v in seeds}
 
 Given the above way of creating a graph and a personalization
 dictionary (which is the programming artifact equivalent to what
-the literature referred to as a graph signal or personalization vector), 
+the literature referres to as a graph signal or personalization vector), 
 one can instantiate a ranking algorithm class 
 and call its `rank(G, personalization)` method to capture
 node ranks in a given graph with the given personalization. This
@@ -76,7 +85,7 @@ for v, rank in ranks.items():
 all of which capture some commonly found types of 
 rank propagation. If these are used on large graphs (with
 thousands or milions of nodes), we recommend passing a
-stricter tolerance parameter  `tol1.E-9` to constructors
+stricter tolerance parameter  `tol=1.E-9` to constructors
 to make sure that the personalization is propagated to most nodes.
 
 
@@ -88,7 +97,9 @@ array (with elements in the same order as the order of nodes
 in the networkx graph, e.g. the order of traversing ``for u in G``).
 Similarly, numpy arrays can also be passed to that method instead
 of the personalization dictionary to also avoid these conversions.
-**This optimization is not supported by some post-processing schemes.**
+
+:warning: Directly passing numpy arrays instead of personalization
+dictionaries is not yet supported by some post-processing schemes.
 
 
 ### Adjacency Matrix Normalization
@@ -172,6 +183,12 @@ ranks1 = ranker1.rank(G, personalization1)
 ranks2 = ranker2.rank(G, personalization2) # does not re-compute the normalization
 ```
 
+:bulb: When benchmarking, in the above code you can call `pre(G)`
+before the first `rank(...)` call to make sure that that call
+does not also perform the first normalization whose outcome will
+be hashed and immediately retrieved by subsequent calls.
+
+
 ### Augmenting Node Ranks
 It is often desirable to postprocess the outcome of node ranking
 algorithms. This can be some simple normalization or involve more 
@@ -227,15 +244,15 @@ ranks = algorithm.rank(G, personalization)
 ```
 
 ### Convergence Criteria
-Most base ranking algorithm constructors allow ``convergence`` argument that
-indicates an object to help determing their convergence criteria, such as type of
+Most base ranking algorithm constructors have a ``convergence`` argument that
+indicates an object to help determine their convergence criteria, such as type of
 error and tolerance for numerical convergence. If no such argument is passed
 to the constructor, a ``pygrank.algorithms.utils.ConvergenceManager`` object
 is automatically instantiated by borrowing whichever extra arguments it can
 from those passed to the constructors. Most frequently used is the ``tol``
 argument to indicate the numerical tolerance level required for convergence.
 
-Sometimes, it suffices to reach a robust node rank order  instead of precise 
+Sometimes, it suffices to reach a robust node rank order instead of precise 
 values. To cover such cases we have implemented a different convergence criterion
 ``pygrank.algorithms.utils.RankOrderConvergenceManager`` that stops 
 at a robust node order \[krasanakis2020stopping\].
@@ -271,7 +288,7 @@ metrics need to be selected.
 
 :bulb: Supervised metrics can also evaluate numpy arrays obtained from the
 ``as_dict=False`` ranking argument but support for this feature is still
-limited for ther metrics. More extensive documentation of this feature
+limited. More extensive documentation of this feature
 will be provided in the future.
 
 ###### How to evaluate ranks with an unsupervised metric
@@ -344,14 +361,6 @@ print(auc.evaluate(ranks))
 
 
 ## References
-### Glossary
-- *Seeds.* Example nodes that are known to belong to a community.
-- *Ranks.* Scores (not ordinalities) assigned to nodes. They typically assume
-values in the range \[0,1\].
-- *Personalization.* A hashmap between seeds and scores to be passed to graph ranking algorithms. This is also known as a personalization vector
-or graph signal priors. 
-- *Node ranking algorithm.* An algorithm that starts with a graph and personalization and outputs a hashmap of node scores.
-
 ### Method References
 
 Instantiation or Usage | Method Name | Citation
@@ -441,7 +450,8 @@ this library are presented in reverse chronological order.
 ```
 
 ### Related
-Here, we list additional publications whose methods are fully or partially implemented in this library.
+Here, we list additional publications whose methods are either fully 
+or partially implemented in this library.
 ```
 @article{tsioutsiouliklis2020fairness,
   title={Fairness-Aware Link Analysis},
