@@ -164,6 +164,19 @@ class Test(unittest.TestCase):
         corr = spearmanr(list(Ordinals().transform(ranks1).values()), list(Ordinals().transform(ranks2).values()))
         self.assertAlmostEqual(corr[0], 1., 4)
 
+    def test_numpy_postprocessing(self):
+        from pygrank.algorithms.pagerank import PageRank
+        from pygrank.algorithms.postprocess import Ordinals
+        G = nx.fast_gnp_random_graph(600, 0.001, seed=1)
+        ranker1 = Ordinals(PageRank(alpha=0.9, max_iters=10000, converge_to_eigenvectors=True, tol=1.E-12))
+        ranks1 = ranker1.rank(G, personalization={0: 1, 1: 1}, as_dict=False)
+        ranker2 = Ordinals(PageRank(alpha=0.99, max_iters=10000, tol=1.E-12))
+        ranks2 = ranker2.rank(G, personalization={0: 1, 1: 1}, as_dict=False)
+
+        from scipy.stats import spearmanr
+        corr = spearmanr(ranks1, ranks2)# ranks are already numpy arrays thanks to using as_dict=False
+        self.assertAlmostEqual(corr[0], 1., 4)
+
     def test_optimizer(self):
         from pygrank.algorithms.utils import optimize
 

@@ -6,6 +6,7 @@ class __Metric__:
     def __call__(self, ranks):
         return self.evaluate(ranks)
 
+
 def to_seeds(groups):
     if not isinstance(groups, collections.Mapping):
         return {v: 1 for v in groups}

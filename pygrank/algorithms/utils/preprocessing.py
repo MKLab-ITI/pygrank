@@ -10,7 +10,7 @@ def to_numpy_idx(nodes, queries):
 
 def to_numpy(nodes, node2values, normalization=True, autocomplete=True):
     if isinstance(node2values, np.ndarray):
-        if node2values.size != len(nodes):
+        if nodes is not None and node2values.size != len(nodes):
             raise Exception("A preconverted numpy vector with different than the desired size is used", node2values.size, 'vs', len(nodes))
         if normalization:
             return node2values / node2values.sum()
@@ -23,6 +23,12 @@ def to_numpy(nodes, node2values, normalization=True, autocomplete=True):
             raise Exception("The personalization vector should contain at least one non-zero entity")
         vector = vector / vector.sum()
     return vector
+
+
+def to_dict(nodes, ranks):
+    if not isinstance(ranks, np.ndarray):
+        return ranks
+    return dict(zip([v for v in nodes], map(float, ranks)))
 
 
 def to_scipy_sparse_matrix(G, normalization="auto", weight="weight"):

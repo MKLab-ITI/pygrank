@@ -5,6 +5,9 @@ from pygrank.algorithms.utils import to_numpy, to_numpy_idx
 
 
 class Supervised(__Metric__):
+    """Provides a base class with the ability to simultaneously convert ranks and known ranks to numpy arrays.
+    This class is used as a base for other supervised evaluation metrics."""
+
     def __init__(self, known_ranks, evaluation="cap"):
         self.known_ranks = known_ranks
         self._nodes = known_ranks if evaluation is None else evaluation
@@ -22,8 +25,9 @@ class Supervised(__Metric__):
             nodes = self.known_ranks
         return to_numpy(nodes, self.known_ranks, normalization=normalization), to_numpy(nodes, ranks, normalization=normalization)
 
+
 class NDCG(__Metric__):
-    """Provides evaluation of NDCG@k score between given and known ranks"""
+    """Provides evaluation of NDCG@k score between given and known ranks."""
 
     def __init__(self, known_ranks, k=None):
         """ Initializes the PageRank scheme parameters.
@@ -48,12 +52,16 @@ class NDCG(__Metric__):
 
 
 class Error(Supervised):
+    """Computes the mean absolute error between ranks and known ranks."""
+
     def evaluate(self, ranks):
         known_ranks, ranks = self.to_numpy(ranks)
         return np.abs(known_ranks-ranks).sum()/ranks.size
 
 
 class CrossEntropy(Supervised):
+    """Computes a cross-entropy loss of ranks vs known ranks."""
+
     def evaluate(self, ranks):
         known_ranks, ranks = self.to_numpy(ranks)
         thresh = ranks[known_ranks!=0].min()
@@ -62,6 +70,8 @@ class CrossEntropy(Supervised):
 
 
 class KLDivergence(Supervised):
+    """Computes KL-divergence of ranks vs known ranks."""
+
     def evaluate(self, ranks):
         known_ranks, ranks = self.to_numpy(ranks, normalization=True)
         ratio = (ranks+1.E-12)/(known_ranks+1.E-12)
@@ -72,7 +82,7 @@ class KLDivergence(Supervised):
 
 
 class AUC(Supervised):
-    """Wrapper for sklearn.metrics.auc evaluation"""
+    """Wrapper for sklearn.metrics.auc evaluation."""
 
     def evaluate(self, ranks):
         known_ranks, ranks = self.to_numpy(ranks)

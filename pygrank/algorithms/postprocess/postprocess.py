@@ -1,6 +1,18 @@
 import warnings
 import numpy as np
-from pygrank.algorithms.utils import MethodHasher
+from pygrank.algorithms.utils import MethodHasher, to_numpy, to_dict
+
+
+class __Postprocessor__(object):
+    def transform(self, ranks, *args, **kwargs):
+        return self._transform(self.ranker.transform(ranks, *args, **kwargs))
+
+    def rank(self, G, personalization, *args, **kwargs):
+        ranks = self.ranker.rank(G, personalization, *args, **kwargs)
+        post_processed_ranks = self._transform(to_dict(G, ranks))
+        if isinstance(ranks, np.ndarray):
+            post_processed_ranks = to_numpy(G, post_processed_ranks, normalization=False, autocomplete=False)
+        return post_processed_ranks
 
 
 class Tautology:
@@ -20,11 +32,12 @@ class Tautology:
         return personalization
 
 
-class Normalize:
+class Normalize(__Postprocessor__):
     """ Normalizes ranks by dividing with their maximal value."""
 
     def __init__(self, ranker=None, method="max"):
-        """ Initializes the class with a base ranker instance.
+        """ Initializes the class with a base ranker instance. Attributes are automatically filled in and
+        re-ordered if at least one is provided.
 
         Attributes:
             ranker: The base ranker instance. A Tautology() ranker is created if None (default) was specified.
@@ -61,14 +74,8 @@ class Normalize:
             raise Exception("Can only normalize towards max or sum")
         return {node: (rank-min_rank) / (max_rank-min_rank) for node, rank in ranks.items()}
 
-    def transform(self, ranks, *args, **kwargs):
-        return self._transform(self.ranker.transform(ranks, *args, **kwargs))
 
-    def rank(self, G, personalization, *args, **kwargs):
-        return self._transform(self.ranker.rank(G, personalization, *args, **kwargs))
-
-
-class Ordinals:
+class Ordinals(__Postprocessor__):
     """ Converts ranking outcome to ordinal numbers.
 
     The highest rank is set to 1, the second highest to 2, etc.
@@ -85,18 +92,13 @@ class Ordinals:
     def _transform(self, ranks):
         return {v: ord+1 for ord, v in enumerate(sorted(ranks, key=ranks.get, reverse=False))}
 
-    def transform(self, ranks, *args, **kwargs):
-        return self._transform(self.ranker.transform(ranks, *args, **kwargs))
 
-    def rank(self, G, personalization, *args, **kwargs):
-        return self._transform(self.ranker.rank(G, personalization, *args, **kwargs))
-
-
-class Threshold:
+class Threshold(__Postprocessor__):
     """ Converts ranking outcome to binary values based on a threshold value."""
 
     def __init__(self, threshold="gap", ranker=None):
-        """ Initializes the Threshold postprocessing scheme.
+        """ Initializes the Threshold postprocessing scheme. Attributes are automatically filled in and
+        re-ordered if at least one is provided.
 
         Attributes:
             threshold: Optional. The minimum numeric value required to output rank 1 instead of 0. If "gap" (default)
@@ -141,12 +143,6 @@ class Threshold:
                         threshold = ranks[v]
                 prev_rank = ranks[v]
         return {v: 1  if ranks[v] >= threshold else 0 for v in ranks.keys()}
-
-    def transform(self, ranks, *args, **kwargs):
-        return self._transform(self.ranker.transform(ranks, *args, **kwargs))
-
-    def rank(self, G, personalization, *args, **kwargs):
-        return self._transform(self.ranker.rank(G, personalization, *args, **kwargs))
 
 
 class Sweep:

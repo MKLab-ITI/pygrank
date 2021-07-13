@@ -29,12 +29,12 @@ pip install pygrank
 ## Usage
 
 ### Glossary
-- *Seeds.* Example nodes that are known to belong to a community.
-- *Ranks.* Scores (not ordinalities) assigned to nodes. They typically assume
-values in the range \[0,1\].
-- *Personalization.* A hashmap between seeds and scores to be passed to graph ranking algorithms. This is also known as a personalization vector
-or graph signal priors. 
-- *Node ranking algorithm.* An algorithm that starts with a graph and personalization and outputs a hashmap of node scores.
+Term | Explanation
+--- | --- 
+Seeds | Example nodes that are known to belong to a community.
+Ranks | Scores (not ordinalities) assigned to nodes. They typically assume values in the range \[0,1\].
+Personalization | A hashmap between seeds and original score estimations to be passed to graph ranking algorithms. This is also known as a personalization vector or graph signal priors. 
+Node ranking algorithm | An algorithm that starts with a graph and personalization and outputs a hashmap of node scores.
 
 
 ### Ranking Algorithms
@@ -99,20 +99,25 @@ Similarly, numpy arrays can also be passed to that method instead
 of the personalization dictionary to also avoid these conversions.
 
 :warning: Directly passing numpy arrays instead of personalization
-dictionaries is not yet supported by some post-processing schemes.
+dictionaries is not yet supported by some post-processing schemes
+and evaluation metrics. For the time being, we recommend writting
+code without this argument and then checking whether adding it
+improves performance.
 
 
 ### Adjacency Matrix Normalization
 Node ranking algorithms all use the same default scheme
-that performs symmetric (i.e. Lalplacian-like) normalization 
+that performs symmetric (i.e. Laplacian-like) normalization 
 for undirected graphs and column-wise normalization that
 follows a true probabilistic formulation of transition probabilities
 for directed graphs, such as `DiGraph` instances. The type of
 normalization can be manually edited by passing a `normalization`
 argument to constructors of ranking algorithms. This parameter can 
-assume values of "auto" for the above-described default behavior, 
-"col" for column-wise normalization, "symmetric" for symmetric 
-normalization and "none" for avoiding any normalization, 
+assume values of:
+* *"auto"* for the above-described default behavior
+* *"col"* for column-wise normalization
+* *"symmetric"* for symmetric normalization
+* *"none"* for avoiding any normalization, 
 for example because edge weights already hold the normalization
 (e.g. this is used to rank graphs after FairWalk is used to
 preprocess edge weights).
@@ -168,8 +173,10 @@ is given, ranking algorithms create a new preprocessing instance
 with the `normalization` and `assume_immutability` values passed
 to their constructor. These two arguments are completely ignored
 if a preprocessor instance is passed to the ranking algorithm.
+Direct use of these arguments without needing to instantiate a
+preprocessor was demonstrated in the previous code example.
 
-For example, using the outcome of graph normalization 
+Using the outcome of graph normalization 
 to speed up multiple rank calls to the same graph by
 different ranking algorithms can be done as:
 ```python
