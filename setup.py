@@ -4,7 +4,7 @@ import setuptools
 # - build  : python setup.py bdist_wheel
 # - deploy : twine upload dist/*
 
-with open("README.md", "r") as file:
+with open("old_README.md", "r") as file:
     long_description = file.read()
 
 setuptools.setup(
@@ -12,7 +12,7 @@ setuptools.setup(
     version='0.1.17',
     author="Emmanouil Krasanakis",
     author_email="maniospas@hotmail.com",
-    description="Recommendation algorithms for large graphs on networkx",
+    description="Recommendation algorithms for large graphs (compatible with networkx)",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/MKLab-ITI/pygrank",

@@ -3,7 +3,7 @@ import numpy as np
 from pygrank.algorithms.utils import MethodHasher, to_numpy, to_dict
 
 
-class __Postprocessor__(object):
+class Postprocessor(object):
     def transform(self, ranks, *args, **kwargs):
         return self._transform(self.ranker.transform(ranks, *args, **kwargs))
 
@@ -32,7 +32,7 @@ class Tautology:
         return personalization
 
 
-class Normalize(__Postprocessor__):
+class Normalize(Postprocessor):
     """ Normalizes ranks by dividing with their maximal value."""
 
     def __init__(self, ranker=None, method="max"):
@@ -75,7 +75,7 @@ class Normalize(__Postprocessor__):
         return {node: (rank-min_rank) / (max_rank-min_rank) for node, rank in ranks.items()}
 
 
-class Ordinals(__Postprocessor__):
+class Ordinals(Postprocessor):
     """ Converts ranking outcome to ordinal numbers.
 
     The highest rank is set to 1, the second highest to 2, etc.
@@ -93,7 +93,7 @@ class Ordinals(__Postprocessor__):
         return {v: ord+1 for ord, v in enumerate(sorted(ranks, key=ranks.get, reverse=False))}
 
 
-class Threshold(__Postprocessor__):
+class Threshold(Postprocessor):
     """ Converts ranking outcome to binary values based on a threshold value."""
 
     def __init__(self, threshold="gap", ranker=None):
