@@ -86,7 +86,7 @@ class RankOrderConvergenceManager:
         self._start_time = None
         self.elapsed_time = None
         self.accumulated_ranks = None
-        self.accumulated_rank_squares = None
+        #self.accumulated_rank_squares = None
         self.pagerank_alpha = pagerank_alpha
         self.confidence = confidence
         self.criterion = criterion
@@ -98,7 +98,7 @@ class RankOrderConvergenceManager:
             self._start_time = time.clock()
             self.elapsed_time = None
             self.iteration = 0
-            self.accumulated_rank_squares = 0
+            #self.accumulated_rank_squares = 0
             self.accumulated_ranks = 0
 
     def has_converged(self, new_ranks):
@@ -106,9 +106,10 @@ class RankOrderConvergenceManager:
             raise Exception("Need to start() the convergence manager")
         new_ranks = np.array(new_ranks)
         self.accumulated_ranks = (self.accumulated_ranks*self.iteration + new_ranks) / (self.iteration+1)
-        self.accumulated_rank_squares += (self.accumulated_rank_squares*self.iteration + new_ranks * new_ranks) / (self.iteration+1)
+        #self.accumulated_rank_squares += (self.accumulated_rank_squares*self.iteration + new_ranks * new_ranks) / (self.iteration+1)
         self.iteration += 1
         converged = self.current_fraction_of_random_walks() >= self.needed_fraction_of_random_walks(new_ranks)
+        #print(self.current_fraction_of_random_walks(), self.needed_fraction_of_random_walks(new_ranks))
         self.elapsed_time = time.clock()-self._start_time
         return converged
 
@@ -117,7 +118,7 @@ class RankOrderConvergenceManager:
             a = [rank for rank in ranks]
             order = np.argsort(a, kind='quicksort')
             gaps = [a[order[i + 1]] - a[order[i]] for i in range(len(order)-1) if a[order[i + 1]] != a[order[i]]]
-            if len(gaps) < 12:
+            if len(gaps) < 2:
                 return 1
             return 1-(max(gaps)-min(gaps)) / (norm.ppf(self.confidence) * np.std(gaps)*len(gaps))
         elif self.criterion == "fraction_of_walks":
