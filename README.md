@@ -5,13 +5,14 @@ Fast recommendation algorithms for large graphs based on link analysis.
 
 **License:** Apache Software License
 <br>**Author:** Emmanouil Krasanakis
+<br>**Dependencies:** `tqdm, sklearn, scipy, numpy, networkx`
 
 # :hammer_and_wrench: Installation
-`pygrank` is meant to work with Python 3.6 or above. It can be installed with pip per:
+`pygrank` is meant to work with Python 3.6 or later. It can be installed with pip per:
 ```
 pip install pygrank
 ```
-  
+
 # :zap: Quickstart
 As a quick start, let us construct a networkx graph `G` and a set of nodes `seeds`.
 
@@ -28,12 +29,18 @@ As a quick start, let us construct a networkx graph `G` and a set of nodes `seed
 >>> seeds = {"A", "B"}
 ```
 
-We run a personalized PageRank algorithm to find structural relatedness scores
-of all graph nodes to the given set. This (but only this) much could also be achieved with networkx.
+We run a personalized PageRank algorithm (for the time being,
+with symmetric normalization) to score the structural relatedness
+of graph nodes to the ones of the given set. 
 ```python
 >>> from pygrank.algorithms.pagerank import PageRank
 >>> ranker = PageRank(alpha=0.85, tol=1.E-6)
 >>> ranks = ranker.rank(G, {v: 1 for v in seeds})
+```
+
+The output can be used like a dictionary. For example, we can
+print the scores of some nodes per:
+```python
 >>> print(ranks["B"], ranks["D"], ranks["E"])
 0.19245466859447746 0.14087481834802176 0.17014304812714195
 ```
@@ -71,27 +78,28 @@ we can use a different way to specify convergence:
 5 1 2
 ```
 
-Close to the previous one
-(slight inaccuracy due to small graph) at
-a fraction of the time!!
+Close to the previous one at a fraction of the iterations!!
+For small graphs, like this example, time gains by fewer iterations 
+are small. But, for graphs with many nodes, running time increases
+linearly with the number of iterations.
 
 
-## :brain: Overview
+# :brain: Overview
 Analyzing graph edges (links) between nodes
 can help discover information, such as structural or attribute-sharing communities 
 or nodes. With the introduction of graph signal processing and
 [Decoupled Graph Neural networks]() the importance of link analysis has drastically 
 increased, as its ability to perform inductive learning by quickly
-spreading node information, such as a few known node attributes or 
-predictions outputted by feature-based machine learning algorithms,
-through edges has been theoretically and experimentally corroborated.
+spreading node information through edges has been theoretically and experimentally
+corroborated. For example, it can be used to make predictions based on few known
+node attributes or base predictions outputted by low-quality feature-based machine
+learning models
 
-`pygrank` is a collection of link analysis algorithms and practices, 
-organized to be easy to deploy in real-world scenarios, where graphs
-are large, there are heterogeneous preprocessing and postprocessing
-requiremenets and. This way, it provides link analysis as a ready-to-use
-tool that does not require extensive familiarization with theoretical
-advancements.
+`pygrank` is a collection of link analysis algorithms and practices that 
+support real-world conditions, such as large graphs and heterogeneous
+preprocessing and postprocessing requiremenets. Thus, it provides
+link analysis as a ready-to-use tool that simplifies deployment of
+theoretical advancements.
 
 Some of the library's advantages are:
 1. **Compatibility** with [networkx](https://github.com/networkx/networkx)
@@ -102,7 +110,7 @@ Some of the library's advantages are:
 
 
 # :link: Links
-[Documentation](old_README.md)<br>
+[Documentation](tutorials/documentation.md)<br>
 [Contributing](tutorials/contributing.md)
 
 # :fire: Features

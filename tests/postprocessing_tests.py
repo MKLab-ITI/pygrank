@@ -21,3 +21,10 @@ class Test(unittest.TestCase):
         self.assertAlmostEqual(max(test_result.values()), 1, places=16, msg="Max should have max 1")
         test_result = Normalize("sum").transform(PageRank(normalization='col').rank(G))
         self.assertAlmostEqual(sum(test_result.values()), 1, places=16, msg="Normalization should be able to use transformations")
+
+    def test_oversampling(self):
+        from pygrank.algorithms.pagerank import PageRank
+        from pygrank.algorithms.oversampling import SeedOversampling
+        G = test_graph()
+        test_result = SeedOversampling(PageRank(normalization='col')).rank(G, {"A": 1})
+

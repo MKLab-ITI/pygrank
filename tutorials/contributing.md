@@ -9,7 +9,8 @@ Many thanks to all existing and future contributors for their participation.
 
 # :hammer_and_wrench: Virtual environment
 You can use any (virtual) environment, such as conda or the one provided by PyCharm,
-with Python 3.6 or later installed. Make sure that the dependencies `numpy,scipy,networkx`
+with Python 3.6 or later installed. Make sure that the dependencies 
+`tqdm, sklearn, scipy, numpy, networkx`
 are installed and upgraded to their latest versions.
 
 # :white_check_mark: Pull Checklist
