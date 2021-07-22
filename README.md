@@ -27,8 +27,8 @@ As a quick start, let us construct a networkx graph `G` and a set of nodes `seed
 >>> seeds = {"A", "B"}
 ```
 
-We can run a personalized PageRank algorithm to find structural relatedness scores
-of all graph nodes to the given set.
+We run a personalized PageRank algorithm to find structural relatedness scores
+of all graph nodes to the given set. This (but only this) much could also be achieved with networkx.
 ```python
 >>> from pygrank.algorithms.pagerank import PageRank
 >>> ranker = PageRank(alpha=0.85, tol=1.E-6)
@@ -39,7 +39,8 @@ of all graph nodes to the given set.
 
 We alter this outcome so that it outputs node order, 
 where higher node scores are assigned lower order. This is achieved
-by wrapping a postprocessor around the algorithm.
+by wrapping a postprocessor around the algorithm. There are various
+postprocessors, including ones to make scores fairness-aware.
 
 ```python
 >>> from pygrank.algorithms.postprocess import Ordinals
@@ -75,20 +76,37 @@ a fraction of the time!!
 
 
 ## :brain: Overview
+Analyzing graph edges (links) between nodes
+can help discover information, such as structural or attribute-sharing communities 
+or nodes. With the introduction of graph signal processing and
+[Decoupled Graph Neural networks]() the importance of link analysis has drastically 
+increased, as its ability to perform inductive learning by quickly
+spreading node information, such as a few known node attributes or 
+predictions outputted by feature-based machine learning algorithms,
+through edges has been theoretically and experimentally corroborated.
 
+`pygrank` is a collection of link analysis algorithms and practices, 
+organized to be easy to deploy in real-world scenarios, where graphs
+are large, there are heterogeneous preprocessing and postprocessing
+requiremenets and. This way, it provides link analysis as a ready-to-use
+tool that does not require extensive familiarization with theoretical
+advancements.
+
+Some of the library's advantages are:
+* **Data-centric** programming interface that does not require data transformations
+* **Compatibility** with networkx (a popular graph management library)
+* **Large** graph support, with memory requirements and algorithm running times scaling near-linearly with the number of edges
+* **Fast** computations with the use of scipy operations, hashing techniques to not recompute computation-intensive graph preprocessing, a numpy-based graph signal exchange pipeline
 
 ## :link: Links
 [Documentation](old_README.md)
 
 ## :fire: Features
-* Compatibility with networkx
 * Graph filters
 * Community detection
-* Supports large graphs
-* Fast computations
 * Graph normalization
 * Convergence criteria
-* Post-processing (e.g. fairness awareness)
+* Post-processing techniques (e.g. fairness awareness)
 * Structural and supervised evaluation measures
 
 ## :thumbsup: Contributing

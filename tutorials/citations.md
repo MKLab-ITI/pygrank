@@ -6,7 +6,8 @@ preferably list the same method names) in addition to this library.
 For example, the seed oversampling method developed in *krasanakis2019boosted*
 could be described in a LaTeX manuscript as 
 *"we employ the seed oversampling (SeedO) post-processing \cite{krasanakis2019boosted}
-implemented by the pygrank library \cite{pygrank}""*.
+implemented by the pygrank library \cite{pygrank}"*. Feel free to provide any other
+description as long as they point to the library's paper and the corresponding publication.
 
 ## Method References
 
