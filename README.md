@@ -1,17 +1,17 @@
-<center><h1>pygrank</h1></center>  
+<center><h1 style=font-size:200px>pygrank</h1></center>  
 Fast recommendation algorithms for large graphs based on link analysis.
 
 **License:** Apache Software License
 
 **Author:** Emmanouil Krasanakis
 
-## :hammer_and_wrench: Installation
+# :hammer_and_wrench: Installation
 `pygrank` is meant to work with Python 3.6 or above. It can be installed with pip per:
 ```
 pip install pygrank
 ```
   
-## :zap: Quickstart
+# :zap: Quickstart
 As a quick start, let us construct a networkx graph `G` and a set of nodes `seeds`.
 
 ```python
@@ -98,10 +98,10 @@ Some of the library's advantages are:
 * **Large** graph support, with memory requirements and algorithm running times scaling near-linearly with the number of edges
 * **Fast** computations with the use of scipy operations, hashing techniques to not recompute computation-intensive graph preprocessing, a numpy-based graph signal exchange pipeline
 
-## :link: Links
+# :link: Links
 [Documentation](old_README.md)
 
-## :fire: Features
+# :fire: Features
 * Graph filters
 * Community detection
 * Graph normalization
@@ -109,11 +109,11 @@ Some of the library's advantages are:
 * Post-processing techniques (e.g. fairness awareness)
 * Structural and supervised evaluation measures
 
-## :thumbsup: Contributing
+# :thumbsup: Contributing
 Feel free to contribute in any way, for example through the [issue tracker]() or by participating in [discussions]().
 Please check out the [contribution guidelines] if you want to bring modifications to the code base.
  
-## :notebook: Citation
+# :notebook: Citation
 If `pygrank` has been useful in your research and you would like to cite it in a scientific publication, please refer to the following paper:
 ```
 TBD
