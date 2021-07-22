@@ -1,9 +1,10 @@
 <center><h1 style=font-size:200px>pygrank</h1></center>  
 Fast recommendation algorithms for large graphs based on link analysis.
+<br>
+<br>
 
 **License:** Apache Software License
-
-**Author:** Emmanouil Krasanakis
+<br>**Author:** Emmanouil Krasanakis
 
 # :hammer_and_wrench: Installation
 `pygrank` is meant to work with Python 3.6 or above. It can be installed with pip per:
@@ -93,25 +94,29 @@ tool that does not require extensive familiarization with theoretical
 advancements.
 
 Some of the library's advantages are:
-* **Data-centric** programming interface that does not require data transformations
-* **Compatibility** with networkx (a popular graph management library)
-* **Large** graph support, with memory requirements and algorithm running times scaling near-linearly with the number of edges
-* **Fast** computations with the use of scipy operations, hashing techniques to not recompute computation-intensive graph preprocessing, a numpy-based graph signal exchange pipeline
+1. **Compatibility** with [networkx](https://github.com/networkx/networkx)
+2. **Datacentric** programming interface that does not require data transformations
+3. **Fast** computations with the use of scipy operations, hashing techniques to not recompute computation-intensive graph preprocessing, a numpy-based graph signal exchange pipeline
+4. **Large** graph support, with memory requirements and algorithm running times scaling near-linearly with the number of edges
+5. **Seamless** pipelines, from graph preprocessing and normalization up to evaluation measures
+
 
 # :link: Links
-[Documentation](old_README.md)
+[Documentation](old_README.md)<br>
+[Contributing](tutorials/contributing.md)
 
 # :fire: Features
 * Graph filters
 * Community detection
 * Graph normalization
 * Convergence criteria
-* Post-processing techniques (e.g. fairness awareness)
-* Structural and supervised evaluation measures
+* Postprocessing (e.g. fairness awareness)
+* Evaluation measures
+* Benchmarks
 
 # :thumbsup: Contributing
 Feel free to contribute in any way, for example through the [issue tracker]() or by participating in [discussions]().
-Please check out the [contribution guidelines] if you want to bring modifications to the code base.
+Please check out the [contribution guidelines](tutorials/contributing.md) if you want to bring modifications to the code base.
  
 # :notebook: Citation
 If `pygrank` has been useful in your research and you would like to cite it in a scientific publication, please refer to the following paper:

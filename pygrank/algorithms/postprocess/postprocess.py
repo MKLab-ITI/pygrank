@@ -1,18 +1,15 @@
 import warnings
 import numpy as np
-from pygrank.algorithms.utils import MethodHasher, to_numpy, to_dict
+from pygrank.algorithms.utils import MethodHasher, to_signal
 
 
 class Postprocessor(object):
     def transform(self, ranks, *args, **kwargs):
-        return self._transform(self.ranker.transform(ranks, *args, **kwargs))
+        return to_signal(ranks, self._transform(self.ranker.transform(ranks, *args, **kwargs)))
 
-    def rank(self, G, personalization, *args, **kwargs):
-        ranks = self.ranker.rank(G, personalization, *args, **kwargs)
-        post_processed_ranks = self._transform(to_dict(G, ranks))
-        if isinstance(ranks, np.ndarray):
-            post_processed_ranks = to_numpy(G, post_processed_ranks, normalization=False, autocomplete=False)
-        return post_processed_ranks
+    def rank(self, *args, **kwargs):
+        ranks = self.ranker.rank(*args, **kwargs)
+        return to_signal(ranks, self._transform(ranks))
 
 
 class Tautology:
@@ -64,12 +61,12 @@ class Normalize(Postprocessor):
     def _transform(self, ranks):
         min_rank = 0
         if self.method == "range":
-            max_rank = max(ranks.values())
-            min_rank = min(ranks.values())
+            max_rank = ranks.np.max()
+            min_rank = ranks.np.min()
         elif self.method == "max":
-            max_rank = max(ranks.values())
+            max_rank = ranks.np.max()
         elif self.method == "sum":
-            max_rank = sum(ranks.values())
+            max_rank = ranks.np.sum()
         else:
             raise Exception("Can only normalize towards max or sum")
         return {node: (rank-min_rank) / (max_rank-min_rank) for node, rank in ranks.items()}
@@ -90,7 +87,7 @@ class Ordinals(Postprocessor):
         self.ranker = Tautology() if ranker is None else ranker
 
     def _transform(self, ranks):
-        return {v: ord+1 for ord, v in enumerate(sorted(ranks, key=ranks.get, reverse=False))}
+        return {v: ord+1 for ord, v in enumerate(sorted(ranks, key=ranks.get, reverse=True))}
 
 
 class Threshold(Postprocessor):

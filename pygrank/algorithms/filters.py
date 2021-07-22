@@ -7,7 +7,7 @@ import numpy as np
 from pygrank.algorithms.utils import optimize
 
 
-class GraphFilter:
+class GenericFilter:
     def __init__(self, weights, to_scipy=None, fraction_of_training=.5, **kwargs):
         self.weights = weights
         self.to_scipy = pygrank.algorithms.utils.preprocessor(**kwargs) if to_scipy is None else to_scipy
