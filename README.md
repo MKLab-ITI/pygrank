@@ -1,4 +1,5 @@
-<center><h1 style=font-size:200px>pygrank</h1></center>  
+![pygrank](tutorials/pygrank.png)
+
 Fast recommendation algorithms for large graphs based on link analysis.
 <br>
 <br>

@@ -7,11 +7,22 @@ improving algorithms and extending the documentation.
 You can also contribute through the [issue tracker].
 Many thanks to all existing and future contributors for their participation.
 
-# :hammer_and_wrench: Virtual environment
-You can use any (virtual) environment, such as conda or the one provided by PyCharm,
-with Python 3.6 or later installed. Make sure that the dependencies 
+# :hammer_and_wrench: Workflow
+The typical workflow for `pygrank` contributions comprises the following steps:
+1. **Fork** the master branch from the GitHub repository.
+2. **Clone** the fork locally.
+3. **Edit** the library.
+4. **Commit** changes.
+5. **Push** changes to the fork.
+6. **Create a pull request** from the fork back to the original master branch.
+
+You can use any (virtual) environment to edit the local clone,
+such as conda or the one provided by PyCharm.
+The environment should come with Python 3.6 or later installed.
+Make sure that library dependencies 
 `tqdm, sklearn, scipy, numpy, networkx`
 are installed and upgraded to their latest versions.
+
 
 # :white_check_mark: Pull Checklist
 Before creating a pull request, make sure that your submission checks the following points:
