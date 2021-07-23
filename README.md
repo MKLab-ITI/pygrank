@@ -86,28 +86,29 @@ linearly with the number of iterations.
 
 
 # :brain: Overview
-Analyzing graph edges (links) between nodes
-can help discover information, such as structural or attribute-sharing communities 
-or nodes. With the introduction of graph signal processing and
-[Decoupled Graph Neural networks]() the importance of link analysis has drastically 
+Analyzing graph edges (links) between nodes can help rank/score
+graph nodes based on their structural proximity to structural
+or attribute-based communities of nodes.
+With the introduction of graph signal processing and
+[decoupled graph neural networks]() the importance of node ranking has drastically 
 increased, as its ability to perform inductive learning by quickly
 spreading node information through edges has been theoretically and experimentally
 corroborated. For example, it can be used to make predictions based on few known
 node attributes or base predictions outputted by low-quality feature-based machine
-learning models
+learning models.
 
-`pygrank` is a collection of link analysis algorithms and practices that 
+`pygrank` is a collection of node ranking algorithms and practices that 
 support real-world conditions, such as large graphs and heterogeneous
 preprocessing and postprocessing requiremenets. Thus, it provides
-link analysis as a ready-to-use tool that simplifies deployment of
-theoretical advancements.
+ready-to-use tools that simplify deployment of theoretical advancements
+and testing of new algorithms.
 
 Some of the library's advantages are:
 1. **Compatibility** with [networkx](https://github.com/networkx/networkx)
-2. **Datacentric** programming interface that does not require data transformations
-3. **Fast** computations with the use of scipy operations, hashing techniques to not recompute computation-intensive graph preprocessing, a numpy-based graph signal exchange pipeline
-4. **Large** graph support, with memory requirements and algorithm running times scaling near-linearly with the number of edges
-5. **Seamless** pipelines, from graph preprocessing and normalization up to evaluation measures
+2. **Datacentric** programming interfaces that do not require data transformations.
+3. **Fast** computations; running times scale near-linearly with the number of edges.
+4. **Large** graph support; memory requirements scale linearly with the number of edges.
+5. **Seamless** pipelines, from graph preprocessing up to graph mining evaluation.
 
 
 # :link: Links
