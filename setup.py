@@ -1,10 +1,11 @@
 import setuptools
-# Reminder:
+
+# Developer self-reminder for uploading in pypi:
 # - install: wheel, twine
 # - build  : python setup.py bdist_wheel
 # - deploy : twine upload dist/*
 
-with open("old_README.md", "r") as file:
+with open("README.md", "r") as file:
     long_description = file.read()
 
 setuptools.setup(

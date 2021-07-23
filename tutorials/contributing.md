@@ -26,16 +26,40 @@ are installed and upgraded to their latest versions.
 
 # :white_check_mark: Pull Checklist
 Before creating a pull request, make sure that your submission checks the following points:
-1. Any new classes and methods are documented and adhering to [Google docstring](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings)
+1. There are docstring for new classes and methods adhering to [Google docstring](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings)
 conventions.
-2. All unit tests are passed with no errors, unless your purpose
-is to introduce new unit tests that reveal existing bugs. Refrain from remodularizing
+2. Run `python docgenerator.py` to automatically add new docstrings.
+3. All unit tests are passed with no errors, unless your purpose
+is to introduce new unit tests that reveal bugs. Refrain from remodularizing
 the code unless absolutely necessary (creating new packages is fine).
-3. When implementing new or existing research (we are more than happy to accomodate this),
+4. Unit tests provide 100% code coverage.
+5. When implementing new or existing research (we are more than happy to accomodate this),
 you are required to also update the library's [citations](!citations.md) and point to
-that research from the respective class docstring.
-4. New code should maintain CamelCase notation for classes and lower_case_with_underscores
+that research from the respective class's docstring.
+6. New code maintains CamelCase notation for classes and lower_case_with_underscores
 for methods and variables.
-5. New files are placed in what feels like appropriate packages.
-6. **Optional.** Algorithm implementations should preferably exhibit near-linear
-(e.g. polylog-linear) running times to scale well. 
+7. New files are placed in what feels like appropriate packages.
+7. **Optional.** Algorithms exhibit near-linear
+(e.g. polylog-linear) running times and memory allocation to scale well to 
+large graphs.
+
+# :pencil2: Implementing New Node Ranking Algorithms
+To create a new node ranking algorithm, you are required to subclass one of the
+classes found in `pygrank.algorithms.abstract_filters`:
+* `GraphFilter` identifies generic graph filters (is subclassed by the next two)
+* `RecursiveGraphFilter` identifies graph filters that can be described with a recursive formula
+* `ClosedFormGraphFilter` identifies graph filers that can be described in closed form
+
+New abstract classes (e.g. that define families of new algorithms) should be placed
+in the same module as the above. New algorithms should be placed in modules
+`pygrank.algorithms.[family]`, where *family* is either an existing or new 
+submodule or a new one. For new submodules, make sure to provide access to
+their classes through `pygrank.algorithms.__init__.py`
+(this is **important**, as it helps `docgenerator.py` to  automatically create
+documentation for new algorithms).
+
+Do not forget to follow the previously outlined pull checklist before pulling new
+code.
+
+# :pencil2: Implementing New Evaluation Measures
+TODO

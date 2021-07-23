@@ -5,7 +5,7 @@ Fast recommendation algorithms for large graphs based on link analysis.
 <br>
 
 **License:** Apache Software License
-<br>**Author:** Emmanouil Krasanakis
+<br>**Author:** Emmanouil (Manios) Krasanakis
 <br>**Dependencies:** `tqdm, sklearn, scipy, numpy, networkx`
 
 # :hammer_and_wrench: Installation
@@ -30,16 +30,24 @@ As a quick start, let us construct a networkx graph `G` and a set of nodes `seed
 >>> seeds = {"A", "B"}
 ```
 
-We run a personalized PageRank algorithm (for the time being,
-with symmetric normalization) to score the structural relatedness
-of graph nodes to the ones of the given set. 
+We run a personalized PageRank [graph filter](tutorials/documentation.md#graph-filters)
+to score the structural relatedness
+of graph nodes to the ones of the given set. For instructional purposes,
+we show the default values of some parameters: the graph diffusion
+rate *alpha* required by the algorithm, a numerical tolerance *tol* at the
+convergence point and a graph preprocessing strategy *"auto"* normalization
+of the garph adjacency matrix to determine between column-based and symmetric
+normalization depending on whether the graph is undirected (as in this example)
+or not respectively.
 ```python
 >>> from pygrank.algorithms.pagerank import PageRank
->>> ranker = PageRank(alpha=0.85, tol=1.E-6)
+>>> ranker = PageRank(alpha=0.85, tol=1.E-6, normalization="auto")
 >>> ranks = ranker.rank(G, {v: 1 for v in seeds})
 ```
 
-The output can be used like a dictionary. For example, we can
+Node ranking output is always organized into
+[graph signals](tutorials/documentation.md#graph-signals)
+which can be used like dictionaries. For example, we can
 print the scores of some nodes per:
 ```python
 >>> print(ranks["B"], ranks["D"], ranks["E"])
@@ -79,10 +87,10 @@ we can use a different way to specify convergence:
 5 1 2
 ```
 
-Close to the previous one at a fraction of the iterations!!
+Close to the previous results at a fraction of the iterations!!
 For small graphs, like this example, time gains by fewer iterations 
-are small. But, for graphs with many nodes, running time increases
-linearly with the number of iterations.
+are small. But, for graphs with many nodes, running time is dominated
+by and increases linearly with the number of iterations.
 
 
 # :brain: Overview
@@ -104,11 +112,11 @@ ready-to-use tools that simplify deployment of theoretical advancements
 and testing of new algorithms.
 
 Some of the library's advantages are:
-1. **Compatibility** with [networkx](https://github.com/networkx/networkx)
+1. **Compatibility** with [networkx](https://github.com/networkx/networkx).
 2. **Datacentric** programming interfaces that do not require data transformations.
 3. **Fast** computations; running times scale near-linearly with the number of edges.
 4. **Large** graph support; memory requirements scale linearly with the number of edges.
-5. **Seamless** pipelines, from graph preprocessing up to graph mining evaluation.
+5. **Seamless** pipelines, from graph preprocessing up to evaluation of algorithms.
 
 
 # :link: Links

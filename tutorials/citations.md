@@ -1,8 +1,8 @@
 <center><h1>:notebook: Citations</h1></center>
 Several research outcomes have been implemented and integrated in `pygrank`.
-Please cite the respective publications (and, for the sake of easy comparison,
-preferably list the same method names) in addition to this library.
-
+Please cite the respective publications in addition to this library.
+<br>
+<br>
 For example, the seed oversampling method developed in *krasanakis2019boosted*
 could be described in a LaTeX manuscript as 
 *"we employ the seed oversampling (SeedO) post-processing \cite{krasanakis2019boosted}
@@ -10,6 +10,12 @@ implemented by the pygrank library \cite{pygrank}"*. Feel free to provide any ot
 description as long as they point to the library's paper and the corresponding publication.
 
 ## Method References
+
+We hereby present a comprehensive match of
+research outcomes to code concepts. For details on how to use respective
+methods, please refer to the project's [documentation](documentation.md).
+Reference names correspond to the list of publication bibtex entries
+presented later on.
 
 Instantiation or Usage | Method Name | Citation
 --- | --- | --- 

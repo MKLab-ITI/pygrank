@@ -32,8 +32,8 @@ node values to their neighbors and aggregating them there.
 The main principle
 lies in recognizing that propagating a graph signal's vector (i.e. numpy array)
 represntation `p` one hop away in the graph is performed through the operation
-`Mp`, where `M` is a normalization of the graph's adjacency matrix. For the time
-being, we will think of a column-based normalization, where `Mp`
+`Mp`, where `M` is a normalization of the graph's adjacency matrix. To gain an
+intuition, think of column-based normalization, where `Mp`
 becomes an update of all node values by setting them as their
 neighbors' previous average.
 
@@ -42,6 +42,11 @@ The library provides several graph filters. Their usage pattern consists
 of instantiating them and then calling their `rank(graph, personalization)`
 method to obtain posterior node signals based on diffusing the provided
 personalization signal through the graph.
+
+### :scroll: List
+An exhaustive documentation of all the project's graph filters can be
+found [here](graph_filters.md). After initialization with the appropriate
+parameters, these can be used interchangeably with the above example.
 
 # Postprocessors
 Postprocessors wrap base graph filters to affect their outcome. Usage

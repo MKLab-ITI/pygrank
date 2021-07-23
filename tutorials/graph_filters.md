@@ -1,0 +1,70 @@
+# :scroll: List of Graph Filters
+The following filters can be imported from the package `pygrank.algorithms`. Constructor detailsare provided. All of them can be used through the code patterns presented at the library's [documentation](documentation.md). 
+
+### AbsorbingRank ([RecursiveGraphFilter](#recursivegraphfilter))
+ Implementation of partial absorbing random walks for Lambda = diag(absorbtion vector), e.g. Lambda = aI
+    Wu, Xiao-Ming, et al. "Learning with partially absorbing random walks." Advances in neural information processing systems. 2012.
+     
+Initializes the AbsorbingRank filter parameters. 
+
+Attributes: 
+ * *alpha:* Optional. (1-alpha)/alpha is the absorbtion rate of the random walk. This is chosen to yield the same underlying meaning as PageRank (for which Lambda = a Diag(degrees) ) 
+
+Example:
+
+``` 
+>>> from pygrank.algorithms import pagerank 
+>>> algorithm = pagerank.HeatKernel(t=5, tol=1.E-9) # tol passed to the ConvergenceManager 
+```
+
+### HeatKernel ([ClosedFormGraphFilter](#closedformgraphfilter))
+ Heat kernel filter. 
+Initializes the HearKernel filter parameters. 
+
+Attributes: 
+ * *t:* Optional. How many hops until the importance of new nodes starts decreasing. Default value is 5. 
+
+Example:
+
+``` 
+>>> from pygrank.algorithms import pagerank 
+>>> algorithm = pagerank.HeatKernel(t=5, tol=1.E-9) # tol passed to the ConvergenceManager 
+```
+
+### PageRank ([RecursiveGraphFilter](#recursivegraphfilter))
+A Personalized PageRank power method algorithm. 
+Initializes the PageRank scheme parameters. 
+
+Attributes: 
+ * *alpha:* Optional. 1-alpha is the bias towards the personalization. Default value is 0.85. 
+
+Example:
+
+``` 
+>>> from pygrank.algorithms import pagerank 
+>>> algorithm = pagerank.PageRank(alpha=0.99, tol=1.E-9) # tol passed to the ConvergenceManager 
+```
+
+### BiasedKernel ([RecursiveGraphFilter](#recursivegraphfilter))
+ *Abstract class*
+
+
+ Heuristic kernel-like method that places emphasis on shorter random walks. 
+### ClosedFormGraphFilter ([GraphFilter](#graphfilter))
+ *Abstract class*
+
+
+Implements a graph filter described as an aggregation of graph signal diffusion certain number of hops away
+    while weighting these by corresponding coefficients. 
+
+Attributes: 
+ * *to_scipy:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with the keyword arguments is used by this constructor. 
+ * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager with the keyword arguments given to this constructor is created. 
+### RecursiveGraphFilter ([GraphFilter](#graphfilter))
+ *Abstract class*
+
+
+Implements a graph filter described through recursion ranks = formula(G, ranks) 
+
+Attributes: 
+ * *use_quotient:* Optional. If True (default) performs a L1 re-normalization of ranks after each iteration. This significantly speeds ups the convergence speed of symmetric normalization (col normalization preserves the L1 norm during computations on its own). Can also pass a pygrank.algorithm.postprocess filter to perform any kind of normalization through its postprocess method. Note that these can slow down computations due to needing to convert ranks between skipy and maps after each iteration. Can pass False or None to ignore this parameter's functionality. 
