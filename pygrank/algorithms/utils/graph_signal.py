@@ -5,8 +5,8 @@ from collections.abc import MutableMapping
 def to_signal(graph, obj):
     known_node2id = None
     if isinstance(graph, GraphSignal):
-        graph = graph.graph
         known_node2id = graph.node2id
+        graph = graph.graph
     elif isinstance(graph, np.ndarray):
         raise Exception("Graph cannot be an array")
     if isinstance(obj, GraphSignal):

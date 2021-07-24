@@ -4,6 +4,13 @@ from .example_graph import test_graph
 
 
 class Test(unittest.TestCase):
+    def test_completion(self):
+        from pygrank.algorithms.fixed import PageRank, HeatKernel, AbsorbingRank
+        G = test_graph()
+        PageRank().rank(G)
+        HeatKernel().rank(G)
+        AbsorbingRank().rank(G)
+
     def test_pagerank(self):
         from pygrank.algorithms.fixed import PageRank
         G = test_graph()
