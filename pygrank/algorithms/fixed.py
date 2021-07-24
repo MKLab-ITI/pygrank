@@ -13,8 +13,8 @@ class PageRank(RecursiveGraphFilter):
         Args:
             alpha: Optional. 1-alpha is the bias towards the personalization. Default value is 0.85.
         Example:
-            >>> from pygrank.algorithms import pagerank
-            >>> algorithm = pagerank.PageRank(alpha=0.99, tol=1.E-9) # tol passed to the ConvergenceManager
+            >>> from pygrank.algorithms import fixed
+            >>> algorithm = fixed.PageRank(alpha=0.99, tol=1.E-9) # tol passed to the ConvergenceManager
         """
         self.alpha = float(alpha)
         super().__init__(*args, **kwargs)
@@ -33,8 +33,8 @@ class HeatKernel(ClosedFormGraphFilter):
         Args:
             t: Optional. How many hops until the importance of new nodes starts decreasing. Default value is 5.
         Example:
-            >>> from pygrank.algorithms import pagerank
-            >>> algorithm = pagerank.HeatKernel(t=5, tol=1.E-9) # tol passed to the ConvergenceManager
+            >>> from pygrank.algorithms import fixed
+            >>> algorithm = fixed.HeatKernel(t=5, tol=1.E-9) # tol passed to the ConvergenceManager
         """
         self.t = float(t)
         super().__init__(*args, **kwargs)
@@ -56,8 +56,8 @@ class AbsorbingRank(RecursiveGraphFilter):
                 same underlying meaning as PageRank (for which Lambda = a Diag(degrees) )
 
         Example:
-            >>> from pygrank.algorithms import pagerank
-            >>> algorithm = pagerank.HeatKernel(t=5, tol=1.E-9) # tol passed to the ConvergenceManager
+            >>> from pygrank.algorithms import fixed
+            >>> algorithm = fixed.HeatKernel(t=5, tol=1.E-9) # tol passed to the ConvergenceManager
         """
 
         super().__init__(to_scipy=to_scipy, convergence=convergence, **kwargs)

@@ -15,11 +15,10 @@ class Postprocessor(object):
         raise Exception("Postprocessor subclasses need to implement a _transform method")
 
 
-class Tautology:
+class Tautology(Postprocessor):
     """ Returns ranks as-are.
 
-    This class can be used as a baseline against which to compare other rank post-processing algorithms
-    (e.g. those of this package).
+    Can be used as a baseline against which to compare other postprocessors.
     """
 
     def __init__(self):
@@ -36,20 +35,20 @@ class Normalize(Postprocessor):
     """ Normalizes ranks by dividing with their maximal value."""
 
     def __init__(self, ranker=None, method="max"):
-        """ Initializes the class with a base ranker instance. Attributes are automatically filled in and
+        """ Initializes the class with a base ranker instance. Args are automatically filled in and
         re-ordered if at least one is provided.
 
-        Attributes:
+        Args:
             ranker: The base ranker instance. A Tautology() ranker is created if None (default) was specified.
             method: Divide ranks either by their "max" (default) or by their "sum"
 
         Example:
-            >>> from pygrank.algorithms.postprocess import Threshold
+            >>> from pygrank.algorithms.postprocess import Normalize
             >>> G, seed_values, algorithm = ...
-            >>> algorithm = Threshold(0.5, algorithm) # sets ranks >= 0.5 to 1 and lower ones to 0
+            >>> algorithm = Normalize(0.5, algorithm) # sets ranks >= 0.5 to 1 and lower ones to 0
             >>> ranks = algorithm.rank(G, seed_values)
 
-        Example (same outcome, quicker one-time use):
+        Example (same outcome, simpler one-liner):
             >>> from pygrank.algorithms.postprocess import Normalize
             >>> G, seed_values, algorithm = ...
             >>> ranks = Normalize(0.5).transform(algorithm.rank(G, seed_values))
@@ -84,7 +83,7 @@ class Ordinals(Postprocessor):
     def __init__(self, ranker=None):
         """ Initializes the class with a base ranker instance.
 
-        Attributes:
+        Args:
             ranker: Optional. The base ranker instance. A Tautology() ranker is created if None (default) was specified.
         """
         self.ranker = Tautology() if ranker is None else ranker
@@ -97,10 +96,10 @@ class Threshold(Postprocessor):
     """ Converts ranking outcome to binary values based on a threshold value."""
 
     def __init__(self, threshold="gap", ranker=None):
-        """ Initializes the Threshold postprocessing scheme. Attributes are automatically filled in and
+        """ Initializes the Threshold postprocessing scheme. Args are automatically filled in and
         re-ordered if at least one is provided.
 
-        Attributes:
+        Args:
             threshold: Optional. The minimum numeric value required to output rank 1 instead of 0. If "gap" (default)
                 then its value is automatically determined based on the maximal percentage increase between consecutive
                 ranks.
@@ -145,15 +144,22 @@ class Threshold(Postprocessor):
         return {v: 1  if ranks[v] >= threshold else 0 for v in ranks.keys()}
 
 
-class Sweep:
+class Sweep(Postprocessor):
+    """
+    Applies a sweep procedure that divides personalized node ranks by corresponding non-personalized ones.
+    """
     def __init__(self, ranker, uniform_ranker=None):
+        """
+        Initializes the sweep procedure.
+        Args:
+            ranker: The base ranker instance.
+            uniform_ranker: Optional. The ranker instance used to perform non-personalized ranking. If None (default)
+                the base ranker is used.
+        """
         self.ranker = ranker
         self.uniform_ranker = ranker if uniform_ranker is None else uniform_ranker
-        self.centrality = MethodHasher(lambda G, *args, **kwargs: self.uniform_ranker.rank(G, np.repeat(1, len(G)), *args, **kwargs))
+        self.centrality = MethodHasher(lambda G: self.uniform_ranker.rank(G))
 
-    def rank(self, G, personalization, *args, **kwargs):
-        ranks = self.ranker.rank(G, personalization, *args, **kwargs)
-        uniforms = self.centrality(G, *args, **kwargs)
-        if isinstance(ranks, np.ndarray):
-            return ranks/(1.E-12+uniforms)
-        return {v: ranks[v]/(1.E-12 + uniforms.get(v,0)) for v in G}
+    def _transform(self, ranks):
+        uniforms = self.centrality(ranks.G).np
+        return ranks.np/(1.E-12+uniforms.np)

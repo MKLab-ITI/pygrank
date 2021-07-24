@@ -1,4 +1,4 @@
-from pygrank.algorithms.pagerank import *
+from pygrank.algorithms.fixed import *
 from pygrank.algorithms.postprocess import *
 from pygrank.metrics import *
 from pygrank.algorithms.postprocess.oversampling import SeedOversampling, BoostedSeedOversampling

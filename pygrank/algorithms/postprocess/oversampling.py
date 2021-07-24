@@ -14,9 +14,9 @@ class SeedOversampling:
                 base ranker run or "neighbors" to oversample the neighbors of personalization nodes.
 
         Example:
-            >>> from pygrank.algorithms.postprocess import oversampling            >>> from pygrank.algorithms import pagerank
+            >>> from pygrank.algorithms.postprocess import oversampling            >>> from pygrank.algorithms import fixed
             >>> G, seed_nodes = ...
-            >>> algorithm = oversampling.SeedOversampling(pagerank.PageRank(alpha=0.99))
+            >>> algorithm = oversampling.SeedOversampling(fixed.PageRank(alpha=0.99))
             >>> ranks = algorithm.rank(G, personalization={1 for v in seed_nodes})
         """
         self.ranker = ranker
@@ -67,10 +67,10 @@ class BoostedSeedOversampling:
                 ConvergenceManager(error_type="small_value", tol=0.001, max_iters=100)
 
         Example:
-            >>> from pygrank.algorithms import pagerank
+            >>> from pygrank.algorithms import fixed
             >>> from pygrank.algorithms import oversampling
             >>> G, seed_nodes = ...
-            >>> algorithm = oversampling.BoostedSeedOversampling(pagerank.PageRank(alpha=0.99))
+            >>> algorithm = oversampling.BoostedSeedOversampling(fixed.PageRank(alpha=0.99))
             >>> ranks = algorithm.rank(G, personalization={1 for v in seed_nodes})
         """
         self.ranker = ranker

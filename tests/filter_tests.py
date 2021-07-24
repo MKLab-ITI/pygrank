@@ -5,7 +5,7 @@ from .example_graph import test_graph
 
 class Test(unittest.TestCase):
     def test_pagerank(self):
-        from pygrank.algorithms.pagerank import PageRank
+        from pygrank.algorithms.fixed import PageRank
         G = test_graph()
         test_result = PageRank(normalization='col').rank(G)
         nx_result = nx.pagerank_scipy(G)
@@ -25,8 +25,8 @@ class Test(unittest.TestCase):
     """
 
     def test_heat_kernel_locality(self):
-        from pygrank.algorithms.pagerank import PageRank
-        from pygrank.algorithms.pagerank import HeatKernel
+        from pygrank.algorithms.fixed import PageRank
+        from pygrank.algorithms.fixed import HeatKernel
         G = test_graph()
         personalization = {"A": 1, "B": 1}
         pagerank = PageRank().rank(G, personalization)
@@ -35,7 +35,7 @@ class Test(unittest.TestCase):
         self.assertLess(heatkernel['I']/sum(heatkernel.values()), pagerank['I']/sum(pagerank.values()), msg="HeatKernel more local than PageRank")
 
     def test_venuerank(self):
-        from pygrank.algorithms.pagerank import PageRank
+        from pygrank.algorithms.fixed import PageRank
         from pygrank.algorithms.postprocess import Ordinals
         from scipy.stats import spearmanr
         G = nx.fast_gnp_random_graph(600, 0.001, seed=1)
