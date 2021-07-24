@@ -19,7 +19,7 @@ def format(doc):
             open_example = False
         line_break = "\n"
         if line.startswith("Example") and ":" in line:
-            line = line+"\n\n```"
+            line = line+"\n\n```python"
             prefix = ""
             line_break = "\n\n"
             open_example = True

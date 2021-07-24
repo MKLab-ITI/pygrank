@@ -15,7 +15,7 @@ Attributes:
 
 Example:
 
-``` 
+```python 
 >>> from pygrank.algorithms.postprocess import Threshold 
 >>> G, seed_values, algorithm = ... 
 >>> algorithm = Threshold(0.5, algorithm) # sets ranks >= 0.5 to 1 and lower ones to 0 
@@ -25,7 +25,7 @@ Example:
 
 Example (same outcome, quicker one-time use):
 
-``` 
+```python 
 >>> from pygrank.algorithms.postprocess import Normalize 
 >>> G, seed_values, algorithm = ... 
 >>> ranks = Normalize(0.5).transform(algorithm.rank(G, seed_values)) 
@@ -53,7 +53,7 @@ Attributes:
 
 Example:
 
-``` 
+```python 
 >>> from pygrank.algorithms.postprocess import Threshold 
 >>> G, seed_values, algorithm = ... 
 >>> algorithm = Threshold(0.5, algorithm) # sets ranks >= 0.5 to 1 and lower ones to 0 
@@ -63,7 +63,7 @@ Example:
 
 Example (same outcome):
 
-``` 
+```python 
 >>> from pygrank.algorithms.postprocess import Threshold 
 >>> G, seed_values, algorithm = ... 
 >>> ranks = Threshold(0.5).transform(algorithm.rank(G, seed_values)) 
