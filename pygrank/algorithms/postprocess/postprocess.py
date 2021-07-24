@@ -11,6 +11,9 @@ class Postprocessor(object):
         ranks = self.ranker.rank(*args, **kwargs)
         return to_signal(ranks, self._transform(ranks))
 
+    def _transform(self, ranks):
+        raise Exception("Postprocessor subclasses need to implement a _transform method")
+
 
 class Tautology:
     """ Returns ranks as-are.

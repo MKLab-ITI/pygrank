@@ -44,22 +44,45 @@ for methods and variables.
 large graphs.
 
 # :pencil2: Implementing New Node Ranking Algorithms
+##### Which classes to subclass?
 To create a new node ranking algorithm, you are required to subclass one of the
 classes found in `pygrank.algorithms.abstract_filters`:
 * `GraphFilter` identifies generic graph filters (is subclassed by the next two)
 * `RecursiveGraphFilter` identifies graph filters that can be described with a recursive formula
 * `ClosedFormGraphFilter` identifies graph filers that can be described in closed form
 
+##### Where to write code?
 New abstract classes (e.g. that define families of new algorithms) should be placed
-in the same module as the above. New algorithms should be placed in modules
-`pygrank.algorithms.[family]`, where *family* is either an existing or new 
+in the same module as the above ones. New algorithms should be placed in modules
+`pygrank.algorithms.[family]`, where *family* is either an existing
 submodule or a new one. For new submodules, make sure to provide access to
 their classes through `pygrank.algorithms.__init__.py`
 (this is **important**, as it helps `docgenerator.py` to  automatically create
 documentation for new algorithms).
 
-Do not forget to follow the previously outlined pull checklist before pulling new
-code.
+##### How to structure constructors?
+Constructors of graph filters should pass extra arguments to parent classes.
+This ensures that new algorithms share the same breadth of customization
+as parent classes. Only additional arguments not parsed by parent classes
+(inherited arguments will be automatically added when `docgenerator.py`
+is used to construct documentation). For example, the following snippet
+presents a new algorithm:
+ 
+
+```python
+class NewAlgorithm(GraphFilter):
+    def __init__(self, parameter=1, *args, **kwargs):
+        """
+        Instantiates the new algorithm.
+        Args:
+            parameter: Optional. The new algorithm's parameter. Default value is 1.
+        """
+        super().__init__(*args, **kwargs)
+        self.parameter = parameter
+    ...
+```
+
+Do not forget to follow the previously outlined pull checklist.
 
 # :pencil2: Implementing New Evaluation Measures
 TODO

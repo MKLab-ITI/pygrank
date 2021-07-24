@@ -10,7 +10,7 @@ class PageRank(RecursiveGraphFilter):
 
     def __init__(self, alpha=0.85, *args, **kwargs):
         """ Initializes the PageRank scheme parameters.
-        Attributes:
+        Args:
             alpha: Optional. 1-alpha is the bias towards the personalization. Default value is 0.85.
         Example:
             >>> from pygrank.algorithms import pagerank
@@ -30,7 +30,7 @@ class HeatKernel(ClosedFormGraphFilter):
 
     def __init__(self, t=3, *args, **kwargs):
         """ Initializes the HearKernel filter parameters.
-        Attributes:
+        Args:
             t: Optional. How many hops until the importance of new nodes starts decreasing. Default value is 5.
         Example:
             >>> from pygrank.algorithms import pagerank
@@ -51,7 +51,7 @@ class AbsorbingRank(RecursiveGraphFilter):
     def __init__(self, alpha=1-1.E-6, to_scipy=None, use_quotient=True, convergence=None, converge_to_eigenvectors=False, **kwargs):
         """ Initializes the AbsorbingRank filter parameters.
 
-        Attributes:
+        Args:
             alpha: Optional. (1-alpha)/alpha is the absorbtion rate of the random walk. This is chosen to yield the
                 same underlying meaning as PageRank (for which Lambda = a Diag(degrees) )
 

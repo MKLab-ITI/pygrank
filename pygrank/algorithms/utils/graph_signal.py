@@ -3,21 +3,23 @@ from collections.abc import MutableMapping
 
 
 def to_signal(graph, obj):
+    known_node2id = None
     if isinstance(graph, GraphSignal):
         graph = graph.graph
+        known_node2id = graph.node2id
     elif isinstance(graph, np.ndarray):
         raise Exception("Graph cannot be an array")
     if isinstance(obj, GraphSignal):
         if graph != obj.graph:
             raise Exception("Graph signal tied to a different graph")
         return obj
-    return GraphSignal(graph, obj)
+    return GraphSignal(graph, obj, known_node2id)
 
 
 class GraphSignal(MutableMapping):
-    def __init__(self, graph, obj):
+    def __init__(self, graph, obj, node2id=None):
         self.graph = graph
-        self.node2id = {v: i for i, v in enumerate(graph)}
+        self.node2id = {v: i for i, v in enumerate(graph)} if node2id is None else node2id
         if isinstance(obj, np.ndarray):
             if len(graph) != len(obj):
                 raise Exception("Graph signal arrays should have the same dimensions as graphs")

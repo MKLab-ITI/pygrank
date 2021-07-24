@@ -44,9 +44,9 @@ method to obtain posterior node signals based on diffusing the provided
 personalization signal through the graph.
 
 ### :scroll: List
-An exhaustive documentation of all the project's graph filters can be
+An exhaustive list of all ready-to-use graph filters can be
 found [here](graph_filters.md). After initialization with the appropriate
-parameters, these can be used interchangeably with the above example.
+parameters, these can be used interchangeably in the above example.
 
 # Postprocessors
 Postprocessors wrap base graph filters to affect their outcome. Usage
@@ -69,3 +69,7 @@ by providing more example nodes, and for fairness-aware posteriors,
 which aim to make node scores adhere to some fairness constraint, 
 such as disparate impact.
 
+### :scroll: List
+An exhaustive list of all ready-to-use postprocessors can be
+found [here](postprocessors.md). After initialization with the appropriate
+parameters, these can be used interchangeably in the above example.

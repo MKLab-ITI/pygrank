@@ -9,12 +9,13 @@ class GraphFilter(object):
 
     def __init__(self, to_scipy = None, convergence = None, ** kwargs):
         """
-        Attributes:
+        Args:
             to_scipy: Optional. Method to extract a scipy sparse matrix from a networkx graph.
-                If None (default), pygrank.algorithms.utils.preprocessor is used with the keyword arguments is
-                used by this constructor.
+                If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments
+                automatically extracted from the ones passed to this constructor.
             convergence: Optional. The ConvergenceManager that determines when iterations stop. If None (default),
-                a ConvergenceManager with the keyword arguments given to this constructor is created.
+                a ConvergenceManager with keyword arguments
+                automatically extracted from the ones passed to this constructor.
         """
         self.to_scipy = _call(pygrank.algorithms.utils.preprocessor, kwargs) if to_scipy is None else to_scipy
         self.convergence = _call(pygrank.algorithms.utils.ConvergenceManager, kwargs) if convergence is None else convergence
@@ -50,7 +51,7 @@ class RecursiveGraphFilter(GraphFilter):
 
     def __init__(self, use_quotient=True, converge_to_eigenvectors=False, *args, **kwargs):
         """
-        Attributes:
+        Args:
             use_quotient: Optional. If True (default) performs a L1 re-normalization of ranks after each iteration.
                 This significantly speeds ups the convergence speed of symmetric normalization (col normalization
                 preserves the L1 norm during computations on its own). Can also pass a pygrank.algorithm.postprocess

@@ -1,7 +1,7 @@
 from pygrank.algorithms.pagerank import *
 from pygrank.algorithms.postprocess import *
 from pygrank.metrics import *
-from pygrank.algorithms.oversampling import SeedOversampling, BoostedSeedOversampling
+from pygrank.algorithms.postprocess.oversampling import SeedOversampling, BoostedSeedOversampling
 from experiments.importer import fairness_dataset
 from pygrank.algorithms.utils import preprocessor
 import random

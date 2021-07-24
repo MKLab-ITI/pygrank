@@ -241,7 +241,7 @@ and then sets seeds to one for nodes with higher ranks than any of the original 
 and then reruns that algorithm with updated seeds:
 
 ```python
-from pygrank.algorithms.oversampling import SeedOversampling
+from pygrank.algorithms.postprocess.oversampling import SeedOversampling
 
 G, personalization = ...
 base_algorithm = ... # e.g. PageRank
