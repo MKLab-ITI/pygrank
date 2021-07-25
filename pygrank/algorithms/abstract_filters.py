@@ -1,9 +1,10 @@
 from .utils import _call, _ensure_all_used
-import pygrank.algorithms.utils
+from pygrank.algorithms.utils import NodeRanking, preprocessor, ConvergenceManager, to_signal
+from pygrank.algorithms.postprocess import Postprocessor
 import numpy as np
 
 
-class GraphFilter(object):
+class GraphFilter(NodeRanking):
     """Implements the base functionality of a graph filter that preprocesses a graph and an iterative computation scheme
     that stops based on a convergence manager."""
 
@@ -17,18 +18,18 @@ class GraphFilter(object):
                 a ConvergenceManager with keyword arguments
                 automatically extracted from the ones passed to this constructor.
         """
-        self.to_scipy = _call(pygrank.algorithms.utils.preprocessor, kwargs) if to_scipy is None else to_scipy
-        self.convergence = _call(pygrank.algorithms.utils.ConvergenceManager, kwargs) if convergence is None else convergence
-        _ensure_all_used(kwargs, [pygrank.algorithms.utils.preprocessor, pygrank.algorithms.utils.vectorize, pygrank.algorithms.utils.ConvergenceManager])
+        self.to_scipy = _call(preprocessor, kwargs) if to_scipy is None else to_scipy
+        self.convergence = _call(ConvergenceManager, kwargs) if convergence is None else convergence
+        _ensure_all_used(kwargs, [preprocessor, ConvergenceManager])
 
     def rank(self, graph=None, personalization=None, warm_start=None, normalized_personalization=True, *args, **kwargs):
         self.convergence.start()
-        personalization = pygrank.algorithms.utils.to_signal(graph, personalization).normalized(normalized_personalization)
+        personalization = to_signal(graph, personalization).normalized(normalized_personalization)
         if np.abs(personalization.np).sum() == 0:
             raise Exception("Personalization should contain at least one non-zero entity")
         if graph is None:
             graph = personalization.G
-        ranks = pygrank.algorithms.utils.to_signal(graph, personalization.np if warm_start is None else warm_start)
+        ranks = to_signal(graph, personalization.np if warm_start is None else warm_start)
         M = self.to_scipy(graph)
         self._start(M, personalization, ranks, *args, **kwargs)
         while not self.convergence.has_converged(ranks.np):
@@ -53,10 +54,9 @@ class RecursiveGraphFilter(GraphFilter):
         """
         Args:
             use_quotient: Optional. If True (default) performs a L1 re-normalization of ranks after each iteration.
-                This significantly speeds ups the convergence speed of symmetric normalization (col normalization
-                preserves the L1 norm during computations on its own). Can also pass a pygrank.algorithm.postprocess
-                filter to perform any kind of normalization through its postprocess method. Note that these can slow
-                down computations due to needing to convert ranks between skipy and maps after each iteration.
+                This significantly speeds up the convergence speed of symmetric normalization (col normalization
+                preserves the L1 norm during computations on its own). Can also pass Postprocessor instances
+                to adjust node scores after each iteration with the Postprocessor.transform(ranks) method.
                 Can pass False or None to ignore this parameter's functionality.
         """
         super().__init__(*args, **kwargs)
@@ -65,7 +65,9 @@ class RecursiveGraphFilter(GraphFilter):
 
     def _step(self, M, personalization, ranks, *args, **kwargs):
         ranks.np = self._formula(M, personalization.np, ranks.np, *args, **kwargs)
-        if self.use_quotient:
+        if isinstance(self.use_quotient, Postprocessor):
+            ranks.np = self.use_quotient.transform(ranks).np
+        elif self.use_quotient:
             ranks.np = ranks.np / ranks.np.sum()
         if self.converge_to_eigenvectors:
             personalization.np = ranks.np
@@ -84,9 +86,10 @@ class ClosedFormGraphFilter(GraphFilter):
         ranks.np *= self.coefficient
 
     def _step(self, M, personalization, ranks, *args, **kwargs):
-        self.Mpower *= M
         self.coefficient = self._coefficient(self.coefficient)
-        ranks.np += self.coefficient * self.Mpower * personalization.np
+        self.Mpower *= M
+        if self.coefficient != 0:
+            ranks.np += self.coefficient * self.Mpower * personalization.np
 
     def _end(self):
         del self.Mpower

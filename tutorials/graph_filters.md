@@ -13,17 +13,27 @@ Initializes the AbsorbingRank filter parameters.
 
 Args: 
  * *alpha:* Optional. (1-alpha)/alpha is the absorbtion rate of the random walk. This is chosen to yield the same underlying meaning as PageRank (for which Lambda = a Diag(degrees) ) 
- * *use_quotient:* Optional. If True (default) performs a L1 re-normalization of ranks after each iteration. This significantly speeds ups the convergence speed of symmetric normalization (col normalization preserves the L1 norm during computations on its own). Can also pass a pygrank.algorithm.postprocess filter to perform any kind of normalization through its postprocess method. Note that these can slow down computations due to needing to convert ranks between skipy and maps after each iteration. Can pass False or None to ignore this parameter's functionality. 
+ * *use_quotient:* Optional. If True (default) performs a L1 re-normalization of ranks after each iteration. This significantly speeds up the convergence speed of symmetric normalization (col normalization preserves the L1 norm during computations on its own). Can also pass Postprocessor instances to adjust node scores after each iteration with the Postprocessor.transform(ranks) method. Can pass False or None to ignore this parameter's functionality. 
  * *to_scipy:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
  * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager with keyword arguments automatically extracted from the ones passed to this constructor. 
 
 Example:
 
 ```python 
->>> from pygrank.algorithms import fixed 
->>> algorithm = fixed.HeatKernel(t=5, tol=1.E-9) # tol passed to the ConvergenceManager 
+>>> from pygrank.algorithms import adhoc 
+>>> algorithm = adhoc.HeatKernel(t=5, tol=1.E-9) # tol passed to the ConvergenceManager 
 ```
 
+
+### GenericGraphFilter 
+
+Implements a graph filter with a specific vector of weight parameters. 
+Initializes the graph filter. 
+
+Args: 
+ * *weights:* A list-like object with elements weights[n] proportional to the importance of propagating personalization graph signals n hops away. Default is [0.9]*10 . 
+ * *to_scipy:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager with keyword arguments automatically extracted from the ones passed to this constructor. 
 
 ### HeatKernel 
 
@@ -38,8 +48,8 @@ Args:
 Example:
 
 ```python 
->>> from pygrank.algorithms import fixed 
->>> algorithm = fixed.HeatKernel(t=5, tol=1.E-9) # tol passed to the ConvergenceManager 
+>>> from pygrank.algorithms import adhoc 
+>>> algorithm = adhoc.HeatKernel(t=5, tol=1.E-9) # tol passed to the ConvergenceManager 
 ```
 
 
@@ -50,14 +60,14 @@ Initializes the PageRank scheme parameters.
 
 Args: 
  * *alpha:* Optional. 1-alpha is the bias towards the personalization. Default value is 0.85. 
- * *use_quotient:* Optional. If True (default) performs a L1 re-normalization of ranks after each iteration. This significantly speeds ups the convergence speed of symmetric normalization (col normalization preserves the L1 norm during computations on its own). Can also pass a pygrank.algorithm.postprocess filter to perform any kind of normalization through its postprocess method. Note that these can slow down computations due to needing to convert ranks between skipy and maps after each iteration. Can pass False or None to ignore this parameter's functionality. 
+ * *use_quotient:* Optional. If True (default) performs a L1 re-normalization of ranks after each iteration. This significantly speeds up the convergence speed of symmetric normalization (col normalization preserves the L1 norm during computations on its own). Can also pass Postprocessor instances to adjust node scores after each iteration with the Postprocessor.transform(ranks) method. Can pass False or None to ignore this parameter's functionality. 
  * *to_scipy:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
  * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager with keyword arguments automatically extracted from the ones passed to this constructor. 
 
 Example:
 
 ```python 
->>> from pygrank.algorithms import fixed 
->>> algorithm = fixed.PageRank(alpha=0.99, tol=1.E-9) # tol passed to the ConvergenceManager 
+>>> from pygrank.algorithms import adhoc 
+>>> algorithm = adhoc.PageRank(alpha=0.99, tol=1.E-9) # tol passed to the ConvergenceManager 
 ```
 

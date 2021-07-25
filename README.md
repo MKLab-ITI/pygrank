@@ -40,7 +40,7 @@ of the garph adjacency matrix to determine between column-based and symmetric
 normalization depending on whether the graph is undirected (as in this example)
 or not respectively.
 ```python
->>> from pygrank.algorithms.fixed import PageRank
+>>> from pygrank.algorithms.adhoc import PageRank
 >>> ranker = PageRank(alpha=0.85, tol=1.E-6, normalization="auto")
 >>> ranks = ranker.rank(G, {v: 1 for v in seeds})
 ```
@@ -119,9 +119,8 @@ Some of the library's advantages are:
 5. **Seamless** pipelines, from graph preprocessing up to evaluation of algorithms.
 
 
-# :link: Links
+# :link: Material
 [Documentation](tutorials/documentation.md)<br>
-[Contributing](tutorials/contributing.md)
 
 # :fire: Features
 * Graph filters

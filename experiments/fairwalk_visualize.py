@@ -1,4 +1,4 @@
-from pygrank.algorithms.fixed import PageRank
+from pygrank.algorithms.adhoc import PageRank
 from pygrank.algorithms.postprocess import Normalize, Ordinals
 from pygrank.metrics.utils import split_groups
 from sklearn import metrics

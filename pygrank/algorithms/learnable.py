@@ -5,53 +5,26 @@ from numpy import dot
 from numpy.random import choice
 import numpy as np
 from pygrank.algorithms.utils import optimize
+from pygrank.algorithms.abstract_filters import ClosedFormGraphFilter
 
 
-class GenericFilter:
-    def __init__(self, weights, to_scipy=None, fraction_of_training=.5, **kwargs):
+class GenericGraphFilter(ClosedFormGraphFilter):
+    """Implements a graph filter with a specific vector of weight parameters."""
+
+    def __init__(self, weights=[0.9]*10, **kwargs):
+        """
+        Initializes the graph filter.
+        Args:
+            weights: A list-like object with elements weights[n] proportional to the importance of propagating
+                personalization graph signals n hops away. Default is [0.9]*10 .
+        """
+        super(GenericGraphFilter, self).__init__(**kwargs)
         self.weights = weights
-        self.to_scipy = pygrank.algorithms.utils.preprocessor(**kwargs) if to_scipy is None else to_scipy
-        self.fraction_of_training = fraction_of_training
 
-    def _rank(self, M, personalization, weights):
-        ranks = 0
-        pow = personalization/personalization.sum()
-        for weight in weights:
-            ranks += weight*pow
-            pow = pow*M
-        if ranks.sum() != 0:
-            ranks = ranks/ranks.sum()
-        return ranks
-
-    def rank(self, G, personalization=None, **kwargs):
-        M = self.to_scipy(G)
-        #degrees = scipy.array(M.sum(axis=1)).flatten()
-        #M = scipy.sparse.diags(scipy.repeat(1.0, len(G))) - M
-        is_known = scipy.repeat(1.0, len(G)) if personalization is None else scipy.array([1 if n in personalization else 0 for n in G], dtype=float)
-        personalization = scipy.repeat(1.0, len(G)) if personalization is None else scipy.array([personalization.get(n, 0) for n in G], dtype=float)
-        if personalization.sum() == 0:
-            raise Exception("The personalization vector should contain at least one non-zero entity")
-
-        if self.weights is None:
-            if self.fraction_of_training == 1:
-                training_choice = 1
-                test_choice = 1
-            else:
-                training_choice = choice([1,0], size=personalization.size, p=[self.fraction_of_training, 1-self.fraction_of_training])
-                test_choice = 1-training_choice
-            if test_choice.sum() == 0:
-                raise Exception("Empty validation set")
-            loss = lambda weights: norm((self._rank(M, personalization*training_choice, weights)-personalization)*test_choice*is_known,2)
-            weights = optimize(loss, [1]*20, divide_range=1.5)
-        else:
-            weights = self.weights
-
-        ranks = self._rank(M, personalization, weights)
-
-        ranks = dict(zip(G.nodes(), map(float, ranks)))
-        return ranks
-
-
+    def _coefficient(self, _):
+        if self.convergence.iteration >= len(self.weights):
+            return 0
+        return self.weights[self.convergence.iteration]
 
 
 class LanczosFilter:

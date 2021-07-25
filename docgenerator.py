@@ -42,11 +42,13 @@ def format(doc):
 from tests.example_graph import test_graph
 G = test_graph()
 
+
 def is_abstract(cls, *args):
     try:
         cls(*args).rank(G)
         return False
     except:
+        print(cls, "not fully implemented (is either an abstract class, or could not create a default instance and rank graph nodes)")
         return True
 
 
@@ -79,7 +81,9 @@ def combine_attributes(text, descriptions):
             in_attributes = True
     if in_attributes:
         for desc in descriptions:
-            ret += extract_attributes(desc)
+            to_add = extract_attributes(desc)
+            if to_add not in ret: # handles case of inherited constructors
+                ret += to_add
     return ret
 
 

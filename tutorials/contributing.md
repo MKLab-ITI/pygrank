@@ -64,20 +64,21 @@ documentation for new algorithms).
 Constructors of graph filters should pass extra arguments to parent classes.
 This ensures that new algorithms share the same breadth of customization
 as parent classes. Only additional arguments not parsed by parent classes
+need to be documented
 (inherited arguments will be automatically added when `docgenerator.py`
 is used to construct documentation). For example, the following snippet
-presents a new algorithm:
+introduces a new algorithm:
  
 
 ```python
 class NewAlgorithm(GraphFilter):
-    def __init__(self, parameter=1, *args, **kwargs):
+    def __init__(self, parameter=1, **kwargs):
         """
         Instantiates the new algorithm.
         Args:
             parameter: Optional. The new algorithm's parameter. Default value is 1.
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
         self.parameter = parameter
     ...
 ```

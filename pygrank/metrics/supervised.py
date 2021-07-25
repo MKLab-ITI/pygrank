@@ -1,7 +1,7 @@
 import numpy as np
 import sklearn.metrics
 from .utils import __Metric__
-from pygrank.algorithms.utils import to_numpy, to_numpy_idx
+from pygrank.algorithms.utils import to_numpy, to_numpy_idx, GraphSignal, to_signal
 
 
 class Supervised(__Metric__):
@@ -13,6 +13,8 @@ class Supervised(__Metric__):
         self._nodes = known_ranks if evaluation is None else evaluation
 
     def to_numpy(self, ranks, normalization=False):
+        if isinstance(ranks, GraphSignal):
+            return to_signal(ranks, self.known_ranks).np, ranks.normalized(normalization).np
         if not isinstance(ranks, np.ndarray):
             nodes = self._nodes
             if nodes == "cap":

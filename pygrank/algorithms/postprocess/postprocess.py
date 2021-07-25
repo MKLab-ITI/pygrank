@@ -1,9 +1,9 @@
 import warnings
 import numpy as np
-from pygrank.algorithms.utils import MethodHasher, to_signal
+from pygrank.algorithms.utils import MethodHasher, to_signal, NodeRanking
 
 
-class Postprocessor(object):
+class Postprocessor(NodeRanking):
     def transform(self, ranks, *args, **kwargs):
         return to_signal(ranks, self._transform(self.ranker.transform(ranks, *args, **kwargs)))
 

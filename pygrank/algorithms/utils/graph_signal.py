@@ -50,3 +50,11 @@ class GraphSignal(MutableMapping):
         if normalize:
             self.np /= self.np.sum()
         return self
+
+
+class NodeRanking(object):
+    def __call__(self, *args, **kwargs):
+        self.rank(*args, **kwargs)
+
+    def rank(self, *args, **kwargs):
+        raise Exception("NodeRanking subclasses should implement a rank method")

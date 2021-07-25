@@ -70,7 +70,7 @@ with absolute rank error tolerance `tol=1.E-6` (its default parameters)
 and printing its node ranks can be done as follows:
 
 ```python
-from pygrank.algorithms.fixed import PageRank
+from pygrank.algorithms.adhoc import PageRank
 G, personalization = ...
 ranker = PageRank(alpha=0.85, tol=1.E-6)
 ranks = ranker.rank(G, personalization)
@@ -149,7 +149,7 @@ For example, hashing the outcome of graph normalization to
 speed up multiple calls to the same graph can be achieved
 as per the following code:
 ```python
-from pygrank.algorithms.fixed import PageRank
+from pygrank.algorithms.adhoc import PageRank
 G, personalization1, personalization2 = ...
 algorithm = PageRank(alpha=0.85, normalization="col", assume_immutability=True)
 ranks = algorithm.rank(G, personalization1)
@@ -180,7 +180,7 @@ Using the outcome of graph normalization
 to speed up multiple rank calls to the same graph by
 different ranking algorithms can be done as:
 ```python
-from pygrank.algorithms.fixed import PageRank, HeatKernel
+from pygrank.algorithms.adhoc import PageRank, HeatKernel
 from pygrank.algorithms.utils import preprocessor
 G, personalization1, personalization2 = ...
 pre = preprocessor(normalization="col", assume_immutability=True)
@@ -270,7 +270,7 @@ as the base ranking algorithm and needs to know that algorithm's diffusion
 rate ``alpha``, which is passed as its first argument.
 
 ```python
-from pygrank.algorithms.fixed import PageRank
+from pygrank.algorithms.adhoc import PageRank
 from pygrank.algorithms.utils import RankOrderConvergenceManager
 from pygrank.algorithms.postprocess import Ordinals
 
@@ -328,7 +328,7 @@ print(metric.evaluate(ranks))
 ###### How to evaluate multiple ranks
 ```python
 import networkx as nx
-from pygrank.algorithms.fixed import PageRank as Ranker
+from pygrank.algorithms.adhoc import PageRank as Ranker
 from pygrank.algorithms.postprocess import Normalize as Normalizer
 from pygrank.algorithms.oversampling import BoostedSeedOversampling as Oversampler
 from pygrank.metrics.unsupervised import Conductance

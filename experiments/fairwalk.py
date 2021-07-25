@@ -1,4 +1,4 @@
-from pygrank.algorithms.fixed import *
+from pygrank.algorithms.adhoc import *
 from pygrank.algorithms.postprocess import *
 from pygrank.metrics import *
 from pygrank.algorithms.postprocess.oversampling import SeedOversampling, BoostedSeedOversampling

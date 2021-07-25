@@ -4,7 +4,7 @@ This file covers the experiments of the paper: Unsupervised evaluation of multip
 
 import networkx as nx
 from pygrank.algorithms.utils import preprocessor
-import pygrank.algorithms.fixed
+import pygrank.algorithms.adhoc
 import pygrank.algorithms.oversampling
 import pygrank.algorithms.postprocess
 import pygrank.metrics.utils
@@ -32,38 +32,38 @@ if __name__ == "__main__":
             preL = preprocessor('symmetric', assume_immutability=True)
             pre(G)
             tol = 1.E-6
-            base_algorithms = {"PPRL 0.85": pygrank.algorithms.fixed.PageRank(alpha=0.85, to_scipy=preL, max_iters=max_iters, tol=tol),
-                          "PPRL 0.90": pygrank.algorithms.fixed.PageRank(alpha=0.9, to_scipy=preL, max_iters=max_iters, tol=tol),
-                          "PPRL 0.95": pygrank.algorithms.fixed.PageRank(alpha=0.95, to_scipy=preL, max_iters=max_iters, tol=tol),
-                          "PPRL 0.99": pygrank.algorithms.fixed.PageRank(alpha=0.99, to_scipy=preL, max_iters=max_iters, tol=tol),
-                           "PPR 0.85": pygrank.algorithms.fixed.PageRank(alpha=0.85, to_scipy=pre, max_iters=max_iters, tol=tol),
-                           "PPR 0.90": pygrank.algorithms.fixed.PageRank(alpha=0.9, to_scipy=pre, max_iters=max_iters, tol=tol),
-                           "PPR 0.95": pygrank.algorithms.fixed.PageRank(alpha=0.95, to_scipy=pre, max_iters=max_iters, tol=tol),
-                           "PPR 0.99": pygrank.algorithms.fixed.PageRank(alpha=0.99, to_scipy=pre, max_iters=max_iters, tol=tol),
-                           "AbsorbL 0.85": pygrank.algorithms.fixed.AbsorbingRank(alpha=0.85, to_scipy=preL, max_iters=max_iters, tol=tol),
-                           "AbsorbL 0.90": pygrank.algorithms.fixed.AbsorbingRank(alpha=0.9, to_scipy=preL, max_iters=max_iters, tol=tol),
-                           "AbsorbL 0.95": pygrank.algorithms.fixed.AbsorbingRank(alpha=0.95, to_scipy=preL, max_iters=max_iters, tol=tol),
-                           "AbsorbL 0.99": pygrank.algorithms.fixed.AbsorbingRank(alpha=0.99, to_scipy=preL, max_iters=max_iters, tol=tol),
-                           "Absorb 0.85": pygrank.algorithms.fixed.AbsorbingRank(alpha=0.85, to_scipy=pre, max_iters=max_iters, tol=tol),
-                           "Absorb 0.90": pygrank.algorithms.fixed.AbsorbingRank(alpha=0.9, to_scipy=pre, max_iters=max_iters, tol=tol),
-                           "Absorb 0.95": pygrank.algorithms.fixed.AbsorbingRank(alpha=0.95, to_scipy=pre, max_iters=max_iters, tol=tol),
-                           "Absorb 0.99": pygrank.algorithms.fixed.AbsorbingRank(alpha=0.99, to_scipy=pre, max_iters=max_iters, tol=tol),
-                          "HK1": pygrank.algorithms.fixed.HeatKernel(t=1, to_scipy=pre, max_iters=max_iters, tol=tol),
-                          "HK3": pygrank.algorithms.fixed.HeatKernel(t=3, to_scipy=pre, max_iters=max_iters, tol=tol),
-                          "HK5": pygrank.algorithms.fixed.HeatKernel(t=5, to_scipy=pre, max_iters=max_iters, tol=tol),
-                          "HK7": pygrank.algorithms.fixed.HeatKernel(t=7, to_scipy=pre, max_iters=max_iters, tol=tol),
-                          "HKL1": pygrank.algorithms.fixed.HeatKernel(t=1, to_scipy=preL, max_iters=max_iters, tol=tol),
-                          "HKL3": pygrank.algorithms.fixed.HeatKernel(t=3, to_scipy=preL, max_iters=max_iters, tol=tol),
-                          "HKL5": pygrank.algorithms.fixed.HeatKernel(t=5, to_scipy=preL, max_iters=max_iters, tol=tol),
-                          "HKL7": pygrank.algorithms.fixed.HeatKernel(t=7, to_scipy=preL, max_iters=max_iters, tol=tol),
-                           "HPRL 0.85": pygrank.algorithms.fixed.BiasedKernel(alpha=0.85, to_scipy=preL, max_iters=max_iters, tol=tol),
-                           "HPRL 0.90": pygrank.algorithms.fixed.BiasedKernel(alpha=0.9, to_scipy=preL, max_iters=max_iters, tol=tol),
-                           "HPRL 0.95": pygrank.algorithms.fixed.BiasedKernel(alpha=0.95, to_scipy=preL, max_iters=max_iters, tol=tol),
-                           "HPRL 0.99": pygrank.algorithms.fixed.BiasedKernel(alpha=0.99, to_scipy=preL, max_iters=max_iters, tol=tol),
-                           "HPR 0.85": pygrank.algorithms.fixed.BiasedKernel(alpha=0.85, to_scipy=pre, max_iters=max_iters, tol=tol),
-                           "HPR 0.90": pygrank.algorithms.fixed.BiasedKernel(alpha=0.9, to_scipy=pre, max_iters=max_iters, tol=tol),
-                           "HPR 0.95": pygrank.algorithms.fixed.BiasedKernel(alpha=0.95, to_scipy=pre, max_iters=max_iters, tol=tol),
-                           "HPR 0.99": pygrank.algorithms.fixed.BiasedKernel(alpha=0.99, to_scipy=pre, max_iters=max_iters, tol=tol),
+            base_algorithms = {"PPRL 0.85": pygrank.algorithms.adhoc.PageRank(alpha=0.85, to_scipy=preL, max_iters=max_iters, tol=tol),
+                          "PPRL 0.90": pygrank.algorithms.adhoc.PageRank(alpha=0.9, to_scipy=preL, max_iters=max_iters, tol=tol),
+                          "PPRL 0.95": pygrank.algorithms.adhoc.PageRank(alpha=0.95, to_scipy=preL, max_iters=max_iters, tol=tol),
+                          "PPRL 0.99": pygrank.algorithms.adhoc.PageRank(alpha=0.99, to_scipy=preL, max_iters=max_iters, tol=tol),
+                           "PPR 0.85": pygrank.algorithms.adhoc.PageRank(alpha=0.85, to_scipy=pre, max_iters=max_iters, tol=tol),
+                           "PPR 0.90": pygrank.algorithms.adhoc.PageRank(alpha=0.9, to_scipy=pre, max_iters=max_iters, tol=tol),
+                           "PPR 0.95": pygrank.algorithms.adhoc.PageRank(alpha=0.95, to_scipy=pre, max_iters=max_iters, tol=tol),
+                           "PPR 0.99": pygrank.algorithms.adhoc.PageRank(alpha=0.99, to_scipy=pre, max_iters=max_iters, tol=tol),
+                           "AbsorbL 0.85": pygrank.algorithms.adhoc.AbsorbingRank(alpha=0.85, to_scipy=preL, max_iters=max_iters, tol=tol),
+                           "AbsorbL 0.90": pygrank.algorithms.adhoc.AbsorbingRank(alpha=0.9, to_scipy=preL, max_iters=max_iters, tol=tol),
+                           "AbsorbL 0.95": pygrank.algorithms.adhoc.AbsorbingRank(alpha=0.95, to_scipy=preL, max_iters=max_iters, tol=tol),
+                           "AbsorbL 0.99": pygrank.algorithms.adhoc.AbsorbingRank(alpha=0.99, to_scipy=preL, max_iters=max_iters, tol=tol),
+                           "Absorb 0.85": pygrank.algorithms.adhoc.AbsorbingRank(alpha=0.85, to_scipy=pre, max_iters=max_iters, tol=tol),
+                           "Absorb 0.90": pygrank.algorithms.adhoc.AbsorbingRank(alpha=0.9, to_scipy=pre, max_iters=max_iters, tol=tol),
+                           "Absorb 0.95": pygrank.algorithms.adhoc.AbsorbingRank(alpha=0.95, to_scipy=pre, max_iters=max_iters, tol=tol),
+                           "Absorb 0.99": pygrank.algorithms.adhoc.AbsorbingRank(alpha=0.99, to_scipy=pre, max_iters=max_iters, tol=tol),
+                          "HK1": pygrank.algorithms.adhoc.HeatKernel(t=1, to_scipy=pre, max_iters=max_iters, tol=tol),
+                          "HK3": pygrank.algorithms.adhoc.HeatKernel(t=3, to_scipy=pre, max_iters=max_iters, tol=tol),
+                          "HK5": pygrank.algorithms.adhoc.HeatKernel(t=5, to_scipy=pre, max_iters=max_iters, tol=tol),
+                          "HK7": pygrank.algorithms.adhoc.HeatKernel(t=7, to_scipy=pre, max_iters=max_iters, tol=tol),
+                          "HKL1": pygrank.algorithms.adhoc.HeatKernel(t=1, to_scipy=preL, max_iters=max_iters, tol=tol),
+                          "HKL3": pygrank.algorithms.adhoc.HeatKernel(t=3, to_scipy=preL, max_iters=max_iters, tol=tol),
+                          "HKL5": pygrank.algorithms.adhoc.HeatKernel(t=5, to_scipy=preL, max_iters=max_iters, tol=tol),
+                          "HKL7": pygrank.algorithms.adhoc.HeatKernel(t=7, to_scipy=preL, max_iters=max_iters, tol=tol),
+                           "HPRL 0.85": pygrank.algorithms.adhoc.BiasedKernel(alpha=0.85, to_scipy=preL, max_iters=max_iters, tol=tol),
+                           "HPRL 0.90": pygrank.algorithms.adhoc.BiasedKernel(alpha=0.9, to_scipy=preL, max_iters=max_iters, tol=tol),
+                           "HPRL 0.95": pygrank.algorithms.adhoc.BiasedKernel(alpha=0.95, to_scipy=preL, max_iters=max_iters, tol=tol),
+                           "HPRL 0.99": pygrank.algorithms.adhoc.BiasedKernel(alpha=0.99, to_scipy=preL, max_iters=max_iters, tol=tol),
+                           "HPR 0.85": pygrank.algorithms.adhoc.BiasedKernel(alpha=0.85, to_scipy=pre, max_iters=max_iters, tol=tol),
+                           "HPR 0.90": pygrank.algorithms.adhoc.BiasedKernel(alpha=0.9, to_scipy=pre, max_iters=max_iters, tol=tol),
+                           "HPR 0.95": pygrank.algorithms.adhoc.BiasedKernel(alpha=0.95, to_scipy=pre, max_iters=max_iters, tol=tol),
+                           "HPR 0.99": pygrank.algorithms.adhoc.BiasedKernel(alpha=0.99, to_scipy=pre, max_iters=max_iters, tol=tol),
                         }
             algorithms = dict()
             for alg_name, alg in base_algorithms.items():
