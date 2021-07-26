@@ -21,13 +21,15 @@ class Tautology(Postprocessor):
     Can be used as a baseline against which to compare other postprocessors.
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, ranker=None):
+        self.ranker = ranker
 
     def transform(self, ranks):
         return ranks
 
-    def rank(self, _, personalization):
+    def rank(self, G, personalization, *args, **kwargs):
+        if self.ranker is not None:
+            return self.ranker.rank(G, personalization, *args, **kwargs)
         return personalization
 
 
@@ -40,7 +42,8 @@ class Normalize(Postprocessor):
 
         Args:
             ranker: The base ranker instance. A Tautology() ranker is created if None (default) was specified.
-            method: Divide ranks either by their "max" (default) or by their "sum"
+            method: Divide ranks either by their "max" (default) or by their "sum" or make the lie in the "range" [0,1]
+                by subtracting their mean before diving by their max.
 
         Example:
             >>> from pygrank.algorithms.postprocess import Normalize

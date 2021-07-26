@@ -1,8 +1,8 @@
 import numpy as np
-from .utils import __Metric__
+from .utils import Measure
 
 
-class __Aggregated__(__Metric__):
+class __Aggregated__(Measure):
     def __init__(self, metrics=None, weights=None, thresholds=None):
         self.metrics = list() if metrics is None else metrics
         self.weights = [1 for _ in self.metrics] if weights is None else weights

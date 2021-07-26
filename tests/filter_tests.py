@@ -5,11 +5,11 @@ from .example_graph import test_graph
 
 class Test(unittest.TestCase):
     def test_completion(self):
-        from pygrank.algorithms.adhoc import PageRank, HeatKernel, AbsorbingRank
+        from pygrank.algorithms.adhoc import PageRank, HeatKernel, AbsorbingWalks
         G = test_graph()
         PageRank().rank(G)
         HeatKernel().rank(G)
-        AbsorbingRank().rank(G)
+        AbsorbingWalks().rank(G)
 
     def test_pagerank(self):
         from pygrank.algorithms.adhoc import PageRank
@@ -19,17 +19,25 @@ class Test(unittest.TestCase):
         abs_diffs = sum(abs(test_result[v] - nx_result[v]) for v in nx_result.keys()) / len(nx_result)
         self.assertAlmostEqual(abs_diffs, 0, places=16, msg="PageRank compliance with nx results")
 
-    """
+    def test_lanczos(self):
+        from pygrank.algorithms.adhoc import HeatKernel
+        from pygrank.algorithms.postprocess import Normalize
+        G = test_graph()
+        test_result = Normalize(HeatKernel(normalization='symmetric')).rank(G)
+        test_result_lanczos = Normalize(HeatKernel(normalization='symmetric', krylov_dims=5)).rank(G)
+        abs_diffs = sum(abs(test_result[v] - test_result_lanczos[v]) for v in test_result_lanczos.keys()) / len(test_result_lanczos)
+        self.assertAlmostEqual(abs_diffs, 0, places=16, msg="Krylov decomposition yields small error")
+
     def test_absorbing_walk(self):
-        from pygrank.algorithms.pagerank import PageRank
-        from pygrank.algorithms.pagerank import AbsorbingRank
+        from pygrank.algorithms.adhoc import PageRank
+        from pygrank.algorithms.adhoc import AbsorbingWalks
         G = test_graph()
         personalization = {"A": 1, "B": 1}
         pagerank_result = PageRank(normalization='col').rank(G, personalization)
-        absorbing_result = AbsorbingRank(normalization='col', max_iters=1000).rank(G, personalization, absorption={v: G.degree(v) for v in G})
+        absorbing_result = AbsorbingWalks(0.85, normalization='col', max_iters=1000).rank(G, personalization)#, absorption={v: G.degree(v) for v in G})
         abs_diffs = sum(abs(pagerank_result[v] - absorbing_result[v]) for v in pagerank_result.keys()) / len(pagerank_result)
         self.assertAlmostEqual(abs_diffs, 0, places=16, msg="Absorbing Random Walks compliance with PageRank results")
-    """
+
 
     def test_heat_kernel_locality(self):
         from pygrank.algorithms.adhoc import PageRank

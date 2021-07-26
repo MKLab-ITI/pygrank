@@ -40,14 +40,14 @@ if __name__ == "__main__":
                            "PPR 0.90": pygrank.algorithms.adhoc.PageRank(alpha=0.9, to_scipy=pre, max_iters=max_iters, tol=tol),
                            "PPR 0.95": pygrank.algorithms.adhoc.PageRank(alpha=0.95, to_scipy=pre, max_iters=max_iters, tol=tol),
                            "PPR 0.99": pygrank.algorithms.adhoc.PageRank(alpha=0.99, to_scipy=pre, max_iters=max_iters, tol=tol),
-                           "AbsorbL 0.85": pygrank.algorithms.adhoc.AbsorbingRank(alpha=0.85, to_scipy=preL, max_iters=max_iters, tol=tol),
-                           "AbsorbL 0.90": pygrank.algorithms.adhoc.AbsorbingRank(alpha=0.9, to_scipy=preL, max_iters=max_iters, tol=tol),
-                           "AbsorbL 0.95": pygrank.algorithms.adhoc.AbsorbingRank(alpha=0.95, to_scipy=preL, max_iters=max_iters, tol=tol),
-                           "AbsorbL 0.99": pygrank.algorithms.adhoc.AbsorbingRank(alpha=0.99, to_scipy=preL, max_iters=max_iters, tol=tol),
-                           "Absorb 0.85": pygrank.algorithms.adhoc.AbsorbingRank(alpha=0.85, to_scipy=pre, max_iters=max_iters, tol=tol),
-                           "Absorb 0.90": pygrank.algorithms.adhoc.AbsorbingRank(alpha=0.9, to_scipy=pre, max_iters=max_iters, tol=tol),
-                           "Absorb 0.95": pygrank.algorithms.adhoc.AbsorbingRank(alpha=0.95, to_scipy=pre, max_iters=max_iters, tol=tol),
-                           "Absorb 0.99": pygrank.algorithms.adhoc.AbsorbingRank(alpha=0.99, to_scipy=pre, max_iters=max_iters, tol=tol),
+                           "AbsorbL 0.85": pygrank.algorithms.adhoc.AbsorbingWalks(alpha=0.85, to_scipy=preL, max_iters=max_iters, tol=tol),
+                           "AbsorbL 0.90": pygrank.algorithms.adhoc.AbsorbingWalks(alpha=0.9, to_scipy=preL, max_iters=max_iters, tol=tol),
+                           "AbsorbL 0.95": pygrank.algorithms.adhoc.AbsorbingWalks(alpha=0.95, to_scipy=preL, max_iters=max_iters, tol=tol),
+                           "AbsorbL 0.99": pygrank.algorithms.adhoc.AbsorbingWalks(alpha=0.99, to_scipy=preL, max_iters=max_iters, tol=tol),
+                           "Absorb 0.85": pygrank.algorithms.adhoc.AbsorbingWalks(alpha=0.85, to_scipy=pre, max_iters=max_iters, tol=tol),
+                           "Absorb 0.90": pygrank.algorithms.adhoc.AbsorbingWalks(alpha=0.9, to_scipy=pre, max_iters=max_iters, tol=tol),
+                           "Absorb 0.95": pygrank.algorithms.adhoc.AbsorbingWalks(alpha=0.95, to_scipy=pre, max_iters=max_iters, tol=tol),
+                           "Absorb 0.99": pygrank.algorithms.adhoc.AbsorbingWalks(alpha=0.99, to_scipy=pre, max_iters=max_iters, tol=tol),
                           "HK1": pygrank.algorithms.adhoc.HeatKernel(t=1, to_scipy=pre, max_iters=max_iters, tol=tol),
                           "HK3": pygrank.algorithms.adhoc.HeatKernel(t=3, to_scipy=pre, max_iters=max_iters, tol=tol),
                           "HK5": pygrank.algorithms.adhoc.HeatKernel(t=5, to_scipy=pre, max_iters=max_iters, tol=tol),
@@ -74,7 +74,7 @@ if __name__ == "__main__":
             experiments = list()
 
             max_positive_samples = 2000
-            training_groups, test_groups = pygrank.metrics.utils.split_groups(groups, fraction_of_training=seed)
+            training_groups, test_groups = pygrank.metrics.utils.split_groups(groups, training_samples=seed)
             test_group_ranks = pygrank.metrics.utils.to_seeds(test_groups)
             measures = {"AUC": pygrank.metrics.multigroup.MultiSupervised(pygrank.metrics.supervised.AUC, test_group_ranks),
                         "NDCG": pygrank.metrics.multigroup.MultiSupervised(pygrank.metrics.supervised.NDCG, test_group_ranks),

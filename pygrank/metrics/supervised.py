@@ -1,20 +1,26 @@
 import numpy as np
 import sklearn.metrics
-from .utils import __Metric__
+from .utils import Measure
 from pygrank.algorithms.utils import to_numpy, to_numpy_idx, GraphSignal, to_signal
 
 
-class Supervised(__Metric__):
+class Supervised(Measure):
     """Provides a base class with the ability to simultaneously convert ranks and known ranks to numpy arrays.
     This class is used as a base for other supervised evaluation metrics."""
 
     def __init__(self, known_ranks, evaluation="cap"):
+        """
+        Initializes the supervised measure with desired graph signal outcomes.
+        Args:
+            known_ranks: The desired graph signal outcomes.
+        """
         self.known_ranks = known_ranks
         self._nodes = known_ranks if evaluation is None else evaluation
 
     def to_numpy(self, ranks, normalization=False):
         if isinstance(ranks, GraphSignal):
             return to_signal(ranks, self.known_ranks).np, ranks.normalized(normalization).np
+        """
         if not isinstance(ranks, np.ndarray):
             nodes = self._nodes
             if nodes == "cap":
@@ -26,9 +32,10 @@ class Supervised(__Metric__):
             ranks = ranks[to_numpy_idx(self._nodes, self.known_ranks)]
             nodes = self.known_ranks
         return to_numpy(nodes, self.known_ranks, normalization=normalization), to_numpy(nodes, ranks, normalization=normalization)
+        """
 
 
-class NDCG(__Metric__):
+class NDCG(Measure):
     """Provides evaluation of NDCG@k score between given and known ranks."""
 
     def __init__(self, known_ranks, k=None):

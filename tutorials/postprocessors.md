@@ -13,7 +13,7 @@ re-ordered if at least one is provided.
 
 Args: 
  * *ranker:* The base ranker instance. A Tautology() ranker is created if None (default) was specified. 
- * *method:* Divide ranks either by their "max" (default) or by their "sum" 
+ * *method:* Divide ranks either by their "max" (default) or by their "sum" or make the lie in the "range" [0,1] by subtracting their mean before diving by their max. 
 
 Example:
 

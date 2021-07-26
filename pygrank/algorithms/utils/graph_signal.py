@@ -46,9 +46,13 @@ class GraphSignal(MutableMapping):
     def __len__(self):
         return len(self.node2id)
 
-    def normalized(self, normalize=True):
+    def normalized(self, normalize=True, copy=True):
+        if copy:
+            return GraphSignal(self.graph, np.copy(self.np), self.node2id).normalized(normalize, copy=False)
         if normalize:
-            self.np /= self.np.sum()
+            np_sum = self.np.__abs__().sum()
+            if np_sum != 0:
+                self.np /= np_sum
         return self
 
 

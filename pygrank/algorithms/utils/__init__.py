@@ -2,6 +2,7 @@ from pygrank.algorithms.utils.convergence import *
 from pygrank.algorithms.utils.optimization import *
 from pygrank.algorithms.utils.preprocessing import *
 from pygrank.algorithms.utils.graph_signal import *
+from pygrank.algorithms.utils.krylov_space import *
 import inspect
 
 

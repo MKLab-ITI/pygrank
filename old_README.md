@@ -316,7 +316,7 @@ from pygrank.metrics.supervised import AUC
 import pygrank.metrics.utils
 
 G, seeds, algorithm = ... # as per the first example
-seeds, ground_truth = pygrank.metrics.utils.split_groups(seeds, fraction_of_training=0.5)
+seeds, ground_truth = pygrank.metrics.utils.split_groups(seeds, training_samples=0.5)
 
 pygrank.metrics.utils.remove_group_edges_from_graph(G, ground_truth)
 ranks = algorithm.rank(G, {v: 1 for v in seeds})

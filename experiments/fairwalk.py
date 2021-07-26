@@ -20,7 +20,7 @@ def perc(num):
 
 
 def personalizer(H, G, p, s, fairness_weight=0, fairness_limit=0.8):
-    training, test = split_groups(list(p.keys()), fraction_of_training=0.5)
+    training, test = split_groups(list(p.keys()), training_samples=0.5)
     loss = AM()
     training = set(training)
     #loss.add(Error(p, G))
@@ -74,7 +74,7 @@ for filter, H in graph_filters.items():
                 else:
                     random.seed(seed_seed) # ensure reproducibility'
                     if seeds < 1:
-                        training, evaluation = split_groups(list(labels.keys()), fraction_of_training=seeds)
+                        training, evaluation = split_groups(list(labels.keys()), training_samples=seeds)
                     else:
                         training_pos = [v for v in labels if labels[v] == 1 and sensitive[v] == 0]
                         random.shuffle(training_pos)

@@ -43,21 +43,23 @@ class HeatKernel(ClosedFormGraphFilter):
         return np.exp(-self.t) if previous_coefficient is None else (previous_coefficient*self.t/(self.convergence.iteration+1))
 
 
-class AbsorbingRank(RecursiveGraphFilter):
-    """ Implementation of partial absorbing random walks for Lambda = diag(absorbtion vector), e.g. Lambda = aI
-    Wu, Xiao-Ming, et al. "Learning with partially absorbing random walks." Advances in neural information processing systems. 2012.
+class AbsorbingWalks(RecursiveGraphFilter):
+    """ Implementation of partial absorbing random walks for Lambda = (1-alpha)/alpha diag(absorbtion vector) .
     """
 
     def __init__(self, alpha=1-1.E-6, to_scipy=None, use_quotient=True, convergence=None, converge_to_eigenvectors=False, **kwargs):
-        """ Initializes the AbsorbingRank filter parameters.
+        """ Initializes the AbsorbingWalks filter parameters. For appropriate parameter values. This can model PageRank
+        but is in principle a generalization that allows custom absorbtion rates per nodes (when not given, these are I).
 
         Args:
-            alpha: Optional. (1-alpha)/alpha is the absorbtion rate of the random walk. This is chosen to yield the
-                same underlying meaning as PageRank (for which Lambda = a Diag(degrees) )
+            alpha: Optional. (1-alpha)/alpha is the absorbtion rate of the random walk multiplied with individual node
+                absorbtion rates. This is chosen to yield the
+                same underlying meaning as PageRank (for which Lambda = alpha Diag(degrees) ) when the same parameter value
+                alpha is chosen. Default is 1-1.E-6 per the respective publication.
 
         Example:
             >>> from pygrank.algorithms import adhoc
-            >>> algorithm = adhoc.HeatKernel(t=5, tol=1.E-9) # tol passed to the ConvergenceManager
+            >>> algorithm = adhoc.AbsorbingWalks(0.85, tol=1.E-9) # tol passed to the ConvergenceManager
         """
 
         super().__init__(to_scipy=to_scipy, convergence=convergence, **kwargs)
@@ -69,7 +71,8 @@ class AbsorbingRank(RecursiveGraphFilter):
         self.absorption = pygrank.algorithms.utils.to_signal(personalization, absorption).np * (1 - self.alpha) / self.alpha
         self.degrees = np.array(M.sum(axis=1)).flatten()
 
-    def _end(self):
+    def _end(self, *args, **kwargs):
+        super()._end(*args, **kwargs)
         del self.absorption
         del self.degrees
 

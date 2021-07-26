@@ -23,6 +23,7 @@ class SeedOversampling:
         self.method = method.lower()
 
     def rank(self, G, personalization, **kwargs):
+        personalization = pygrank.algorithms.utils.to_signal(G, personalization)
         pygrank.algorithms.utils.assert_binary(personalization)
         if self.method == 'safe':
             #prev_to_scipy = self.ranker.to_scipy
@@ -89,9 +90,10 @@ class BoostedSeedOversampling:
         return a_N
 
     def rank(self, G, personalization, **kwargs):
+        personalization = pygrank.algorithms.utils.to_signal(G, personalization)
         #prev_to_scipy = self.ranker.to_scipy
         #self.ranker.to_scipy = pygrank.algorithms.utils.MethodHasher(self.ranker.to_scipy)
-        r0_N = personalization.copy()
+        r0_N = personalization.normalized(False)
         RN = self.ranker.rank(G, r0_N, **kwargs)
         a_N = 1
         suma_N = 1

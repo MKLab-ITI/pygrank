@@ -7,7 +7,7 @@ import data.facebook_fairness.importer
 G, sensitive, labels = data.facebook_fairness.importer.load("data/facebook_fairness/0")
 
 algorithm = Normalize(PageRank())
-training, evaluation = split_groups(list(G), fraction_of_training=0.1)
+training, evaluation = split_groups(list(G), training_samples=0.1)
 ranks = algorithm.rank(G, {v: labels[v] for v in training if sensitive[v] == 0}, sensitive=sensitive)
 
 

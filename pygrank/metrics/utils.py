@@ -2,9 +2,12 @@ import random
 import collections
 
 
-class __Metric__:
+class Measure(object):
     def __call__(self, ranks):
         return self.evaluate(ranks)
+
+    def evaluate(self, ranks):
+        raise Exception("Non-abstract subclasses of Measure should implement an evaluate method")
 
 
 def to_seeds(groups):
@@ -22,18 +25,18 @@ def to_nodes(groups):
     return list(set(all_nodes))
 
 
-def split_groups(groups, fraction_of_training=0.99):
-    if fraction_of_training == 1:
+def split_groups(groups, training_samples=0.99):
+    if training_samples == 1:
         return groups, groups
     if not isinstance(groups, collections.Mapping):
         group = list(groups)
         random.shuffle(group)
-        splt = int(len(group)*fraction_of_training)
+        splt = training_samples if training_samples > 1 else int(len(group) * training_samples)
         return group[:splt], group[splt:]
     clusters = {}
     training = {}
     for group_id, group in groups.items():
-        splt = int(len(group)*fraction_of_training)
+        splt = training_samples if training_samples > 1 else int(len(group) * training_samples)
         if splt < 1:
             splt = 1
         # group = list(group) # not really needed if data are already imported as lists

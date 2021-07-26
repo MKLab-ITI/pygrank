@@ -15,8 +15,12 @@ class GenericGraphFilter(ClosedFormGraphFilter):
         """
         Initializes the graph filter.
         Args:
-            weights: A list-like object with elements weights[n] proportional to the importance of propagating
+            weights: Optional. A list-like object with elements weights[n] proportional to the importance of propagating
                 personalization graph signals n hops away. Default is [0.9]*10 .
+
+        Example:
+            >>> from pygrank.algorithms import learnable
+            >>> algorithm = learnable.GenericGraphFilter([0.5, 0.25, 0.125], tol=1.E-9) # tol passed to the ConvergenceManager
         """
         super(GenericGraphFilter, self).__init__(**kwargs)
         self.weights = weights
@@ -28,7 +32,6 @@ class GenericGraphFilter(ClosedFormGraphFilter):
 
 
 class LanczosFilter:
-    # https://arxiv.org/pdf/1509.04537.pdf
 
     def __init__(self, weights=None, krylov_space_degree=None, to_scipy=None, fraction_of_training=.5, **kwargs):
         self.weights = weights

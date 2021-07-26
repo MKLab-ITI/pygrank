@@ -7,7 +7,7 @@ For example, the seed oversampling method developed in *krasanakis2019boosted*
 could be described in a LaTeX manuscript as 
 *"we employ the seed oversampling (SeedO) post-processing \cite{krasanakis2019boosted}
 implemented by the pygrank library \cite{pygrank}"*. Feel free to provide any other
-description as long as they point to the library's paper and the corresponding publication.
+description as long as they point to the library's paper and the corresponding publication(s).
 
 ## Method References
 
@@ -19,6 +19,8 @@ presented later on.
 
 Instantiation or Usage | Method Name | Citation
 --- | --- | --- 
+`pygrank.algorithms.adhoc.AbsorbingWalks` | Absorbing Random Walk | wu2012learningadd
+passing `lanczos=True` to graph filter constructors | Lanczos acceleration | susnjara2015accelerated
 `pygrank.algorithms.oversampling.SeedOversampling(ranker)` | SeedO | krasanakis2019boosted
 `pygrank.algorithms.oversampling.BoostedSeedOversampling(ranker)` | SeedBO | krasanakis2019boosted
 `pygrank.algorithms.pagerank.PageRank(converge_to_eigenvectors=True)` | VenueRank | krasanakis2018venuerank
@@ -122,5 +124,23 @@ or partially implemented in this library.
   booktitle={IJCAI},
   pages={3289--3295},
   year={2019}
+}
+```
+```
+@inproceedings{wu2012learning,
+  title={Learning with Partially Absorbing Random Walks.},
+  author={Wu, Xiao-Ming and Li, Zhenguo and So, Anthony Man-Cho and Wright, John and Chang, Shih-Fu},
+  booktitle={NIPS},
+  volume={25},
+  pages={3077--3085},
+  year={2012}
+}
+```
+```
+@article{susnjara2015accelerated,
+  title={Accelerated filtering on graphs using lanczos method},
+  author={Susnjara, Ana and Perraudin, Nathanael and Kressner, Daniel and Vandergheynst, Pierre},
+  journal={arXiv preprint arXiv:1509.04537},
+  year={2015}
 }
 ```
