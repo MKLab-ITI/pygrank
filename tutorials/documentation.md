@@ -15,7 +15,7 @@ As an example, let us create a simple line graph of three edges `"A", "B", "C"`
 and assign to the first and the last one the values *3* and *2* respectively.
 To create a graph signal holding this information we can write:
 
-```
+```python
 >>> from pygrank.algorithms.utils.graph_signal import to_signal
 >>> import networkx as nx
 >>> G = nx.Graph()
@@ -31,7 +31,7 @@ through a `signal.np` attribute. Continuing from the previous example,
 in the following code we divide a graph signal's elements with their sum.
 Value changes are reflected to the values being accessed.
 
-```
+```python
 >>> print(signal.np)
 [3. 0. 2.]
 >>> signal.np /= signal.np.sum()
@@ -77,7 +77,7 @@ of instantiating them and then calling their `rank(graph, personalization)`
 method to obtain posterior node signals based on diffusing the provided
 personalization signal through the graph.
 
-### :scroll: List
+### :scroll: List of Graph Filters
 An exhaustive list of all ready-to-use graph filters can be
 found [here](graph_filters.md). After initialization with the appropriate
 parameters, these can be used interchangeably in the above example.
@@ -103,7 +103,21 @@ by providing more example nodes, and for fairness-aware posteriors,
 which aim to make node scores adhere to some fairness constraint, 
 such as disparate impact.
 
-### :scroll: List
+### :scroll: List of Graph Filters
 An exhaustive list of all ready-to-use postprocessors can be
 found [here](postprocessors.md). After initialization with the appropriate
 parameters, these can be used interchangeably in the above example.
+
+
+
+# Evaluation
+
+### :zap: Examples
+
+### :brain: Evaluation Measures
+
+### :brain: Benchmarks
+
+### :scroll: List of Benchmarks
+
+### :scroll: List of Evaluation Measures

@@ -1,8 +1,18 @@
-import time
 from math import log
 
 
 def __add(weights, index, increment, max_val, min_val):
+    """
+    Adds to a value to a specific index in a list of weights while thresholding the outcome to a minimum and maximum value.
+    Creates new list of weights holding the result without altering the original.
+
+    Args:
+        weights: The list of weights.
+        index: The element to add to.
+        increment: The value to add.
+        max_val: The maximum threshold.
+        min_val: The mimimum threshold.
+    """
     weights = [weight for weight in weights]
     weights[index] = min(max_val, max(min_val, weights[index]+increment))
     #if increment != 0 and (weights[index] == min_val or weights[index] == max_val):
@@ -27,6 +37,8 @@ def optimize(loss, max_vals=[1 for _ in range(1)], min_vals=None, tol=1.E-8, div
             Default is a list of ones for one parameter.
         min_vals. Optional. The minimum value for each paramter to search for. If None (default) it becomes a list of
             zeros and equal length to max_vals.
+        tol: Optional. The numerical tolerance to optimize to. Default is 1.E-8.
+        divide_range: Optional. Value greater than 1 with which to divide the range at each iteration.
     Example:
         >>> p = optimize(loss=lambda p: (1.5-p[0]+p[0]*p[1])**2+(2.25-p[0]+p[0]*p[1]**2)**2+(2.625-p[0]+p[0]*p[1]**3)**2, max_vals=[4.5, 4.5], min_vals=[-4.5, -4.5])
         >>> # desired optimization point for the Beale function of this example is [3, 0.5]
@@ -40,6 +52,8 @@ def optimize(loss, max_vals=[1 for _ in range(1)], min_vals=None, tol=1.E-8, div
     for min_val, max_val in zip(min_vals, max_vals):
         if min_val > max_val:
             raise Exception("Empty parameter range ["+str(min_val)+","+str(max_val)+"]")
+    if divide_range <= 1:
+        raise Exception("divide_range should be greater than 1, otherwise the search space never shrinks.")
     #weights = [1./dims for i in range(dims)]
     if weights is None:
         weights = [(min_val+max_val)/2 for min_val, max_val in zip(min_vals, max_vals)]

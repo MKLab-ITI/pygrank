@@ -5,6 +5,9 @@ The following postprocessors can be imported from the package `pygrank.algorithm
 Constructor details are provided, including arguments inherited from and passed to parent classes.
 All of them can be used through the code patterns presented at the library's [documentation](documentation.md).  
 
+### FairWeights 
+ 
+
 ### Normalize 
 
 Normalizes ranks by dividing with their maximal value. 

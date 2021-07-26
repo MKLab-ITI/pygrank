@@ -1,7 +1,7 @@
 import numpy as np
 import sklearn.metrics
 from .utils import Measure
-from pygrank.algorithms.utils import to_numpy, to_numpy_idx, GraphSignal, to_signal
+from pygrank.algorithms.utils import GraphSignal, to_signal
 
 
 class Supervised(Measure):

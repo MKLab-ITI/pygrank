@@ -1,5 +1,6 @@
 from pygrank.algorithms.postprocess.postprocess import Tautology, Normalize
 from pygrank.algorithms.utils import optimize
+from pygrank.algorithms.postprocess import Postprocessor
 from math import exp
 from pygrank.metrics.supervised import pRule
 import numpy as np
@@ -18,18 +19,15 @@ def to_fairwalk(G, sensitive):
     return G
 
 
-class FairSweep:
-    def __init__(self, ranker, uniform_ranker=None):
+class FairWeights(Postprocessor):
+    def __init__(self, ranker):
         self.ranker = ranker
-        self.uniform_ranker = ranker if uniform_ranker is None else uniform_ranker
 
-    def rank(self, G, personalization, sensitive, *args, **kwargs):
-        ranks = self.ranker.rank(G, personalization, *args, **kwargs)
-        uniforms = self.uniform_ranker.rank(G, {v: 1 for v in G}, *args, **kwargs)
+    def _transform(self, ranks, sensitive):
         phi = sum(sensitive.values())/len(ranks)
         sumR = sum(ranks[v] * sensitive.get(v, 0) for v in ranks)
         sumB = sum(ranks[v] * (1 - sensitive.get(v, 0)) for v in ranks)
-        return {v: ranks[v]/uniforms[v]*((phi*sensitive[v]/sumR)+(1-phi)*(1-sensitive[v])/sumB) for v in G}
+        return {v: ranks[v]*((phi*sensitive[v]/sumR)+(1-phi)*(1-sensitive[v])/sumB) for v in G}
 
 
 class IterativeFairPersonalizer:

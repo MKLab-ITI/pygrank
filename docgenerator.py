@@ -1,4 +1,4 @@
-import setuptools
+import unittest
 import sys, inspect
 import pygrank.algorithms
 import pygrank.algorithms.postprocess
@@ -148,5 +148,6 @@ def generate_postprocessor_docs():
         file.write(text)
 
 
-generate_filter_docs()
-generate_postprocessor_docs()
+if __name__ == '__main__':
+    generate_filter_docs()
+    generate_postprocessor_docs()

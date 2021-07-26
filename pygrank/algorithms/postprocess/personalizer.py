@@ -1,5 +1,5 @@
 import numpy as np
-from pygrank.algorithms.utils import optimize, to_numpy
+from pygrank.algorithms.utils import optimize
 from random import random
 import time
 

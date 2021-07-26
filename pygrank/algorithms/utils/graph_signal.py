@@ -111,7 +111,7 @@ class GraphSignal(MutableMapping):
 
 class NodeRanking(object):
     """
-    A generic node ranking algorithm interfact that effectively transforms GraphSignals.
+    A generic node ranking algorithm interface that effectively transforms GraphSignals.
     Ranking algorithms and postprocessors should subclass this interface and implement
     an appropriate rank method. NodeRanking objects can be used as callables and their arguments
     are passed to their rank methods.

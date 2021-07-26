@@ -26,7 +26,7 @@ class Test(unittest.TestCase):
         test_result = Normalize(HeatKernel(normalization='symmetric')).rank(G)
         test_result_lanczos = Normalize(HeatKernel(normalization='symmetric', krylov_dims=5)).rank(G)
         abs_diffs = sum(abs(test_result[v] - test_result_lanczos[v]) for v in test_result_lanczos.keys()) / len(test_result_lanczos)
-        self.assertAlmostEqual(abs_diffs, 0, places=16, msg="Krylov decomposition yields small error")
+        self.assertAlmostEqual(abs_diffs, 0, places=0, msg="Krylov decomposition yields small error")
 
     def test_absorbing_walk(self):
         from pygrank.algorithms.adhoc import PageRank

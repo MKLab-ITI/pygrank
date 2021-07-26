@@ -1,6 +1,6 @@
 import warnings
 import numpy as np
-from pygrank.algorithms.utils import MethodHasher, to_signal, NodeRanking
+from pygrank.algorithms.utils import MethodHasher, to_signal, NodeRanking, _call
 
 
 class Postprocessor(NodeRanking):
@@ -9,7 +9,8 @@ class Postprocessor(NodeRanking):
 
     def rank(self, *args, **kwargs):
         ranks = self.ranker.rank(*args, **kwargs)
-        return to_signal(ranks, self._transform(ranks))
+        call_transform = lambda **kwargs: self._transform(ranks, **kwargs)
+        return to_signal(ranks, _call(call_transform, kwargs))
 
     def _transform(self, ranks):
         raise Exception("Postprocessor subclasses need to implement a _transform method")
@@ -154,6 +155,7 @@ class Sweep(Postprocessor):
     def __init__(self, ranker, uniform_ranker=None):
         """
         Initializes the sweep procedure.
+
         Args:
             ranker: The base ranker instance.
             uniform_ranker: Optional. The ranker instance used to perform non-personalized ranking. If None (default)

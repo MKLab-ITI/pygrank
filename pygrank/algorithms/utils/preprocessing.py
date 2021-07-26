@@ -3,34 +3,6 @@ import numpy as np
 import scipy
 
 
-def to_numpy_idx(nodes, queries):
-    queries = set(queries)
-    return [i for i, v in enumerate(nodes) if v in queries]
-
-
-def to_numpy(nodes, node2values, normalization=True, autocomplete=True):
-    if isinstance(node2values, np.ndarray):
-        if nodes is not None and node2values.size != len(nodes):
-            raise Exception("A preconverted numpy vector with different than the desired size is used", node2values.size, 'vs', len(nodes))
-        if normalization:
-            return node2values / node2values.sum()
-        return node2values
-    if not autocomplete:
-        nodes = [n for n in nodes if n in node2values]
-    vector = np.repeat(1.0, len(nodes)) if node2values is None else np.array([node2values.get(n, 0) for n in nodes], dtype=float)
-    if normalization:
-        if vector.sum() == 0:
-            raise Exception("The personalization vector should contain at least one non-zero entity")
-        vector = vector / vector.sum()
-    return vector
-
-
-def to_dict(nodes, ranks):
-    if not isinstance(ranks, np.ndarray):
-        return ranks
-    return dict(zip([v for v in nodes], map(float, ranks)))
-
-
 def to_scipy_sparse_matrix(G, normalization="auto", weight="weight"):
     """ Used to normalize a graph and produce a sparse matrix representation.
 
@@ -64,7 +36,11 @@ def to_scipy_sparse_matrix(G, normalization="auto", weight="weight"):
 
 
 def assert_binary(ranks):
-    """ Assert that ranks.values() are only 0 or 1 ."""
+    """ Assert that ranks.values() are only 0 or 1.
+
+        Args:
+            ranks: A dict-like object (e.g. a GraphSignal) to check for violations.
+    """
     for v in ranks.values():
         if v not in [0, 1]:
             raise Exception('Binary ranks required')
@@ -75,14 +51,43 @@ def _idfier(*args, **kwargs):
 
 
 class MethodHasher:
-    """ Used to hash methods."""
+    """ Used to hash method runs, so that rerunning them with the same object inputs would directly output
+    the outcome of previous computations.
+
+    Example:
+        >>> from pygrank.algorithms.utils.preprocessing import MethodHasher
+        >>> def method(x, deg=2):
+        ...     print("Computing with params", x, deg)
+        ...     return x**deg
+        >>> hashed_method = MethodHasher(method)
+        >>> print(hashed_method(2))
+        Computing with params 2 2
+        4
+        >>> print(hashed_method(2, 3))
+        Computing with params 2 3
+        8
+        >>> print(hashed_method(2))
+        4
+    """
 
     def __init__(self, method, assume_immutability=True):
+        """
+        Instantiates the method hasher for a given method.
+
+        Args:
+            method:
+            assume_immutability: Optional. If True (default) then the hasher will produce the
+                same outputs as previous runs of the same objects. If False, the instant is see-through
+                and the method is run anew each time.
+        """
         self.assume_immutability = assume_immutability
         self._method = method
         self._stored = dict()
 
     def clear_hashed(self):
+        """
+        Clears all hashed data.
+        """
         self._stored = dict()
 
     def __call__(self, *args, **kwargs):
