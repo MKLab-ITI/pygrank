@@ -1,5 +1,6 @@
 <center><h1 style=font-size:200px>Documentation</h1></center> 
 
+
 # Graph Signals
 Graph signals are a way to organize numerical values corresponding to respective
 nodes. They
@@ -45,13 +46,13 @@ Value changes are reflected to the values being accessed.
 
 
 ### :hammer_and_wrench: Details
-For ease of use, the library can parse
+For ease of use, the library can directly parse
 dictionaries that map nodes to values, e.g. `{"A":0.8,"B":0.5}`
 where ommitted nodes are considered to correspond to zeroes,
 or numpy arrays with the same number of elements as graph nodes,
 e.g. `np.ndarray([node_scores.get(v, 0) for v in graph])` where `graph` is the networkx
 graph passed to node ranking algorithms. When either of these two conventions is used,
-ranking algorithms are automatically converted them to graph signals.
+node ranking algorithms automatically convert them to graph signals.
 
 At the same time, the output of `rank(...)` methods are always graph signals. It must
 be noted that this datatype implements the same methods as a dictionary and can
@@ -60,9 +61,30 @@ values can be obtained through the object attribute `signal.np`.
 
 
 
-# Graph Filters
+# Node Ranking Algorithms
 Graph filters are ways to diffuse graph signals through graphs by sending
-node values to their neighbors and aggregating them there. 
+node values to their neighbors and aggregating them there. This process
+effectively ends up with new graph signals. The original graph signals,
+often called *personalization* usually hold values proportional to the probabilities
+that nodes exhibit a property of interest (e.g. are members of an attribute-based
+or structural communities) and zero when they either do not exhibit that
+property at all or it is unknown if they do so. Then, the resulting scores 
+make an improved estimatation for all nodes proportional to the probability
+that they also exhibit the property of interest.
+
+Based on this understanding, the following figure demonstrates a typical
+node recommendation pipeline using `pygrank`. This starts from a known
+personalization signal,
+applies node ranking algorithms, potentially improves their outcome with
+postprocessing mechanisms and eventually arives at new node scores. 
+In this procedure, node ranking algorithms effectively smooth out the
+personalization through the graph's structure.
+
+![pipeline](pipeline.png)
+
+The structural importance of nodes according to the ranking algorithm corresponds
+to their scores if a (normalized) signal of ones is provided as input. By
+convention, this is used by all algorithms if no graph signal is provided.
 
 ### :zap: Example
 
