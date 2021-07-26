@@ -2,14 +2,47 @@
 
 # Graph Signals
 Graph signals are a way to organize numerical values corresponding to respective
-nodes.
+nodes. They
+are returned by ranking algorithms, but for ease-of-use you can also pass
+maps of node values (e.g.  `{"A": 3, "C": 2}`)
+or numpy arrays (e.g. `np.array([3, 0, 2, 0])` where positions correspond
+to the order networkx traverse graph nodes) to them. If so,
+these representations are converted internally to graph signals based on
+whatever graph information is available.
 
 ### :zap: Example
+As an example, let us create a simple line graph of three edges `"A", "B", "C"` 
+and assign to the first and the last one the values *3* and *2* respectively.
+To create a graph signal holding this information we can write:
+
+```
+>>> from pygrank.algorithms.utils.graph_signal import to_signal
+>>> import networkx as nx
+>>> G = nx.Graph()
+>>> G.add_edge("A", "B")
+>>> G.add_edge("B", "C")
+>>> signal = to_signal(G, {"A": 3, "C": 2})
+>>> print(signal["A"], signal["B"])
+3.0 0.0
+```
+
+If is possible to directly access graph signal values as numpy arrays
+through a `signal.np` attribute. Continuing from the previous example,
+in the following code we divide a graph signal's elements with their sum.
+Value changes are reflected to the values being accessed.
+
+```
+>>> print(signal.np)
+[3. 0. 2.]
+>>> signal.np /= signal.np.sum()
+>>> print([(k,v) for k,v in signal.items()])
+[('A', 0.6), ('B', 0.0), ('C', 0.4)]
+```
 
 ### :hammer_and_wrench: Details
 For ease of use, the library can parse
-dictionaries that map nodes to values, e.g. `{"A":0.8,"B":0.5}` where ommitted nodes
-are considered to correspond to zeroes,
+dictionaries that map nodes to values, e.g. `{"A":0.8,"B":0.5}`
+where ommitted nodes are considered to correspond to zeroes,
 or numpy arrays with the same number of elements as graph nodes,
 e.g. `np.ndarray([node_scores.get(v, 0) for v in graph])` where `graph` is the networkx
 graph passed to node ranking algorithms. When either of these two conventions is used,
@@ -24,9 +57,10 @@ values can be obtained through the object attribute `signal.np`.
 
 # Graph Filters
 Graph filters are ways to diffuse graph signals through graphs by sending
-node values to their neighbors and aggregating them there.
+node values to their neighbors and aggregating them there. 
 
 ### :zap: Example
+
 
 ### :brain: Explanation
 The main principle

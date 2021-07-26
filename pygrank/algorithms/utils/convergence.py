@@ -5,7 +5,8 @@ import time
 
 
 class ConvergenceManager:
-    """ Used to keep previous iteration and generally manage convergence of variables.
+    """ Used to keep previous iteration and generally manage convergence of variables. Graph filters
+    automatically create instances of this class by passing on appropriate parameters.
 
     Supported error types:
         "mabs": mean absolute value of rank differences. Throws exception on iteration max_iters.
@@ -24,6 +25,20 @@ class ConvergenceManager:
     """
 
     def __init__(self, tol=1.E-6, error_type="mabs", max_iters=100):
+        """
+        Initializes a convergence manager with a provided tolerance level, error type and number of iterations.
+
+        Args:
+            tol: Numerical tolerance to determine the stopping point (algorithms stop if the "error" between
+                consecutive iterations becomes less than this numer). Default is 1.E-6 but for large graphs
+                1.E-9 often yields more robust convergence points.
+            error_type: How to calculate the "error" between consecutive iterations of graph signals. Look
+                at the class definition's supported error type for details. Default is "mabs".
+            max_iters: The number of iterations algorithms can run for. If this number is exceeded,
+                an exception is thrown. This could help manage computational resources. Default value is 100,
+                and exceeding this value with graph filters often indicates that either graphs have large diameters
+                or that algorithms of choice converge particularly slowly.
+        """
         self.tol = tol
         self.error_type = error_type.lower()
         self.max_iters = max_iters
@@ -34,6 +49,14 @@ class ConvergenceManager:
         self.elapsed_time = None
 
     def start(self, restart_timer=True):
+        """
+        Starts the convergence manager
+
+        Args:
+            restart_time: If True (default) timing information, such as the number of iterations and wall
+                clock time measurement, is reset. Otherwise, this only ensures that convergence manager
+                performs one iteration before starting comparing values with previous ones.
+        """
         if restart_timer or self._start_time is None:
             self._start_time = time.clock()
             self.elapsed_time = None
@@ -42,9 +65,18 @@ class ConvergenceManager:
         self.last_ranks = None
 
     def force_next_iteration(self):
+        """
+        Forcefully performs at least one more iteration.
+        """
         self.min_iters = self.iteration+1
 
     def has_converged(self, new_ranks):
+        """
+        Checks whether convergence has been by comparing this iteration's numpy array with the previous iteration's.
+
+        Args:
+            new_ranks: The iteration's numpy array.
+        """
         if self.error_type == "dynamic_iters":
             self._find_max_iters_dynamically(new_ranks)
         self.iteration += 1

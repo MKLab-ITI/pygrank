@@ -84,12 +84,13 @@ class ClosedFormGraphFilter(GraphFilter):
 
     def __init__(self, krylov_dims=None, *args, **kwargs):
         """
-            krylov_dims: Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space
-                of the graph with degree equal to the provided dimensions. This considerably speeds up filtering
-                but ends up providing an *approximation* of true graph filter outcomes.
-                If None (default) filters are not computed through their projection
-                the Krylov space, which may yield slower but exact computations. Otherwise, a numeric value
-                equal to the number of latent dimensions is required.
+            Args:
+                krylov_dims: Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space
+                    of the graph with degree equal to the provided dimensions. This considerably speeds up filtering
+                    but ends up providing an *approximation* of true graph filter outcomes.
+                    If None (default) filters are not computed through their projection
+                    the Krylov space, which may yield slower but exact computations. Otherwise, a numeric value
+                    equal to the number of latent dimensions is required.
         """
         super().__init__(*args, **kwargs)
         self.krylov_dims = krylov_dims
@@ -121,10 +122,9 @@ class ClosedFormGraphFilter(GraphFilter):
 
     def _end(self, M, personalization, ranks, *args, **kwargs):
         if self.krylov_dims is not None:
-            if self.convergence.iteration >= int(self.krylov_dims):
-                warnings.warn("Robust Krylov space approximations require at least one degree higher than the number of coefficients.\n"
-                              +"Consider setting krylov_dims="+str(self.convergence.iteration+1)+" or more in the constructor.", stacklevel=2)
-            #ranks.np = krylov2original(self.krylov_base, self.krylov_result, int(self.krylov_dims))
+            #if self.convergence.iteration >= int(self.krylov_dims):
+            #    warnings.warn("Robust Krylov space approximations require at least one degree higher than the number of coefficients.\n"
+            #                  +"Consider setting krylov_dims="+str(self.convergence.iteration+1)+" or more in the constructor.", stacklevel=2)
             del self.krylov_base
             del self.krylov_H
         del self.Mpower

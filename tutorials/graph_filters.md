@@ -32,6 +32,7 @@ Initializes the graph filter.
 
 Args: 
  * *weights:* Optional. A list-like object with elements weights[n] proportional to the importance of propagating personalization graph signals n hops away. Default is [0.9]*10 . 
+ * *krylov_dims:* Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space of the graph with degree equal to the provided dimensions. This considerably speeds up filtering but ends up providing an *approximation* of true graph filter outcomes. If None (default) filters are not computed through their projection the Krylov space, which may yield slower but exact computations. Otherwise, a numeric value equal to the number of latent dimensions is required. 
  * *to_scipy:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
  * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
 
@@ -50,6 +51,7 @@ Initializes the HearKernel filter parameters.
 
 Args: 
  * *t:* Optional. How many hops until the importance of new nodes starts decreasing. Default value is 5. 
+ * *krylov_dims:* Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space of the graph with degree equal to the provided dimensions. This considerably speeds up filtering but ends up providing an *approximation* of true graph filter outcomes. If None (default) filters are not computed through their projection the Krylov space, which may yield slower but exact computations. Otherwise, a numeric value equal to the number of latent dimensions is required. 
  * *to_scipy:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
  * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
 

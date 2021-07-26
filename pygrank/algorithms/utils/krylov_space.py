@@ -4,6 +4,7 @@ from numpy import dot
 from numpy.linalg import norm
 import sklearn
 
+
 def diags(vecs, offs):
     return np.add.reduce([np.diag(v,k) for v,k in zip(vecs, offs)])
 
