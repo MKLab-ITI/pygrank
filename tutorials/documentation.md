@@ -20,7 +20,9 @@ To create a graph signal holding this information we can write:
 >>> import networkx as nx
 >>> G = nx.Graph()
 >>> G.add_edge("A", "B")
->>> G.add_edge("B", "C")
+>>> G.add_edge("A", "C")
+>>> G.add_edge("C", "D")
+>>> G.add_edge("D", "E")
 >>> signal = to_signal(G, {"A": 3, "C": 2})
 >>> print(signal["A"], signal["B"])
 3.0 0.0
@@ -36,8 +38,11 @@ Value changes are reflected to the values being accessed.
 [3. 0. 2.]
 >>> signal.np /= signal.np.sum()
 >>> print([(k,v) for k,v in signal.items()])
-[('A', 0.6), ('B', 0.0), ('C', 0.4)]
+[('A', 0.6), ('B', 0.0), ('C', 0.4), ('D', 0.0), ('E', 0.0)]
 ```
+
+![graph signal](graph_signal.png)
+
 
 ### :hammer_and_wrench: Details
 For ease of use, the library can parse
