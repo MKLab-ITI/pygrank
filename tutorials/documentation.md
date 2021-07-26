@@ -83,11 +83,47 @@ personalization through the graph's structure.
 ![pipeline](pipeline.png)
 
 The structural importance of nodes according to the ranking algorithm corresponds
-to their scores if a (normalized) signal of ones is provided as input. By
-convention, this is used by all algorithms if no graph signal is provided.
+to their scores if a signal of equal values (e.g. ones) is provided as input. By
+convention, a signal of ones is inputted to all algorithms if `None` is provided.
 
 ### :zap: Example
+Let us first define an personalized PageRank algorithm, which is graph filter
+performing random walk with restart in the graph. If the personalization is
+binary (i.e. all nodes have initial scores either 0 or 1) then this algorithm
+is equivalent to a stochastic Markov process where it starts from the nodes
+with initial scores 1 and iteratively jumpt to neighbors randomly. During this
+process, it has a fixed probability *1-alpha* to restart and finally measures
+the probability of arriving at each node.
 
+We will use a restart probability at each step `1-alpha=0.01` and will
+perform "col" (column-wise) normalization of the adjacency matrix in that
+jumps to neighbors have the same probability (the alternative is "symmetric"
+normalization where the prbabilities of moving between two nodes are the
+same no matter the direction). We  will also stop the algorithm at numerical
+tolerance 1.E-9. Smaller tolerances are more accurate in exactly solving
+each algorithm's assumptions but take longer to converge.
+
+```python
+>>> from pygrank.algorithms import adhoc
+>>> algorithm = adhoc.PageRank(alpha=0.99, normalization="col", tol=1.E-9)
+```
+
+Having defined this algorithm, we will now use the graph `G` and graph signal
+`signal` generated in the previous graph signal section. Passing the original
+signal through the pipeline, ignoring the postprocessing step for the time being,
+can be done as:
+
+```python
+>>> scores = algorithm.rank(G, signal)
+```
+
+In this code, we could also pass the dictionary `{"A":1, "C": 2}` in place
+of the signal and it would make the conversion internally. If a graph signal
+is defined though, the graph needs not be provided again.
+
+```python
+>>> scores = algorithm.rank(personalization=signal)
+```
 
 ### :brain: Explanation
 The main principle
