@@ -153,7 +153,8 @@ the graph signal holds a reference to the graph it is tied to.
 
 We now examine the structural relatedness of various nodes to the personalization:
 ```python
->>> print(scores.items())
+>>> print(list(scores.items()))
+[('A', 0.25613418536078547), ('B', 0.12678642237010243), ('C', 0.2517487443382047), ('D', 0.24436832596280528), ('E', 0.12096232196810223)]
 ```
 
 
@@ -241,7 +242,7 @@ can be achieved as:
 >>> new_algorithm = Normalize(Transformer(np.exp, algorithm))
 >>> new_scores = new_algorithm.rank(G, signal)
 >>> print(list(new_scores.items()))
->>> [('A', 1.0), ('B', 0.8786683440755908), ('C', 0.9956241609824301), ('D', 0.9883030876536782), ('E', 0.8735657648099558)]
+[('A', 1.0), ('B', 0.8786683440755908), ('C', 0.9956241609824301), ('D', 0.9883030876536782), ('E', 0.8735657648099558)]
 ```
 
 
