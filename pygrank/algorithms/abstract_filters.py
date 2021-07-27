@@ -24,9 +24,9 @@ class GraphFilter(NodeRanking):
         self.convergence = _call(ConvergenceManager, kwargs) if convergence is None else convergence
         _ensure_all_used(kwargs, [preprocessor, ConvergenceManager])
 
-    def rank(self, graph=None, personalization=None, warm_start=None, normalized_personalization=True, *args, **kwargs):
+    def rank(self, graph=None, personalization=None, warm_start=None, normalize_personalization=True, *args, **kwargs):
         self.convergence.start()
-        personalization = to_signal(graph, personalization).normalized(normalized_personalization)
+        personalization = to_signal(graph, personalization).normalized(normalize_personalization)
         if np.abs(personalization.np).sum() == 0:
             raise Exception("Personalization should contain at least one non-zero entity")
         if graph is None:

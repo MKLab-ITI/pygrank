@@ -87,7 +87,7 @@ class ConvergenceManager:
             if self.error_type=="iters":
                 self.elapsed_time = time.clock()-self._start_time
                 return True
-            raise Exception("Could not converge within", self.max_iters, "iterations")
+            raise Exception("Could not converge within "+str(self.max_iters)+" iterations")
         converged = False if self.last_ranks is None else self._has_converged(self.last_ranks, new_ranks)
         self.last_ranks = new_ranks
         self.elapsed_time = time.clock()-self._start_time

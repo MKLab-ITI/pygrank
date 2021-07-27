@@ -5,27 +5,28 @@
 Graph signals are a way to organize numerical values corresponding to respective
 nodes. They
 are returned by ranking algorithms, but for ease-of-use you can also pass
-maps of node values (e.g.  `{"A": 3, "C": 2}`)
+maps of node values (e.g.  `{'A': 3, 'C': 2}`)
 or numpy arrays (e.g. `np.array([3, 0, 2, 0])` where positions correspond
 to the order networkx traverse graph nodes) to them. If so,
 these representations are converted internally to graph signals based on
 whatever graph information is available.
 
-### :zap: Example
-As an example, let us create a simple line graph of three edges `"A", "B", "C"` 
-and assign to the first and the last one the values *3* and *2* respectively.
+### :zap: Define and Manipulate a Graph Signal
+As an example, let us create a simple graph
+and assign to nodes 'A' and 'C' the values *3* and *2* respectively,
+where all other nodes are assigned zeroes.
 To create a graph signal holding this information we can write:
 
 ```python
 >>> from pygrank.algorithms.utils.graph_signal import to_signal
 >>> import networkx as nx
 >>> G = nx.Graph()
->>> G.add_edge("A", "B")
->>> G.add_edge("A", "C")
->>> G.add_edge("C", "D")
->>> G.add_edge("D", "E")
->>> signal = to_signal(G, {"A": 3, "C": 2})
->>> print(signal["A"], signal["B"])
+>>> G.add_edge('A', 'B')
+>>> G.add_edge('A', 'C')
+>>> G.add_edge('C', 'D')
+>>> G.add_edge('D', 'E')
+>>> signal = to_signal(G, {'A': 3, 'C': 2})
+>>> print(signal['A'], signal['B'])
 3.0 0.0
 ```
 
@@ -36,7 +37,7 @@ Value changes are reflected to the values being accessed.
 
 ```python
 >>> print(signal.np)
-[3. 0. 2.]
+[3. 0. 2. 0. 0.]
 >>> signal.np /= signal.np.sum()
 >>> print([(k,v) for k,v in signal.items()])
 [('A', 0.6), ('B', 0.0), ('C', 0.4), ('D', 0.0), ('E', 0.0)]
@@ -47,21 +48,23 @@ Value changes are reflected to the values being accessed.
 
 ### :hammer_and_wrench: Details
 For ease of use, the library can directly parse
-dictionaries that map nodes to values, e.g. `{"A":0.8,"B":0.5}`
-where ommitted nodes are considered to correspond to zeroes,
+dictionaries that map nodes to values, e.g. the dictionary
+`{'A':0.6,'C':0.4}` were ommitted nodes correspond to zeroes,
 or numpy arrays with the same number of elements as graph nodes,
-e.g. `np.ndarray([node_scores.get(v, 0) for v in graph])` where `graph` is the networkx
-graph passed to node ranking algorithms. When either of these two conventions is used,
+e.g. `np.ndarray([node_scores.get(v, 0) for v in G])` where `G`
+is the networkx graph passed to node ranking algorithms.
+When either of these two conventions is used,
 node ranking algorithms automatically convert them to graph signals.
 
-At the same time, the output of `rank(...)` methods are always graph signals. It must
-be noted that this datatype implements the same methods as a dictionary and can
-be used interchangeably, whereas access to a numpy array storing corresponding node
-values can be obtained through the object attribute `signal.np`.
+At the same time, the output of `rank(...)` methods are always graph signals.
+This datatype implements the same methods as a dictionary and can
+be used interchangeably, whereas access to a numpy array storing
+corresponding node values can be obtained through the object attribute
+`signal.np`.
 
 
 
-# Node Ranking Algorithms
+# Graph Filters
 Graph filters are ways to diffuse graph signals through graphs by sending
 node values to their neighbors and aggregating them there. This process
 effectively ends up with new graph signals. The original graph signals,
@@ -75,18 +78,18 @@ that they also exhibit the property of interest.
 Based on this understanding, the following figure demonstrates a typical
 node recommendation pipeline using `pygrank`. This starts from a known
 personalization signal,
-applies node ranking algorithms, potentially improves their outcome with
+applies graph filters, potentially improves their outcome with
 postprocessing mechanisms and eventually arives at new node scores. 
-In this procedure, node ranking algorithms effectively smooth out the
+In this procedure, filters effectively smooth out the
 personalization through the graph's structure.
 
 ![pipeline](pipeline.png)
 
-The structural importance of nodes according to the ranking algorithm corresponds
+The structural importance of nodes according to the filters used corresponds
 to their scores if a signal of equal values (e.g. ones) is provided as input. By
-convention, a signal of ones is inputted to all algorithms if `None` is provided.
+convention, a signal of ones is understood if `None` is provided.
 
-### :zap: Example
+### :zap: Pass a Graph Signal through a Filter
 Let us first define an personalized PageRank algorithm, which is graph filter
 performing random walk with restart in the graph. If the personalization is
 binary (i.e. all nodes have initial scores either 0 or 1) then this algorithm
@@ -109,21 +112,50 @@ each algorithm's assumptions but take longer to converge.
 ```
 
 Having defined this algorithm, we will now use the graph `G` and graph signal
-`signal` generated in the previous graph signal section. Passing the original
-signal through the pipeline, ignoring the postprocessing step for the time being,
-can be done as:
+`signal` generated in the previous section. Passing these through the pipeline
+while ignoring any postprocessing for the time being can be done as:
 
 ```python
 >>> scores = algorithm.rank(G, signal)
+Exception: ('Could not converge within 100 iterations')
 ```
 
-In this code, we could also pass the dictionary `{"A":1, "C": 2}` in place
-of the signal and it would make the conversion internally. If a graph signal
-is defined though, the graph needs not be provided again.
+The code threw an exception, because for alpha values near 1 and high tolerance
+PageRank is slow to converge. Convergence speed is also reduced by the graph being
+sparsely connected (this does not happen for graphs with higher average node
+degrees - e.g. 5). To address this issue, we can either set a laxer numerical
+tolerance or simply provide a larger number of iterations the algorithm is allowed
+to run for. For the sake of demonstration, we chose the second solution and allow
+the algorithm to run for up to 2,000 iterations:
+
+```python
+>>> algorithm = adhoc.PageRank(alpha=0.99, normalization="col", tol=1.E-9, max_iters=2000)
+>>> scores = algorithm.rank(G, signal)
+>>> print(list(scores.items()))
+[('A', 0.25613418536078547), ('B', 0.12678642237010243), ('C', 0.2517487443382047), ('D', 0.24436832596280528), ('E', 0.12096232196810223)]
+```
+
+We can see that both 'A' and 'C' end up with the higher scores,
+which are approximately 0.25. 'D' is in the same circle as these
+and thus, by merit of being structurally close, is scored approximately as
+0.24. Finally, the other two nodes assume lower values.
+
+In the above code, we could also pass to the `rank` method
+the dictionary `{'A':1, 'C': 2}` in place
+of the signal and the library would make the conversion internally.
+Alternatively, if a graph signal is already defined,
+the graph could be ommited, as shown next. We stress that this is possible only because
+the graph signal holds a reference to the graph it is tied to.
 
 ```python
 >>> scores = algorithm.rank(personalization=signal)
 ```
+
+We now examine the structural relatedness of various nodes to the personalization:
+```python
+>>> print(scores.items())
+```
+
 
 ### :brain: Explanation
 The main principle
@@ -138,7 +170,15 @@ neighbors' previous average.
 The library provides several graph filters. Their usage pattern consists
 of instantiating them and then calling their `rank(graph, personalization)`
 method to obtain posterior node signals based on diffusing the provided
-personalization signal through the graph.
+personalization signal through the graph. However, the outcomes of graph
+filters often require additional processing steps, for example to perform
+normalization, improve their quality or apply fairness constraints.
+
+We refer to the improvement of graph filter outcomes as postprocessing. 
+Keep in mind though that some postprocessors may run the base filters
+multiple times. Still, we recognize this as the same procedure, since
+it maintains the base use case of wrapping around a base filter to improve
+its outcome.
 
 ### :scroll: List of Graph Filters
 An exhaustive list of all ready-to-use graph filters can be
@@ -149,7 +189,61 @@ parameters, these can be used interchangeably in the above example.
 Postprocessors wrap base graph filters to affect their outcome. Usage
 of the original filters remains identical.
 
-### :zap: Example
+### :zap: Wrapping Postprocessors around Graph Filters
+Let us consider a simple scenario where we want the graph signal outputted
+by a filter to always be normalized so that its largest value is one. For
+this, we will consider the graph `G`, signal `signal` and filter `algorithm`,
+as obtained from the previous example and will use the postprocessor 
+`Normalize`.
+
+There are two ways to apply postprocessors. The first is to simply
+`transform` graph signals, such as the outcomes of graph filters. For example,
+we can write:
+
+```python
+>>> from pygrank.algorithms.postprocess import Normalize
+>>> scores = algorithm.rank(G, signal)
+>>> normalized_scores = Normalize().transform(scores)
+>>> print(list(normalized_scores.items()))
+[('A', 1.0), ('B', 0.4950000024069947), ('C', 0.9828783455187619), ('D', 0.9540636897749238), ('E', 0.472261528845582)]
+```
+
+This way is supported by postprocessors that perform simple data
+transformations. However, others may need to re-run base graph filters,
+in which case they can only be attached to the latter to wrap its
+functionality. Furthermore, the `transform` method only works with 
+graph signals as inputs, as it does not take the graph as an
+argument to automatically make the conversion.
+
+Thus, use of the above pattern should be minimized and instead
+we can write the following equivalent, which works for **all** 
+postprocessors:
+
+
+```python
+>>> from pygrank.algorithms.postprocess import Normalize
+>>> normalized_algorithm = Normalize(algorithm)
+>>> normalized_scores = normalized_algorithm.rank(G, signal)
+>>> print(list(normalized_scores.items()))
+[('A', 1.0), ('B', 0.4950000024069947), ('C', 0.9828783455187619), ('D', 0.9540636897749238), ('E', 0.472261528845582)]
+```
+
+The `rank` method is used the same way as before, but the graph
+filter is now nested inside the postprocessor. Multiple postprocessors 
+may be applied with the same pattern. For example, performing
+an element-wise exponential transformation of node scores
+with the postprocessor `Transformer` *before* normalization
+can be achieved as:
+
+```python
+>>> from pygrank.algorithms.postprocess import Normalize, Transformer
+>>> import numpy as np
+>>> new_algorithm = Normalize(Transformer(np.exp, algorithm))
+>>> new_scores = new_algorithm.rank(G, signal)
+>>> print(list(new_scores.items()))
+>>> [('A', 1.0), ('B', 0.8786683440755908), ('C', 0.9956241609824301), ('D', 0.9883030876536782), ('E', 0.8735657648099558)]
+```
+
 
 ### :brain: Explanation
 There are many ways graph filter posteriors can be processed to provide
@@ -166,7 +260,7 @@ by providing more example nodes, and for fairness-aware posteriors,
 which aim to make node scores adhere to some fairness constraint, 
 such as disparate impact.
 
-### :scroll: List of Graph Filters
+### :scroll: List of Postprocessors
 An exhaustive list of all ready-to-use postprocessors can be
 found [here](postprocessors.md). After initialization with the appropriate
 parameters, these can be used interchangeably in the above example.

@@ -96,6 +96,34 @@ class Ordinals(Postprocessor):
         return {v: ord+1 for ord, v in enumerate(sorted(ranks, key=ranks.get, reverse=True))}
 
 
+class Transformer(Postprocessor):
+    """Applies an element-by-element transformation on a graph signal based on a given expression."""
+
+    def __init__(self, ranker=None, expr=np.exp):
+        """ Initializes the class with a base ranker instance. Args are automatically filled in and
+        re-ordered if at least one is provided.
+
+        Args:
+            ranker: Optional. The base ranker instance. A Tautology() ranker is created if None (default) was specified.
+            expr: Optional. A lambda expression to apply on each element. The transformer will automatically try to
+                apply it on the numpy array representation of the graph signal first, so prefer use of numpy functions
+                for faster computations. For example, np.exp (default) should be prefered instead of math.exp, because
+                the former can directly parse a numpy array.
+        """
+        if ranker is not None and not callable(getattr(ranker, "rank", None)):
+            ranker, expr = expr, ranker
+            if not callable(getattr(ranker, "rank", None)):
+                ranker = None
+        self.ranker = Tautology() if ranker is None else ranker
+        self.expr = expr
+
+    def _transform(self, ranks):
+        try:
+            return self.expr(ranks.np)
+        except:
+            return {v: self.expr(ranks[v]) for v in ranks}
+
+
 class Threshold(Postprocessor):
     """ Converts ranking outcome to binary values based on a threshold value."""
 

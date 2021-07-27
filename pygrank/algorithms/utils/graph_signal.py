@@ -7,19 +7,24 @@ def to_signal(graph, obj):
     Converts an object to a GraphSignal tied to an explicit or implicit reference to a graph. This method helps
     convert various ways of expressing graph signals to the same format that algorithms can work with. Prefer
     using GraphSignal instances when developing new code, because these combine the advantages of using hashmaps
-    for accessing values with the speed provided by numpy arrrays.
+    for accessing values with the speed provided by numpy arrays.
 
     Args:
         graph: Either a graph or a GraphSignal, where in the second case it takes the value of the latter's graph.
             Prefer using a GraphSignal as reference, as this copies the latter's node2id property without additional
-            memory or computations.
+            memory or computations. If the graph is None, the second argument needs to be a GraphSignal.
         obj: Either a numpy array or a hashmap between graph nodes and their values, in which cases the appropriate
             GraphSignal contructor is called, or a GraphSignal in which case it is also returned and a check is
             performed that these are signals on the same graph. If None, this argument induces a graph signal
             of ones.
     """
     known_node2id = None
-    if isinstance(graph, GraphSignal):
+    if graph is None:
+        if isinstance(graph, GraphSignal):
+            graph = obj.graph
+        else:
+            raise Exception("None graph allowed only for explicit graph signal input")
+    elif isinstance(graph, GraphSignal):
         known_node2id = graph.node2id
         graph = graph.graph
     elif isinstance(graph, np.ndarray):

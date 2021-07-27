@@ -20,6 +20,9 @@ def to_fairwalk(G, sensitive):
 
 
 class FairWeights(Postprocessor):
+    """Weights node scores based on whether they are sensitive, so that the sum of sensitive
+    and non-sensitive scores are equal.
+    """
     def __init__(self, ranker):
         self.ranker = ranker
 
@@ -158,8 +161,22 @@ class FairPersonalizer:
 
 
 
-class FairPostprocessor:
+class FairPostprocessor(Postprocessor):
+    """Adjusts node scores so that the sum of sensitive nodes is closer to the sum of non-sensitive ones.
+    """
+
     def __init__(self, ranker=None, method="O"):
+        """
+        Initializes the fairness-aware postprocessor.
+
+        Args:
+            ranker: The base ranking algorithm.
+            method: The method with which to adjust weights. If "O" (default) an optimal gradual adjustment is performed.
+                If "B" node scores are weighted according to whether the nodes are sensitive, so that
+                the sum of sensitive node scores becomes equal to the sum of non-sensitive node scores.
+                If "reweight" the graph is pre-processed so that, when possible, walks are equally probable to visit
+                sensitive or non-sensitive nodes at non-restarting iterations.
+        """
         if ranker is not None and not callable(getattr(ranker, "rank", None)):
             ranker, method = method, ranker
             if not callable(getattr(ranker, "rank", None)):

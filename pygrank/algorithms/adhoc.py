@@ -19,10 +19,17 @@ class PageRank(RecursiveGraphFilter):
         self.alpha = float(alpha)
         super().__init__(*args, **kwargs)
 
+    def _start(self, M, personalization, ranks, *args, **kwargs):
+        super()._start(M, personalization, ranks, *args, **kwargs)
+        self.is_dangling = np.where(np.array(M.sum(axis=1)).flatten() == 0)[0]
+
     def _formula(self, M, personalization, ranks, *args, **kwargs):
-        #self.is_dangling = np.where(np.array(M.sum(axis=1)).flatten() == 0)[0]
-        #ranks = self.alpha * (ranks * M + np.sum(ranks[is_dangling]) * personalization) + (1 - self.alpha) * personalization
-        return self.alpha * (ranks * M) + (1 - self.alpha) * personalization
+        return self.alpha * (ranks * M + np.sum(ranks[self.is_dangling]) * personalization) + (1 - self.alpha) * personalization
+        #return self.alpha * (ranks * M) + (1 - self.alpha) * personalization
+
+    def _end(self, M, personalization, ranks, *args, **kwargs):
+        super()._end(M, personalization, ranks, *args, **kwargs)
+        del self.is_dangling
 
 
 class HeatKernel(ClosedFormGraphFilter):

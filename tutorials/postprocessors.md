@@ -5,8 +5,19 @@ The following postprocessors can be imported from the package `pygrank.algorithm
 Constructor details are provided, including arguments inherited from and passed to parent classes.
 All of them can be used through the code patterns presented at the library's [documentation](documentation.md).  
 
+### FairPostprocessor 
+
+Adjusts node scores so that the sum of sensitive nodes is closer to the sum of non-sensitive ones. 
+Initializes the fairness-aware postprocessor. 
+
+Args: 
+ * *ranker:* The base ranking algorithm. 
+ * *method:* The method with which to adjust weights. If "O" (default) an optimal gradual adjustment is performed. If "B" node scores are weighted according to whether the nodes are sensitive, so that the sum of sensitive node scores becomes equal to the sum of non-sensitive node scores. If "reweight" the graph is pre-processed so that, when possible, walks are equally probable to visit sensitive or non-sensitive nodes at non-restarting iterations. 
+
 ### FairWeights 
- 
+
+Weights node scores based on whether they are sensitive, so that the sum of sensitive 
+and non-sensitive scores are equal. 
 
 ### Normalize 
 
@@ -88,3 +99,13 @@ Example (same outcome):
 >>> ranks = Threshold(0.5).transform(algorithm.rank(G, seed_values)) 
 ```
 
+
+### Transformer 
+
+Applies an element-by-element transformation on a graph signal based on a given expression. 
+Initializes the class with a base ranker instance. Args are automatically filled in and 
+re-ordered if at least one is provided. 
+
+Args: 
+ * *ranker:* Optional. The base ranker instance. A Tautology() ranker is created if None (default) was specified. 
+ * *expr:* Optional. A lambda expression to apply on each element. The transformer will automatically try to apply it on the numpy array representation of the graph signal first, so prefer use of numpy functions for faster computations. For example, np.exp (default) should be prefered instead of math.exp, because the former can directly parse a numpy array. 
