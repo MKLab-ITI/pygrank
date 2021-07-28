@@ -3,13 +3,16 @@
 
 # Graph Signals
 Graph signals are a way to organize numerical values corresponding to respective
-nodes. They
-are returned by ranking algorithms, but for ease-of-use you can also pass
-maps of node values (e.g.  `{'A': 3, 'C': 2}`)
-or numpy arrays (e.g. `np.array([3, 0, 2, 0])` where positions correspond
-to the order networkx traverse graph nodes) to them. If so,
-these representations are converted internally to graph signals based on
-whatever graph information is available.
+nodes. They are returned by ranking algorithms, but for ease-of-use,
+you can also pass to ranking algorithms maps of node values
+(e.g.  `{'A': 3, 'C': 2}`) or numpy arrays (e.g. `np.array([3, 0, 2, 0])`
+where positions correspond to the order networkx traverse graph nodes) to them.
+If so, these representations are converted internally to graph signals based on
+whatever graph information is available. In fact, we encourage using these
+representations to avoid
+
+**If** *tensorflow* or *pytorch* are set as the backends of choice,
+you can also construct graph signals instead of numpy arrays.
 
 ### :zap: Define and Manipulate a Graph Signal
 As an example, let us create a simple graph
@@ -30,15 +33,18 @@ To create a graph signal holding this information we can write:
 3.0 0.0
 ```
 
-If is possible to directly access graph signal values as numpy arrays
-through a `signal.np` attribute. Continuing from the previous example,
+If is possible to directly access graph signal values as objects of the
+respective backend through a `signal.np` attribute. For example, if the
+default *numpy* backend is used, this attribute holds a numpy array. 
+Continuing from the previous example,
 in the following code we divide a graph signal's elements with their sum.
 Value changes are reflected to the values being accessed.
 
 ```python
+>>> from pygrank import backend
 >>> print(signal.np)
 [3. 0. 2. 0. 0.]
->>> signal.np /= signal.np.sum()
+>>> signal.np = signal.np / backend.sum(signal.np)
 >>> print([(k,v) for k,v in signal.items()])
 [('A', 0.6), ('B', 0.0), ('C', 0.4), ('D', 0.0), ('E', 0.0)]
 ```
@@ -100,11 +106,11 @@ the probability of arriving at each node.
 
 We will use a restart probability at each step `1-alpha=0.01` and will
 perform "col" (column-wise) normalization of the adjacency matrix in that
-jumps to neighbors have the same probability (the alternative is "symmetric"
-normalization where the prbabilities of moving between two nodes are the
-same no matter the direction). We  will also stop the algorithm at numerical
+jumps to neighbors have equal probabilities (the alternative is "symmetric"
+normalization where the probabilities of moving between two nodes are the
+same for both movement directions). We will also stop the algorithm at numerical
 tolerance 1.E-9. Smaller tolerances are more accurate in exactly solving
-each algorithm's assumptions but take longer to converge.
+each algorithm's exact outputs but take longer to converge.
 
 ```python
 >>> from pygrank.algorithms import adhoc
@@ -183,7 +189,7 @@ it maintains the base use case of wrapping around a base filter to improve
 its outcome.
 
 ### :scroll: List of Graph Filters
-An exhaustive list of all ready-to-use graph filters can be
+An exhaustive list of ready-to-use graph filters can be
 found [here](graph_filters.md). After initialization with the appropriate
 parameters, these can be used interchangeably in the above example.
 
@@ -193,7 +199,7 @@ of the original filters remains identical.
 
 ### :zap: Wrapping Postprocessors around Graph Filters
 Let us consider a simple scenario where we want the graph signal outputted
-by a filter to always be normalized so that its largest value is one. For
+by a filter to always be normalized so that its largest node score is one. For
 this, we will consider the graph `G`, signal `signal` and filter `algorithm`,
 as obtained from the previous example and will use the postprocessor 
 `Normalize`.
@@ -263,7 +269,7 @@ which aim to make node scores adhere to some fairness constraint,
 such as disparate impact.
 
 ### :scroll: List of Postprocessors
-An exhaustive list of all ready-to-use postprocessors can be
+An exhaustive list of ready-to-use postprocessors can be
 found [here](postprocessors.md). After initialization with the appropriate
 parameters, these can be used interchangeably in the above example.
 
@@ -279,4 +285,7 @@ parameters, these can be used interchangeably in the above example.
 
 ### :scroll: List of Benchmarks
 
-### :scroll: List of Evaluation Measures
+### :scroll: List of Measures
+An exhaustive list of measures can be
+found [here](measures.md). After initialization with the appropriate
+parameters, these can be used interchangeably in the above example.

@@ -14,6 +14,19 @@ Fast recommendation algorithms for large graphs based on link analysis.
 pip install pygrank
 ```
 
+To use machine learning backends (e.g. to integrate the package
+in machine learning projects), such as *tensorflow*
+either manually change the automatically created
+configuration file displayed in the error console.
+If you want others to run your code that depends on `pygrank`
+with a specific backend, add the following recipe:
+
+```python
+from pygrank import backend
+backend.set_backend_preference(`tensorflow`, remind_where_to_find=False)
+```
+
+
 # :zap: Quickstart
 As a quick start, let us construct a networkx graph `G` and a set of nodes `seeds`.
 
@@ -51,7 +64,7 @@ which can be used like dictionaries. For example, we can
 print the scores of some nodes per:
 ```python
 >>> print(ranks["B"], ranks["D"], ranks["E"])
-0.19245466859447746 0.14087481834802176 0.17014304812714195
+0.25865456609095644 0.12484722044728883 0.17079023174039495
 ```
 
 We alter this outcome so that it outputs node order, 
@@ -63,14 +76,14 @@ postprocessors, including ones to make scores fairness-aware.
 >>> from pygrank.algorithms.postprocess import Ordinals
 >>> ordinals = Ordinals(ranker).rank(G, {v: 1 for v in seeds})
 >>> print(ordinals["B"], ordinals["D"], ordinals["E"])
-5 1 3
+1 5 4
 ```
 
 How much time did it take for the base ranker to converge?
 
 ```python
 >>> print(ranker.convergence)
-19 iterations (0.0018321000000014465 sec)
+19 iterations (0.001831000000009908 sec)
 ```
 
 Since only the node order is important,
@@ -82,15 +95,14 @@ we can use a different way to specify convergence:
 >>> early_stop_ranker = PageRank(alpha=0.85, convergence=convergence)
 >>> ordinals = Ordinals(early_stop_ranker).rank(G, {v: 1 for v in seeds})
 >>> print(early_stop_ranker.convergence)
-3 iterations (0.0015069 sec)
+2 iterations (0.0006313000000091051 sec)
 >>> print(ordinals["B"], ordinals["D"], ordinals["E"])
-5 1 2
+1 5 4
 ```
 
-Close to the previous results at a fraction of the iterations!!
-For small graphs, like this example, time gains by fewer iterations 
-are small. But, for graphs with many nodes, running time is dominated
-by and increases linearly with the number of iterations.
+Close to the previous results at a fraction of the time!!
+Note that convergence time measurements do not take into account
+the time needed to preprocess graphs.
 
 
 # :brain: Overview
@@ -112,11 +124,11 @@ ready-to-use tools that simplify deployment of theoretical advancements
 and testing of new algorithms.
 
 Some of the library's advantages are:
-1. **Compatibility** with [networkx](https://github.com/networkx/networkx).
+1. **Compatibility** with [networkx](https://github.com/networkx/networkx) and [tensorflow](https://www.tensorflow.org/).
 2. **Datacentric** programming interfaces that do not require data transformations.
-3. **Fast** computations; running times scale near-linearly with the number of edges.
-4. **Large** graph support; memory requirements scale linearly with the number of edges.
-5. **Seamless** pipelines, from graph preprocessing up to evaluation of algorithms.
+3. **Large** graph support with sparse representations.
+4. **Seamless** pipelines, from graph preprocessing up to evaluation.
+5. **Modular** combination of node ranking algorithms.
 
 
 # :link: Material

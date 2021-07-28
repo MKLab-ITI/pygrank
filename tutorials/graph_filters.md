@@ -5,26 +5,6 @@ The following filters can be imported from the package `pygrank.algorithms`.
 Constructor details are provided, including arguments inherited from and passed to parent classes.
 All of them can be used through the code patterns presented at the library's [documentation](documentation.md). 
 
-### AbsorbingWalks 
-
-Implementation of partial absorbing random walks for Lambda = (1-alpha)/alpha diag(absorbtion vector) . 
-Initializes the AbsorbingWalks filter parameters. For appropriate parameter values. This can model PageRank 
-but is in principle a generalization that allows custom absorbtion rates per nodes (when not given, these are I). 
-
-Args: 
- * *alpha:* Optional. (1-alpha)/alpha is the absorbtion rate of the random walk multiplied with individual node absorbtion rates. This is chosen to yield the same underlying meaning as PageRank (for which Lambda = alpha Diag(degrees) ) when the same parameter value alpha is chosen. Default is 1-1.E-6 per the respective publication. 
- * *use_quotient:* Optional. If True (default) performs a L1 re-normalization of ranks after each iteration. This significantly speeds up the convergence speed of symmetric normalization (col normalization preserves the L1 norm during computations on its own). Can also pass Postprocessor instances to adjust node scores after each iteration with the Postprocessor.transform(ranks) method. Can pass False or None to ignore this parameter's functionality. 
- * *to_scipy:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
- * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
-
-Example:
-
-```python 
->>> from pygrank.algorithms import adhoc 
->>> algorithm = adhoc.AbsorbingWalks(0.85, tol=1.E-9) # tol passed to the ConvergenceManager 
-```
-
-
 ### GenericGraphFilter 
 
 Implements a graph filter with a specific vector of weight parameters. 

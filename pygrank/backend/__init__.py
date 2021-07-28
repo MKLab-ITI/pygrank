@@ -57,7 +57,8 @@ def set_backend_preference(mod_name, remind_where_to_find=True):
     config_path = os.path.join(default_dir, 'config.json')
     with open(config_path, "w") as config_file:
         json.dump({'backend': mod_name.lower(), 'reminder': str(remind_where_to_find).lower()}, config_file)
-    _notify_load(mod_name)
+    if remind_where_to_find:
+        _notify_load(mod_name)
 
 
 def _notify_load(mod_name):
