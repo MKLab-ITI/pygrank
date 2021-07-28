@@ -2,15 +2,10 @@
 This file covers the experiments of the paper: Unsupervised evaluation of multiple node ranks by reconstructing local structures
 """
 
-import networkx as nx
 from pygrank.algorithms.utils import preprocessor
-import pygrank.algorithms.adhoc
-import pygrank.algorithms.oversampling
 import pygrank.algorithms.postprocess
-import pygrank.metrics.utils
-import pygrank.metrics.unsupervised
-import pygrank.metrics.supervised
-import pygrank.metrics.multigroup
+import pygrank.measures.utils
+import pygrank.measures.multigroup
 import scipy.stats
 from experiments.importer import import_SNAP
 
@@ -74,19 +69,19 @@ if __name__ == "__main__":
             experiments = list()
 
             max_positive_samples = 2000
-            training_groups, test_groups = pygrank.metrics.utils.split_groups(groups, training_samples=seed)
-            test_group_ranks = pygrank.metrics.utils.to_seeds(test_groups)
-            measures = {"AUC": pygrank.metrics.multigroup.MultiSupervised(pygrank.metrics.supervised.AUC, test_group_ranks),
-                        "NDCG": pygrank.metrics.multigroup.MultiSupervised(pygrank.metrics.supervised.NDCG, test_group_ranks),
-                        "Conductance": pygrank.metrics.multigroup.MultiUnsupervised(pygrank.metrics.unsupervised.Conductance, G),
-                        "ClusteringCoefficient": pygrank.metrics.multigroup.ClusteringCoefficient(G, similarity="cos", max_positive_samples=max_positive_samples),
-                        "Density": pygrank.metrics.multigroup.MultiUnsupervised(pygrank.metrics.unsupervised.Density, G),
-                        "Modularity": pygrank.metrics.multigroup.MultiUnsupervised(pygrank.metrics.unsupervised.Modularity, G, max_positive_samples=max_positive_samples),
+            training_groups, test_groups = pygrank.measures.utils.split_groups(groups, training_samples=seed)
+            test_group_ranks = pygrank.measures.utils.to_seeds(test_groups)
+            measures = {"AUC": pygrank.measures.multigroup.MultiSupervised(pygrank.measures.supervised.AUC, test_group_ranks),
+                        "NDCG": pygrank.measures.multigroup.MultiSupervised(pygrank.measures.supervised.NDCG, test_group_ranks),
+                        "Conductance": pygrank.measures.multigroup.MultiUnsupervised(pygrank.measures.unsupervised.Conductance, G),
+                        "ClusteringCoefficient": pygrank.measures.multigroup.ClusteringCoefficient(G, similarity="cos", max_positive_samples=max_positive_samples),
+                        "Density": pygrank.measures.multigroup.MultiUnsupervised(pygrank.measures.unsupervised.Density, G),
+                        "Modularity": pygrank.measures.multigroup.MultiUnsupervised(pygrank.measures.unsupervised.Modularity, G, max_positive_samples=max_positive_samples),
                         #"DotLinkAUC": pygrank.metrics.multigroup.LinkAUC(G, similarity="dot", max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples),
-                        "CosLinkAUC": pygrank.metrics.multigroup.LinkAUC(G, similarity="cos", max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples, seed=1),
-                        "HopAUC": pygrank.metrics.multigroup.LinkAUC(G, similarity="cos", hops=2,max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples, seed=1),
-                        "LinkCE": pygrank.metrics.multigroup.LinkAUC(G, evaluation="CrossEntropy", similarity="cos", hops=1,max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples, seed=1),
-                        "HopCE": pygrank.metrics.multigroup.LinkAUC(G, evaluation="CrossEntropy", similarity="cos", hops=2,max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples, seed=1)
+                        "CosLinkAUC": pygrank.measures.multigroup.LinkAUC(G, similarity="cos", max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples, seed=1),
+                        "HopAUC": pygrank.measures.multigroup.LinkAUC(G, similarity="cos", hops=2, max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples, seed=1),
+                        "LinkCE": pygrank.measures.multigroup.LinkAUC(G, evaluation="CrossEntropy", similarity="cos", hops=1, max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples, seed=1),
+                        "HopCE": pygrank.measures.multigroup.LinkAUC(G, evaluation="CrossEntropy", similarity="cos", hops=2, max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples, seed=1)
                         }
             if len(measure_evaluations) == 0:
                 for measure_name in measures.keys():

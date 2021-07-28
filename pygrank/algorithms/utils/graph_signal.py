@@ -1,6 +1,6 @@
-import numpy as np
 from collections.abc import MutableMapping
-
+from pygrank import backend
+import numpy as np
 
 def to_signal(graph, obj):
     """
@@ -27,7 +27,7 @@ def to_signal(graph, obj):
     elif isinstance(graph, GraphSignal):
         known_node2id = graph.node2id
         graph = graph.graph
-    elif isinstance(graph, np.ndarray):
+    elif backend.is_array(graph):
         raise Exception("Graph cannot be an array")
     if isinstance(obj, GraphSignal):
         if graph != obj.graph:
@@ -70,16 +70,17 @@ class GraphSignal(MutableMapping):
 
         self.graph = graph
         self.node2id = {v: i for i, v in enumerate(graph)} if node2id is None else node2id
-        if isinstance(obj, np.ndarray):
+        if backend.is_array(obj):
             if len(graph) != len(obj):
                 raise Exception("Graph signal arrays should have the same dimensions as graphs")
-            self.np = obj
+            self.np = backend.to_array(obj)
         elif obj is None:
-            self.np = np.repeat(1.0, len(graph))
+            self.np = backend.repeat(1.0, len(graph))
         else:
-            self.np = np.repeat(0.0, len(graph))
+            self.np = np.repeat(0.0, len(graph)) # tensorflow does not initialize editing of eager tensors
             for key, value in obj.items():
                 self[key] = value
+            self.np = backend.to_array(self.np) # make all operations with numpy and then potentially switch to tensorflow
 
     def __getitem__(self, key):
         return self.np[self.node2id[key]]
@@ -101,16 +102,14 @@ class GraphSignal(MutableMapping):
         Copies and the signal into a normalized one, which is subsequently returned.
 
         Args:
-            normalized: If True (default) applies L1 normalization to the values of the copied signal.
+            normalize: If True (default) applies L1 normalization to the values of the copied signal.
             copy: If True (default) a new copy is created, otherwise in-place normalization is performed (if at all)
                 and self is returned.
         """
         if copy:
-            return GraphSignal(self.graph, np.copy(self.np), self.node2id).normalized(normalize, copy=False)
+            return GraphSignal(self.graph, backend.copy(self.np), self.node2id).normalized(normalize, copy=False)
         if normalize:
-            np_sum = self.np.__abs__().sum()
-            if np_sum != 0:
-                self.np /= np_sum
+            self.np = backend.self_normalize(self.np)
         return self
 
 

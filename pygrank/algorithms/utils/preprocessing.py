@@ -1,12 +1,13 @@
 import networkx as nx
 import numpy as np
 import scipy
+from pygrank.backend import scipy_sparse_to_backend
 
 
-def to_scipy_sparse_matrix(G, normalization="auto", weight="weight"):
+def to_sparse_matrix(G, normalization="auto", weight="weight"):
     """ Used to normalize a graph and produce a sparse matrix representation.
 
-    Attributes:
+    Args:
         G: A networkx graph
         normalization: The type of normalization can be "col", "symmetric" or "auto" (default). The latter selects
              one of the previous normalization depending on whether the graph is directed or not respectively.
@@ -32,7 +33,7 @@ def to_scipy_sparse_matrix(G, normalization="auto", weight="weight"):
         M = Qleft * M * Qright
     elif normalization != "none":
         raise Exception("Supported normalizations: none, col, symmetric, auto")
-    return M
+    return scipy_sparse_to_backend(M)
 
 
 def assert_binary(ranks):
@@ -47,6 +48,9 @@ def assert_binary(ranks):
 
 
 def _idfier(*args, **kwargs):
+    """
+    Converts args and kwargs into a hashable array of object ids.
+    """
     return "["+",".join(str(id(arg)) for arg in args)+"]"+"{"+",".join(v+":"+str(id(kwargs[v])) for v in kwargs)+"}"
 
 
@@ -103,19 +107,13 @@ class MethodHasher:
 
 
 def preprocessor(normalization="auto", assume_immutability=False):
-    """ Wrapper function that generates lambda expressions for the method to_scipy_sparse_matrix.
+    """ Wrapper function that generates lambda expressions for the method to_sparse_matrix.
 
-    Attributes:
-        normalization: Normalization parameter for to_scipy_sparse_matrix (default is "auto").
+    Args:
+        normalization: Normalization parameter for to_sparse_matrix (default is "auto").
         assume_immutability: If True, then the output is further wrapped through a MethodHasher to avoid redundant
             calls. Default is False, as graph immutability needs be explicitly assumed but cannot be guaranteed.
     """
     if assume_immutability:
         return MethodHasher(preprocessor(normalization, False))
-    return lambda G: to_scipy_sparse_matrix(G, normalization=normalization)
-
-
-def vectorize(normalize_vectors=True, autocomplete=True, assume_immutability=False):
-    #if assume_immutability:
-    #    return MethodHasher(vectorize(normalize_vectors, autocomplete, False))
-    return lambda G, dictionary: to_numpy(G, dictionary, normalization=normalize_vectors, autocomplete=autocomplete)
+    return lambda G: to_sparse_matrix(G, normalization=normalization)

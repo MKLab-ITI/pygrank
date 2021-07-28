@@ -1,9 +1,7 @@
 from .utils import _call, _ensure_all_used
 from pygrank.algorithms.utils import NodeRanking, preprocessor, ConvergenceManager, to_signal, krylov_base, krylov2original
+from pygrank import backend
 from pygrank.algorithms.postprocess import Postprocessor
-import numpy as np
-import scipy
-import warnings
 
 
 class GraphFilter(NodeRanking):
@@ -25,14 +23,14 @@ class GraphFilter(NodeRanking):
         _ensure_all_used(kwargs, [preprocessor, ConvergenceManager])
 
     def rank(self, graph=None, personalization=None, warm_start=None, normalize_personalization=True, *args, **kwargs):
-        self.convergence.start()
         personalization = to_signal(graph, personalization).normalized(normalize_personalization)
-        if np.abs(personalization.np).sum() == 0:
+        if backend.sum(backend.abs(personalization.np)) == 0:
             raise Exception("Personalization should contain at least one non-zero entity")
         if graph is None:
             graph = personalization.G
-        ranks = to_signal(graph, np.copy(personalization.np) if warm_start is None else warm_start)
+        ranks = to_signal(graph, backend.copy(personalization.np) if warm_start is None else warm_start)
         M = self.to_scipy(graph)
+        self.convergence.start()
         self._start(M, personalization, ranks, *args, **kwargs)
         while not self.convergence.has_converged(ranks.np):
             self._step(M, personalization, ranks, *args, **kwargs)
@@ -70,7 +68,7 @@ class RecursiveGraphFilter(GraphFilter):
         if isinstance(self.use_quotient, Postprocessor):
             ranks.np = self.use_quotient.transform(ranks).np
         elif self.use_quotient:
-            ranks.np = ranks.np / ranks.np.sum()
+            ranks.np = ranks.np / backend.sum(ranks.np)
         if self.converge_to_eigenvectors:
             personalization.np = ranks.np
 
@@ -84,29 +82,29 @@ class ClosedFormGraphFilter(GraphFilter):
 
     def __init__(self, krylov_dims=None, *args, **kwargs):
         """
-            Args:
-                krylov_dims: Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space
-                    of the graph with degree equal to the provided dimensions. This considerably speeds up filtering
-                    but ends up providing an *approximation* of true graph filter outcomes.
-                    If None (default) filters are not computed through their projection
-                    the Krylov space, which may yield slower but exact computations. Otherwise, a numeric value
-                    equal to the number of latent dimensions is required.
+        Args:
+            krylov_dims: Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space
+                of the graph with degree equal to the provided dimensions. This considerably speeds up filtering
+                but ends up providing an *approximation* of true graph filter outcomes.
+                If None (default) filters are not computed through their projection
+                the Krylov space, which may yield slower but exact computations. Otherwise, a numeric value
+                equal to the number of latent dimensions is required.
         """
         super().__init__(*args, **kwargs)
         self.krylov_dims = krylov_dims
 
     def _start(self, M, personalization, ranks, *args, **kwargs):
-        self.coefficient = self._coefficient(None)
-        ranks.np *= self.coefficient
+        self.coefficient = None
         if self.krylov_dims is not None:
             V, H = krylov_base(M, personalization.np, int(self.krylov_dims))
             self.krylov_base = V
             self.krylov_H = H
             self.zero_coefficient = self.coefficient
             self.krylov_result = 0
-            self.Mpower = np.eye(int(self.krylov_dims))
+            self.Mpower = backend.eye(int(self.krylov_dims))
         else:
-            self.Mpower = scipy.sparse.eye(M.shape[0])
+            self.ranks_power = ranks.np
+            ranks.np = 0
 
     def _step(self, M, personalization, ranks, *args, **kwargs):
         self.coefficient = self._coefficient(self.coefficient)
@@ -117,8 +115,8 @@ class ClosedFormGraphFilter(GraphFilter):
             self.krylov_result += self.coefficient * self.Mpower
             ranks.np = krylov2original(self.krylov_base, self.krylov_result, int(self.krylov_dims))
         else:
-            self.Mpower = self.Mpower @ M
-            ranks.np += self.coefficient * self.Mpower * personalization.np
+            self.ranks_power = backend.conv(self.ranks_power, M)
+            ranks.np = ranks.np + float(self.coefficient) * self.ranks_power
 
     def _end(self, M, personalization, ranks, *args, **kwargs):
         if self.krylov_dims is not None:
@@ -127,7 +125,7 @@ class ClosedFormGraphFilter(GraphFilter):
             #                  +"Consider setting krylov_dims="+str(self.convergence.iteration+1)+" or more in the constructor.", stacklevel=2)
             del self.krylov_base
             del self.krylov_H
-        del self.Mpower
+        del self.ranks_power
         del self.coefficient
 
     def _coefficient(self, previous_coefficient):

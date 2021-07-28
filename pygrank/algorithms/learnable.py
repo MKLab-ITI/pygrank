@@ -7,6 +7,7 @@ class GenericGraphFilter(ClosedFormGraphFilter):
     def __init__(self, weights=[0.9]*10, **kwargs):
         """
         Initializes the graph filter.
+
         Args:
             weights: Optional. A list-like object with elements weights[n] proportional to the importance of propagating
                 personalization graph signals n hops away. Default is [0.9]*10 .

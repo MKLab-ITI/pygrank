@@ -2,8 +2,8 @@ from experiments.importer import import_SNAP
 from pygrank.algorithms import PageRank, HeatKernel
 from pygrank.algorithms.postprocess import Tautology, SeedOversampling, BoostedSeedOversampling
 from pygrank.algorithms.utils import preprocessor, to_signal
-from pygrank.metrics.utils import split_groups
-from pygrank.metrics import Accuracy, AUC
+from pygrank.measures.utils import split_groups
+from pygrank.measures import Accuracy, AUC
 from timeit import default_timer as time
 
 def perc(num):
@@ -35,10 +35,10 @@ def supervised_benchmark(algorithms, datasets, metric=AUC, delimiter=" \t ", end
         training, evaluation = split_groups(list(group), training_samples=0.1)
         training, evaluation = to_signal(G,{v: 1 for v in training}), to_signal(G,{v: 1 for v in evaluation})
         for algorithm in algorithms.values():
-            #start = time()
             dataset_results += delimiter+fill(perc(metric(evaluation)(algorithm.rank(G, training))))
-            #print(algorithm, time()-start)
+            #print(algorithm.ranker.convergence)
         print(dataset_results+endline)
+
 
 def create_variations(algorithms, variations):
     all = dict()

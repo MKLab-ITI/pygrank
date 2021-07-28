@@ -136,9 +136,10 @@ the algorithm to run for up to 2,000 iterations:
 ```
 
 We can see that both 'A' and 'C' end up with the higher scores,
-which are approximately 0.25. 'D' is in the same circle as these
-and thus, by merit of being structurally close, is scored approximately as
-0.24. Finally, the other two nodes assume lower values.
+which are approximately 0.25. 'D' forms a circle with these
+in the graph's structure and thus, by merit of being structurally close,
+is scored closely to these two as 0.24. Finally, the other two nodes
+assume lower values.
 
 In the above code, we could also pass to the `rank` method
 the dictionary `{'A':1, 'C': 2}` in place

@@ -2,7 +2,7 @@ from pygrank.algorithms.postprocess.postprocess import Tautology, Normalize
 from pygrank.algorithms.utils import optimize
 from pygrank.algorithms.postprocess import Postprocessor
 from math import exp
-from pygrank.metrics.supervised import pRule
+from pygrank.measures.supervised import pRule
 import numpy as np
 
 

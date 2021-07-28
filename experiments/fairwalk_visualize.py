@@ -1,6 +1,6 @@
 from pygrank.algorithms.adhoc import PageRank
 from pygrank.algorithms.postprocess import Normalize, Ordinals
-from pygrank.metrics.utils import split_groups
+from pygrank.measures.utils import split_groups
 from sklearn import metrics
 import data.facebook_fairness.importer
 

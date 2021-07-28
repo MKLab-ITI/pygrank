@@ -1,7 +1,6 @@
-import scipy
-import numpy as np
 import warnings
 import pygrank.algorithms.utils
+from pygrank import backend
 from pygrank.algorithms.abstract_filters import RecursiveGraphFilter, ClosedFormGraphFilter
 
 
@@ -21,15 +20,15 @@ class PageRank(RecursiveGraphFilter):
 
     def _start(self, M, personalization, ranks, *args, **kwargs):
         super()._start(M, personalization, ranks, *args, **kwargs)
-        self.is_dangling = np.where(np.array(M.sum(axis=1)).flatten() == 0)[0]
+        #self.is_dangling = np.where(np.array(M.sum(axis=1)).flatten() == 0)[0]
 
     def _formula(self, M, personalization, ranks, *args, **kwargs):
-        return self.alpha * (ranks * M + np.sum(ranks[self.is_dangling]) * personalization) + (1 - self.alpha) * personalization
-        #return self.alpha * (ranks * M) + (1 - self.alpha) * personalization
+        #return self.alpha * (ranks * M + backend.sum(ranks[self.is_dangling]) * personalization) + (1 - self.alpha) * personalization
+        return self.alpha * backend.conv(ranks, M) + (1 - self.alpha) * personalization
 
     def _end(self, M, personalization, ranks, *args, **kwargs):
         super()._end(M, personalization, ranks, *args, **kwargs)
-        del self.is_dangling
+        #del self.is_dangling
 
 
 class HeatKernel(ClosedFormGraphFilter):
@@ -37,8 +36,10 @@ class HeatKernel(ClosedFormGraphFilter):
 
     def __init__(self, t=3, *args, **kwargs):
         """ Initializes the HearKernel filter parameters.
+
         Args:
             t: Optional. How many hops until the importance of new nodes starts decreasing. Default value is 5.
+
         Example:
             >>> from pygrank.algorithms import adhoc
             >>> algorithm = adhoc.HeatKernel(t=5, tol=1.E-9) # tol passed to the ConvergenceManager
@@ -47,7 +48,7 @@ class HeatKernel(ClosedFormGraphFilter):
         super().__init__(*args, **kwargs)
 
     def _coefficient(self, previous_coefficient):
-        return np.exp(-self.t) if previous_coefficient is None else (previous_coefficient*self.t/(self.convergence.iteration+1))
+        return backend.exp(-self.t) if previous_coefficient is None else (previous_coefficient * self.t / (self.convergence.iteration + 1))
 
 
 class AbsorbingWalks(RecursiveGraphFilter):
@@ -76,7 +77,7 @@ class AbsorbingWalks(RecursiveGraphFilter):
 
     def _start(self, M, personalization, ranks, absorption=None, **kwargs):
         self.absorption = pygrank.algorithms.utils.to_signal(personalization, absorption).np * (1 - self.alpha) / self.alpha
-        self.degrees = np.array(M.sum(axis=1)).flatten()
+        self.degrees = backend.to_array(M.sum(axis=1)).flatten()
 
     def _end(self, *args, **kwargs):
         super()._end(*args, **kwargs)

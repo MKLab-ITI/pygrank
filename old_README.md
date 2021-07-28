@@ -301,7 +301,7 @@ will be provided in the future.
 ###### How to evaluate ranks with an unsupervised metric
 ```python
 from pygrank.algorithms.postprocess import Normalize
-from pygrank.metrics.unsupervised import Conductance
+from pygrank.measures.unsupervised import Conductance
 
 G, ranks = ... # calculate as per the first example
 normalized_ranks = Normalize().transform(ranks)
@@ -312,13 +312,13 @@ print(metric.evaluate(normalized_ranks))
 
 ###### How to evaluate ranks with a supervised metric
 ```python
-from pygrank.metrics.supervised import AUC
-import pygrank.metrics.utils
+from pygrank.measures.supervised import AUC
+import pygrank.measures.utils
 
 G, seeds, algorithm = ... # as per the first example
-seeds, ground_truth = pygrank.metrics.utils.split_groups(seeds, training_samples=0.5)
+seeds, ground_truth = pygrank.measures.utils.split_groups(seeds, training_samples=0.5)
 
-pygrank.metrics.utils.remove_group_edges_from_graph(G, ground_truth)
+pygrank.measures.utils.remove_group_edges_from_graph(G, ground_truth)
 ranks = algorithm.rank(G, {v: 1 for v in seeds})
 
 metric = AUC({v: 1 for v in ground_truth})
@@ -331,10 +331,10 @@ import networkx as nx
 from pygrank.algorithms.adhoc import PageRank as Ranker
 from pygrank.algorithms.postprocess import Normalize as Normalizer
 from pygrank.algorithms.oversampling import BoostedSeedOversampling as Oversampler
-from pygrank.metrics.unsupervised import Conductance
-from pygrank.metrics.supervised import AUC
-from pygrank.metrics.multigroup import MultiUnsupervised, MultiSupervised, LinkAUC
-import pygrank.metrics.utils
+from pygrank.measures.unsupervised import Conductance
+from pygrank.measures.supervised import AUC
+from pygrank.measures.multigroup import MultiUnsupervised, MultiSupervised, LinkAUC
+import pygrank.measures.utils
 
 # Construct data
 G = nx.Graph()
@@ -343,8 +343,8 @@ groups["group1"] = list()
 ... 
 
 # Split to training and test data
-training_groups, test_groups = pygrank.metrics.utils.split_groups(groups)
-pygrank.metrics.utils.remove_group_edges_from_graph(G, test_groups)
+training_groups, test_groups = pygrank.measures.utils.split_groups(groups)
+pygrank.measures.utils.remove_group_edges_from_graph(G, test_groups)
 
 # Calculate ranks and put them in a map
 algorithm = Normalizer(Oversampler(Ranker(alpha=0.99)))
@@ -357,11 +357,11 @@ conductance = MultiUnsupervised(Conductance, G)
 print(conductance.evaluate(ranks))
 
 # Evaluation with LinkAUC
-link_AUC = LinkAUC(G, pygrank.metrics.utils.to_nodes(test_groups))
+link_AUC = LinkAUC(G, pygrank.measures.utils.to_nodes(test_groups))
 print(link_AUC.evaluate(ranks))
 
 # Evaluation with AUC
-auc = MultiSupervised(AUC, pygrank.metrics.utils.to_seeds(test_groups))
+auc = MultiSupervised(AUC, pygrank.measures.utils.to_seeds(test_groups))
 print(auc.evaluate(ranks))
         
 ```

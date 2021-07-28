@@ -1,6 +1,6 @@
 from pygrank.algorithms.adhoc import *
 from pygrank.algorithms.postprocess import *
-from pygrank.metrics import *
+from pygrank.measures import *
 from pygrank.algorithms.postprocess.oversampling import SeedOversampling, BoostedSeedOversampling
 from experiments.importer import fairness_dataset
 from pygrank.algorithms.utils import preprocessor
