@@ -12,9 +12,10 @@ whatever graph information is available. In fact, we encourage using these
 representations to avoid
 
 **If** *tensorflow* or *pytorch* are set as the backends of choice,
-you can also construct graph signals instead of numpy arrays.
+you can also construct graph signals by passing tensors of those
+libraries instead of numpy arrays.
 
-### :zap: Define and Manipulate a Graph Signal
+### Define and Manipulate a Graph Signal
 As an example, let us create a simple graph
 and assign to nodes 'A' and 'C' the values *3* and *2* respectively,
 where all other nodes are assigned zeroes.
@@ -52,7 +53,7 @@ Value changes are reflected to the values being accessed.
 ![graph signal](graph_signal.png)
 
 
-### :hammer_and_wrench: Details
+### Details
 For ease of use, the library can directly parse
 dictionaries that map nodes to values, e.g. the dictionary
 `{'A':0.6,'C':0.4}` were ommitted nodes correspond to zeroes,
@@ -95,7 +96,7 @@ The structural importance of nodes according to the filters used corresponds
 to their scores if a signal of equal values (e.g. ones) is provided as input. By
 convention, a signal of ones is understood if `None` is provided.
 
-### :zap: Pass a Graph Signal through a Filter
+### Pass a Graph Signal through a Filter
 Let us first define an personalized PageRank algorithm, which is graph filter
 performing random walk with restart in the graph. If the personalization is
 binary (i.e. all nodes have initial scores either 0 or 1) then this algorithm
@@ -165,7 +166,7 @@ We now examine the structural relatedness of various nodes to the personalizatio
 ```
 
 
-### :brain: Explanation
+### Explanation
 The main principle
 lies in recognizing that propagating a graph signal's vector (i.e. numpy array)
 represntation `p` one hop away in the graph is performed through the operation
@@ -174,7 +175,7 @@ intuition, think of column-based normalization, where `Mp`
 becomes an update of all node values by setting them as their
 neighbors' previous average.
 
-### :hammer_and_wrench: Details
+### Details
 The library provides several graph filters. Their usage pattern consists
 of instantiating them and then calling their `rank(graph, personalization)`
 method to obtain posterior node signals based on diffusing the provided
@@ -188,7 +189,7 @@ multiple times. Still, we recognize this as the same procedure, since
 it maintains the base use case of wrapping around a base filter to improve
 its outcome.
 
-### :scroll: List of Graph Filters
+### List of Graph Filters
 An exhaustive list of ready-to-use graph filters can be
 found [here](graph_filters.md). After initialization with the appropriate
 parameters, these can be used interchangeably in the above example.
@@ -197,7 +198,7 @@ parameters, these can be used interchangeably in the above example.
 Postprocessors wrap base graph filters to affect their outcome. Usage
 of the original filters remains identical.
 
-### :zap: Wrapping Postprocessors around Graph Filters
+### Wrapping Postprocessors around Graph Filters
 Let us consider a simple scenario where we want the graph signal outputted
 by a filter to always be normalized so that its largest node score is one. For
 this, we will consider the graph `G`, signal `signal` and filter `algorithm`,
@@ -253,7 +254,7 @@ can be achieved as:
 ```
 
 
-### :brain: Explanation
+### Explanation
 There are many ways graph filter posteriors can be processed to provide
 more meaningful data. Of the simpler ones are normalization constraints,
 for example to set the maximal or the sum of posterior node values to
@@ -268,7 +269,7 @@ by providing more example nodes, and for fairness-aware posteriors,
 which aim to make node scores adhere to some fairness constraint, 
 such as disparate impact.
 
-### :scroll: List of Postprocessors
+### List of Postprocessors
 An exhaustive list of ready-to-use postprocessors can be
 found [here](postprocessors.md). After initialization with the appropriate
 parameters, these can be used interchangeably in the above example.
@@ -277,15 +278,15 @@ parameters, these can be used interchangeably in the above example.
 
 # Evaluation
 
-### :zap: Examples
+### Examples
 
-### :brain: Evaluation Measures
+### Evaluation Measures
 
-### :brain: Benchmarks
+### Benchmarks
 
-### :scroll: List of Benchmarks
+### List of Benchmarks
 
-### :scroll: List of Measures
+### List of Measures
 An exhaustive list of measures can be
 found [here](measures.md). After initialization with the appropriate
 parameters, these can be used interchangeably in the above example.
