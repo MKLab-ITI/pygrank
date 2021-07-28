@@ -28,3 +28,13 @@ def self_normalize(obj):
 
 def conv(signal, M):
     return tf.sparse.sparse_dense_matmul(M, signal)
+
+
+def length(x):
+    if isinstance(x, tf.Tensor):
+        return x.shape[0]
+    return len(x)
+
+
+def degrees(M):
+    return tf.experimental.numpy.ravel(sum(M, axis=1))

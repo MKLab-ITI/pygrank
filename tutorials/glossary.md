@@ -1,4 +1,6 @@
 # Glossary
+A more detailed of the following terms can be found in the [documentation](documentation.md).
+
 Term | Explanation
 --- | --- 
 Seeds | Example nodes that are known to belong to a community.

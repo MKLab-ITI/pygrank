@@ -20,7 +20,7 @@ def to_signal(graph, obj):
     """
     known_node2id = None
     if graph is None:
-        if isinstance(graph, GraphSignal):
+        if isinstance(obj, GraphSignal):
             graph = obj.graph
         else:
             raise Exception("None graph allowed only for explicit graph signal input")
@@ -29,6 +29,8 @@ def to_signal(graph, obj):
         graph = graph.graph
     elif backend.is_array(graph):
         raise Exception("Graph cannot be an array")
+    if isinstance(obj, list) and len(obj) != len(graph):
+        obj = {v: 1 for v in obj}
     if isinstance(obj, GraphSignal):
         if graph != obj.graph:
             raise Exception("Graph signal tied to a different graph")
@@ -71,7 +73,7 @@ class GraphSignal(MutableMapping):
         self.graph = graph
         self.node2id = {v: i for i, v in enumerate(graph)} if node2id is None else node2id
         if backend.is_array(obj):
-            if len(graph) != len(obj):
+            if len(graph) != backend.length(obj):
                 raise Exception("Graph signal arrays should have the same dimensions as graphs")
             self.np = backend.to_array(obj)
         elif obj is None:
@@ -81,6 +83,13 @@ class GraphSignal(MutableMapping):
             for key, value in obj.items():
                 self[key] = value
             self.np = backend.to_array(self.np) # make all operations with numpy and then potentially switch to tensorflow
+
+    def filter(self, exclude=None):
+        if exclude is not None:
+            exclude = set([key for key, value in to_signal(self, exclude).items() if value != 0])
+            ret = backend.to_array([self[key] for key in self.graph if key not in exclude])
+            return ret
+        return self.np
 
     def __getitem__(self, key):
         return self.np[self.node2id[key]]

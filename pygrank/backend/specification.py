@@ -40,3 +40,10 @@ def self_normalize(obj):
 
 def conv(signal, M):
     pass
+
+
+def length(x):
+    pass
+
+def degrees(M):
+    pass

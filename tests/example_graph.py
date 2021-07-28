@@ -1,5 +1,5 @@
 import networkx as nx
-
+import random
 
 def test_graph(directed=False):
     G = nx.DiGraph() if directed else nx.Graph()
@@ -23,3 +23,15 @@ def test_graph(directed=False):
     G.add_edge("L", "K")
     G.add_edge("K", "M")
     return G
+
+
+def test_block_model_graph(nodes=600, seed=1):
+    random.seed(1)
+    G = nx.DiGraph()
+    groups = [list(range(300)), list(range(300, nodes))]
+    for i in range(nodes):
+        for j in range(nodes):
+            prob = 0.1 if (i<300)==(j<300) else 0.05
+            if random.uniform(0, 1) < prob:
+                G.add_edge(i, j)
+    return G, groups

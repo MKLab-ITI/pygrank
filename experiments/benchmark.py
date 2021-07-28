@@ -1,10 +1,10 @@
 from experiments.importer import import_SNAP
-from pygrank.algorithms import PageRank, HeatKernel
+from pygrank.algorithms import PageRank, HeatKernel, AbsorbingWalks
 from pygrank.algorithms.postprocess import Tautology, SeedOversampling, BoostedSeedOversampling
 from pygrank.algorithms.utils import preprocessor, to_signal
 from pygrank.measures.utils import split_groups
-from pygrank.measures import Accuracy, AUC
-from timeit import default_timer as time
+from pygrank.measures import AUC
+
 
 def perc(num):
     if num<0.005:
@@ -24,7 +24,7 @@ def fill(algorithm="", chars=14):
 def supervised_benchmark(algorithms, datasets, metric=AUC, delimiter=" \t ", endline=""):
     print("Comparing algorithms based on "+metric.__class__.__name__)
     print(delimiter.join([fill()]+[fill(algorithm) for algorithm in algorithms])+endline)
-    datasets = [(dataset, 0) if len(dataset)!=2 else dataset for dataset in datasets]
+    datasets = [(dataset, 0) if len(dataset) != 2 else dataset for dataset in datasets]
     last_loaded_dataset = None
     for dataset, group_id in datasets:
         dataset_results = fill(dataset)
@@ -35,7 +35,7 @@ def supervised_benchmark(algorithms, datasets, metric=AUC, delimiter=" \t ", end
         training, evaluation = split_groups(list(group), training_samples=0.1)
         training, evaluation = to_signal(G,{v: 1 for v in training}), to_signal(G,{v: 1 for v in evaluation})
         for algorithm in algorithms.values():
-            dataset_results += delimiter+fill(perc(metric(evaluation)(algorithm.rank(G, training))))
+            dataset_results += delimiter+fill(perc(metric(evaluation, exclude=training)(algorithm.rank(G, training))))
             #print(algorithm.ranker.convergence)
         print(dataset_results+endline)
 
@@ -53,10 +53,11 @@ pre = preprocessor(assume_immutability=True, normalization="symmetric")
 algorithms = {
     "ppr0.85": PageRank(alpha=0.85, to_scipy=pre, max_iters=1000000, tol=1.E-9),
     "ppr0.99": PageRank(alpha=0.99, to_scipy=pre, max_iters=1000000, tol=1.E-9),
+    "absorb": AbsorbingWalks(to_scipy=pre, max_iters=1000000, tol=1.E-6),
     #"Lhk3": HeatKernel(t=3, to_scipy=pre, krylov_dims=5, max_iters=1000000, tol=1.E-9),
     #"Lhk7": HeatKernel(t=7, to_scipy=pre, krylov_dims=5, max_iters=1000000, tol=1.E-9),
     "hk3": HeatKernel(t=3, to_scipy=pre, max_iters=1000000, tol=1.E-9),
-    "hk7": HeatKernel(t=7, to_scipy=pre, max_iters=1000000, tol=1.E-9),
+    "hk7": HeatKernel(t=5, to_scipy=pre, max_iters=1000000, tol=1.E-9),
 }
 algorithms = create_variations(algorithms, {"": Tautology, "+SO": SeedOversampling})
 

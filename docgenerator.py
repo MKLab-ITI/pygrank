@@ -174,9 +174,9 @@ def generate_metric_docs():
         if not abstract[obj]:
             text += combine_attributes(base_descriptions[obj], [base_descriptions.get(cls,"") for cls in inspect.getmro(obj)][1:])
 
-
     with open("tutorials/measures.md", "w") as file:
         file.write(text)
+
 
 if __name__ == '__main__':
     generate_filter_docs()

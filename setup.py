@@ -10,10 +10,10 @@ with open("README.md", "r") as file:
 
 setuptools.setup(
     name='pygrank',
-    version='0.1.17',
+    version='0.2.1',
     author="Emmanouil Krasanakis",
     author_email="maniospas@hotmail.com",
-    description="Recommendation algorithms for large graphs (compatible with networkx)",
+    description="Recommendation algorithms for large graphs",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/MKLab-ITI/pygrank",

@@ -50,7 +50,7 @@ class HeatKernel(ClosedFormGraphFilter):
     def _coefficient(self, previous_coefficient):
         return backend.exp(-self.t) if previous_coefficient is None else (previous_coefficient * self.t / (self.convergence.iteration + 1))
 
-
+import numpy as np
 class AbsorbingWalks(RecursiveGraphFilter):
     """ Implementation of partial absorbing random walks for Lambda = (1-alpha)/alpha diag(absorbtion vector) .
     """
@@ -77,7 +77,7 @@ class AbsorbingWalks(RecursiveGraphFilter):
 
     def _start(self, M, personalization, ranks, absorption=None, **kwargs):
         self.absorption = pygrank.algorithms.utils.to_signal(personalization, absorption).np * (1 - self.alpha) / self.alpha
-        self.degrees = backend.to_array(M.sum(axis=1)).flatten()
+        self.degrees = backend.degrees(M)
 
     def _end(self, *args, **kwargs):
         super()._end(*args, **kwargs)
@@ -85,7 +85,7 @@ class AbsorbingWalks(RecursiveGraphFilter):
         del self.degrees
 
     def _formula(self, M, personalization, ranks, *args, **kwargs):
-        return ((ranks * M) * self.degrees + personalization * self.absorption) / (self.absorption + self.degrees)
+        return (backend.conv(ranks, M) * self.degrees + personalization * self.absorption) / (self.absorption + self.degrees)
 
 
 class BiasedKernel(RecursiveGraphFilter):
@@ -99,4 +99,4 @@ class BiasedKernel(RecursiveGraphFilter):
 
     def _formula(self, M, personalization, ranks, *args, **kwargs):
         a = self.alpha * self.t / self.convergence.iteration
-        return personalization + a * ((ranks * M) * personalization) - ranks
+        return personalization + a * (backend.conv(ranks, M) * personalization) - ranks

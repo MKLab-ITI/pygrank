@@ -26,10 +26,8 @@ class GraphFilter(NodeRanking):
         personalization = to_signal(graph, personalization).normalized(normalize_personalization)
         if backend.sum(backend.abs(personalization.np)) == 0:
             raise Exception("Personalization should contain at least one non-zero entity")
-        if graph is None:
-            graph = personalization.G
-        ranks = to_signal(graph, backend.copy(personalization.np) if warm_start is None else warm_start)
-        M = self.to_scipy(graph)
+        ranks = to_signal(personalization, backend.copy(personalization.np) if warm_start is None else warm_start)
+        M = self.to_scipy(personalization.graph)
         self.convergence.start()
         self._start(M, personalization, ranks, *args, **kwargs)
         while not self.convergence.has_converged(ranks.np):
@@ -104,7 +102,7 @@ class ClosedFormGraphFilter(GraphFilter):
             self.Mpower = backend.eye(int(self.krylov_dims))
         else:
             self.ranks_power = ranks.np
-            ranks.np = 0
+            ranks.np = backend.repeat(0, backend.length(ranks.np))
 
     def _step(self, M, personalization, ranks, *args, **kwargs):
         self.coefficient = self._coefficient(self.coefficient)
@@ -125,7 +123,8 @@ class ClosedFormGraphFilter(GraphFilter):
             #                  +"Consider setting krylov_dims="+str(self.convergence.iteration+1)+" or more in the constructor.", stacklevel=2)
             del self.krylov_base
             del self.krylov_H
-        del self.ranks_power
+        else:
+            del self.ranks_power
         del self.coefficient
 
     def _coefficient(self, previous_coefficient):

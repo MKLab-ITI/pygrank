@@ -2,24 +2,25 @@ import numpy as np
 import sklearn.metrics
 from .utils import Measure
 from pygrank.algorithms.utils import GraphSignal, to_signal
+from pygrank import backend
 
 
 class Supervised(Measure):
     """Provides a base class with the ability to simultaneously convert ranks and known ranks to numpy arrays.
     This class is used as a base for other supervised evaluation metrics."""
 
-    def __init__(self, known_ranks, evaluation="cap"):
+    def __init__(self, known_ranks, exclude=None):
         """
         Initializes the supervised measure with desired graph signal outcomes.
         Args:
             known_ranks: The desired graph signal outcomes.
         """
         self.known_ranks = known_ranks
-        self._nodes = known_ranks if evaluation is None else evaluation
+        self.exclude = exclude
 
     def to_numpy(self, ranks, normalization=False):
         if isinstance(ranks, GraphSignal):
-            return to_signal(ranks, self.known_ranks).np, ranks.normalized(normalization).np
+            return to_signal(ranks, self.known_ranks).filter(exclude=self.exclude), ranks.normalized(normalization).filter(exclude=self.exclude)
         """
         if not isinstance(ranks, np.ndarray):
             nodes = self._nodes
@@ -35,28 +36,28 @@ class Supervised(Measure):
         """
 
 
-class NDCG(Measure):
+class NDCG(Supervised):
     """Provides evaluation of NDCG@k score between given and known ranks."""
 
-    def __init__(self, known_ranks, k=None):
+    def __init__(self, known_ranks, exclude=None, k=None):
         """ Initializes the PageRank scheme parameters.
 
         Attributes:
-            known_ranks: A dict of known ranks, where higher ranks correspond to more related elements.
             k: Optional. Calculates NDCG@k. If None (default), len(known_ranks) is used.
         """
-        self.known_ranks = known_ranks
+        super().__init__(known_ranks, exclude=exclude)
         if not k is None and k > len(known_ranks):
             raise Exception("NDCG@k cannot be computed for k greater than the number of known ranks")
         self.k = len(known_ranks) if k is None else k
 
     def evaluate(self, ranks):
+        known_ranks, ranks = self.to_numpy(ranks)
         DCG = 0
         IDCG = 0
-        for i, v in enumerate(list(sorted(ranks, key=ranks.get, reverse=True))[:self.k]):
-            DCG += self.known_ranks.get(v, 0) / np.log2(i + 2)
-        for i, v in enumerate(list(sorted(self.known_ranks, key=self.known_ranks.get, reverse=True))[:self.k]):
-            IDCG += self.known_ranks[v] / np.log2(i + 2)
+        for i, v in enumerate(list(sorted(list(range(backend.length(ranks))), key=ranks.__getitem__, reverse=True))[:self.k]):
+            DCG += known_ranks[v] / np.log2(i + 2)
+        for i, v in enumerate(list(sorted(list(range(backend.length(known_ranks))), key=known_ranks.__getitem__, reverse=True))[:self.k]):
+            IDCG += known_ranks[v] / np.log2(i + 2)
         return DCG / IDCG
 
 
@@ -86,7 +87,7 @@ class KLDivergence(Supervised):
         ratio = (ranks+1.E-12)/(known_ranks+1.E-12)
         if ratio.min() <= 0:
             raise Exception("Invalid KLDivergence calculations (negative ranks or known ranks)")
-        ret = np.dot(ranks, np.log((ranks+1.E-12)/(known_ranks+1.E-12)))/ranks.size
+        ret = -np.dot(ranks, np.log((ranks+1.E-12)/(known_ranks+1.E-12)))/ranks.size
         return ret
 
 

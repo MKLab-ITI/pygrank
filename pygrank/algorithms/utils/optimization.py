@@ -28,7 +28,7 @@ def __add(weights, index, increment, max_val, min_val):
     return weights
 
 
-def optimize(loss, max_vals=[1 for _ in range(1)], min_vals=None, tol=1.E-8, divide_range=1.01, partitions = 5, parameter_tol=float('inf'), depth=1, weights=None):
+def optimize(loss, max_vals=[1 for _ in range(1)], min_vals=None, tol=1.E-8, divide_range=1.01, partitions = 5, parameter_tol=float('inf'), depth=1, weights=None, verbose=False):
     """
     Implements a coordinate descent algorithm for optimizing the argument vector of the given loss function.
     Arguments:
@@ -52,14 +52,15 @@ def optimize(loss, max_vals=[1 for _ in range(1)], min_vals=None, tol=1.E-8, div
     for min_val, max_val in zip(min_vals, max_vals):
         if min_val > max_val:
             raise Exception("Empty parameter range ["+str(min_val)+","+str(max_val)+"]")
-    if divide_range <= 1:
+    if str(divide_range)!="shrinking" and divide_range <= 1:
         raise Exception("divide_range should be greater than 1, otherwise the search space never shrinks.")
     #weights = [1./dims for i in range(dims)]
     if weights is None:
         weights = [(min_val+max_val)/2 for min_val, max_val in zip(min_vals, max_vals)]
     range_search = [(max_val-min_val)/2 for min_val, max_val in zip(min_vals, max_vals)]
     curr_variable = 0
-    #print("first loss", loss(weights))
+    if verbose:
+        print("first loss", loss(weights))
     iter = 0
     range_deviations = [float('inf')]*len(max_vals)
     while True:
@@ -75,13 +76,15 @@ def optimize(loss, max_vals=[1 for _ in range(1)], min_vals=None, tol=1.E-8, div
         candidate_weights = [__add(weights, curr_variable, range_search[curr_variable]*(part*2./(partitions-1)-1), max_vals[curr_variable], min_vals[curr_variable]) for part in range(partitions)]
         #print(candidate_weights)
         loss_pairs = [(w,loss(w)) for w in candidate_weights if w is not None]
+        #print(loss_pairs)
         weights, _ = min(loss_pairs, key=lambda pair: pair[1])
         if divide_range == "shrinking":
             range_search[curr_variable] = (max_vals[curr_variable]-min_vals[curr_variable])/((iter+1)**0.5*log(iter+2))
         else:
             range_search[curr_variable] /= divide_range
         range_deviations[curr_variable] = max([loss for _, loss in loss_pairs])-min([loss for _, loss in loss_pairs])
-        #print('Params', weights, '\t Loss', loss(weights), '+-', max(range_deviations), '\t Var',curr_variable, '\t Parameter max range', max(range_search))
+        if verbose:
+            print('Params', weights, '\t Loss', loss(weights), '+-', max(range_deviations), '\t Var',curr_variable, '\t Parameter max range', max(range_search))
         if max(range_deviations) < tol and max(range_search) < parameter_tol:
             break
         # move to next var

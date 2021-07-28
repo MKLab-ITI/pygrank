@@ -17,7 +17,7 @@
 5. [Evaluation](#evaluation)
 
 For a brief overview of common terms found in this document
-is presented in a [glossary](#glossary).
+please refer to the [glossary](glossary.md).
 
 # Graph Signals
 Graph signals are a way to organize numerical values corresponding to respective

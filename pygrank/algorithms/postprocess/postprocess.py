@@ -75,6 +75,8 @@ class Normalize(Postprocessor):
             max_rank = ranks.np.sum()
         else:
             raise Exception("Can only normalize towards max or sum")
+        if min_rank == max_rank:
+            return ranks
         return {node: (rank-min_rank) / (max_rank-min_rank) for node, rank in ranks.items()}
 
 

@@ -26,3 +26,13 @@ def self_normalize(obj):
 
 def conv(signal, M):
     return signal * M
+
+
+def length(x):
+    if isinstance(x, np.ndarray):
+        return x.shape[0]
+    return len(x)
+
+
+def degrees(M):
+    return np.asarray(sum(M, axis=1)).ravel()
