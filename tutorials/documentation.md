@@ -1,5 +1,23 @@
 <center><h1 style=font-size:200px>:hammer_and_wrench: Documentation</h1></center> 
 
+## Table of Contents
+1. [Table of Contents](#table-of-contents)
+2. [Graph Signals](#graph-signals)
+    + [Defining and Manipulating Graph Signals](#defining-and-manipulating-graph-signals)
+    + [Implicit Use of Signals](#implicit-use-of-signals)
+3. [Graph Filters](#graph-filters)
+    + [Passing Graph Signals through Filters](#passing-graph-signals-through-filters)
+    + [Graph Difusion Principles](#graph-diffusion-principles)
+    + [Types of Filters](#types-of-filters)
+    + [Convergence Criteria](#convergence-cirteria)
+    + [Graph Preprocessing](#graph-preprocessing)
+4. [Postprocessors](#postprocessors)
+    + [Wrapping Postprocessors around Graph Filters](#wrapping-postprocessors-around-graph-filters)
+    + [Types of Postprocessors](#types-of-postprocessors)
+5. [Evaluation](#evaluation)
+
+For a brief overview of common terms found in this document
+is presented in a [glossary](#glossary).
 
 # Graph Signals
 Graph signals are a way to organize numerical values corresponding to respective
@@ -15,7 +33,7 @@ representations to avoid
 you can also construct graph signals by passing tensors of those
 libraries instead of numpy arrays.
 
-### Define and Manipulate a Graph Signal
+### Defining and Manipulating Graph Signals
 As an example, let us create a simple graph
 and assign to nodes 'A' and 'C' the values *3* and *2* respectively,
 where all other nodes are assigned zeroes.
@@ -53,7 +71,7 @@ Value changes are reflected to the values being accessed.
 ![graph signal](graph_signal.png)
 
 
-### Details
+### Implicit Use of Signals
 For ease of use, the library can directly parse
 dictionaries that map nodes to values, e.g. the dictionary
 `{'A':0.6,'C':0.4}` were ommitted nodes correspond to zeroes,
@@ -68,7 +86,6 @@ This datatype implements the same methods as a dictionary and can
 be used interchangeably, whereas access to a numpy array storing
 corresponding node values can be obtained through the object attribute
 `signal.np`.
-
 
 
 # Graph Filters
@@ -96,7 +113,7 @@ The structural importance of nodes according to the filters used corresponds
 to their scores if a signal of equal values (e.g. ones) is provided as input. By
 convention, a signal of ones is understood if `None` is provided.
 
-### Pass a Graph Signal through a Filter
+### Passing Graph Signals through Filters
 Let us first define an personalized PageRank algorithm, which is graph filter
 performing random walk with restart in the graph. If the personalization is
 binary (i.e. all nodes have initial scores either 0 or 1) then this algorithm
@@ -166,7 +183,7 @@ We now examine the structural relatedness of various nodes to the personalizatio
 ```
 
 
-### Explanation
+### Graph Diffusion Principles
 The main principle
 lies in recognizing that propagating a graph signal's vector (i.e. numpy array)
 represntation `p` one hop away in the graph is performed through the operation
@@ -175,7 +192,7 @@ intuition, think of column-based normalization, where `Mp`
 becomes an update of all node values by setting them as their
 neighbors' previous average.
 
-### Details
+### Types of Filters
 The library provides several graph filters. Their usage pattern consists
 of instantiating them and then calling their `rank(graph, personalization)`
 method to obtain posterior node signals based on diffusing the provided
@@ -189,10 +206,132 @@ multiple times. Still, we recognize this as the same procedure, since
 it maintains the base use case of wrapping around a base filter to improve
 its outcome.
 
-### List of Graph Filters
 An exhaustive list of ready-to-use graph filters can be
 found [here](graph_filters.md). After initialization with the appropriate
 parameters, these can be used interchangeably in the above example.
+
+### Convergence Cirteria
+All graph filter constructors have a ``convergence`` argument that
+indicates an object to help determine their convergence criteria, such as type of
+error and tolerance for numerical convergence. If no such argument is passed
+to the constructor, a ``pygrank.algorithms.utils.ConvergenceManager`` object
+is automatically instantiated by borrowing whichever extra arguments it can
+from those passed to the constructors. Most frequently used is the ``tol``
+argument to indicate the numerical tolerance level required for convergence.
+
+Sometimes, it suffices to reach a robust node rank order instead of precise 
+values. To cover such cases we have implemented a different convergence criterion
+``pygrank.algorithms.utils.RankOrderConvergenceManager`` that stops 
+at a robust node order \[krasanakis2020stopping\]. This criterion is specifically intended to be used with PageRank 
+as the base ranking algorithm and needs to know that algorithm's diffusion
+rate ``alpha``, which is passed as its first argument.
+
+```python
+from pygrank.algorithms.adhoc import PageRank
+from pygrank.algorithms.utils import RankOrderConvergenceManager
+from pygrank.algorithms.postprocess import Ordinals
+
+G, personalization = ...
+alpha = 0.85
+ordered_ranker = PageRank(alpha=alpha, convergence=RankOrderConvergenceManager(alpha))
+ordered_ranker = Ordinals(ordered_ranker)
+ordered_ranks = ordered_ranker.rank(G, personalization)
+```
+
+:bulb: Since the node order is more important than the specific rank values,
+a post-processing step has been added throught the wrapping expression
+``ordered_ranker = Ordinals(ordered_ranker)`` to output rank order. 
+
+
+### Graph Preprocessing
+Graph filters all use the same default scheme
+that performs symmetric (i.e. Laplacian-like) normalization 
+for undirected graphs and column-wise normalization that
+follows a true probabilistic formulation of transition probabilities
+for directed graphs, such as `DiGraph` instances. The type of
+normalization can be manually edited by passing a `normalization`
+argument to constructors of ranking algorithms. This parameter can 
+assume values of:
+* *"auto"* for the above-described default behavior
+* *"col"* for column-wise normalization
+* *"symmetric"* for symmetric normalization
+* *"none"* for avoiding any normalization, 
+for example because edge weights already hold the normalization
+(e.g. this is used to rank graphs after FairWalk is used to
+preprocess edge weights).
+
+In all cases, adjacency matrix normalization involves the
+computationally intensive operation of converting the graph 
+into a scipy sparse matrix each time  the `rank(G, personalization)`
+method of ranking algorithms is called. The *pygrank* library
+provides a way to avoid recomputing the normalization
+during large-scale experiments by the same algorithm for 
+the same graphs by passing an argument `assume_immutability=True`
+to the algorithms's constructor, which indicates that
+the the graph does not change between runs of the algorithm
+and hence computes the normalization only once for each given
+graph, a process known as hashing.
+
+:warning: Hashing only uses the Python object's hash method, 
+so a different instance of the same graph will recompute the 
+normalization if it points at a different memory location.
+
+:warning: Do not alter graph objects after passing them to
+`rank(...)` methods of algorithms with
+`assume_immutability=True` for the first time. If altering the
+graph is necessary midway through your code, create a copy
+instance with one of *networkx*'s in-built methods and
+edit that one.
+
+For example, hashing the outcome of graph normalization to
+speed up multiple calls to the same graph can be achieved
+as per the following code:
+```python
+from pygrank.algorithms.adhoc import PageRank
+G, personalization1, personalization2 = ...
+algorithm = PageRank(alpha=0.85, normalization="col", assume_immutability=True)
+ranks = algorithm.rank(G, personalization1)
+ranks = algorithm.rank(G, personalization2) # does not re-compute the normalization
+```
+
+Sometimes, many different algorithms are applied on the
+same graph. In this case, to prevent each one
+from recomputing the hashing already calculated by others,
+they can be made to share the same normalization method. This 
+can be done by using a shared instance of the 
+normalization preprocessing class `preprocessor`, 
+which can be passed as the `to_scipy` argument of ranking algorithm
+constructors. In this case, the `normalization` and `assume_immutability`
+arguments should be passed to the preprocessor and will be ignored by the
+constructors (what would otherwise happen is that the constructors
+would create a prerpocessor with these arguments).
+
+:bulb: Basically, when the default value `to_scipy=None`
+is given, ranking algorithms create a new preprocessing instance
+with the `normalization` and `assume_immutability` values passed
+to their constructor. These two arguments are completely ignored
+if a preprocessor instance is passed to the ranking algorithm.
+Direct use of these arguments without needing to instantiate a
+preprocessor was demonstrated in the previous code example.
+
+Using the outcome of graph normalization 
+to speed up multiple rank calls to the same graph by
+different ranking algorithms can be done as:
+```python
+from pygrank.algorithms.adhoc import PageRank, HeatKernel
+from pygrank.algorithms.utils import preprocessor
+G, personalization1, personalization2 = ...
+pre = preprocessor(normalization="col", assume_immutability=True)
+ranker1 = PageRank(alpha=0.85, to_scipy=pre)
+ranker2 = HeatKernel(alpha=0.85, to_scipy=pre)
+ranks1 = ranker1.rank(G, personalization1)
+ranks2 = ranker2.rank(G, personalization2) # does not re-compute the normalization
+```
+
+:bulb: When benchmarking, in the above code you can call `pre(G)`
+before the first `rank(...)` call to make sure that that call
+does not also perform the first normalization whose outcome will
+be hashed and immediately retrieved by subsequent calls.
 
 # Postprocessors
 Postprocessors wrap base graph filters to affect their outcome. Usage
@@ -253,8 +392,7 @@ can be achieved as:
 [('A', 1.0), ('B', 0.8786683440755908), ('C', 0.9956241609824301), ('D', 0.9883030876536782), ('E', 0.8735657648099558)]
 ```
 
-
-### Explanation
+### Types of Postprocessors
 There are many ways graph filter posteriors can be processed to provide
 more meaningful data. Of the simpler ones are normalization constraints,
 for example to set the maximal or the sum of posterior node values to
@@ -269,7 +407,6 @@ by providing more example nodes, and for fairness-aware posteriors,
 which aim to make node scores adhere to some fairness constraint, 
 such as disparate impact.
 
-### List of Postprocessors
 An exhaustive list of ready-to-use postprocessors can be
 found [here](postprocessors.md). After initialization with the appropriate
 parameters, these can be used interchangeably in the above example.
@@ -277,14 +414,13 @@ parameters, these can be used interchangeably in the above example.
 
 
 # Evaluation
+TODO
 
 ### Examples
-
-### Evaluation Measures
+TODO
 
 ### Benchmarks
-
-### List of Benchmarks
+TODO
 
 ### List of Measures
 An exhaustive list of measures can be
