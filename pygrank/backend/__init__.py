@@ -14,7 +14,6 @@ def load_backend(mod_name):
         pass
     else:
         raise Exception("Unsupported backend "+mod_name)
-    importlib.import_module('.%s' % mod_name, __name__)
     mod = importlib.import_module('.%s' % mod_name, __name__)
     thismod = sys.modules[__name__]
     for api in specification.__dict__.keys():
@@ -59,6 +58,7 @@ def set_backend_preference(mod_name, remind_where_to_find=True):
         json.dump({'backend': mod_name.lower(), 'reminder': str(remind_where_to_find).lower()}, config_file)
     if remind_where_to_find:
         _notify_load(mod_name)
+    load_backend(mod_name)
 
 
 def _notify_load(mod_name):

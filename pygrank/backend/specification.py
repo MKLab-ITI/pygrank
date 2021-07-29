@@ -1,8 +1,19 @@
+def backend_name():
+    return None
+
 def abs(x):
     pass
 
 
 def sum(x):
+    pass
+
+
+def min(x):
+    pass
+
+
+def max(x):
     pass
 
 

@@ -102,19 +102,18 @@ class ClosedFormGraphFilter(GraphFilter):
             self.Mpower = backend.eye(int(self.krylov_dims))
         else:
             self.ranks_power = ranks.np
-            ranks.np = backend.repeat(0, backend.length(ranks.np))
+            ranks.np = backend.repeat(0.0, backend.length(ranks.np))
 
     def _step(self, M, personalization, ranks, *args, **kwargs):
         self.coefficient = self._coefficient(self.coefficient)
-        if self.coefficient == 0:
-            return
         if self.krylov_dims is not None:
             self.Mpower = self.Mpower @ self.krylov_H
             self.krylov_result += self.coefficient * self.Mpower
             ranks.np = krylov2original(self.krylov_base, self.krylov_result, int(self.krylov_dims))
         else:
+            if self.coefficient != 0:
+                ranks.np = ranks.np + float(self.coefficient) * self.ranks_power
             self.ranks_power = backend.conv(self.ranks_power, M)
-            ranks.np = ranks.np + float(self.coefficient) * self.ranks_power
 
     def _end(self, M, personalization, ranks, *args, **kwargs):
         if self.krylov_dims is not None:

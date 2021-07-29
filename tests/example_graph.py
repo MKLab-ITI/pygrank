@@ -1,6 +1,7 @@
 import networkx as nx
 import random
 
+
 def test_graph(directed=False):
     G = nx.DiGraph() if directed else nx.Graph()
     G.add_edge("A", "B")

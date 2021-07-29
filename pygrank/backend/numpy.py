@@ -1,6 +1,10 @@
 import numpy as np
-from numpy import abs, sum, exp, copy, repeat
+from numpy import abs, sum, exp, copy, repeat, min, max
 from scipy.sparse import eye
+
+
+def backend_name():
+    return "numpy"
 
 
 def scipy_sparse_to_backend(M):

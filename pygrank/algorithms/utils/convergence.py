@@ -72,7 +72,7 @@ class ConvergenceManager:
 
     def has_converged(self, new_ranks):
         """
-        Checks whether convergence has been by comparing this iteration's numpy array with the previous iteration's.
+        Checks whether convergence has been achieved by comparing this iteration's numpy array with the previous iteration's.
 
         Args:
             new_ranks: The iteration's numpy array.

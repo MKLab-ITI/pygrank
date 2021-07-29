@@ -1,5 +1,5 @@
 # Glossary
-A more detailed of the following terms can be found in the [documentation](documentation.md).
+More detailed descriptions of the following terms can be found in the [documentation](documentation.md).
 
 Term | Explanation
 --- | --- 

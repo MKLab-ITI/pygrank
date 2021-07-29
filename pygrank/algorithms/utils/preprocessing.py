@@ -1,7 +1,7 @@
 import networkx as nx
 import numpy as np
 import scipy
-from pygrank.backend import scipy_sparse_to_backend
+from pygrank import backend
 
 
 def to_sparse_matrix(G, normalization="auto", weight="weight"):
@@ -33,7 +33,7 @@ def to_sparse_matrix(G, normalization="auto", weight="weight"):
         M = Qleft * M * Qright
     elif normalization != "none":
         raise Exception("Supported normalizations: none, col, symmetric, auto")
-    return scipy_sparse_to_backend(M)
+    return backend.scipy_sparse_to_backend(M)
 
 
 def assert_binary(ranks):

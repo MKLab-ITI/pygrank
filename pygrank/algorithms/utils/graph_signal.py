@@ -2,6 +2,7 @@ from collections.abc import MutableMapping
 from pygrank import backend
 import numpy as np
 
+
 def to_signal(graph, obj):
     """
     Converts an object to a GraphSignal tied to an explicit or implicit reference to a graph. This method helps
@@ -73,7 +74,7 @@ class GraphSignal(MutableMapping):
         self.graph = graph
         self.node2id = {v: i for i, v in enumerate(graph)} if node2id is None else node2id
         if backend.is_array(obj):
-            if len(graph) != backend.length(obj):
+            if backend.length(graph) != backend.length(obj):
                 raise Exception("Graph signal arrays should have the same dimensions as graphs")
             self.np = backend.to_array(obj)
         elif obj is None:
@@ -92,7 +93,7 @@ class GraphSignal(MutableMapping):
         return self.np
 
     def __getitem__(self, key):
-        return self.np[self.node2id[key]]
+        return float(self.np[self.node2id[key]])
 
     def __setitem__(self, key, value):
         self.np[self.node2id[key]] = float(value)

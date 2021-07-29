@@ -5,6 +5,7 @@ from .example_graph import test_graph, test_block_model_graph
 # coverage run --source=pygrank -m unittest tests/test_filters.py
 # coverage html
 
+
 class Test(unittest.TestCase):
     def test_completion(self):
         from pygrank.algorithms.adhoc import PageRank, HeatKernel, AbsorbingWalks
@@ -16,12 +17,33 @@ class Test(unittest.TestCase):
     def test_pagerank(self):
         from pygrank.algorithms.adhoc import PageRank
         G = test_graph()
-        test_result = PageRank(normalization='col').rank(G)
-        nx_result = nx.pagerank_scipy(G)
+        test_result = PageRank(normalization='col', tol=1.E-9).rank(G)
+        nx_result = nx.pagerank_scipy(G, tol=1.E-9)
         abs_diffs = sum(abs(test_result[v] - nx_result[v]) for v in nx_result.keys()) / len(nx_result)
-        self.assertAlmostEqual(abs_diffs, 0, places=16, msg="PageRank compliance with nx results")
+        self.assertAlmostEqual(abs_diffs, 0, places=12, msg="PageRank compliance with nx results")
 
-    def test_implicity_graph(self):
+    def test_oversampling(self):
+        from pygrank.algorithms import PageRank
+        from pygrank.algorithms.utils import to_signal
+        from pygrank.algorithms.postprocess import SeedOversampling, BoostedSeedOversampling
+        from pygrank.measures.utils import split_groups
+        from pygrank.measures import NDCG
+        import random
+        G, groups = test_block_model_graph(nodes=600, seed=1)
+        group = groups[0]
+        random.seed(1)
+        training, evaluation = split_groups(list(group), training_samples=3)
+        training, evaluation = to_signal(G, {v: 1 for v in training}), to_signal(G, {v: 1 for v in evaluation})
+
+        base_result = NDCG(evaluation, exclude=training).evaluate(PageRank(0.99).rank(G, training))
+        so_result = NDCG(evaluation, exclude=training).evaluate(SeedOversampling(PageRank(0.99)).rank(G, training))
+        bso_result = NDCG(evaluation, exclude=training).evaluate(BoostedSeedOversampling(PageRank(0.99)).rank(G, training))
+        self.assertLessEqual(base_result, so_result)
+        self.assertLessEqual(so_result, bso_result)
+
+        SeedOversampling(PageRank(0.99), "top").rank(G, training)
+
+    def test_implicit_graph(self):
         from pygrank.algorithms.adhoc import PageRank
         from pygrank.algorithms.utils import to_signal
         G = test_graph()
@@ -126,3 +148,12 @@ class Test(unittest.TestCase):
         pre.clear_hashed()
         res2 = pre(G)
         self.assertTrue(id(res1) != id(res2), msg="When immutability is assumed but data cleared, different objects are returned")
+
+    def test_backend(self):
+        from pygrank import backend
+        backend.load_backend("tensorflow")
+        self.test_pagerank()
+        self.test_venuerank()
+        backend.load_backend("numpy")
+        #self.test_learnable()
+        self.test_pagerank()

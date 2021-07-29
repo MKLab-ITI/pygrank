@@ -50,7 +50,7 @@ class HeatKernel(ClosedFormGraphFilter):
     def _coefficient(self, previous_coefficient):
         return backend.exp(-self.t) if previous_coefficient is None else (previous_coefficient * self.t / (self.convergence.iteration + 1))
 
-import numpy as np
+
 class AbsorbingWalks(RecursiveGraphFilter):
     """ Implementation of partial absorbing random walks for Lambda = (1-alpha)/alpha diag(absorbtion vector) .
     """

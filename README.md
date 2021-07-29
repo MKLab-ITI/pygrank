@@ -18,12 +18,13 @@ To use machine learning backends (e.g. to integrate the package
 in machine learning projects), such as *tensorflow*
 either manually change the automatically created
 configuration file displayed in the error console.
-If you want others to run your code that depends on `pygrank`
-with a specific backend, add the following recipe:
+or, if you want others to run your code that depends on `pygrank`
+with a specific backend, add the following recipe at your code's
+entry point to override any user preferences:
 
 ```python
 from pygrank import backend
-backend.set_backend_preference(`tensorflow`, remind_where_to_find=False)
+backend.load_backend(`tensorflow`)
 ```
 
 
@@ -144,7 +145,7 @@ Some of the library's advantages are:
 * Benchmarks
 
 # :thumbsup: Contributing
-Feel free to contribute in any way, for example through the [issue tracker]() or by participating in [discussions]().
+Feel free to contribute in any way, for example through the [issue tracker](https://github.com/MKLab-ITI/pygrank/issues) or by participating in [discussions]().
 Please check out the [contribution guidelines](tutorials/contributing.md) if you want to bring modifications to the code base.
  
 # :notebook: Citation

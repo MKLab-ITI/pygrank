@@ -20,6 +20,6 @@ class GenericGraphFilter(ClosedFormGraphFilter):
         self.weights = weights
 
     def _coefficient(self, _):
-        if self.convergence.iteration >= len(self.weights):
+        if self.convergence.iteration > len(self.weights):
             return 0
-        return self.weights[self.convergence.iteration]
+        return self.weights[self.convergence.iteration-1]

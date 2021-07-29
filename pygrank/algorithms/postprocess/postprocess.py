@@ -1,6 +1,7 @@
 import warnings
 import numpy as np
 from pygrank.algorithms.utils import MethodHasher, to_signal, NodeRanking, _call
+from pygrank import backend
 
 
 class Postprocessor(NodeRanking):
@@ -67,17 +68,18 @@ class Normalize(Postprocessor):
     def _transform(self, ranks):
         min_rank = 0
         if self.method == "range":
-            max_rank = ranks.np.max()
-            min_rank = ranks.np.min()
+            max_rank = float(backend.max(ranks.np))
+            min_rank = float(backend.min(ranks.np))
         elif self.method == "max":
-            max_rank = ranks.np.max()
+            max_rank = float(backend.max(ranks.np))
         elif self.method == "sum":
-            max_rank = ranks.np.sum()
+            max_rank = float(backend.sum(ranks.np))
         else:
             raise Exception("Can only normalize towards max or sum")
         if min_rank == max_rank:
             return ranks
-        return {node: (rank-min_rank) / (max_rank-min_rank) for node, rank in ranks.items()}
+        ret = (ranks.np-min_rank) / (max_rank-min_rank)
+        return ret
 
 
 class Ordinals(Postprocessor):
@@ -101,15 +103,15 @@ class Ordinals(Postprocessor):
 class Transformer(Postprocessor):
     """Applies an element-by-element transformation on a graph signal based on a given expression."""
 
-    def __init__(self, ranker=None, expr=np.exp):
+    def __init__(self, ranker=None, expr=backend.exp):
         """ Initializes the class with a base ranker instance. Args are automatically filled in and
         re-ordered if at least one is provided.
 
         Args:
             ranker: Optional. The base ranker instance. A Tautology() ranker is created if None (default) was specified.
             expr: Optional. A lambda expression to apply on each element. The transformer will automatically try to
-                apply it on the numpy array representation of the graph signal first, so prefer use of numpy functions
-                for faster computations. For example, np.exp (default) should be prefered instead of math.exp, because
+                apply it on the backend array representation of the graph signal first, so prefer use of backend functions
+                for faster computations. For example, backend.exp (default) should be prefered instead of math.exp, because
                 the former can directly parse a numpy array.
         """
         if ranker is not None and not callable(getattr(ranker, "rank", None)):
