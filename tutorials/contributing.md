@@ -1,10 +1,11 @@
 <center><h1>:thumbsup: Contributing</h1></center>
 
+
 Feel free to provide any kind of code base contribution. This could include
 implementing new publications, fixing, writting unit tests,
 improving algorithms and extending the documentation.
 
-You can also contribute through the [issue tracker].
+You can also contribute through the [issue tracker](https://github.com/MKLab-ITI/pygrank/issues).
 Many thanks to all existing and future contributors for their participation.
 
 # :hammer_and_wrench: Workflow
@@ -19,29 +20,31 @@ The typical workflow for `pygrank` contributions comprises the following steps:
 You can use any (virtual) environment to edit the local clone,
 such as conda or the one provided by PyCharm.
 The environment should come with Python 3.6 or later installed.
-Make sure that library dependencies 
-`tqdm, sklearn, scipy, numpy, networkx`
+Make sure that both base library dependencies 
+`networkx, numpy, scipy, sklearn, tqdm`
+and `tensorflow` 
 are installed and upgraded to their latest versions.
 
 
 # :white_check_mark: Pull Checklist
 Before creating a pull request, make sure that your submission checks the following points:
-1. There are docstring for new classes and methods adhering to [Google docstring](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings)
-conventions.
-2. Run `python docgenerator.py` to automatically add new docstrings.
-3. All unit tests are passed with no errors, unless your purpose
-is to introduce new unit tests that reveal bugs. Refrain from remodularizing
-the code unless absolutely necessary (creating new packages is fine).
-4. Unit tests provide 100% code coverage.
+1. Class and method docstrings should adhere to [Google's docstring conventions](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings)
+where, additionally, code examples are prefaced by a description ending at the text `example:`.
+2. Run `python docgenerator.py` to add new classes to the documentation.
+3. Pass all unit tests with no errors, unless your purpose
+is to introduce new unit tests that reveal existing bugs.
+Refrain from remodularizing the code unless absolutely necessary
+(creating new packages is fine, but backwards compatibility of import statements
+is mandatory).
+4. Unit tests should provide 100% code coverage.
 5. When implementing new or existing research (we are more than happy to accomodate this),
-you are required to also update the library's [citations](!citations.md) and point to
-that research from the respective class's docstring.
-6. New code maintains CamelCase notation for classes and lower_case_with_underscores
-for methods and variables.
-7. New files are placed in what feels like appropriate packages.
-7. **Optional.** Algorithms exhibit near-linear
-(e.g. polylog-linear) running times and memory allocation to scale well to 
-large graphs.
+you are required to also update the library's [citations](!citations.md).
+6. New code should maintain *CamelCase* notation for classes and 
+*lower_case_with_underscores* for methods and variables.
+7. New files should be placed in appropriate packages.
+7. **Optional.** Algorithms should exhibit near-linear
+(e.g. polylog-linear) running times and memory allocation with respect to
+the number of edges, to scale well to large graphs.
 
 # :pencil2: Implementing New Node Ranking Algorithms
 ##### Which classes to subclass?
@@ -50,6 +53,8 @@ classes found in `pygrank.algorithms.abstract_filters`:
 * `GraphFilter` identifies generic graph filters (is subclassed by the next two)
 * `RecursiveGraphFilter` identifies graph filters that can be described with a recursive formula
 * `ClosedFormGraphFilter` identifies graph filers that can be described in closed form
+
+Please extend this documentation if a new family of node ranking algorithms is implemented.
 
 ##### Where to write code?
 New abstract classes (e.g. that define families of new algorithms) should be placed
@@ -60,30 +65,85 @@ their classes through `pygrank.algorithms.__init__.py`
 (this is **important**, as it helps `docgenerator.py` to  automatically create
 documentation for new algorithms).
 
+##### Which method(s) to override?
+Depending on which class you subclass, you need to override and implement a
+different method; more general `GraphFilter` classes need to implement at
+least a step `_step(M, personalization, ranks, *args, **kwargs)`
+method of that class with the correct arguments
+that implements iterative convolutions through the methods provided by the
+backend  (these can be imported from `pygrank.backend`). You can add any
+arguments and keyword arguments corresponding to additional graph signals,
+but take care to put all algortithm-describing parameters in the constructor.
+Note that `personalization` and `ranks` in this method are **graph signals**
+but the method is expected to return the output of backend calculations, 
+which will be directly assigned to `ranks.np`. The other two abstract subclasses
+partially implement this method to simplify definition of new filters.
+
+For `RecursiveGraphFilter` subclasses, you only need to implement the method
+`_formula(self, M, personalization, ranks, *args, **kwargs)`, which describes
+an iterative formula describing the filter. Contrary to above, for this method
+`personalization` and `ranks` are **backend primitives**. Similarly to before,
+it should also return a backend primitive.
+
+For `ClosedFormGraphFilter` subclasses, you only need to implement the method
+`_coefficient(self, previous_coefficient)` which calculates the next coefficient
+*a<sub>n</sub>* of the closed form graph filter
+*a<sub>0</sub>+a<sub>1</sub>M+a<sub>2</sub>M<sup>2</sup>+...*
+given that the previous coefficient is *a<sub>n-1</sub>*, where the latter
+is inputted as *None* when *a<sub>0</sub>* is being calculated. It may be
+easier to use `n = self.convergence.iteration-1` to explicitly calculate the 
+returned value.
+
+
 ##### How to structure constructors?
 Constructors of graph filters should pass extra arguments to parent classes.
 This ensures that new algorithms share the same breadth of customization
 as parent classes. Only additional arguments not parsed by parent classes
 need to be documented
 (inherited arguments will be automatically added when `docgenerator.py`
-is used to construct documentation). For example, the following snippet
-introduces a new algorithm:
+is used to construct documentation). Try to parameterize constructors
+as much as possible, even i
+For example, the following snippet
+introduces a new algorithm that performs a non-recursive
+implementation of personalized PageRank based on the recursion
+*a<sub>0</sub> = 1-alpha*, *a<sub>n</sub>=alpha a<sub>n-1</sub>* for *n>0*:
  
 
 ```python
-class NewAlgorithm(GraphFilter):
-    def __init__(self, parameter=1, **kwargs):
+class NewAlgorithm(ClosedFormGraphFilter):
+    def __init__(self, alpha=0.85, **kwargs):
         """
         Instantiates the new algorithm.
         Args:
-            parameter: Optional. The new algorithm's parameter. Default value is 1.
+            alpha: Optional. The new algorithm's parameter. Default value is 0.85.
         """
         super().__init__(**kwargs)
-        self.parameter = parameter
+        self.alpha = alpha
+    
+    def _coefficient(self, previous_coefficient):
+        if previous_coefficient is None:
+            return 1-self.alpha
+        return previous_coefficient*self.alpha
     ...
 ```
 
 Do not forget to follow the previously outlined pull checklist.
 
-# :pencil2: Implementing New Evaluation Measures
+# :pencil2: Implementing New Postprocessors
+#### Which class to subclass?
+Postprocessors need to subclass the abstract
+`pygrank.algorithms.postprocess.Postprocessor`
+class.
+
+#### Which method to override?
+Postprocessors need to subclass the method `_transform(self, ranks)`
+where `ranks` is a graph signal -typically the outcome of some other
+node ranking algorithm (e.g. a graph filter). Implementations of this
+method can return any kind of data convertible to graph signals,
+such as dictionaries or backend primitives. When possible, use the latter
+(i.e. manipulate `ranks.np` with backend operations and return the result)
+to ensure faster computations through the graph filter pipeline, for example
+when iterative postprocessors are applied afterwards.
+
+# :pencil2: Implementing New Measures
 TODO

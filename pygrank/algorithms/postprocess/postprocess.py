@@ -5,6 +5,9 @@ from pygrank import backend
 
 
 class Postprocessor(NodeRanking):
+    def __init__(self, ranker=None):
+        self.ranker = ranker
+
     def transform(self, ranks, *args, **kwargs):
         return to_signal(ranks, self._transform(self.ranker.transform(ranks, *args, **kwargs)))
 

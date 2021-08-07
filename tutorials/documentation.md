@@ -186,11 +186,19 @@ We now examine the structural relatedness of various nodes to the personalizatio
 ### Graph Diffusion Principles
 The main principle
 lies in recognizing that propagating a graph signal's vector (i.e. numpy array)
-represntation `p` one hop away in the graph is performed through the operation
-`Mp`, where `M` is a normalization of the graph's adjacency matrix. To gain an
-intuition, think of column-based normalization, where `Mp`
+representation *p* one hop away in the graph is performed through the operation
+*Mp*, where *M* is a normalization of the graph's adjacency matrix. To gain an
+intuition, think of column-based normalization, where *Mp*
 becomes an update of all node values by setting them as their
 neighbors' previous average.
+
+By this principle, *M<sup> n</sup>p* propagates the signal *p* a total of *n* hops
+away. Weighting the importance of hops and aggregating their outcome through summation
+yields the following graph signal processing operation:
+
+*H(M)p* such that *H(M) = a<sub>0</sub>+a<sub>1</sub>M+a<sub>2</sub>M<sup>2</sup>+...*
+
+where *H(M)* is called a *graph filter*.
 
 ### Types of Filters
 The library provides several graph filters. Their usage pattern consists
