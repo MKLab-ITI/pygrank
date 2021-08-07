@@ -94,5 +94,5 @@ def optimize(loss, max_vals=[1 for _ in range(1)], min_vals=None, tol=1.E-8, div
             curr_variable -= len(max_vals)
     #print("trained weights in", iter, "iterations", weights, "final loss", loss(weights))
     if depth > 1:
-        return optimize(loss, max_vals, min_vals, tol, divide_range, partitions, parameter_tol, depth-1, weights)
+        return optimize(loss, max_vals, min_vals, tol, divide_range, partitions, parameter_tol, depth-1, weights, verbose)
     return weights

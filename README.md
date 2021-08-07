@@ -81,6 +81,7 @@ postprocessors, including ones to make scores fairness-aware.
 ```
 
 How much time did it take for the base ranker to converge?
+(Depends on backend and device characteristics.)
 
 ```python
 >>> print(ranker.convergence)

@@ -1,12 +1,24 @@
 import unittest
 import networkx as nx
-from .example_graph import test_graph, test_block_model_graph
+from tests.example_graph import test_graph, test_block_model_graph
 
-# coverage run --source=pygrank -m unittest tests/test_filters.py
+# coverage run --source=pygrank -m unittest tests/test_filters.py tests/test_postprocessing.py
 # coverage html
 
 
 class Test(unittest.TestCase):
+    def test_abstract_filter(self):
+        from pygrank.algorithms.abstract_filters import GraphFilter, RecursiveGraphFilter, ClosedFormGraphFilter
+        G = test_graph()
+        with self.assertRaises(Exception):
+            GraphFilter().rank(G, {})
+        with self.assertRaises(Exception):
+            GraphFilter().rank(G)
+        with self.assertRaises(Exception):
+            RecursiveGraphFilter().rank(G)
+        with self.assertRaises(Exception):
+            ClosedFormGraphFilter().rank(G)
+
     def test_completion(self):
         from pygrank.algorithms.adhoc import PageRank, HeatKernel, AbsorbingWalks
         G = test_graph()
@@ -21,6 +33,15 @@ class Test(unittest.TestCase):
         nx_result = nx.pagerank_scipy(G, tol=1.E-9)
         abs_diffs = sum(abs(test_result[v] - nx_result[v]) for v in nx_result.keys()) / len(nx_result)
         self.assertAlmostEqual(abs_diffs, 0, places=12, msg="PageRank compliance with nx results")
+
+    def test_quotient(self):
+        from pygrank.algorithms.adhoc import PageRank
+        from pygrank.algorithms.postprocess import Normalize
+        G = test_graph()
+        test_result = PageRank(normalization='symmetric', tol=1.E-9, use_quotient=True).rank(G)
+        norm_result = PageRank(normalization='symmetric', tol=1.E-9, use_quotient=Normalize("sum")).rank(G)
+        abs_diffs = sum(abs(test_result[v] - norm_result[v]) for v in norm_result.keys()) / len(norm_result)
+        self.assertAlmostEqual(abs_diffs, 0, places=12, msg="Using quotient yields the same result")
 
     def test_oversampling(self):
         from pygrank.algorithms import PageRank
@@ -59,7 +80,6 @@ class Test(unittest.TestCase):
         with self.assertRaises(Exception):
             PageRank(normalization='col').rank(test_graph(), signal)
 
-
     def test_lanczos(self):
         from pygrank.algorithms.adhoc import HeatKernel
         from pygrank.algorithms.postprocess import Normalize
@@ -86,8 +106,18 @@ class Test(unittest.TestCase):
         personalization = {"A": 1, "B": 1}
         pagerank = PageRank().rank(G, personalization)
         heatkernel = HeatKernel().rank(G, personalization)
-        #self.assertLess(pagerank['A']/sum(pagerank.values()), heatkernel['A']/sum(heatkernel.values()), msg="HeatKernel more local than PageRank")
-        #self.assertLess(heatkernel['I']/sum(heatkernel.values()), pagerank['I']/sum(pagerank.values()), msg="HeatKernel more local than PageRank")
+        self.assertLess(pagerank['A']/sum(pagerank.values()), heatkernel['A']/sum(heatkernel.values()), msg="HeatKernel more local than PageRank")
+        self.assertLess(heatkernel['I']/sum(heatkernel.values()), pagerank['I']/sum(pagerank.values()), msg="HeatKernel more local than PageRank")
+
+    def test_biased_kernel_locality(self):
+        from pygrank.algorithms.adhoc import PageRank
+        from pygrank.algorithms.adhoc import BiasedKernel
+        G = test_graph()
+        personalization = {"A": 1, "B": 1}
+        pagerank = PageRank().rank(G, personalization)
+        heatkernel = BiasedKernel().rank(G, personalization)
+        self.assertLess(pagerank['A'] / sum(pagerank.values()), heatkernel['A'] / sum(heatkernel.values()), msg="BiasedRank more local than PageRank")
+        self.assertLess(heatkernel['I'] / sum(heatkernel.values()), pagerank['I'] / sum(pagerank.values()), msg="BiasedRank more local than PageRank")
 
     def test_venuerank(self):
         from pygrank.algorithms.adhoc import PageRank
@@ -152,8 +182,12 @@ class Test(unittest.TestCase):
     def test_backend(self):
         from pygrank import backend
         backend.load_backend("tensorflow")
+        self.assertEqual(backend.backend_name(), "tensorflow")
         self.test_pagerank()
         self.test_venuerank()
+        self.test_absorbing_walk()
         backend.load_backend("numpy")
+        self.assertEqual(backend.backend_name(), "numpy")
         #self.test_learnable()
         self.test_pagerank()
+        self.test_absorbing_walk()

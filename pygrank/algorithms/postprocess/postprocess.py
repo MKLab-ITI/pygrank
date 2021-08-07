@@ -198,7 +198,7 @@ class Sweep(Postprocessor):
         """
         self.ranker = ranker
         self.uniform_ranker = ranker if uniform_ranker is None else uniform_ranker
-        self.centrality = MethodHasher(lambda G: self.uniform_ranker.rank(G))
+        self.centrality = MethodHasher(lambda G: self.uniform_ranker.rank(G), assume_immutability=True)
 
     def _transform(self, ranks):
         uniforms = self.centrality(ranks.G).np

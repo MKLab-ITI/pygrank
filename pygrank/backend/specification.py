@@ -1,60 +1,60 @@
-def backend_name():
+def backend_name():  # pragma: no cover
     return None
 
-def abs(x):
+def abs(x):  # pragma: no cover
     pass
 
 
-def sum(x):
+def sum(x):  # pragma: no cover
     pass
 
 
-def min(x):
+def min(x):  # pragma: no cover
     pass
 
 
-def max(x):
+def max(x):  # pragma: no cover
     pass
 
 
-def exp(x):
+def exp(x):  # pragma: no cover
     pass
 
 
-def eye(dims):
+def eye(dims):  # pragma: no cover
     pass
 
 
-def copy(x):
+def copy(x):  # pragma: no cover
     pass
 
 
-def scipy_sparse_to_backend(M):
+def scipy_sparse_to_backend(M):  # pragma: no cover
     pass
 
 
-def to_array(obj):
+def to_array(obj):  # pragma: no cover
     pass
 
 
-def is_array(obj):
+def is_array(obj):  # pragma: no cover
     pass
 
 
-def repeat(value, times):
+def repeat(value, times):  # pragma: no cover
     pass
 
 
-def self_normalize(obj):
+def self_normalize(obj):  # pragma: no cover
     pass
 
 
-def conv(signal, M):
+def conv(signal, M):  # pragma: no cover
     pass
 
 
-def length(x):
+def length(x):  # pragma: no cover
     pass
 
-def degrees(M):
+def degrees(M):  # pragma: no cover
     pass
