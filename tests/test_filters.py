@@ -2,7 +2,7 @@ import unittest
 import networkx as nx
 from tests.example_graph import test_graph, test_block_model_graph
 
-# coverage run --source=pygrank -m unittest tests/test_filters.py tests/test_postprocessing.py
+# coverage run --source=pygrank -m unittest tests/test_filters.py tests/test_postprocessing.py -b
 # coverage html
 
 
@@ -179,6 +179,7 @@ class Test(unittest.TestCase):
         res2 = pre(G)
         self.assertTrue(id(res1) != id(res2), msg="When immutability is assumed but data cleared, different objects are returned")
 
+    """
     def test_backend(self):
         from pygrank import backend
         backend.load_backend("tensorflow")
@@ -191,3 +192,4 @@ class Test(unittest.TestCase):
         #self.test_learnable()
         self.test_pagerank()
         self.test_absorbing_walk()
+    """

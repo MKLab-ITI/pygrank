@@ -1,5 +1,4 @@
 import unittest
-import networkx as nx
 from tests.example_graph import test_graph
 
 

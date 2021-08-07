@@ -112,8 +112,8 @@ Provides evaluation of NDCG@k score between given and known ranks.
 Initializes the PageRank scheme parameters. 
 
 Attributes: 
- * *known_ranks:* A dict of known ranks, where higher ranks correspond to more related elements. 
  * *k:* Optional. Calculates NDCG@k. If None (default), len(known_ranks) is used. 
+ * *known_ranks:* The desired graph signal outcomes. 
 
 ### pRule 
 

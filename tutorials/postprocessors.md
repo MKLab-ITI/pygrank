@@ -108,4 +108,4 @@ re-ordered if at least one is provided.
 
 Args: 
  * *ranker:* Optional. The base ranker instance. A Tautology() ranker is created if None (default) was specified. 
- * *expr:* Optional. A lambda expression to apply on each element. The transformer will automatically try to apply it on the numpy array representation of the graph signal first, so prefer use of numpy functions for faster computations. For example, np.exp (default) should be prefered instead of math.exp, because the former can directly parse a numpy array. 
+ * *expr:* Optional. A lambda expression to apply on each element. The transformer will automatically try to apply it on the backend array representation of the graph signal first, so prefer use of backend functions for faster computations. For example, backend.exp (default) should be prefered instead of math.exp, because the former can directly parse a numpy array. 
