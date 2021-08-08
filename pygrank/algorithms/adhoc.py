@@ -85,7 +85,8 @@ class AbsorbingWalks(RecursiveGraphFilter):
         del self.degrees
 
     def _formula(self, M, personalization, ranks, *args, **kwargs):
-        return (backend.conv(ranks, M) * self.degrees + personalization * self.absorption) / (self.absorption + self.degrees)
+        ret = (backend.conv(ranks, M) * self.degrees + personalization * self.absorption) / (self.absorption + self.degrees)
+        return ret
 
 
 class BiasedKernel(RecursiveGraphFilter):

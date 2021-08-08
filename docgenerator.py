@@ -4,6 +4,10 @@ import pygrank.algorithms
 import pygrank.algorithms.postprocess
 import pygrank.measures
 
+"""
+THIS FILE IS AUTOMATICALLY RUN BY THE pre-commit HOOK FOR GIT
+"""
+
 
 def format(doc):
     if doc is None:

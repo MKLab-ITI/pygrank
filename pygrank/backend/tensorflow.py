@@ -44,4 +44,4 @@ def length(x):
 
 
 def degrees(M):
-    return tf.experimental.numpy.ravel(sum(M, axis=0))
+    return tf.reshape(tf.sparse.reduce_sum(M, axis=0), (-1,1))

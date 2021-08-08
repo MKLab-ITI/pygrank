@@ -132,7 +132,7 @@ class NodeRanking(object):
     """
 
     def __call__(self, *args, **kwargs):
-        self.rank(*args, **kwargs)
+        return self.rank(*args, **kwargs)
 
     def rank(self, *args, **kwargs):
         raise Exception("NodeRanking subclasses should implement a rank method")

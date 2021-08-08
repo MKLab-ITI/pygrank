@@ -1,0 +1,53 @@
+#!/bin/sh
+current_branch=`git branch | grep '*' | sed 's/* //'`
+
+if [ "$current_branch" = "master" ]; then
+    echo "You are about to commit on master. Running unit tests..."
+	  coverage run --source=pygrank -m unittest tests/test_filters.py tests/test_postprocessing.py tests/test_measures.py -b
+    if [ $? -eq 0 ]; then
+		echo "Generating code coverage reports..."
+		coverage html
+		coverage xml
+		echo "Checking for code coverage..."
+		read_dom () {
+			local IFS=\>
+			read -d \< ENTITY CONTENT
+			local ret=$?
+			TAG_NAME=${ENTITY%% *}
+			ATTRIBUTES=${ENTITY#* }
+			return $ret
+		}
+		parse_dom() {
+			if [[ $TAG_NAME = "coverage" ]]; then
+				echo $TAG_NAME
+				eval local ${ATTRIBUTES//-/_}
+				echo "coverage: $line_rate"
+				if [ "$lines_covered" -lt "$lines_valid" ]; then
+					echo "Code coverage should be 100%. Aborting the commit and opening coverage report."
+					case "$OSTYPE" in
+					  linux*)   xdg-open ./htmlcov/index.html;;
+					  msys*)    start ./htmlcov/index.html;;
+					  *)        echo "add the required open operation in the pre-commit file: $OSTYPE" ;;
+					esac
+					
+					exit 1
+				fi
+			fi
+		}
+		while read_dom; do
+			parse_dom;
+		done < coverage.xml
+		
+		echo "Running docgenerator..."
+		python docgenerator.py
+		echo "Updating commit..."
+		git add tutorials/graph_filters.md
+		git add tutorials/postprocessors.md
+		git add tutorials/measures.md
+        # tests passed, proceed to prepare commit message
+        exit 0
+    else
+        echo "Some tests failed. Aborting the commit."
+        exit 1
+    fi
+fi

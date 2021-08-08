@@ -3,6 +3,21 @@ from tests.example_graph import test_graph
 
 
 class Test(unittest.TestCase):
+    def test_tautology(self):
+        from pygrank.algorithms.adhoc import PageRank
+        from pygrank.algorithms.postprocess import Tautology
+        G = test_graph()
+        r = PageRank().rank(G)
+        tr = Tautology(PageRank()).rank(G)
+        rt = Tautology().transform(r)
+        for u in G:
+            self.assertEqual(r[u], rt[u])
+            self.assertEqual(r[u], tr[u])
+
+        from pygrank.backend import sum
+        u = Tautology().rank(G)
+        self.assertEqual(float(sum(u.np)), len(G))
+
     def test_normalize_range(self):
         from pygrank.algorithms.adhoc import PageRank
         from pygrank.algorithms.postprocess import Normalize
@@ -24,6 +39,27 @@ class Test(unittest.TestCase):
         G = test_graph()
         with self.assertRaises(Exception):
             Normalize(PageRank(), "unknown").rank(G)
+
+    def test_transform_primitives(self):
+        from pygrank.algorithms.adhoc import PageRank
+        from pygrank.algorithms.postprocess import Normalize, Transformer
+        from pygrank.backend import sum
+        G = test_graph()
+        r1 = Normalize(PageRank(), "sum").rank(G)
+        r2 = Transformer(PageRank(), lambda x: x/sum(x)).rank(G)
+        for v in G:
+            self.assertAlmostEqual(r1[v], r2[v], places=16)
+
+    def test_transform_individuals(self):
+        from pygrank.algorithms.adhoc import PageRank
+        from pygrank.algorithms.postprocess import Normalize, Transformer
+        import math
+        from pygrank import backend
+        G = test_graph()
+        r1 = Transformer(math.exp).transform(PageRank()(G))
+        r2 = Transformer(PageRank(), backend.exp).rank(G)
+        for v in G:
+            self.assertAlmostEqual(r1[v], r2[v], places=16)
 
     def test_ordinals(self):
         from pygrank.algorithms.adhoc import PageRank
@@ -48,6 +84,24 @@ class Test(unittest.TestCase):
         from pygrank.algorithms.postprocess.oversampling import SeedOversampling
         G = test_graph()
         test_result = SeedOversampling(PageRank(normalization='col')).rank(G, {"A": 1})
+        test_result = SeedOversampling(PageRank(normalization='col'), 'top').rank(G, {"A": 1})
+        test_result = SeedOversampling(PageRank(normalization='col'), 'neighbors').rank(G, {"A": 1})
+        with self.assertRaises(Exception):
+            test_result = SeedOversampling(PageRank(normalization='col'), 'unknown').rank(G, {"A": 1})
+        with self.assertRaises(Exception):
+            test_result = SeedOversampling(PageRank(normalization='col')).rank(G, {"A": 0.5, "B": 1})
+
+    def test_boosted_oversampling(self):
+        from pygrank.algorithms.adhoc import PageRank
+        from pygrank.algorithms.postprocess.oversampling import BoostedSeedOversampling
+        G = test_graph()
+        test_result = BoostedSeedOversampling(PageRank(normalization='col')).rank(G, {"A": 1})
+        test_result = BoostedSeedOversampling(PageRank(normalization='col'), 'naive').rank(G, {"A": 1})
+        test_result = BoostedSeedOversampling(PageRank(normalization='col'), oversample_from_iteration='original').rank(G, {"A": 1})
+        with self.assertRaises(Exception):
+            test_result = BoostedSeedOversampling(PageRank(normalization='col'), 'unknown').rank(G, {"A": 1})
+        with self.assertRaises(Exception):
+            test_result = BoostedSeedOversampling(PageRank(normalization='col'), oversample_from_iteration='unknown').rank(G, {"A": 1})
 
     def test_abstract_postprocessor(self):
         from pygrank.algorithms.adhoc import PageRank
@@ -63,6 +117,8 @@ class Test(unittest.TestCase):
             optimize(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4, max_vals=[5, 5], parameter_tol=1.E-8, divide_range=1)
         with self.assertRaises(Exception):
             optimize(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4, max_vals=[5, 5], min_vals=[5, 6])
+
+
 
     def test_optimizer(self):
         from pygrank.algorithms.utils import optimize

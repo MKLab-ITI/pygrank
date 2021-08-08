@@ -1,11 +1,13 @@
 import pygrank.algorithms.utils
 import numpy as np
+from pygrank.algorithms.utils import NodeRanking, ConvergenceManager
+from pygrank.algorithms.postprocess.postprocess import Postprocessor
 
 
-class SeedOversampling:
+class SeedOversampling(Postprocessor):
     """Performs seed oversampling on a base ranker to improve the quality of predicted seeds."""
 
-    def __init__(self, ranker, method='safe'):
+    def __init__(self, ranker: NodeRanking, method : str = 'safe'):
         """ Initializes the class with a base ranker.
 
         Attributes:
@@ -14,7 +16,8 @@ class SeedOversampling:
                 base ranker run or "neighbors" to oversample the neighbors of personalization nodes.
 
         Example:
-            >>> from pygrank.algorithms.postprocess import oversampling            >>> from pygrank.algorithms import adhoc
+            >>> from pygrank.algorithms.postprocess import oversampling
+            >>> from pygrank.algorithms import adhoc
             >>> G, seed_nodes = ...
             >>> algorithm = oversampling.SeedOversampling(adhoc.PageRank(alpha=0.99))
             >>> ranks = algorithm.rank(G, personalization={1 for v in seed_nodes})
@@ -52,10 +55,13 @@ class SeedOversampling:
             raise Exception("Supported oversampling methods: safe, neighbors, top")
 
 
-class BoostedSeedOversampling:
+class BoostedSeedOversampling(Postprocessor):
     """ Iteratively performs seed oversampling and combines found ranks by weighting them with a Boosting scheme."""
 
-    def __init__(self, ranker, objective='partial', oversample_from_iteration='previous', weight_convergence=None):
+    def __init__(self, ranker: NodeRanking,
+                 objective: str = 'partial',
+                 oversample_from_iteration: str = 'previous',
+                 weight_convergence: ConvergenceManager = None):
         """ Initializes the class with a base ranker and the boosting scheme's parameters.
 
         Attributes:
@@ -68,10 +74,10 @@ class BoostedSeedOversampling:
                 ConvergenceManager(error_type="small_value", tol=0.001, max_iters=100)
 
         Example:
-            >>> from pygrank.algorithms import adhoc
-            >>> from pygrank.algorithms import oversampling
+            >>> from pygrank.algorithms.adhoc import PageRank
+            >>> from pygrank.algorithms.oversampling import BoostedSeedOversampling
             >>> G, seed_nodes = ...
-            >>> algorithm = oversampling.BoostedSeedOversampling(adhoc.PageRank(alpha=0.99))
+            >>> algorithm = BoostedSeedOversampling(PageRank(alpha=0.99))
             >>> ranks = algorithm.rank(G, personalization={1 for v in seed_nodes})
         """
         self.ranker = ranker

@@ -1,6 +1,5 @@
 import warnings
-import numpy as np
-from pygrank.algorithms.utils import MethodHasher, to_signal, NodeRanking, _call
+from pygrank.algorithms.utils import MethodHasher, to_signal, NodeRanking, _call, to_signal
 from pygrank import backend
 
 
@@ -17,7 +16,7 @@ class Postprocessor(NodeRanking):
         return to_signal(ranks, _call(call_transform, kwargs))
 
     def _transform(self, ranks):
-        raise Exception("Postprocessor subclasses need to implement a _transform method")
+        raise Exception("Postprocessor subclasses need to implement a _transform method to call default rank or transform methods")
 
 
 class Tautology(Postprocessor):
@@ -32,10 +31,10 @@ class Tautology(Postprocessor):
     def transform(self, ranks):
         return ranks
 
-    def rank(self, G, personalization, *args, **kwargs):
+    def rank(self, graph=None, personalization=None, *args, **kwargs):
         if self.ranker is not None:
-            return self.ranker.rank(G, personalization, *args, **kwargs)
-        return personalization
+            return self.ranker.rank(graph, personalization, *args, **kwargs)
+        return to_signal(graph, personalization)
 
 
 class Normalize(Postprocessor):
@@ -52,14 +51,14 @@ class Normalize(Postprocessor):
 
         Example:
             >>> from pygrank.algorithms.postprocess import Normalize
-            >>> G, seed_values, algorithm = ...
+            >>> graph, personalization, algorithm = ...
             >>> algorithm = Normalize(0.5, algorithm) # sets ranks >= 0.5 to 1 and lower ones to 0
-            >>> ranks = algorithm.rank(G, seed_values)
+            >>> ranks = algorithm.rank(graph, personalization)
 
         Example (same outcome, simpler one-liner):
             >>> from pygrank.algorithms.postprocess import Normalize
-            >>> G, seed_values, algorithm = ...
-            >>> ranks = Normalize(0.5).transform(algorithm.rank(G, seed_values))
+            >>> graph, personalization, algorithm = ...
+            >>> ranks = Normalize(0.5).transform(algorithm.rank(graph, personalization))
         """
         if ranker is not None and not callable(getattr(ranker, "rank", None)):
             ranker, method = method, ranker
@@ -116,6 +115,15 @@ class Transformer(Postprocessor):
                 apply it on the backend array representation of the graph signal first, so prefer use of backend functions
                 for faster computations. For example, backend.exp (default) should be prefered instead of math.exp, because
                 the former can directly parse a numpy array.
+
+        Example:
+            >>> from pygrank.algorithms.postprocess import Normalize, Transformer
+            >>> from pygrank import backend
+            >>> graph, personalization, algorithm = ...
+            >>> r1 = Normalize(algorithm, "sum").rank(graph, personalization)
+            >>> r2 = Transformer(algorithm, lambda x: x/backend.sum(x)).rank(graph, personalization)
+            >>> print(sum(abs(r1[v]-r2[v]) for v in graph))
+            0
         """
         if ranker is not None and not callable(getattr(ranker, "rank", None)):
             ranker, expr = expr, ranker
@@ -146,14 +154,14 @@ class Threshold(Postprocessor):
 
         Example:
             >>> from pygrank.algorithms.postprocess import Threshold
-            >>> G, seed_values, algorithm = ...
+            >>> graph, personalization, algorithm = ...
             >>> algorithm = Threshold(0.5, algorithm) # sets ranks >= 0.5 to 1 and lower ones to 0
-            >>> ranks = algorithm.rank(G, seed_values)
+            >>> ranks = algorithm.rank(graph, personalization)
 
         Example (same outcome):
             >>> from pygrank.algorithms.postprocess import Threshold
-            >>> G, seed_values, algorithm = ...
-            >>> ranks = Threshold(0.5).transform(algorithm.rank(G, seed_values))
+            >>> graph, personalization, algorithm = ...
+            >>> ranks = Threshold(0.5).transform(algorithm.rank(graph, personalization))
         """
         if ranker is not None and not callable(getattr(ranker, "rank", None)):
             ranker, threshold = threshold, ranker
@@ -164,12 +172,12 @@ class Threshold(Postprocessor):
         if threshold == "gap":
             warnings.warn("gap-determined threshold is still under development (its implementation may be incorrect)", stacklevel=2)
 
-    def _transform(self, ranks, G):
+    def _transform(self, ranks, graph):
         threshold = self.threshold
         if threshold == "none":
             return ranks
         if threshold == "gap":
-            ranks = {v: ranks[v] / G.degree(v) for v in ranks}
+            ranks = {v: ranks[v] / graph.degree(v) for v in ranks}
             max_diff = 0
             threshold = 0
             prev_rank = 0
@@ -198,7 +206,7 @@ class Sweep(Postprocessor):
         """
         self.ranker = ranker
         self.uniform_ranker = ranker if uniform_ranker is None else uniform_ranker
-        self.centrality = MethodHasher(lambda G: self.uniform_ranker.rank(G), assume_immutability=True)
+        self.centrality = MethodHasher(lambda graph: self.uniform_ranker.rank(graph), assume_immutability=True)
 
     def _transform(self, ranks):
         uniforms = self.centrality(ranks.G).np

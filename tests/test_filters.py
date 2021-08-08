@@ -2,11 +2,35 @@ import unittest
 import networkx as nx
 from tests.example_graph import test_graph, test_block_model_graph
 
-# coverage run --source=pygrank -m unittest tests/test_filters.py tests/test_postprocessing.py -b
-# coverage html
-
 
 class Test(unittest.TestCase):
+
+    def test_signal(self):
+        from pygrank.algorithms.utils import GraphSignal
+        with self.assertRaises(Exception):
+            GraphSignal([1, 2, 3], [1, 2])
+        signal = GraphSignal(test_graph(), {"A": 1, "B": 2})
+        del signal["A"]
+        self.assertEqual(signal["A"], 0)
+        self.assertEqual(signal["B"], 2)
+
+    def test_unused_arguments(self):
+        from pygrank.algorithms import PageRank
+        with self.assertRaises(Exception):
+            PageRank(krylov_dims=5)
+
+    def test_node_ranking(self):
+        from pygrank.algorithms.utils import NodeRanking
+        from pygrank.algorithms import PageRank
+        G = test_graph()
+        with self.assertRaises(Exception):
+            NodeRanking().rank(G)
+        ranker = PageRank(normalization='col', tol=1.E-9)
+        test_result = ranker.rank(G)
+        test_result2 = ranker(G)
+        abs_diffs = sum(abs(test_result[v] - test_result2[v]) for v in test_result2.keys()) / len(test_result2)
+        self.assertAlmostEqual(abs_diffs, 0, places=16, msg="PageRank compliance with nx results")
+
     def test_abstract_filter(self):
         from pygrank.algorithms.abstract_filters import GraphFilter, RecursiveGraphFilter, ClosedFormGraphFilter
         G = test_graph()
@@ -18,6 +42,11 @@ class Test(unittest.TestCase):
             RecursiveGraphFilter().rank(G)
         with self.assertRaises(Exception):
             ClosedFormGraphFilter().rank(G)
+
+    def prevent_passing_node_lists_as_graphs(self):
+        from pygrank.algorithms import PageRank
+        with self.assertRaises(Exception):
+            PageRank().rank(list(test_graph()))
 
     def test_completion(self):
         from pygrank.algorithms.adhoc import PageRank, HeatKernel, AbsorbingWalks
@@ -88,6 +117,9 @@ class Test(unittest.TestCase):
         test_result_lanczos = Normalize(HeatKernel(normalization='symmetric', krylov_dims=5)).rank(G)
         abs_diffs = sum(abs(test_result[v] - test_result_lanczos[v]) for v in test_result_lanczos.keys()) / len(test_result_lanczos)
         self.assertAlmostEqual(abs_diffs, 0, places=0, msg="Krylov decomposition yields small error")
+
+        with self.assertRaises(Exception):
+            HeatKernel(normalization='col', krylov_dims=5).rank(G)
 
     def test_absorbing_walk(self):
         from pygrank.algorithms.adhoc import PageRank
@@ -160,7 +192,7 @@ class Test(unittest.TestCase):
                         msg="Metrics correctly apply exclude filter to not skew results")
 
     def test_preprocessor(self):
-        from pygrank.algorithms.utils import preprocessor
+        from pygrank.algorithms.utils import preprocessor, MethodHasher
         G = test_graph()
         with self.assertRaises(Exception):
             pre = preprocessor(normalization="unknown", assume_immutability=True)
@@ -172,6 +204,13 @@ class Test(unittest.TestCase):
         res2 = pre(G)
         self.assertTrue(id(res1) != id(res2), msg="When immutability is not assumed, different objects are returned")
 
+        pre = MethodHasher(preprocessor, assume_immutability=True)
+        G = test_graph()
+        res1 = pre(G)
+        pre.assume_immutability = False # give the ability to switch immutability off midway
+        res2 = pre(G)
+        self.assertTrue(id(res1) != id(res2), msg="When immutability is not assumed, different objects are returned")
+
         pre = preprocessor(normalization="col", assume_immutability=True)
         G = test_graph()
         res1 = pre(G)
@@ -179,7 +218,6 @@ class Test(unittest.TestCase):
         res2 = pre(G)
         self.assertTrue(id(res1) != id(res2), msg="When immutability is assumed but data cleared, different objects are returned")
 
-    """
     def test_backend(self):
         from pygrank import backend
         backend.load_backend("tensorflow")
@@ -187,9 +225,12 @@ class Test(unittest.TestCase):
         self.test_pagerank()
         self.test_venuerank()
         self.test_absorbing_walk()
+        self.prevent_passing_node_lists_as_graphs()
         backend.load_backend("numpy")
+        self.assertEqual(backend.backend_name(), "numpy")
+        with self.assertRaises(Exception):
+            backend.load_backend("unknown")
         self.assertEqual(backend.backend_name(), "numpy")
         #self.test_learnable()
         self.test_pagerank()
         self.test_absorbing_walk()
-    """

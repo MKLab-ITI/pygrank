@@ -11,7 +11,7 @@ Many thanks to all existing and future contributors for their participation.
 # :hammer_and_wrench: Workflow
 The typical workflow for `pygrank` contributions comprises the following steps:
 1. **Fork** the master branch from the GitHub repository.
-2. **Clone** the fork locally.
+2. **Clone** the fork locally (recommended: also copy the *pre-commit* file to *.git/hooks*).
 3. **Edit** the library.
 4. **Commit** changes.
 5. **Push** changes to the fork.
@@ -30,21 +30,25 @@ are installed and upgraded to their latest versions.
 Before creating a pull request, make sure that your submission checks the following points:
 1. Class and method docstrings should adhere to [Google's docstring conventions](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings)
 where, additionally, code examples are prefaced by a description ending at the text `example:`.
-2. Run `python docgenerator.py` to add new classes to the documentation.
-3. Pass all unit tests with no errors, unless your purpose
+2. When implementing new or existing research (we are more than happy to accomodate this),
+you are required to also update the library's [citations](!citations.md).
+3. New code should maintain *CamelCase* notation for classes and 
+*lower_case_with_underscores* for methods and variables.
+4. New files should be placed in appropriate packages.
+5. **[optional]** Algorithms should exhibit near-linear
+(e.g. polylog-linear) running times and memory allocation with respect to
+the number of edges, to scale well to large graphs.
+6. **[pre-commit]** Run `python docgenerator.py` to add new classes to the documentation.
+7. **[pre-commit]** Pass all unit tests with no errors, unless your purpose
 is to introduce new unit tests that reveal existing bugs.
 Refrain from remodularizing the code unless absolutely necessary
 (creating new packages is fine, but backwards compatibility of import statements
 is mandatory).
-4. Unit tests should provide 100% code coverage.
-5. When implementing new or existing research (we are more than happy to accomodate this),
-you are required to also update the library's [citations](!citations.md).
-6. New code should maintain *CamelCase* notation for classes and 
-*lower_case_with_underscores* for methods and variables.
-7. New files should be placed in appropriate packages.
-7. **Optional.** Algorithms should exhibit near-linear
-(e.g. polylog-linear) running times and memory allocation with respect to
-the number of edges, to scale well to large graphs.
+8. **[pre-commit]** Unit tests should provide 100% code coverage.
+
+**Steps 6-8 can be automated for commits to the master branch
+by copying the `pre-commit` script file to the local folder `.git/hooks`**.
+
 
 # :pencil2: Implementing New Node Ranking Algorithms
 ##### Which classes to subclass?

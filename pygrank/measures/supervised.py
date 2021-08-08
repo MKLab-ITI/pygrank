@@ -21,19 +21,6 @@ class Supervised(Measure):
     def to_numpy(self, ranks, normalization=False):
         if isinstance(ranks, GraphSignal):
             return to_signal(ranks, self.known_ranks).filter(exclude=self.exclude), ranks.normalized(normalization).filter(exclude=self.exclude)
-        """
-        if not isinstance(ranks, np.ndarray):
-            nodes = self._nodes
-            if nodes == "cap":
-                nodes = [v for v in ranks if v in self.known_ranks]
-            elif nodes == "cap once":
-                nodes = [v for v in ranks if v in self.known_ranks]
-                self._nodes = nodes
-        else:
-            ranks = ranks[to_numpy_idx(self._nodes, self.known_ranks)]
-            nodes = self.known_ranks
-        return to_numpy(nodes, self.known_ranks, normalization=normalization), to_numpy(nodes, ranks, normalization=normalization)
-        """
 
 
 class NDCG(Supervised):

@@ -64,8 +64,7 @@ def optimize(loss, max_vals=[1 for _ in range(1)], min_vals=None, tol=1.E-8, div
     iter = 0
     range_deviations = [float('inf')]*len(max_vals)
     while True:
-        if max(range_search) == 0:
-            raise Exception("Something went wrong and took too many iterations for optimizer to run (check for nans)")
+        assert max(range_search) != 0, "Something went wrong and took too many iterations for optimizer to run (check for nans)"
         if range_search[curr_variable] == 0:
             range_deviations[curr_variable] = 0
             curr_variable += 1

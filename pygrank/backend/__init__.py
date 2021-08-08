@@ -6,13 +6,7 @@ from pygrank.backend.specification import *
 
 
 def load_backend(mod_name):
-    if mod_name == 'pytorch':
-        pass
-    elif mod_name == 'numpy':
-        pass
-    elif mod_name == 'tensorflow':
-        pass
-    else:
+    if mod_name not in ['pytorch', 'numpy', 'tensorflow']:
         raise Exception("Unsupported backend "+mod_name)
     mod = importlib.import_module('.%s' % mod_name, __name__)
     thismod = sys.modules[__name__]
@@ -21,11 +15,11 @@ def load_backend(mod_name):
             continue
         if api in mod.__dict__:
             setattr(thismod, api, mod.__dict__[api])
-        else:
+        else: # pragma: no cover
             raise Exception("Missing implementation for "+str(api))
 
 
-def get_backend_preference():
+def get_backend_preference(): # pragma: no cover
     config_path = os.path.join(os.path.expanduser('~'), '.pygrank', 'config.json')
     mod_name = None
     remind_where_to_find = False
@@ -49,7 +43,7 @@ def get_backend_preference():
     return mod_name
 
 
-def set_backend_preference(mod_name, remind_where_to_find=True):
+def set_backend_preference(mod_name, remind_where_to_find=True): # pragma: no cover
     default_dir = os.path.join(os.path.expanduser('~'), '.pygrank')
     if not os.path.exists(default_dir):
         os.makedirs(default_dir)

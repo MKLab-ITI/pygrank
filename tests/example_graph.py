@@ -27,7 +27,7 @@ def test_graph(directed=False):
 
 
 def test_block_model_graph(nodes=600, seed=1):
-    random.seed(1)
+    random.seed(seed)
     G = nx.DiGraph()
     groups = [list(range(300)), list(range(300, nodes))]
     for i in range(nodes):
