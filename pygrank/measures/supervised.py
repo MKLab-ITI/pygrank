@@ -14,6 +14,11 @@ class Supervised(Measure):
         Initializes the supervised measure with desired graph signal outcomes.
         Args:
             known_ranks: The desired graph signal outcomes.
+            exclude: Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed
+                to determine which nodes to ommit from the evaluation, for example because they were used for training.
+                If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude`
+                property at any time to alter this original value. Prefer using this behavior to avoid overfitting
+                measure assessments.
         """
         self.known_ranks = known_ranks
         self.exclude = exclude
@@ -91,16 +96,17 @@ class Accuracy(Error):
     def evaluate(self, ranks):
         return 1-super().evaluate(ranks)
 
+
 class pRule(Supervised):
     """Provides an assessment of stochastic ranking fairness."""
 
     def evaluate(self, ranks):
         sensitive, ranks = self.to_numpy(ranks)
-        p1 = np.dot(ranks, sensitive)
-        p2 = ranks.sum() - p1
+        p1 = backend.dot(ranks, sensitive)
+        p2 = backend.sum(ranks) - p1
         if p1 == 0 or p2 == 0:
             return 0
-        s = float(sensitive.sum())
+        s = backend.sum(sensitive)
         p1 /= s
-        p2 /= sensitive.size-s
+        p2 /= backend.length(sensitive)-s
         return min(p1,p2)/max(p1,p2)

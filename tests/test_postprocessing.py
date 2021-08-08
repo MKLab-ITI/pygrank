@@ -178,4 +178,7 @@ class Test(unittest.TestCase):
         self.assertAlmostEqual(p[0], 3, places=6, msg="Optimizer should optimize the Beale function")
         self.assertAlmostEqual(p[1], 0.5, places=6, msg="Optimizer should optimize the Beale function")
 
+    def test_fairness(self):
+        from experiments import fairwalk
+
 

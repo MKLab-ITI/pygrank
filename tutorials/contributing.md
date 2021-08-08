@@ -106,8 +106,10 @@ as parent classes. Only additional arguments not parsed by parent classes
 need to be documented
 (inherited arguments will be automatically added when `docgenerator.py`
 is used to construct documentation). Try to parameterize constructors
-as much as possible, even i
-For example, the following snippet
+as much as possible, to ensure that researchers can easily try different
+variations.
+
+As an example, the following snippet
 introduces a new algorithm that performs a non-recursive
 implementation of personalized PageRank based on the recursion
 *a<sub>0</sub> = 1-alpha*, *a<sub>n</sub>=alpha a<sub>n-1</sub>* for *n>0*:

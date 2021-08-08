@@ -8,12 +8,13 @@ class Postprocessor(NodeRanking):
         self.ranker = ranker
 
     def transform(self, ranks, *args, **kwargs):
-        return to_signal(ranks, self._transform(self.ranker.transform(ranks, *args, **kwargs)))
+        #call_transform = lambda **kwargs: self._transform(ranks, **kwargs)
+        #ret = _call(call_transform, kwargs)
+        return to_signal(ranks, _call(self._transform, kwargs, [ranks]))
 
     def rank(self, *args, **kwargs):
         ranks = self.ranker.rank(*args, **kwargs)
-        call_transform = lambda **kwargs: self._transform(ranks, **kwargs)
-        return to_signal(ranks, _call(call_transform, kwargs))
+        return to_signal(ranks, _call(self._transform, kwargs, [ranks]))
 
     def _transform(self, ranks):
         raise Exception("Postprocessor subclasses need to implement a _transform method to call default rank or transform methods")

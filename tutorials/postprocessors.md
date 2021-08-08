@@ -27,7 +27,7 @@ Example:
 ```
 
 
-### FairPostprocessor 
+### AdhocFairness 
 
 Adjusts node scores so that the sum of sensitive nodes is closer to the sum of non-sensitive ones. 
 Initializes the fairness-aware postprocessor. 

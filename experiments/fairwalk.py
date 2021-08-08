@@ -29,7 +29,8 @@ def personalizer(H, G, p, s, fairness_weight=0, fairness_limit=0.8):
     return Normalize(Personalizer(H)).rank(G, p, loss=loss, training_personalization={v: p.get(v,0) for v in training})
 
 
-datasets = ["acm", "amazon", "ant", "citeseer","dblp","facebook0","facebook686","log4j","maven","pubmed","squirel", "twitter"]
+#datasets = ["acm", "amazon", "ant", "citeseer","dblp","facebook0","facebook686","log4j","maven","pubmed","squirel", "twitter"]
+datasets = ["facebook0"]
 #datasets = ["facebook0","facebook686","pubmed","squirel","twitter"]
 seed_fractions = [0.1, 0.2, 0.3]
 pre = preprocessor(assume_immutability=True, normalization="symmetric")
@@ -37,9 +38,9 @@ pre = preprocessor(assume_immutability=True, normalization="symmetric")
 
 graph_filters = {
     "ppr0.85": PageRank(alpha=0.85, to_scipy=pre, max_iters=1000000, tol=1.E-6, assume_immutability=True),
-    "ppr0.99": PageRank(alpha=0.99, to_scipy=pre, max_iters=1000000, tol=1.E-6, assume_immutability=True),
-    "hk3": HeatKernel(t=3, to_scipy=pre, max_iters=1000000, tol=1.E-9, assume_immutability=True),
-    "hk7": HeatKernel(t=7, to_scipy=pre, max_iters=1000000, tol=1.E-9, assume_immutability=True),
+    #"ppr0.99": PageRank(alpha=0.99, to_scipy=pre, max_iters=1000000, tol=1.E-6, assume_immutability=True),
+    #"hk3": HeatKernel(t=3, to_scipy=pre, max_iters=1000000, tol=1.E-9, assume_immutability=True),
+    #"hk7": HeatKernel(t=7, to_scipy=pre, max_iters=1000000, tol=1.E-9, assume_immutability=True),
 }
 for filter in list(graph_filters.keys()):
     graph_filters["sweep "+filter] = Sweep(graph_filters[filter])
@@ -48,18 +49,18 @@ for filter in list(graph_filters.keys()):
 for filter, H in graph_filters.items():
     print("=====", filter, "=====")
     algorithms = {
-        #"None": lambda G, p, s: Normalize(H).rank(G, p),
+        "None": lambda G, p, s: Normalize(H).rank(G, p),
         #"AUCPers": lambda G,p,s: personalizer(H, G, p, s, 0, 0),
-        #"Mult": lambda G,p,s: Normalize(FairPostprocessor(H, "B")).rank(G, p, s),
-        #"LFRPO": lambda G,p,s: Normalize(FairPostprocessor(H, "O")).rank(G, p, s),
-        #"FairPers": lambda G,p,s: Normalize(FairPersonalizer(H, error_type="mabs", max_residual=0)).rank(G, p, sensitive=s),
-        #"FairPers-C": lambda G,p,s: Normalize(FairPersonalizer(H,.80, pRule_weight=10, error_type="mabs", max_residual=0)).rank(G, p, sensitive=s),
+        "Mult": lambda G,p,s: Normalize(AdhocFairness(H, "B")).rank(G, p, sensitive=s),
+        "LFRPO": lambda G,p,s: Normalize(AdhocFairness(H, "O")).rank(G, p, sensitive=s),
+        "FairPers": lambda G,p,s: Normalize(FairPersonalizer(H, error_type="mabs", max_residual=0)).rank(G, p, sensitive=s),
+        "FairPers-C": lambda G,p,s: Normalize(FairPersonalizer(H,.80, pRule_weight=10, error_type="mabs", max_residual=0)).rank(G, p, sensitive=s),
         "FairPersKL": lambda G,p,s: Normalize(FairPersonalizer(H, max_residual=0)).rank(G, p, sensitive=s),
         "FairPersKL-C": lambda G,p,s: Normalize(FairPersonalizer(H,.80, pRule_weight=10, max_residual=0)).rank(G, p, sensitive=s),
       }
     for dataset in datasets:
         random.seed(1) # ensure reproducibility
-        G, sensitive, labels = fairness_dataset(dataset, 0, sensitive_group=1)
+        G, sensitive, labels = fairness_dataset(dataset, 0, sensitive_group=1, path="../data/")
         #G = to_fairwalk(G, sensitive) # COMMENT THIS LINE WHEN NOT RUNNING EXPLICITLY FAIRWALK AND USE preprocessor(assume_immutability=False, normalization="none")
         #print('Dataset pRule', pRule(sensitive)(labels), 'nodes', len(G), 'edges', G.number_of_edges(), 'positive', sum(labels.values()), 'sensitive', sum(sensitive.values()))
         measures = {"AUC": AUC(labels),
@@ -85,9 +86,9 @@ for filter, H in graph_filters.items():
                     personalization = {v: labels[v] for v in training if sensitive[v] == 0}
                     hash_seeds[seed_seed] = (personalization, training, evaluation)
                 ranks = algorithms[algorithm](G, personalization, sensitive)
-                evaluation_ranks = {v: ranks[v] for v in evaluation}
                 for measure in measures:
                     mtic = time.clock()
-                    measure_scores[measure].append(measures[measure](evaluation_ranks))
+                    measures[measure].exclude = training
+                    measure_scores[measure].append(measures[measure](ranks))
             print_algs += " & "+" & ".join([str(perc(sum(measure_scores[measure])/len(measure_scores[measure]))) for measure in measure_scores])
         print(dataset[0].upper()+dataset[1:], print_algs, "\\\\")

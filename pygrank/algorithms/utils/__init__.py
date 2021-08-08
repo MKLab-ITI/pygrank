@@ -6,7 +6,7 @@ from pygrank.algorithms.utils.krylov_space import *
 import inspect
 
 
-def _call(method, kwargs):
+def _call(method, kwargs, args=None):
     """
     This method wraps an argument extraction process and passes only the valid arguments of a given dict to a method.
     This is equivalent to calling method(**kwargs) while ignoring unused arguments.
@@ -21,6 +21,10 @@ def _call(method, kwargs):
         >>>     _call(func2, kwargs)
         >>> func(arg1="passed to func 1", arg2="passed to func 2")
     """
+    if args:
+        kwargs = dict(kwargs)
+        for arg, val in zip(list(inspect.signature(method).parameters)[:len(args)], args):
+            kwargs[arg] = val
     return method(**{argname: kwargs[argname] for argname in inspect.signature(method).parameters if argname in kwargs})
 
 

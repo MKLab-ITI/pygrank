@@ -9,7 +9,7 @@
     + [Passing Graph Signals through Filters](#passing-graph-signals-through-filters)
     + [Graph Difusion Principles](#graph-diffusion-principles)
     + [Types of Filters](#types-of-filters)
-    + [Convergence Criteria](#convergence-cirteria)
+    + [Convergence Criteria](#convergence-criteria)
     + [Graph Preprocessing](#graph-preprocessing)
 4. [Postprocessors](#postprocessors)
     + [Wrapping Postprocessors around Graph Filters](#wrapping-postprocessors-around-graph-filters)
@@ -218,7 +218,7 @@ An exhaustive list of ready-to-use graph filters can be
 found [here](graph_filters.md). After initialization with the appropriate
 parameters, these can be used interchangeably in the above example.
 
-### Convergence Cirteria
+### Convergence Criteria
 All graph filter constructors have a ``convergence`` argument that
 indicates an object to help determine their convergence criteria, such as type of
 error and tolerance for numerical convergence. If no such argument is passed
@@ -405,7 +405,7 @@ There are many ways graph filter posteriors can be processed to provide
 more meaningful data. Of the simpler ones are normalization constraints,
 for example to set the maximal or the sum of posterior node values to
 sum to 1. There also exist thresholding schemes, which can be used
-for binary community detections, as well as methods to make node
+for binary community detection, as well as methods to make node
 comparisons non-parameteric by transforming scores to ordinalities.
 
 Some more complex postprocessing mechanisms involve re-running the 

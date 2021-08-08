@@ -64,3 +64,7 @@ def length(x):  # pragma: no cover
 
 def degrees(M):  # pragma: no cover
     pass
+
+
+def dot(x, y):   # pragma: no cover
+    pass
