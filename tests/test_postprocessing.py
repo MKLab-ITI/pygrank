@@ -1,8 +1,9 @@
 import unittest
-from tests.example_graph import test_graph
+from tests.example_graph import test_graph, test_block_model_graph
 
 
 class Test(unittest.TestCase):
+
     def test_tautology(self):
         from pygrank.algorithms.adhoc import PageRank
         from pygrank.algorithms.postprocess import Tautology
@@ -118,7 +119,33 @@ class Test(unittest.TestCase):
         with self.assertRaises(Exception):
             optimize(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4, max_vals=[5, 5], min_vals=[5, 6])
 
+    def test_sweep(self):
+        from pygrank.algorithms import PageRank
+        from pygrank.algorithms.postprocess import Sweep
+        from pygrank.measures import AUC
+        from pygrank.measures.utils import split_groups
+        import random
+        G, groups = test_block_model_graph(nodes=600, seed=1)
+        group = groups[0]
+        random.seed(1)
+        training, evaluation = split_groups(list(group), training_samples=0.5)
+        auc1 = AUC({v: 1 for v in evaluation}, exclude=training).evaluate(Sweep(PageRank()).rank(G, {v: 1 for v in training}))
+        auc2 = AUC({v: 1 for v in evaluation}, exclude=training).evaluate(PageRank().rank(G, {v: 1 for v in training}))
+        self.assertLess(auc2+0.22, auc1, "The Sweep procedure should significantly improve AUC")
 
+    def test_threshold(self):
+        from pygrank.algorithms import PageRank
+        from pygrank.algorithms.postprocess import Threshold, Sweep
+        from pygrank.measures import Conductance
+        from pygrank.measures.utils import split_groups
+        import random
+        G, groups = test_block_model_graph(nodes=600, seed=1)
+        group = groups[0]
+        random.seed(1)
+        training, evaluation = split_groups(list(group), training_samples=0.5)
+        cond1 = Conductance().evaluate(Threshold(Sweep(PageRank())).rank(G, {v: 1 for v in training}))
+        cond2 = Conductance().evaluate(Threshold("gap").transform(PageRank().rank(G, {v: 1 for v in training}))) # try both versions
+        self.assertLess(cond2*4.5, cond1, "The Sweep procedure should significantly reduce conductance after gap thresholding")
 
     def test_optimizer(self):
         from pygrank.algorithms.utils import optimize

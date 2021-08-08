@@ -35,8 +35,8 @@ the fuzzy rank subgraph.
 If ranks assume binary values, E[.] becomes set size and this calculates the induced subgraph Conductance. 
 Initializes the Conductance metric. 
 
-Attributes: 
- * *G:* The graph on which to calculate the metric. 
+Args: 
+ * *graph:* Optional. The graph on which to calculate the metric. If None (default) it is automatically extracted from graph signals passed for evaluation. 
  * *max_rank:* Optional. The maximum value ranks can assume. To maintain a probabilistic formulation of conductance, this can be greater but not less than the maximum rank during evaluation. Default is 1. 
 
 Example:
@@ -44,10 +44,10 @@ Example:
 ```python 
 >>> from pygrank.metrics.unsupervised import Conductance 
 >>> from pygrank.algorithms.postprocess import Normalize 
->>> G, seed_nodes, algorithm = ... 
+>>> graph, seed_nodes, algorithm = ... 
 >>> algorithm = Normalize(algorithm) 
->>> ranks = algorithm.rank(G, seed_nodes) 
->>> conductance = Conductance(G).evaluate(ranks) 
+>>> ranks = algorithm.rank(graph, seed_nodes) 
+>>> conductance = Conductance().evaluate(ranks) 
 ```
 
 
@@ -68,16 +68,16 @@ the fuzzy rank subgraph.
 If ranks assume binary values, E[.] becomes set size and this calculates the induced subgraph Density. 
 Initializes the Density metric. 
 
-Attributes: 
- * *G:* The graph on which to calculate the metric. 
+Args: 
+ * *graph:* Optional. The graph on which to calculate the metric. If None (default) it is automatically extracted from graph signals passed for evaluation. 
 
 Example:
 
 ```python 
 >>> from pygrank.metrics.unsupervised import Density 
->>> G, seed_nodes, algorithm = ... 
->>> ranks = algorithm.rank(G, seed_nodes) 
->>> conductance = Density(G).evaluate(ranks) 
+>>> graph, seed_nodes, algorithm = ... 
+>>> ranks = algorithm.rank(graph, seed_nodes) 
+>>> conductance = Density().evaluate(ranks) 
 ```
 
 
@@ -99,9 +99,6 @@ Initializes the supervised measure with desired graph signal outcomes.
 
 Args: 
  * *known_ranks:* The desired graph signal outcomes. 
-
-### Mean 
- 
 
 ### Modularity 
  

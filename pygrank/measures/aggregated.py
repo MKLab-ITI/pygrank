@@ -1,4 +1,4 @@
-import numpy as np
+from pygrank import backend
 from .utils import Measure
 
 
@@ -33,7 +33,7 @@ class AM(__Aggregated__):
             if self.weights[i] != 0:
                 eval = self.metrics[i].evaluate(ranks)
                 #print("metric", i, ":", eval, "->", min(max(eval, self.thresholds[i][0]), self.thresholds[i][1]))
-                result += self.weights[i]*min(max(eval, self.thresholds[i][0]), self.thresholds[i][1])
+                result += self.weights[i]*backend.min(backend.max(eval, self.thresholds[i][0]), self.thresholds[i][1])
         return result
 
 
@@ -43,5 +43,5 @@ class GM(__Aggregated__):
         for i in range(len(self.metrics)):
             if self.weights[i] != 0:
                 eval = self.metrics[i].evaluate(ranks)
-                result += self.weights[i]*np.log(1.E-12+min(max(eval, self.thresholds[i][0]), self.thresholds[i][1]))
-        return np.exp(result/sum(self.weights))
+                result += self.weights[i]*backend.log(1.E-12+min(max(eval, self.thresholds[i][0]), self.thresholds[i][1]))
+        return backend.exp(result/backend.sum(self.weights))

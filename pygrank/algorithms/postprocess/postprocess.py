@@ -142,20 +142,20 @@ class Transformer(Postprocessor):
 class Threshold(Postprocessor):
     """ Converts ranking outcome to binary values based on a threshold value."""
 
-    def __init__(self, threshold="gap", ranker=None):
+    def __init__(self, ranker=None, threshold="gap"):
         """ Initializes the Threshold postprocessing scheme. Args are automatically filled in and
         re-ordered if at least one is provided.
 
         Args:
+            ranker: Optional. The base ranker instance. A Tautology() ranker is created if None (default) was specified.
             threshold: Optional. The minimum numeric value required to output rank 1 instead of 0. If "gap" (default)
                 then its value is automatically determined based on the maximal percentage increase between consecutive
                 ranks.
-            ranker: Optional. The base ranker instance. A Tautology() ranker is created if None (default) was specified.
 
         Example:
             >>> from pygrank.algorithms.postprocess import Threshold
             >>> graph, personalization, algorithm = ...
-            >>> algorithm = Threshold(0.5, algorithm) # sets ranks >= 0.5 to 1 and lower ones to 0
+            >>> algorithm = Threshold(algorithm, 0.5) # sets ranks >= 0.5 to 1 and lower ones to 0
             >>> ranks = algorithm.rank(graph, personalization)
 
         Example (same outcome):
@@ -169,15 +169,11 @@ class Threshold(Postprocessor):
                 ranker = None
         self.ranker = Tautology() if ranker is None else ranker
         self.threshold = threshold
-        if threshold == "gap":
-            warnings.warn("gap-determined threshold is still under development (its implementation may be incorrect)", stacklevel=2)
 
-    def _transform(self, ranks, graph):
+    def _transform(self, ranks):
         threshold = self.threshold
-        if threshold == "none":
-            return ranks
         if threshold == "gap":
-            ranks = {v: ranks[v] / graph.degree(v) for v in ranks}
+            #ranks = {v: ranks[v] / ranks.graph.degree(v) for v in ranks}
             max_diff = 0
             threshold = 0
             prev_rank = 0
@@ -209,5 +205,5 @@ class Sweep(Postprocessor):
         self.centrality = MethodHasher(lambda graph: self.uniform_ranker.rank(graph), assume_immutability=True)
 
     def _transform(self, ranks):
-        uniforms = self.centrality(ranks.G).np
-        return ranks.np/(1.E-12+uniforms.np)
+        uniforms = self.centrality(ranks.graph).np
+        return ranks.np/(1.E-12+uniforms)

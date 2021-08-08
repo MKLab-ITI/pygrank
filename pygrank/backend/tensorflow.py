@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 from tensorflow import abs, reduce_sum as sum, exp, eye, identity as copy, reduce_min as min, reduce_max as max
+import tensorflow.math.log as log
 
 
 def backend_name():

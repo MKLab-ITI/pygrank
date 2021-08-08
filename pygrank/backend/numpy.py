@@ -1,5 +1,5 @@
 import numpy as np
-from numpy import abs, sum, exp, copy, repeat, min, max
+from numpy import abs, sum, exp, log, copy, repeat, min, max
 from scipy.sparse import eye
 
 

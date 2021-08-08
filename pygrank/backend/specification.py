@@ -1,5 +1,6 @@
 def backend_name():  # pragma: no cover
-    return None
+    return "no backend loaded"
+
 
 def abs(x):  # pragma: no cover
     pass
@@ -18,6 +19,10 @@ def max(x):  # pragma: no cover
 
 
 def exp(x):  # pragma: no cover
+    pass
+
+
+def log(x): # pragma: no cover
     pass
 
 
@@ -55,6 +60,7 @@ def conv(signal, M):  # pragma: no cover
 
 def length(x):  # pragma: no cover
     pass
+
 
 def degrees(M):  # pragma: no cover
     pass

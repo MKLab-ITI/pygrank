@@ -5,6 +5,28 @@ The following postprocessors can be imported from the package `pygrank.algorithm
 Constructor details are provided, including arguments inherited from and passed to parent classes.
 All of them can be used through the code patterns presented at the library's [documentation](documentation.md).  
 
+### BoostedSeedOversampling 
+
+Iteratively performs seed oversampling and combines found ranks by weighting them with a Boosting scheme. 
+Initializes the class with a base ranker and the boosting scheme's parameters. 
+
+Attributes: 
+ * *ranker:* The base ranker instance. 
+ * *objective:* Optional. Can be either "partial" (default) or "naive". 
+ * *oversample_from_iteration:* Optional. Can be either "previous" (default) to oversample the ranks of the previous iteration or "original" to always ovesample the given personalization. 
+ * *weight_convergence:* Optional.  A ConvergenceManager that helps determine whether the weights placed on boosting iterations have converged. If None (default), initialized with ConvergenceManager(error_type="small_value", tol=0.001, max_iters=100) 
+
+Example:
+
+```python 
+>>> from pygrank.algorithms.adhoc import PageRank 
+>>> from pygrank.algorithms.oversampling import BoostedSeedOversampling 
+>>> G, seed_nodes = ... 
+>>> algorithm = BoostedSeedOversampling(PageRank(alpha=0.99)) 
+>>> ranks = algorithm.rank(G, personalization={1 for v in seed_nodes}) 
+```
+
+
 ### FairPostprocessor 
 
 Adjusts node scores so that the sum of sensitive nodes is closer to the sum of non-sensitive ones. 
@@ -33,9 +55,9 @@ Example:
 
 ```python 
 >>> from pygrank.algorithms.postprocess import Normalize 
->>> G, seed_values, algorithm = ... 
+>>> graph, personalization, algorithm = ... 
 >>> algorithm = Normalize(0.5, algorithm) # sets ranks >= 0.5 to 1 and lower ones to 0 
->>> ranks = algorithm.rank(G, seed_values) 
+>>> ranks = algorithm.rank(graph, personalization) 
 ```
 
 
@@ -43,8 +65,8 @@ Example (same outcome, simpler one-liner):
 
 ```python 
 >>> from pygrank.algorithms.postprocess import Normalize 
->>> G, seed_values, algorithm = ... 
->>> ranks = Normalize(0.5).transform(algorithm.rank(G, seed_values)) 
+>>> graph, personalization, algorithm = ... 
+>>> ranks = Normalize(0.5).transform(algorithm.rank(graph, personalization)) 
 ```
 
 
@@ -56,6 +78,26 @@ Initializes the class with a base ranker instance.
 
 Args: 
  * *ranker:* Optional. The base ranker instance. A Tautology() ranker is created if None (default) was specified. 
+
+### SeedOversampling 
+
+Performs seed oversampling on a base ranker to improve the quality of predicted seeds. 
+Initializes the class with a base ranker. 
+
+Attributes: 
+ * *ranker:* The base ranker instance. 
+ * *method:* Optional. Can be "safe" (default) to oversample based on the ranking scores of a preliminary base ranker run or "neighbors" to oversample the neighbors of personalization nodes. 
+
+Example:
+
+```python 
+>>> from pygrank.algorithms.postprocess import oversampling 
+>>> from pygrank.algorithms import adhoc 
+>>> G, seed_nodes = ... 
+>>> algorithm = oversampling.SeedOversampling(adhoc.PageRank(alpha=0.99)) 
+>>> ranks = algorithm.rank(G, personalization={1 for v in seed_nodes}) 
+```
+
 
 ### Sweep 
 
@@ -78,16 +120,16 @@ Initializes the Threshold postprocessing scheme. Args are automatically filled i
 re-ordered if at least one is provided. 
 
 Args: 
- * *threshold:* Optional. The minimum numeric value required to output rank 1 instead of 0. If "gap" (default) then its value is automatically determined based on the maximal percentage increase between consecutive ranks. 
  * *ranker:* Optional. The base ranker instance. A Tautology() ranker is created if None (default) was specified. 
+ * *threshold:* Optional. The minimum numeric value required to output rank 1 instead of 0. If "gap" (default) then its value is automatically determined based on the maximal percentage increase between consecutive ranks. 
 
 Example:
 
 ```python 
 >>> from pygrank.algorithms.postprocess import Threshold 
->>> G, seed_values, algorithm = ... 
->>> algorithm = Threshold(0.5, algorithm) # sets ranks >= 0.5 to 1 and lower ones to 0 
->>> ranks = algorithm.rank(G, seed_values) 
+>>> graph, personalization, algorithm = ... 
+>>> algorithm = Threshold(algorithm, 0.5) # sets ranks >= 0.5 to 1 and lower ones to 0 
+>>> ranks = algorithm.rank(graph, personalization) 
 ```
 
 
@@ -95,8 +137,8 @@ Example (same outcome):
 
 ```python 
 >>> from pygrank.algorithms.postprocess import Threshold 
->>> G, seed_values, algorithm = ... 
->>> ranks = Threshold(0.5).transform(algorithm.rank(G, seed_values)) 
+>>> graph, personalization, algorithm = ... 
+>>> ranks = Threshold(0.5).transform(algorithm.rank(graph, personalization)) 
 ```
 
 
@@ -109,3 +151,16 @@ re-ordered if at least one is provided.
 Args: 
  * *ranker:* Optional. The base ranker instance. A Tautology() ranker is created if None (default) was specified. 
  * *expr:* Optional. A lambda expression to apply on each element. The transformer will automatically try to apply it on the backend array representation of the graph signal first, so prefer use of backend functions for faster computations. For example, backend.exp (default) should be prefered instead of math.exp, because the former can directly parse a numpy array. 
+
+Example:
+
+```python 
+>>> from pygrank.algorithms.postprocess import Normalize, Transformer 
+>>> from pygrank import backend 
+>>> graph, personalization, algorithm = ... 
+>>> r1 = Normalize(algorithm, "sum").rank(graph, personalization) 
+>>> r2 = Transformer(algorithm, lambda x: x/backend.sum(x)).rank(graph, personalization) 
+>>> print(sum(abs(r1[v]-r2[v]) for v in graph)) 
+```
+
+0 

@@ -5,7 +5,7 @@ import pygrank.algorithms.postprocess
 import pygrank.measures
 
 """
-THIS FILE IS AUTOMATICALLY RUN BY THE pre-commit HOOK FOR GIT
+THIS FILE IS AUTOMATICALLY RUN BY THE pre-commit HOOK FOR git
 """
 
 
