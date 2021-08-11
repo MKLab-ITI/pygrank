@@ -2,7 +2,7 @@ import importlib
 import sys
 import os
 import json
-from pygrank.backend.specification import *
+from pygrank.core.backend.specification import *
 
 
 def load_backend(mod_name):

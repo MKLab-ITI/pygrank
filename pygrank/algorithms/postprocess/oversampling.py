@@ -1,13 +1,13 @@
-import pygrank.algorithms.utils
 import numpy as np
-from pygrank.algorithms.utils import NodeRanking, ConvergenceManager
+from pygrank.core.signals import to_signal, NodeRanking
+from pygrank.algorithms.utils import ConvergenceManager, assert_binary
 from pygrank.algorithms.postprocess.postprocess import Postprocessor
 
 
 class SeedOversampling(Postprocessor):
     """Performs seed oversampling on a base ranker to improve the quality of predicted seeds."""
 
-    def __init__(self, ranker: NodeRanking, method : str = 'safe'):
+    def __init__(self, ranker: NodeRanking, method: str = 'safe'):
         """ Initializes the class with a base ranker.
 
         Attributes:
@@ -16,41 +16,35 @@ class SeedOversampling(Postprocessor):
                 base ranker run or "neighbors" to oversample the neighbors of personalization nodes.
 
         Example:
-            >>> from pygrank.algorithms.postprocess import oversampling
-            >>> from pygrank.algorithms import adhoc
-            >>> G, seed_nodes = ...
-            >>> algorithm = oversampling.SeedOversampling(adhoc.PageRank(alpha=0.99))
-            >>> ranks = algorithm.rank(G, personalization={1 for v in seed_nodes})
+            >>> from pygrank.algorithms import PageRank, SeedOversampling
+            >>> graph, seed_nodes = ...
+            >>> algorithm = SeedOversampling(PageRank(alpha=0.99))
+            >>> ranks = algorithm.rank(graph, personalization={1 for v in seed_nodes})
         """
-        self.ranker = ranker
+        super().__init__(ranker)
         self.method = method.lower()
 
-    def rank(self, G, personalization, **kwargs):
-        personalization = pygrank.algorithms.utils.to_signal(G, personalization)
-        pygrank.algorithms.utils.assert_binary(personalization)
+    def rank(self, graph, personalization, **kwargs):
+        personalization = to_signal(graph, personalization)
+        assert_binary(personalization)
         if self.method == 'safe':
-            #prev_to_scipy = self.ranker.to_scipy
-            #self.ranker.to_scipy = pygrank.algorithms.utils.MethodHasher(self.ranker.to_scipy)
-            ranks = self.ranker.rank(G, personalization, **kwargs)
+            ranks = self.ranker.rank(graph, personalization, **kwargs)
             threshold = min(ranks[u] for u in personalization if personalization[u] == 1)
-            personalization = {v: 1 for v in G.nodes() if ranks[v] >= threshold}
-            ranks = self.ranker.rank(G, personalization, **kwargs)
-            #self.ranker.to_scipy = prev_to_scipy
+            personalization = {v: 1 for v in graph.nodes() if ranks[v] >= threshold}
+            ranks = self.ranker.rank(graph, personalization, **kwargs)
             return ranks
         elif self.method == 'top':
-            #prev_to_scipy = self.ranker.to_scipy
-            #self.ranker.to_scipy = pygrank.algorithms.utils.MethodHasher(self.ranker.to_scipy)
-            ranks = self.ranker.rank(G, personalization, **kwargs)
-            threshold = np.sort(list(ranks.values()))[len(ranks)-int(G.number_of_nodes()*G.number_of_nodes()/G.number_of_edges())] # get top rank
-            personalization = {v: 1 for v in G.nodes() if ranks[v] >= threshold or personalization.get(v,0)==1} # add only this top rank
-            ranks = self.ranker.rank(G, personalization, **kwargs)
-            #self.ranker.to_scipy = prev_to_scipy
+            ranks = self.ranker.rank(graph, personalization, **kwargs)
+            top = int(graph.number_of_nodes() * graph.number_of_nodes() / graph.number_of_edges())
+            threshold = np.sort(list(ranks.values()))[len(ranks) - top]  # get top ranks
+            personalization = {v: 1 for v in graph.nodes() if ranks[v] >= threshold or personalization.get(v, 0) == 1}
+            ranks = self.ranker.rank(graph, personalization, **kwargs)
             return ranks
         elif self.method == 'neighbors':
             for u in [u for u in personalization if personalization[u] == 1]:
-                for v in G.neighbors(u):
+                for v in graph.neighbors(u):
                     personalization[v] = 1
-            return self.ranker.rank(G, personalization, **kwargs)
+            return self.ranker.rank(graph, personalization, **kwargs)
         else:
             raise Exception("Supported oversampling methods: safe, neighbors, top")
 
@@ -74,35 +68,33 @@ class BoostedSeedOversampling(Postprocessor):
                 ConvergenceManager(error_type="small_value", tol=0.001, max_iters=100)
 
         Example:
-            >>> from pygrank.algorithms.adhoc import PageRank
-            >>> from pygrank.algorithms.oversampling import BoostedSeedOversampling
-            >>> G, seed_nodes = ...
+            >>> from pygrank.algorithms import PageRank, BoostedSeedOversampling
+            >>> graph, seed_nodes = ...
             >>> algorithm = BoostedSeedOversampling(PageRank(alpha=0.99))
-            >>> ranks = algorithm.rank(G, personalization={1 for v in seed_nodes})
+            >>> ranks = algorithm.rank(graph, personalization={1 for v in seed_nodes})
         """
-        self.ranker = ranker
+        super().__init__(ranker)
         self._objective = objective.lower()
         self._oversample_from_iteration = oversample_from_iteration.lower()
-        self._weight_convergence = pygrank.algorithms.utils.ConvergenceManager(error_type="small_value", tol=0.001, max_iters=100) if weight_convergence is None else weight_convergence
+        self._weight_convergence = ConvergenceManager(error_type="small_value", tol=0.001, max_iters=100) \
+            if weight_convergence is None else weight_convergence
 
     def _boosting_weight(self, r0_N, Rr0_N, RN):
         if self._objective == 'partial':
             a_N = sum(r0_N[u]*Rr0_N[u]**2 for u in r0_N)/float(sum(Rr0_N[u]**2 for u in Rr0_N)) \
-                  -sum(r0_N[u]*RN.get(u,0)*Rr0_N[u] for u in r0_N)/float(sum(Rr0_N[u]**2 for u in Rr0_N))
+                  - sum(r0_N[u]*RN.get(u, 0)*Rr0_N[u] for u in r0_N)/float(sum(Rr0_N[u]**2 for u in Rr0_N))
         elif self._objective == 'naive':
-            a_N = 0.5-0.5*sum(r0_N[u]*RN.get(u,0)*Rr0_N[u] for u in r0_N)/float(sum(Rr0_N[u]**2 for u in Rr0_N))
+            a_N = 0.5-0.5*sum(r0_N[u]*RN.get(u, 0)*Rr0_N[u] for u in r0_N)/float(sum(Rr0_N[u]**2 for u in Rr0_N))
         else:
             raise Exception("Supported boosting objectives: partial, naive")
         return a_N
 
-    def rank(self, G, personalization, **kwargs):
-        personalization = pygrank.algorithms.utils.to_signal(G, personalization)
-        #prev_to_scipy = self.ranker.to_scipy
-        #self.ranker.to_scipy = pygrank.algorithms.utils.MethodHasher(self.ranker.to_scipy)
+    def rank(self, graph, personalization, **kwargs):
+        personalization = to_signal(graph, personalization)
         r0_N = personalization.normalized(False)
-        RN = self.ranker.rank(G, r0_N, **kwargs)
+        RN = self.ranker.rank(graph, r0_N, **kwargs)
         a_N = 1
-        suma_N = 1
+        sum_a_N = 1
         self._weight_convergence.start()
         while not self._weight_convergence.has_converged(a_N):
             if self._oversample_from_iteration == 'previous':
@@ -112,10 +104,9 @@ class BoostedSeedOversampling(Postprocessor):
             else:
                 raise Exception("Boosting only supports oversampling from iterations: previous, original")
             r0_N = {u: 1 for u in RN if RN[u] >= threshold}
-            Rr0_N = self.ranker.rank(G, r0_N, **kwargs)
+            Rr0_N = self.ranker.rank(graph, r0_N, **kwargs)
             a_N = self._boosting_weight(r0_N, Rr0_N, RN)
-            for u in G.nodes():
-                RN[u] = RN.get(u,0) + a_N*Rr0_N[u]
-            suma_N += a_N
-        #self.ranker.to_scipy = prev_to_scipy
+            for u in graph.nodes():
+                RN[u] = RN.get(u, 0) + a_N*Rr0_N[u]
+            sum_a_N += a_N
         return RN

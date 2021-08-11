@@ -1,9 +1,7 @@
-from pygrank.algorithms.adhoc import *
-from pygrank.algorithms.postprocess import *
+from pygrank.algorithms import *
 from pygrank.measures import *
-from pygrank.algorithms.postprocess.oversampling import SeedOversampling, BoostedSeedOversampling
 from experiments.importer import fairness_dataset
-from pygrank.algorithms.utils import preprocessor
+from pygrank.algorithms import preprocessor
 import random
 import time
 
@@ -51,9 +49,9 @@ for filter, H in graph_filters.items():
     algorithms = {
         "None": lambda G, p, s: Normalize(H).rank(G, p),
         #"AUCPers": lambda G,p,s: personalizer(H, G, p, s, 0, 0),
-        "FairWalk": lambda G,p,s: Normalize(AdhocFairness(H, "fairwalk")).rank(G, p, sensitive=s),
-        "Mult": lambda G,p,s: Normalize(AdhocFairness(H, "B")).rank(G, p, sensitive=s),
-        "LFRPO": lambda G,p,s: Normalize(AdhocFairness(H, "O")).rank(G, p, sensitive=s),
+        "FairWalk": lambda G,p,s: Normalize(AdHocFairness(H, "fairwalk")).rank(G, p, sensitive=s),
+        "Mult": lambda G,p,s: Normalize(AdHocFairness(H, "B")).rank(G, p, sensitive=s),
+        "LFRPO": lambda G,p,s: Normalize(AdHocFairness(H, "O")).rank(G, p, sensitive=s),
         "FairPers": lambda G,p,s: Normalize(FairPersonalizer(H, error_type="mabs", max_residual=0)).rank(G, p, sensitive=s),
         "FairPers-C": lambda G,p,s: Normalize(FairPersonalizer(H,.80, pRule_weight=10, error_type="mabs", max_residual=0)).rank(G, p, sensitive=s),
         "FairPersKL": lambda G,p,s: Normalize(FairPersonalizer(H, max_residual=0)).rank(G, p, sensitive=s),

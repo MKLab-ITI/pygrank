@@ -1,6 +1,7 @@
-from .utils import _call, _ensure_all_used
-from pygrank.algorithms.utils import NodeRanking, preprocessor, ConvergenceManager, to_signal, krylov_base, krylov2original
-from pygrank import backend
+from pygrank.core.signals import to_signal, NodeRanking
+from pygrank.algorithms.utils import call, ensure_used_args
+from pygrank.algorithms.utils import preprocessor, ConvergenceManager, krylov_base, krylov2original
+from pygrank.core import backend
 from pygrank.algorithms.postprocess import Postprocessor
 
 
@@ -18,9 +19,9 @@ class GraphFilter(NodeRanking):
                 a ConvergenceManager is used with keyword arguments
                 automatically extracted from the ones passed to this constructor.
         """
-        self.to_scipy = _call(preprocessor, kwargs) if to_scipy is None else to_scipy
-        self.convergence = _call(ConvergenceManager, kwargs) if convergence is None else convergence
-        _ensure_all_used(kwargs, [preprocessor, ConvergenceManager])
+        self.to_scipy = call(preprocessor, kwargs) if to_scipy is None else to_scipy
+        self.convergence = call(ConvergenceManager, kwargs) if convergence is None else convergence
+        ensure_used_args(kwargs, [preprocessor, ConvergenceManager])
 
     def rank(self, graph=None, personalization=None, warm_start=None, normalize_personalization=True, *args, **kwargs):
         personalization = to_signal(graph, personalization).normalized(normalize_personalization)

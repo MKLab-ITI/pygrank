@@ -113,7 +113,8 @@ def generate_filter_docs():
     base_descriptions = dict()
     abstract = dict()
 
-    base_descriptions[pygrank.algorithms.abstract_filters.GraphFilter] = base_description(pygrank.algorithms.abstract_filters.GraphFilter, True)
+    base_descriptions[pygrank.algorithms.abstract_filters.GraphFilter] = base_description(
+        pygrank.algorithms.abstract_filters.GraphFilter, True)
     abstract[pygrank.algorithms.abstract_filters.GraphFilter] = True
     for name, obj in inspect.getmembers(sys.modules["pygrank.algorithms"]):
         if inspect.isclass(obj) and issubclass(obj, pygrank.algorithms.abstract_filters.GraphFilter):
@@ -149,7 +150,8 @@ def generate_postprocessor_docs():
         if inspect.isclass(obj) and issubclass(obj, pygrank.algorithms.postprocess.Postprocessor):
             abstract[obj] = False#is_abstract(obj, pygrank.algorithms.PageRank()) TODO - fix this
             base_descriptions[obj] = base_description(obj, abstract[obj])
-    base_descriptions[pygrank.algorithms.postprocess.Postprocessor] = base_description(pygrank.algorithms.postprocess.Postprocessor, True)
+    base_descriptions[pygrank.algorithms.postprocess.Postprocessor] = base_description(
+        pygrank.algorithms.postprocess.Postprocessor, True)
     abstract[pygrank.algorithms.postprocess.Postprocessor] = True
 
     count = 0

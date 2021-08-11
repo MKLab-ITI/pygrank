@@ -70,7 +70,7 @@ with absolute rank error tolerance `tol=1.E-6` (its default parameters)
 and printing its node ranks can be done as follows:
 
 ```python
-from pygrank.algorithms.adhoc import PageRank
+from pygrank.algorithms import PageRank
 G, personalization = ...
 ranker = PageRank(alpha=0.85, tol=1.E-6)
 ranks = ranker.rank(G, personalization)
@@ -149,7 +149,7 @@ For example, hashing the outcome of graph normalization to
 speed up multiple calls to the same graph can be achieved
 as per the following code:
 ```python
-from pygrank.algorithms.adhoc import PageRank
+from pygrank.algorithms import PageRank
 G, personalization1, personalization2 = ...
 algorithm = PageRank(alpha=0.85, normalization="col", assume_immutability=True)
 ranks = algorithm.rank(G, personalization1)
@@ -180,8 +180,8 @@ Using the outcome of graph normalization
 to speed up multiple rank calls to the same graph by
 different ranking algorithms can be done as:
 ```python
-from pygrank.algorithms.adhoc import PageRank, HeatKernel
-from pygrank.algorithms.utils import preprocessor
+from pygrank.algorithms import PageRank, HeatKernel
+from pygrank.algorithms import preprocessor
 G, personalization1, personalization2 = ...
 pre = preprocessor(normalization="col", assume_immutability=True)
 ranker1 = PageRank(alpha=0.85, to_scipy=pre)
@@ -209,7 +209,7 @@ with a preprocessor that assigns rank 1 to the highest scored node,
 2 to the second highest, etc:
 
 ```python
-from pygrank.algorithms.postprocess import Ordinals
+from pygrank.algorithms import Ordinals
 
 G, personalization = ...
 base_algorithm = ... # e.g. PageRank
@@ -224,7 +224,7 @@ base algotithm. For example, the following code performs the same operation
 as the previous one:
 
 ```python
-from pygrank.algorithms.postprocess import Ordinals
+from pygrank.algorithms import Ordinals
 
 G, personalization = ...
 base_algorithm = ... # e.g. PageRank
@@ -241,7 +241,7 @@ and then sets seeds to one for nodes with higher ranks than any of the original 
 and then reruns that algorithm with updated seeds:
 
 ```python
-from pygrank.algorithms.postprocess.oversampling import SeedOversampling
+from pygrank.algorithms import SeedOversampling
 
 G, personalization = ...
 base_algorithm = ... # e.g. PageRank
@@ -270,9 +270,9 @@ as the base ranking algorithm and needs to know that algorithm's diffusion
 rate ``alpha``, which is passed as its first argument.
 
 ```python
-from pygrank.algorithms.adhoc import PageRank
-from pygrank.algorithms.utils import RankOrderConvergenceManager
-from pygrank.algorithms.postprocess import Ordinals
+from pygrank.algorithms import PageRank
+from pygrank.algorithms import RankOrderConvergenceManager
+from pygrank.algorithms import Ordinals
 
 G, personalization = ...
 alpha = 0.85
@@ -300,7 +300,7 @@ will be provided in the future.
 
 ###### How to evaluate ranks with an unsupervised metric
 ```python
-from pygrank.algorithms.postprocess import Normalize
+from pygrank.algorithms import Normalize
 from pygrank.measures.unsupervised import Conductance
 
 G, ranks = ... # calculate as per the first example
@@ -328,9 +328,9 @@ print(metric.evaluate(ranks))
 ###### How to evaluate multiple ranks
 ```python
 import networkx as nx
-from pygrank.algorithms.adhoc import PageRank as Ranker
-from pygrank.algorithms.postprocess import Normalize as Normalizer
-from pygrank.algorithms.oversampling import BoostedSeedOversampling as Oversampler
+from pygrank.algorithms import PageRank as Ranker
+from pygrank.algorithms import Normalize as Normalizer
+from pygrank.algorithms import BoostedSeedOversampling as Oversampler
 from pygrank.measures.unsupervised import Conductance
 from pygrank.measures.supervised import AUC
 from pygrank.measures.multigroup import MultiUnsupervised, MultiSupervised, LinkAUC

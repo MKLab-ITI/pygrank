@@ -6,7 +6,7 @@ from tests.example_graph import test_graph, test_block_model_graph
 class Test(unittest.TestCase):
 
     def test_signal(self):
-        from pygrank.algorithms.utils import GraphSignal
+        from pygrank.algorithms import GraphSignal
         with self.assertRaises(Exception):
             GraphSignal([1, 2, 3], [1, 2])
         signal = GraphSignal(test_graph(), {"A": 1, "B": 2})
@@ -20,7 +20,7 @@ class Test(unittest.TestCase):
             PageRank(krylov_dims=5)
 
     def test_node_ranking(self):
-        from pygrank.algorithms.utils import NodeRanking
+        from pygrank.algorithms import NodeRanking
         from pygrank.algorithms import PageRank
         G = test_graph()
         with self.assertRaises(Exception):
@@ -32,7 +32,7 @@ class Test(unittest.TestCase):
         self.assertAlmostEqual(abs_diffs, 0, places=16, msg="PageRank compliance with nx results")
 
     def test_abstract_filter(self):
-        from pygrank.algorithms.abstract_filters import GraphFilter, RecursiveGraphFilter, ClosedFormGraphFilter
+        from pygrank.algorithms.filters.abstract_filters import GraphFilter, RecursiveGraphFilter, ClosedFormGraphFilter
         G = test_graph()
         with self.assertRaises(Exception):
             GraphFilter().rank(G, {})
@@ -43,20 +43,20 @@ class Test(unittest.TestCase):
         with self.assertRaises(Exception):
             ClosedFormGraphFilter().rank(G)
 
-    def prevent_passing_node_lists_as_graphs(self):
+    def test_prevent_passing_node_lists_as_graphs(self):
         from pygrank.algorithms import PageRank
         with self.assertRaises(Exception):
             PageRank().rank(list(test_graph()))
 
     def test_completion(self):
-        from pygrank.algorithms.adhoc import PageRank, HeatKernel, AbsorbingWalks
+        from pygrank.algorithms import PageRank, HeatKernel, AbsorbingWalks
         G = test_graph()
         PageRank().rank(G)
         HeatKernel().rank(G)
         AbsorbingWalks().rank(G)
 
     def test_pagerank(self):
-        from pygrank.algorithms.adhoc import PageRank
+        from pygrank.algorithms import PageRank
         G = test_graph()
         test_result = PageRank(normalization='col', tol=1.E-9).rank(G)
         nx_result = nx.pagerank_scipy(G, tol=1.E-9)
@@ -64,8 +64,8 @@ class Test(unittest.TestCase):
         self.assertAlmostEqual(abs_diffs, 0, places=12, msg="PageRank compliance with nx results")
 
     def test_quotient(self):
-        from pygrank.algorithms.adhoc import PageRank
-        from pygrank.algorithms.postprocess import Normalize
+        from pygrank.algorithms import PageRank
+        from pygrank.algorithms import Normalize
         G = test_graph()
         test_result = PageRank(normalization='symmetric', tol=1.E-9, use_quotient=True).rank(G)
         norm_result = PageRank(normalization='symmetric', tol=1.E-9, use_quotient=Normalize("sum")).rank(G)
@@ -74,8 +74,8 @@ class Test(unittest.TestCase):
 
     def test_oversampling(self):
         from pygrank.algorithms import PageRank
-        from pygrank.algorithms.utils import to_signal
-        from pygrank.algorithms.postprocess import SeedOversampling, BoostedSeedOversampling
+        from pygrank.algorithms import to_signal
+        from pygrank.algorithms import SeedOversampling, BoostedSeedOversampling
         from pygrank.measures.utils import split
         from pygrank.measures import NDCG
         import random
@@ -94,8 +94,8 @@ class Test(unittest.TestCase):
         SeedOversampling(PageRank(0.99), "top").rank(G, training)
 
     def test_implicit_graph(self):
-        from pygrank.algorithms.adhoc import PageRank
-        from pygrank.algorithms.utils import to_signal
+        from pygrank.algorithms import PageRank
+        from pygrank.algorithms import to_signal
         G = test_graph()
         signal = to_signal(G, {"A": 1})
         test_result1 = PageRank(normalization='col').rank(signal, signal)
@@ -110,11 +110,11 @@ class Test(unittest.TestCase):
             PageRank(normalization='col').rank(test_graph(), signal)
 
     def test_lanczos(self):
-        from pygrank.algorithms.adhoc import HeatKernel
-        from pygrank.algorithms.postprocess import Normalize
+        from pygrank.algorithms import HeatKernel
+        from pygrank.algorithms import Normalize
         G = test_graph()
         test_result = Normalize(HeatKernel(normalization='symmetric')).rank(G)
-        test_result_lanczos = Normalize(HeatKernel(normalization='symmetric', krylov_dims=5)).rank(G)
+        test_result_lanczos = Normalize(HeatKernel(normalization='symmetric', krylov_dims=5)).rank(G, personalization=None)
         abs_diffs = sum(abs(test_result[v] - test_result_lanczos[v]) for v in test_result_lanczos.keys()) / len(test_result_lanczos)
         self.assertAlmostEqual(abs_diffs, 0, places=0, msg="Krylov decomposition yields small error")
 
@@ -122,8 +122,8 @@ class Test(unittest.TestCase):
             HeatKernel(normalization='col', krylov_dims=5).rank(G)
 
     def test_absorbing_walk(self):
-        from pygrank.algorithms.adhoc import PageRank
-        from pygrank.algorithms.adhoc import AbsorbingWalks
+        from pygrank.algorithms import PageRank
+        from pygrank.algorithms import AbsorbingWalks
         G = test_graph()
         personalization = {"A": 1, "B": 1}
         pagerank_result = PageRank(normalization='col').rank(G, personalization)
@@ -132,8 +132,8 @@ class Test(unittest.TestCase):
         self.assertAlmostEqual(abs_diffs, 0, places=16, msg="Absorbing Random Walks compliance with PageRank results")
 
     def test_heat_kernel_locality(self):
-        from pygrank.algorithms.adhoc import PageRank
-        from pygrank.algorithms.adhoc import HeatKernel
+        from pygrank.algorithms import PageRank
+        from pygrank.algorithms import HeatKernel
         G = test_graph()
         personalization = {"A": 1, "B": 1}
         pagerank = PageRank().rank(G, personalization)
@@ -142,8 +142,8 @@ class Test(unittest.TestCase):
         self.assertLess(heatkernel['I']/sum(heatkernel.values()), pagerank['I']/sum(pagerank.values()), msg="HeatKernel more local than PageRank")
 
     def test_biased_kernel_locality(self):
-        from pygrank.algorithms.adhoc import PageRank
-        from pygrank.algorithms.adhoc import BiasedKernel
+        from pygrank.algorithms import PageRank
+        from pygrank.algorithms import BiasedKernel
         G = test_graph()
         personalization = {"A": 1, "B": 1}
         pagerank = PageRank().rank(G, personalization)
@@ -152,8 +152,8 @@ class Test(unittest.TestCase):
         self.assertLess(heatkernel['I'] / sum(heatkernel.values()), pagerank['I'] / sum(pagerank.values()), msg="BiasedRank more local than PageRank")
 
     def test_venuerank(self):
-        from pygrank.algorithms.adhoc import PageRank
-        from pygrank.algorithms.postprocess import Ordinals
+        from pygrank.algorithms import PageRank
+        from pygrank.algorithms import Ordinals
         from scipy.stats import spearmanr
         G = nx.fast_gnp_random_graph(600, 0.001, seed=1)
         ranker1 = PageRank(max_iters=10000, converge_to_eigenvectors=True, tol=1.E-12)
@@ -166,12 +166,12 @@ class Test(unittest.TestCase):
         self.assertAlmostEqual(corr[0], 1., 4, msg="converge_to_eigenvectors (VenueRank) should yield similar order to the one of small restart probability")
 
     def test_learnable(self):
-        from pygrank.algorithms.autotune.optimization import optimize
+        from pygrank.algorithms import optimize
         from pygrank.algorithms import GenericGraphFilter, HeatKernel
-        from pygrank.algorithms.utils import to_signal, preprocessor
+        from pygrank.algorithms import to_signal, preprocessor
         from pygrank.measures.utils import split
         from pygrank.measures import AUC
-        from pygrank.algorithms.postprocess import Normalize
+        from pygrank.algorithms import Normalize
         import random
         G, groups = test_block_model_graph(nodes=600, seed=1)
         group = groups[0]
@@ -192,12 +192,12 @@ class Test(unittest.TestCase):
                         msg="Metrics correctly apply exclude filter to not skew results")
 
     def test_chebychev(self):
-        from pygrank.algorithms.autotune.optimization import optimize
+        from pygrank.algorithms import optimize
         from pygrank.algorithms import GenericGraphFilter, HeatKernel
-        from pygrank.algorithms.utils import to_signal, preprocessor
+        from pygrank.algorithms import to_signal, preprocessor
         from pygrank.measures.utils import split
         from pygrank.measures import AUC
-        from pygrank.algorithms.postprocess import Normalize
+        from pygrank.algorithms import Normalize
         import random
         G, groups = test_block_model_graph(nodes=600, seed=1)
         group = groups[0]
@@ -223,7 +223,7 @@ class Test(unittest.TestCase):
                         msg="Metrics correctly apply exclude filter to not skew results")
 
     def test_preprocessor(self):
-        from pygrank.algorithms.utils import preprocessor, MethodHasher
+        from pygrank.algorithms import preprocessor, MethodHasher
         G = test_graph()
         with self.assertRaises(Exception):
             pre = preprocessor(normalization="unknown", assume_immutability=True)
@@ -256,7 +256,7 @@ class Test(unittest.TestCase):
         self.test_pagerank()
         self.test_venuerank()
         self.test_absorbing_walk()
-        self.prevent_passing_node_lists_as_graphs()
+        self.test_prevent_passing_node_lists_as_graphs()
         backend.load_backend("numpy")
         self.assertEqual(backend.backend_name(), "numpy")
         with self.assertRaises(Exception):
@@ -264,4 +264,3 @@ class Test(unittest.TestCase):
         self.assertEqual(backend.backend_name(), "numpy")
         #self.test_learnable()
         self.test_pagerank()
-        self.test_absorbing_walk()

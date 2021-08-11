@@ -1,2 +1,4 @@
-from pygrank.algorithms.adhoc import *
-from pygrank.algorithms.learnable import *
+from pygrank.algorithms.filters import *
+from pygrank.algorithms.postprocess import *
+from pygrank.algorithms.autotune import *
+from pygrank.algorithms.utils import *

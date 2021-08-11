@@ -1,7 +1,7 @@
 from pygrank.algorithms import PageRank, HeatKernel, GenericGraphFilter
-from pygrank.algorithms.autotune import ParameterTuner
-from pygrank.algorithms.postprocess import Tautology, SeedOversampling
-from pygrank.algorithms.utils import preprocessor
+from pygrank.algorithms import ParameterTuner
+from pygrank.algorithms import Tautology, SeedOversampling
+from pygrank.algorithms import preprocessor
 from pygrank.measures import AUC
 from pygrank import benchmark
 

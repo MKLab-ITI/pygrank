@@ -1,4 +1,4 @@
-from pygrank.algorithms.abstract_filters import ClosedFormGraphFilter
+from pygrank.algorithms.filters.abstract_filters import ClosedFormGraphFilter
 
 
 class GenericGraphFilter(ClosedFormGraphFilter):

@@ -2,7 +2,7 @@
 This file covers the experiments of the paper: Unsupervised evaluation of multiple node ranks by reconstructing local structures
 """
 
-from pygrank.algorithms.utils import preprocessor
+from pygrank.algorithms import preprocessor
 import pygrank.algorithms.postprocess
 import pygrank.measures.utils
 import pygrank.measures.multigroup

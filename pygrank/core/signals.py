@@ -1,44 +1,6 @@
 from collections.abc import MutableMapping
-from pygrank import backend
+from pygrank.core import backend
 import numpy as np
-
-
-def to_signal(graph, obj):
-    """
-    Converts an object to a GraphSignal tied to an explicit or implicit reference to a graph. This method helps
-    convert various ways of expressing graph signals to the same format that algorithms can work with. Prefer
-    using GraphSignal instances when developing new code, because these combine the advantages of using hashmaps
-    for accessing values with the speed provided by numpy arrays.
-
-    Args:
-        graph: Either a graph or a GraphSignal, where in the second case it takes the value of the latter's graph.
-            Prefer using a GraphSignal as reference, as this copies the latter's node2id property without additional
-            memory or computations. If the graph is None, the second argument needs to be a GraphSignal.
-        obj: Either a numpy array or a hashmap between graph nodes and their values, in which cases the appropriate
-            GraphSignal contructor is called, or a GraphSignal in which case it is also returned and a check is
-            performed that these are signals on the same graph. If None, this argument induces a graph signal
-            of ones.
-    """
-    known_node2id = None
-    if obj is None and isinstance(graph, GraphSignal):
-        obj, graph = graph, obj
-    if graph is None:
-        if isinstance(obj, GraphSignal):
-            graph = obj.graph
-        else:
-            raise Exception("None graph allowed only for explicit graph signal input")
-    elif isinstance(graph, GraphSignal):
-        known_node2id = graph.node2id
-        graph = graph.graph
-    elif backend.is_array(graph):
-        raise Exception("Graph cannot be an array")
-    if isinstance(obj, list) and len(obj) != len(graph):
-        obj = {v: 1 for v in obj}
-    if isinstance(obj, GraphSignal):
-        if graph != obj.graph:
-            raise Exception("Graph signal tied to a different graph")
-        return obj
-    return GraphSignal(graph, obj, known_node2id)
 
 
 class GraphSignal(MutableMapping):
@@ -54,12 +16,12 @@ class GraphSignal(MutableMapping):
         node2id: A map from graph nodes to their position inside the above-described numpy array.
 
     Example:
-        >>> from pygrank.algorithms.utils.graph_signal import to_signal
+        >>> from pygrank import to_signal
         >>> import networkx as nx
-        >>> G = nx.Graph()
-        >>> G.add_edge("A", "B")
-        >>> G.add_edge("B", "C")
-        >>> signal = to_signal(G, {"A": 3, "C": 2})
+        >>> graph = nx.Graph()
+        >>> graph.add_edge("A", "B")
+        >>> graph.add_edge("B", "C")
+        >>> signal = to_signal(graph, {"A": 3, "C": 2})
         >>> print(signal["A"], signal["B"])
         3.0 0.0
         >>> print(signal.np)
@@ -135,8 +97,46 @@ class NodeRanking(object):
     are passed to their rank methods.
     """
 
-    def __call__(self, *args, **kwargs):
-        return self.rank(*args, **kwargs)
+    def __call__(self, graph=None, personalization=None, *args, **kwargs) -> GraphSignal:
+        return self.rank(graph, personalization, *args, **kwargs)
 
-    def rank(self, *args, **kwargs):
+    def rank(self, graph=None, personalization=None, *args, **kwargs) -> GraphSignal:
         raise Exception("NodeRanking subclasses should implement a rank method")
+
+
+def to_signal(graph, obj) -> GraphSignal:
+    """
+    Converts an object to a GraphSignal tied to an explicit or implicit reference to a graph. This method helps
+    convert various ways of expressing graph signals to the same format that algorithms can work with. Prefer
+    using GraphSignal instances when developing new code, because these combine the advantages of using hashmaps
+    for accessing values with the speed provided by numpy arrays.
+
+    Args:
+        graph: Either a graph or a GraphSignal, where in the second case it takes the value of the latter's graph.
+            Prefer using a GraphSignal as reference, as this copies the latter's node2id property without additional
+            memory or computations. If the graph is None, the second argument needs to be a GraphSignal.
+        obj: Either a numpy array or a hashmap between graph nodes and their values, in which cases the appropriate
+            GraphSignal contructor is called, or a GraphSignal in which case it is also returned and a check is
+            performed that these are signals on the same graph. If None, this argument induces a graph signal
+            of ones.
+    """
+    known_node2id = None
+    if obj is None and isinstance(graph, GraphSignal):
+        obj, graph = graph, obj
+    if graph is None:
+        if isinstance(obj, GraphSignal):
+            graph = obj.graph
+        else:
+            raise Exception("None graph allowed only for explicit graph signal input")
+    elif isinstance(graph, GraphSignal):
+        known_node2id = graph.node2id
+        graph = graph.graph
+    elif backend.is_array(graph):
+        raise Exception("Graph cannot be an array")
+    if isinstance(obj, list) and len(obj) != len(graph):
+        obj = {v: 1 for v in obj}
+    if isinstance(obj, GraphSignal):
+        if graph != obj.graph:
+            raise Exception("Graph signal tied to a different graph")
+        return obj
+    return GraphSignal(graph, obj, known_node2id)

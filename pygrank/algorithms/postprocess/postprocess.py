@@ -1,23 +1,23 @@
-import warnings
-from pygrank.algorithms.utils import MethodHasher, to_signal, NodeRanking, _call, to_signal
-from pygrank import backend
+from pygrank.algorithms.utils import MethodHasher, call, ensure_used_args, remove_used_args
+from pygrank.core.signals import GraphSignal, to_signal, NodeRanking
+from pygrank.core import backend
+from typing import Union
 
 
 class Postprocessor(NodeRanking):
     def __init__(self, ranker=None):
         self.ranker = ranker
 
-    def transform(self, ranks, *args, **kwargs):
-        #call_transform = lambda **kwargs: self._transform(ranks, **kwargs)
-        #ret = _call(call_transform, kwargs)
-        return to_signal(ranks, _call(self._transform, kwargs, [ranks]))
+    def transform(self, ranks: GraphSignal, *args, **kwargs):
+        return to_signal(ranks, call(self._transform, kwargs, [ranks]))
 
     def rank(self, *args, **kwargs):
         ranks = self.ranker.rank(*args, **kwargs)
-        return to_signal(ranks, _call(self._transform, kwargs, [ranks]))
+        kwargs = remove_used_args(self.ranker.rank, kwargs)
+        return to_signal(ranks, call(self._transform, kwargs, [ranks]))
 
-    def _transform(self, ranks):
-        raise Exception("Postprocessor subclasses need to implement a _transform method to call default rank or transform methods")
+    def _transform(self, ranks: GraphSignal, **kwargs):
+        raise Exception("_transform method not implemented for the class "+self.__class__.__name__)
 
 
 class Tautology(Postprocessor):
@@ -27,12 +27,12 @@ class Tautology(Postprocessor):
     """
 
     def __init__(self, ranker=None):
-        self.ranker = ranker
+        super().__init__(ranker)
 
-    def transform(self, ranks):
+    def transform(self, ranks: GraphSignal, *args, **kwargs) -> GraphSignal:
         return ranks
 
-    def rank(self, graph=None, personalization=None, *args, **kwargs):
+    def rank(self, graph=None, personalization=None, *args, **kwargs) -> GraphSignal:
         if self.ranker is not None:
             return self.ranker.rank(graph, personalization, *args, **kwargs)
         return to_signal(graph, personalization)
@@ -65,10 +65,11 @@ class Normalize(Postprocessor):
             ranker, method = method, ranker
             if not callable(getattr(ranker, "rank", None)):
                 ranker = None
-        self.ranker = Tautology() if ranker is None else ranker
+        super().__init__(Tautology() if ranker is None else ranker)
         self.method = method
 
-    def _transform(self, ranks):
+    def _transform(self, ranks: GraphSignal, **kwargs):
+        ensure_used_args(kwargs)
         min_rank = 0
         if self.method == "range":
             max_rank = float(backend.max(ranks.np))
@@ -97,10 +98,11 @@ class Ordinals(Postprocessor):
         Args:
             ranker: Optional. The base ranker instance. A Tautology() ranker is created if None (default) was specified.
         """
-        self.ranker = Tautology() if ranker is None else ranker
+        super().__init__(Tautology() if ranker is None else ranker)
 
-    def _transform(self, ranks):
-        return {v: ord+1 for ord, v in enumerate(sorted(ranks, key=ranks.get, reverse=True))}
+    def _transform(self, ranks: GraphSignal, **kwargs):
+        ensure_used_args(kwargs)
+        return {v: order+1 for order, v in enumerate(sorted(ranks, key=ranks.get, reverse=True))}
 
 
 class Transformer(Postprocessor):
@@ -113,27 +115,27 @@ class Transformer(Postprocessor):
         Args:
             ranker: Optional. The base ranker instance. A Tautology() ranker is created if None (default) was specified.
             expr: Optional. A lambda expression to apply on each element. The transformer will automatically try to
-                apply it on the backend array representation of the graph signal first, so prefer use of backend functions
-                for faster computations. For example, backend.exp (default) should be prefered instead of math.exp, because
-                the former can directly parse a numpy array.
+                apply it on the backend array representation of the graph signal first, so prefer use of backend
+                functions for faster computations. For example, backend.exp (default) should be preferred instead of
+                math.exp, because the former can directly parse numpy arrays, tensors, etc.
 
         Example:
-            >>> from pygrank.algorithms.postprocess import Normalize, Transformer
+            >>> from pygrank.algorithms import Normalize, Transformer
             >>> from pygrank import backend
             >>> graph, personalization, algorithm = ...
             >>> r1 = Normalize(algorithm, "sum").rank(graph, personalization)
             >>> r2 = Transformer(algorithm, lambda x: x/backend.sum(x)).rank(graph, personalization)
             >>> print(sum(abs(r1[v]-r2[v]) for v in graph))
-            0
         """
         if ranker is not None and not callable(getattr(ranker, "rank", None)):
             ranker, expr = expr, ranker
             if not callable(getattr(ranker, "rank", None)):
                 ranker = None
-        self.ranker = Tautology() if ranker is None else ranker
+        super().__init__(Tautology() if ranker is None else ranker)
         self.expr = expr
 
-    def _transform(self, ranks):
+    def _transform(self, ranks: GraphSignal, **kwargs):
+        ensure_used_args(kwargs)
         try:
             return self.expr(ranks.np)
         except:
@@ -143,7 +145,9 @@ class Transformer(Postprocessor):
 class Threshold(Postprocessor):
     """ Converts ranking outcome to binary values based on a threshold value."""
 
-    def __init__(self, ranker=None, threshold="gap"):
+    def __init__(self,
+                 ranker: Union[str, float, NodeRanking] = None,
+                 threshold: Union[str, float, NodeRanking] = "gap"):
         """ Initializes the Threshold postprocessing scheme. Args are automatically filled in and
         re-ordered if at least one is provided.
 
@@ -168,13 +172,14 @@ class Threshold(Postprocessor):
             ranker, threshold = threshold, ranker
             if not callable(getattr(ranker, "rank", None)):
                 ranker = None
-        self.ranker = Tautology() if ranker is None else ranker
+        super().__init__(Tautology() if ranker is None else ranker)
         self.threshold = threshold
 
-    def _transform(self, ranks):
+    def _transform(self, ranks: GraphSignal, **kwargs):
+        ensure_used_args(kwargs)
         threshold = self.threshold
         if threshold == "gap":
-            #ranks = {v: ranks[v] / ranks.graph.degree(v) for v in ranks}
+            # TODO maybe enable ranks = {v: ranks[v] / ranks.graph.degree(v) for v in ranks} with a postprocessor
             max_diff = 0
             threshold = 0
             prev_rank = 0
@@ -185,7 +190,7 @@ class Threshold(Postprocessor):
                         max_diff = diff
                         threshold = ranks[v]
                 prev_rank = ranks[v]
-        return {v: 1  if ranks[v] >= threshold else 0 for v in ranks.keys()}
+        return {v: 1 if ranks[v] >= threshold else 0 for v in ranks.keys()}
 
 
 class Sweep(Postprocessor):
@@ -201,10 +206,11 @@ class Sweep(Postprocessor):
             uniform_ranker: Optional. The ranker instance used to perform non-personalized ranking. If None (default)
                 the base ranker is used.
         """
-        self.ranker = ranker
+        super().__init__(ranker)
         self.uniform_ranker = ranker if uniform_ranker is None else uniform_ranker
         self.centrality = MethodHasher(lambda graph: self.uniform_ranker.rank(graph), assume_immutability=True)
 
-    def _transform(self, ranks):
+    def _transform(self, ranks: GraphSignal, **kwargs):
+        ensure_used_args(kwargs)
         uniforms = self.centrality(ranks.graph).np
         return ranks.np/(1.E-12+uniforms)

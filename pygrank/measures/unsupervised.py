@@ -1,8 +1,7 @@
 import warnings
-import networkx as nx
 import numpy as np
 from pygrank.measures.utils import Measure
-from pygrank.algorithms.utils import to_signal
+from pygrank.core.signals import to_signal
 
 
 class Conductance(Measure):

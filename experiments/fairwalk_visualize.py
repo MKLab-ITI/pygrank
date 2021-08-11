@@ -1,7 +1,6 @@
-from pygrank.algorithms.adhoc import PageRank
-from pygrank.algorithms.postprocess import Normalize, Ordinals
+from pygrank.algorithms import PageRank
+from pygrank.algorithms import Normalize
 from pygrank.measures.utils import split
-from sklearn import metrics
 import data.facebook_fairness.importer
 
 G, sensitive, labels = data.facebook_fairness.importer.load("data/facebook_fairness/0")

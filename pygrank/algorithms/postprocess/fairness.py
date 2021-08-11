@@ -1,9 +1,8 @@
-from pygrank.algorithms.autotune.optimization import optimize
-from pygrank.algorithms.postprocess.postprocess import Tautology, Normalize
-from pygrank.algorithms.utils import to_signal
-from pygrank.algorithms.postprocess import Postprocessor
+from pygrank.algorithms.autotune import optimize
+from pygrank.algorithms.postprocess.postprocess import Tautology, Normalize, Postprocessor
+from pygrank.core.signals import GraphSignal, to_signal
+from pygrank.measures import pRule
 from pygrank import backend
-from pygrank.measures.supervised import pRule
 
 
 class FairPersonalizer(Postprocessor):
@@ -11,31 +10,35 @@ class FairPersonalizer(Postprocessor):
     A personalization editing scheme that aims to edit graph signal priors (i.e. personalization) to produce
     disparate
     """
-    def __init__(self, ranker, target_pRule=1, retain_rank_weight=1, pRule_weight=1, error_type="KL", parameter_buckets=1, max_residual=1):
+
+    def __init__(self, ranker, target_pRule=1, retain_rank_weight=1, pRule_weight=1, error_type="KL",
+                 parameter_buckets=1, max_residual=1):
         """
         Instantiates a personalization editing scheme that trains towards optimizing
-        retain_rank_weight*error_type(original scores, editing-induced scores) + pRule_weight*min(induced score pRule, target_pRule)
+        retain_rank_weight*error_type(original scores, editing-induced scores)
+            + pRule_weight*min(induced score pRule, target_pRule)
 
         Args:
             ranker: The base ranking algorithm.
-            target_pRule: Up to which value should pRule be improved. pRule values greater than this are not penalized further.
+            target_pRule: Up to which value should pRule be improved. pRule values greater than this are not penalized
+                further.
             retain_rank_weight: Can be used to penalize deviations from original posteriors due to editing.
                 Use the default value 1 unless there is a specific reason to scale the error. Higher values
                 correspond to tighter maintenance of original posteriors, but may not improve fairness as much.
             pRule_weight: Can be used to penalize low pRule values. Either use the default value 1 or, if you want to
-                place most emphasis on pRule maximization (instead of trading-off between fairness and posterior preservation)
-                10 is a good empirical starting point.
-            error_type: The error type used to penalize deviations from original posterior scores. "KL" (default) uses KL-diveregence
-                and is used in [krasanakis2020prioredit]. "mabs" uses the mean absolute error and is used in the
-                earlier [krasanakis2020fairconstr]. The latter does not maintain fairness as well on average, but is
-                sometimes better for specific graphs.
+                place most emphasis on pRule maximization (instead of trading-off between fairness and posterior
+                preservation) 10 is a good empirical starting point.
+            error_type: The error type used to penalize deviations from original posterior scores. "KL" (default) uses
+                KL-divergence and is used in [krasanakis2020prioredit]. "mabs" uses the mean absolute error and is used
+                in the earlier [krasanakis2020fairconstr]. The latter does not maintain fairness as well on average,
+                but is sometimes better for specific graphs.
             parameter_buckets: How many sets of parameters to be used to . Default is 1. More parameters could be needed to
                 to track, but running time scales **exponentially** to these (with base 4).
             max_residual: An upper limit on how much the original personalization is preserved, i.e. a fraction of
                 it in the range [0, max_residual] is preserved. Default is 1 and is introduced by [krasanakis2020prioredit],
                 but 0 can be used for exact replication of [krasanakis2020fairconstr].
         """
-        self.ranker = ranker
+        super().__init__(ranker)
         self.target_pRule = target_pRule
         self.retain_rank_weight = retain_rank_weight
         self.pRule_weight = pRule_weight
@@ -56,17 +59,17 @@ class FairPersonalizer(Postprocessor):
                 res += (1-a)*backend.exp(b*backend.abs(ranks-personalization)) + a*backend.exp(-b*backend.abs(ranks-personalization))
         return res
 
-    def __prule_loss(self, ranks, original_ranks, sensitive, personalization):
-        pRule = self.pRule(ranks)
+    def __prule_loss(self, ranks: GraphSignal, original_ranks: GraphSignal, sensitive: object, personalization: object) -> object:
+        prule = self.pRule(ranks)
         if self.error_type == "mabs":
             ranks = ranks.np / backend.max(ranks.np)
             original_ranks = original_ranks.np / backend.max(original_ranks.np)
             return self.retain_rank_weight * backend.sum(backend.abs(ranks - original_ranks)) / backend.length(ranks) \
-                  - self.pRule_weight * min(self.target_pRule, pRule)
+                  - self.pRule_weight * min(self.target_pRule, prule)
         if self.error_type == "KL":
             ranks = ranks.np / backend.sum(ranks.np)
             original_ranks = original_ranks.np / backend.sum(original_ranks.np)
-            return self.retain_rank_weight * backend.dot(ranks[original_ranks != 0], -backend.log(original_ranks[original_ranks!=0]/ranks[original_ranks!=0])) - self.pRule_weight * min(self.target_pRule, pRule)
+            return self.retain_rank_weight * backend.dot(ranks[original_ranks != 0], -backend.log(original_ranks[original_ranks!=0]/ranks[original_ranks!=0])) - self.pRule_weight * min(self.target_pRule, prule)
         raise Exception("Invalid error type")
 
     def rank(self, G, personalization, sensitive, *args, **kwargs):
@@ -81,16 +84,23 @@ class FairPersonalizer(Postprocessor):
             fair_ranks = self.ranker.rank(G, personalization=fair_pers, *args, as_dict=False, **kwargs)
             return self.__prule_loss(fair_ranks, ranks, sensitive, personalization)
 
-        params = optimize(loss, [1, 1, 10, 10] * self.parameter_buckets + [self.max_residual], min_vals=[0, 0, -10, -10]*self.parameter_buckets+[0], deviation_tol=1.E-2, divide_range=2, partitions=5)
-        return self.ranker.rank(G, personalization=self.__culep(personalization, sensitive, ranks, params), *args, **kwargs)
+        optimal_params = optimize(loss,
+                                  max_vals=[1, 1, 10, 10] * self.parameter_buckets + [self.max_residual],
+                                  min_vals=[0, 0, -10, -10]*self.parameter_buckets+[0],
+                                  deviation_tol=1.E-2,
+                                  divide_range=2,
+                                  partitions=5)
+        optimal_personalization = personalization=self.__culep(personalization, sensitive, ranks, optimal_params)
+        del self.pRule
+        return self.ranker.rank(G, optimal_personalization, *args, **kwargs)
 
 
-class AdhocFairness(Postprocessor):
+class AdHocFairness(Postprocessor):
     """Adjusts node scores so that the sum of sensitive nodes is moved closer to the sum of non-sensitive ones based on
     ad hoc literature assumptions about how unfairness is propagated in graphs.
     """
 
-    def __init__(self, ranker=None, method="O"):
+    def __init__(self, ranker=None, method="O", eps=1.E-12):
         """
         Initializes the fairness-aware postprocessor.
 
@@ -99,25 +109,26 @@ class AdhocFairness(Postprocessor):
             method: The method with which to adjust weights. If "O" (default) an optimal gradual adjustment is performed
                 [tsioutsiouliklis2020fairness].
                 If "B" node scores are weighted according to whether the nodes are sensitive, so that
-                the sum of sensitive node scores becomes equal to the sum of non-sensitive node scores [tsioutsiouliklis2020fairness].
-                If "fairwalk" the graph is pre-processed so that, when possible, walks are equally probable to visit
-                sensitive or non-sensitive nodes at non-restarting iterations [rahman2019fairwalk].
+                the sum of sensitive node scores becomes equal to the sum of non-sensitive node scores
+                [tsioutsiouliklis2020fairness].  If "fairwalk" the graph is pre-processed so that, when possible,
+                walks are equally probable to visit sensitive or non-sensitive nodes at non-restarting iterations
+                [rahman2019fairwalk].
+            eps: A small value to consider rank redistribution to have converged. Default is 1.E-12.
         """
         if ranker is not None and not callable(getattr(ranker, "rank", None)):
             ranker, method = method, ranker
             if not callable(getattr(ranker, "rank", None)):
                 ranker = None
-        self.ranker = Tautology() if ranker is None else ranker
+        super.__init__(Tautology() if ranker is None else ranker)
         self.method = method
+        self.eps = eps
 
     def __distribute(self, DR, ranks, sensitive):
-        #ranks = {v: ranks[v] * sensitive.get(v, 0) for v in ranks if ranks[v] * sensitive.get(v, 0) > 1.E-6}
         while True:
             ranks = {v: ranks[v] * sensitive.get(v, 0) for v in ranks if ranks[v] * sensitive.get(v, 0) != 0}
             d = DR / len(ranks)
             min_rank = min(ranks.values())
-            #print(min_rank)
-            if min_rank < 1.E-12:
+            if min_rank < self.eps:
                 break
             if min_rank > d:
                 ranks = {v: val - d for v, val in ranks.items()}
@@ -126,16 +137,16 @@ class AdhocFairness(Postprocessor):
             DR -= len(ranks) * min_rank
         return ranks
 
-    def __reweight(self, G, sensitive):
-        if not getattr(self, "reweights", None):
-            self.reweights = dict()
-        if G not in self.reweights:
-            phi = sum(sensitive.values())/len(G)
-            Gnew = G.copy()
-            for u, v, d in Gnew.edges(data=True):
+    def __reweigh(self, graph, sensitive):
+        if not getattr(self, "reweighs", None):
+            self.reweighs = dict()
+        if graph not in self.reweighs:
+            phi = sum(sensitive.values())/len(graph)
+            new_graph = graph.copy()
+            for u, v, d in new_graph.edges(data=True):
                 d["weight"] = 1./(sensitive[u]*phi+(1-sensitive[u])*(1-phi))
-            self.reweights[G] = Gnew
-        return self.reweights[G]
+            self.reweighs[graph] = new_graph
+        return self.reweighs[graph]
 
     def _transform(self, ranks, sensitive):
         phi = sum(sensitive.values())/len(ranks)
@@ -164,5 +175,5 @@ class AdhocFairness(Postprocessor):
 
     def transform(self, *args, **kwargs):
         if self.method == "fairwalk":
-            raise Exception("Reweighting can only occur by preprocessing the graph")
+            raise Exception("reweighing can only occur by preprocessing the graph")
         return super().transform(*args, **kwargs)

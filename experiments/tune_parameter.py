@@ -1,7 +1,7 @@
-from pygrank.algorithms.autotune.optimization import optimize
+from pygrank.algorithms import optimize
 from pygrank.algorithms import GenericGraphFilter
 from experiments.importer import import_SNAP
-from pygrank.algorithms.utils import to_signal, preprocessor
+from pygrank.algorithms import to_signal, preprocessor
 from pygrank.measures.utils import split
 from pygrank.measures import AUC
 

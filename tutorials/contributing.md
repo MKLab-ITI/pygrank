@@ -25,28 +25,46 @@ Make sure that both base library dependencies
 and `tensorflow` 
 are installed and upgraded to their latest versions.
 
+# :hammer_and_wrench: Architecture
+`pygrank` adheres to a hierarchical architecture to manage inter-module dependencies,
+which new code should maintain for import statements to work.
+For example, do not design evaluation measures that depend on algorithms.
+Rather, such components should be delegated to some of the other modules.
+
+![architecture](architecture.png)
+
+Please try to import methods and classes through the highest-level 
+architectural component they belong in that does not conflict with the code.
+For example, to design a new filter you need import utility methods
+from `pygrank.algorithms.utils`, since a higher-level import would create
+self-recursions by trying to import all sub-modules. On the other hand,
+in the same module you can safely import classes from `pygrank.measures`.
+
 
 # :white_check_mark: Pull Checklist
 Before creating a pull request, make sure that your submission checks the following points:
-1. Class and method docstrings should adhere to [Google's docstring conventions](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings)
-where, additionally, code examples are prefaced by a description ending at the text `example:`.
+1. Class and method docstrings should adhere to [Google's docstring conventions](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings).
+Additionally, code examples should be prefaced by a line starting with the word
+`Example ` and ending in `:` and their code lines start with `>>>`.
 2. When implementing new or existing research (we are more than happy to accomodate this),
-you are required to also update the library's [citations](!citations.md).
+you are required to also update the library's [citations](citations.md).
 3. New code should maintain *CamelCase* notation for classes and 
 *lower_case_with_underscores* for methods and variables.
-4. New files should be placed in appropriate packages.
-5. **[optional]** Algorithms should exhibit near-linear
+4. New files should be placed in appropriate modules and new methods and classes
+can be accessed from the top level.
+5. Module dependencies should comply on the above-described architecture.
+6. **[optional]** Algorithms should exhibit near-linear
 (e.g. polylog-linear) running times and memory allocation with respect to
 the number of edges, to scale well to large graphs.
-6. **[pre-commit]** Run `python docgenerator.py` to add new classes to the documentation.
-7. **[pre-commit]** Pass all unit tests with no errors, unless your purpose
+7. **[pre-commit]** Run `python docgenerator.py` to add new classes to the documentation.
+8. **[pre-commit]** Pass all unit tests with no errors, unless your purpose
 is to introduce new unit tests that reveal existing bugs.
 Refrain from remodularizing the code unless absolutely necessary
 (creating new packages is fine, but backwards compatibility of import statements
 is mandatory).
-8. **[pre-commit]** Unit tests should provide 100% code coverage.
+9. **[pre-commit]** Unit tests should provide 100% code coverage.
 
-**Steps 6-8 can be automated for commits to the master branch
+**Steps 7-9 can be automated for commits to the master branch
 by copying the `pre-commit` script file to the local folder `.git/hooks`**.
 
 
@@ -152,4 +170,11 @@ to ensure faster computations through the graph filter pipeline, for example
 when iterative postprocessors are applied afterwards.
 
 # :pencil2: Implementing New Measures
+TODO
+
+
+# :pencil2: Implementing New Benchmarks
+TODO
+
+# :pencil2: Implementing New Tuners
 TODO

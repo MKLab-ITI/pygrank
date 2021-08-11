@@ -24,8 +24,8 @@ passing `lanczos=True` to graph filter constructors | Lanczos acceleration | sus
 `pygrank.algorithms.oversampling.SeedOversampling(ranker)` | SeedO | krasanakis2019boosted
 `pygrank.algorithms.oversampling.BoostedSeedOversampling(ranker)` | SeedBO | krasanakis2019boosted
 `pygrank.algorithms.pagerank.PageRank(converge_to_eigenvectors=True)` | VenueRank | krasanakis2018venuerank
-`pygrank.algorithms.postprocess.fairness.AdhocFairness(ranker,'fairwalk')` | FairWalk |rahman2019fairwalk
-`pygrank.algorithms.postprocess.fairness.AdhocFairness(ranker,'O')` | LFPRO | tsioutsiouliklis2020fairness
+`pygrank.algorithms.postprocess.fairness.AdHocFairness(ranker,'fairwalk')` | FairWalk |rahman2019fairwalk
+`pygrank.algorithms.postprocess.fairness.AdHocFairness(ranker,'O')` | LFPRO | tsioutsiouliklis2020fairness
 `pygrank.algorithms.postprocess.fairness.FairPersonalizer(ranker, error_type="mabs", max_residual=0)` | FP | krasanakis2020fairconstr
 `pygrank.algorithms.postprocess.fairness.FairPersonalizer(ranker, 0.8, 10, error_type="mabs", max_residual=0)` | CFP | krasanakis2020fairconstr
 `pygrank.algorithms.postprocess.fairness.FairPersonalizer(ranker)` | FairEdit | krasanakis2020prioredit

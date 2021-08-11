@@ -1,5 +1,5 @@
 from typing import Callable, Mapping, Any
-from pygrank.algorithms.utils import to_signal, GraphSignal, NodeRanking
+from pygrank.core import to_signal, GraphSignal, NodeRanking
 from pygrank.measures.utils import split
 from pygrank.measures import AUC, Supervised
 

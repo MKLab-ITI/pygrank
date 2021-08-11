@@ -1,6 +1,6 @@
 from typing import Callable, Mapping
-from pygrank.algorithms.postprocess import Postprocessor
-from pygrank.algorithms.utils import NodeRanking
+from pygrank.algorithms import Postprocessor
+from pygrank.algorithms import NodeRanking
 
 
 def create_variations(algorithms: Mapping[str, NodeRanking], variations: Mapping[str, Callable[[NodeRanking], Postprocessor]]):

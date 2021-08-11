@@ -5,8 +5,8 @@ from tests.example_graph import test_graph, test_block_model_graph
 class Test(unittest.TestCase):
 
     def test_tautology(self):
-        from pygrank.algorithms.adhoc import PageRank
-        from pygrank.algorithms.postprocess import Tautology
+        from pygrank.algorithms import PageRank
+        from pygrank.algorithms import Tautology
         G = test_graph()
         r = PageRank().rank(G)
         tr = Tautology(PageRank()).rank(G)
@@ -15,36 +15,36 @@ class Test(unittest.TestCase):
             self.assertEqual(r[u], rt[u])
             self.assertEqual(r[u], tr[u])
 
-        from pygrank.backend import sum
+        from pygrank.core.backend import sum
         u = Tautology().rank(G)
         self.assertEqual(float(sum(u.np)), len(G))
 
     def test_normalize_range(self):
-        from pygrank.algorithms.adhoc import PageRank
-        from pygrank.algorithms.postprocess import Normalize
+        from pygrank.algorithms import PageRank
+        from pygrank.algorithms import Normalize
         G = test_graph()
         r = Normalize(PageRank(), "range").rank(G)
         self.assertAlmostEqual(min(r[v] for v in G), 0, places=16)
         self.assertAlmostEqual(max(r[v] for v in G), 1, places=16)
 
     def test_normalize_sum(self):
-        from pygrank.algorithms.adhoc import PageRank
-        from pygrank.algorithms.postprocess import Normalize
+        from pygrank.algorithms import PageRank
+        from pygrank.algorithms import Normalize
         G = test_graph()
         r = Normalize(PageRank(), "sum").rank(G)
         self.assertAlmostEqual(sum(r[v] for v in G), 1, places=16)
 
     def test_normalize_invalid(self):
-        from pygrank.algorithms.adhoc import PageRank
-        from pygrank.algorithms.postprocess import Normalize
+        from pygrank.algorithms import PageRank
+        from pygrank.algorithms import Normalize
         G = test_graph()
         with self.assertRaises(Exception):
             Normalize(PageRank(), "unknown").rank(G)
 
     def test_transform_primitives(self):
-        from pygrank.algorithms.adhoc import PageRank
-        from pygrank.algorithms.postprocess import Normalize, Transformer
-        from pygrank.backend import sum
+        from pygrank.algorithms import PageRank
+        from pygrank.algorithms import Normalize, Transformer
+        from pygrank.core.backend import sum
         G = test_graph()
         r1 = Normalize(PageRank(), "sum").rank(G)
         r2 = Transformer(PageRank(), lambda x: x/sum(x)).rank(G)
@@ -52,10 +52,10 @@ class Test(unittest.TestCase):
             self.assertAlmostEqual(r1[v], r2[v], places=16)
 
     def test_transform_individuals(self):
-        from pygrank.algorithms.adhoc import PageRank
-        from pygrank.algorithms.postprocess import Normalize, Transformer
+        from pygrank.algorithms import PageRank
+        from pygrank.algorithms import Transformer
         import math
-        from pygrank import backend
+        from pygrank.core import backend
         G = test_graph()
         r1 = Transformer(math.exp).transform(PageRank()(G))
         r2 = Transformer(PageRank(), backend.exp).rank(G)
@@ -63,15 +63,15 @@ class Test(unittest.TestCase):
             self.assertAlmostEqual(r1[v], r2[v], places=16)
 
     def test_ordinals(self):
-        from pygrank.algorithms.adhoc import PageRank
-        from pygrank.algorithms.postprocess import Ordinals
+        from pygrank.algorithms import PageRank
+        from pygrank.algorithms import Ordinals
         G = test_graph()
         test_result = Ordinals(Ordinals(Ordinals(PageRank(normalization='col')))).rank(G, {"A": 1}) # three ordinal transformations are the same as one
         self.assertAlmostEqual(test_result["A"], 1, places=16, msg="Ordinals should compute without errors (seed node is highest rank in small graphs)")
 
     def test_normalization(self):
-        from pygrank.algorithms.adhoc import PageRank
-        from pygrank.algorithms.postprocess import Normalize
+        from pygrank.algorithms import PageRank
+        from pygrank.algorithms import Normalize
         G = test_graph()
         test_result = Normalize("sum", PageRank(normalization='col')).rank(G)
         self.assertAlmostEqual(sum(test_result.values()), 1, places=16, msg="Sum normalization should sum to 1")
@@ -81,8 +81,8 @@ class Test(unittest.TestCase):
         self.assertAlmostEqual(sum(test_result.values()), 1, places=16, msg="Normalization should be able to use transformations")
 
     def test_oversampling(self):
-        from pygrank.algorithms.adhoc import PageRank
-        from pygrank.algorithms.postprocess.oversampling import SeedOversampling
+        from pygrank.algorithms import PageRank
+        from pygrank.algorithms import SeedOversampling
         G = test_graph()
         test_result = SeedOversampling(PageRank(normalization='col')).rank(G, {"A": 1})
         test_result = SeedOversampling(PageRank(normalization='col'), 'top').rank(G, {"A": 1})
@@ -93,8 +93,8 @@ class Test(unittest.TestCase):
             test_result = SeedOversampling(PageRank(normalization='col')).rank(G, {"A": 0.5, "B": 1})
 
     def test_boosted_oversampling(self):
-        from pygrank.algorithms.adhoc import PageRank
-        from pygrank.algorithms.postprocess.oversampling import BoostedSeedOversampling
+        from pygrank.algorithms import PageRank
+        from pygrank.algorithms import BoostedSeedOversampling
         G = test_graph()
         test_result = BoostedSeedOversampling(PageRank(normalization='col')).rank(G, {"A": 1})
         test_result = BoostedSeedOversampling(PageRank(normalization='col'), 'naive').rank(G, {"A": 1})
@@ -105,15 +105,15 @@ class Test(unittest.TestCase):
             test_result = BoostedSeedOversampling(PageRank(normalization='col'), oversample_from_iteration='unknown').rank(G, {"A": 1})
 
     def test_abstract_postprocessor(self):
-        from pygrank.algorithms.adhoc import PageRank
-        from pygrank.algorithms.postprocess import Postprocessor
+        from pygrank.algorithms import PageRank
+        from pygrank.algorithms import Postprocessor
         with self.assertRaises(Exception):
             p = Postprocessor(PageRank())
             G = test_graph()
             p.rank(G)
 
     def test_optimizer_errors(self):
-        from pygrank.algorithms.utils import optimize
+        from pygrank.algorithms import optimize
         with self.assertRaises(Exception):
             optimize(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4, max_vals=[5, 5], parameter_tol=1.E-8, divide_range=1)
         with self.assertRaises(Exception):
@@ -121,7 +121,7 @@ class Test(unittest.TestCase):
 
     def test_sweep(self):
         from pygrank.algorithms import PageRank
-        from pygrank.algorithms.postprocess import Sweep
+        from pygrank.algorithms import Sweep
         from pygrank.measures import AUC
         from pygrank.measures.utils import split
         import random
@@ -135,7 +135,7 @@ class Test(unittest.TestCase):
 
     def test_threshold(self):
         from pygrank.algorithms import PageRank
-        from pygrank.algorithms.postprocess import Threshold, Sweep
+        from pygrank.algorithms import Threshold, Sweep
         from pygrank.measures import Conductance
         from pygrank.measures.utils import split
         import random
@@ -148,7 +148,7 @@ class Test(unittest.TestCase):
         self.assertLess(cond2*4.5, cond1, "The Sweep procedure should significantly reduce conductance after gap thresholding")
 
     def test_optimizer(self):
-        from pygrank.algorithms.utils import optimize
+        from pygrank.algorithms import optimize
 
         # a simple function
         p = optimize(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4, max_vals=[5, 5], parameter_tol=1.E-8)
@@ -179,6 +179,6 @@ class Test(unittest.TestCase):
         self.assertAlmostEqual(p[1], 0.5, places=6, msg="Optimizer should optimize the Beale function")
 
     def test_fairness(self):
-        from experiments import fairwalk
+        pass
 
 

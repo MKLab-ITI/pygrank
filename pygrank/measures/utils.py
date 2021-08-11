@@ -1,6 +1,6 @@
 import random
 import collections
-from pygrank.algorithms.utils import GraphSignal, to_signal
+from pygrank.core.signals import GraphSignal, to_signal
 
 
 class Measure(object):

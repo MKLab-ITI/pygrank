@@ -26,8 +26,8 @@ with a specific backend, add the following recipe at your code's
 entry point to override other configurations:
 
 ```python
-from pygrank import backend
-backend.load_backend(`tensorflow`)
+import pygrank as pg
+pg.load_backend(`tensorflow`)
 ```
 
 
@@ -36,30 +36,37 @@ As a quick start, let us construct a networkx graph `G` and a set of nodes `seed
 
 ```python
 >>> import networkx as nx
->>> G = nx.Graph()
->>> G.add_edge("A", "B")
->>> G.add_edge("B", "C")
->>> G.add_edge("C", "D")
->>> G.add_edge("D", "E")
->>> G.add_edge("A", "C")
->>> G.add_edge("C", "E")
->>> G.add_edge("B", "E")
+>>> graph = nx.Graph()
+>>> graph.add_edge("A", "B")
+>>> graph.add_edge("B", "C")
+>>> graph.add_edge("C", "D")
+>>> graph.add_edge("D", "E")
+>>> graph.add_edge("A", "C")
+>>> graph.add_edge("C", "E")
+>>> graph.add_edge("B", "E")
 >>> seeds = {"A", "B"}
 ```
 
-We run a personalized PageRank [graph filter](tutorials/documentation.md#graph-filters)
-to score the structural relatedness
-of graph nodes to the ones of the given set. For instructional purposes,
-we show the default values of some parameters: the graph diffusion
+We now run a personalized PageRank [graph filter](tutorials/documentation.md#graph-filters)
+to score the structural relatedness of graph nodes to the ones of the given set.
+ We start by importing the library, 
+```python
+>>> import pygrank as pg
+```
+
+For instructional purposes,
+we select the *PageRank* filter. This and more filters can be found in the module
+`pygrank.algorithms.filters`, but for ease-of-use can
+be accessed from the top-level import.
+We also set the default values of some parameters: the graph diffusion
 rate *alpha* required by the algorithm, a numerical tolerance *tol* at the
 convergence point and a graph preprocessing strategy *"auto"* normalization
 of the garph adjacency matrix to determine between column-based and symmetric
 normalization depending on whether the graph is undirected (as in this example)
 or not respectively.
 ```python
->>> from pygrank.algorithms.adhoc import PageRank
->>> ranker = PageRank(alpha=0.85, tol=1.E-6, normalization="auto")
->>> ranks = ranker.rank(G, {v: 1 for v in seeds})
+>>> ranker = pg.PageRank(alpha=0.85, tol=1.E-6, normalization="auto")
+>>> ranks = ranker(graph, {v: 1 for v in seeds})
 ```
 
 Node ranking output is always organized into
@@ -74,11 +81,12 @@ print the scores of some nodes per:
 We alter this outcome so that it outputs node order, 
 where higher node scores are assigned lower order. This is achieved
 by wrapping a postprocessor around the algorithm. There are various
-postprocessors, including ones to make scores fairness-aware.
+postprocessors, including ones to make scores fairness-aware. Again,
+postprocessors can be found in `pygrank.algorithms.postprocess`,
+but for shortcut purposes  can be used from the top-level package import.
 
 ```python
->>> from pygrank.algorithms.postprocess import Ordinals
->>> ordinals = Ordinals(ranker).rank(G, {v: 1 for v in seeds})
+>>> ordinals = pg.Ordinals(ranker).rank(graph, {v: 1 for v in seeds})
 >>> print(ordinals["B"], ordinals["D"], ordinals["E"])
 1 5 4
 ```
@@ -95,10 +103,9 @@ Since only the node order is important,
 we can use a different way to specify convergence:
 
 ```python
->>> from pygrank.algorithms.utils.convergence import RankOrderConvergenceManager
->>> convergence = RankOrderConvergenceManager(pagerank_alpha=0.85, confidence=0.98) 
->>> early_stop_ranker = PageRank(alpha=0.85, convergence=convergence)
->>> ordinals = Ordinals(early_stop_ranker).rank(G, {v: 1 for v in seeds})
+>>> convergence = pg.RankOrderConvergenceManager(pagerank_alpha=0.85, confidence=0.98) 
+>>> early_stop_ranker = pg.PageRank(alpha=0.85, convergence=convergence)
+>>> ordinals = pg.Ordinals(early_stop_ranker).rank(graph, {v: 1 for v in seeds})
 >>> print(early_stop_ranker.convergence)
 2 iterations (0.0006313000000091051 sec)
 >>> print(ordinals["B"], ordinals["D"], ordinals["E"])
@@ -130,7 +137,7 @@ and testing of new algorithms.
 
 Some of the library's advantages are:
 1. **Compatibility** with [networkx](https://github.com/networkx/networkx) and [tensorflow](https://www.tensorflow.org/).
-2. **Datacentric** programming interfaces that do not require transformations to identifiers.
+2. **Datacentric** interfaces that do not require transformations to identifiers.
 3. **Large** graph support with sparse representations.
 4. **Seamless** pipelines, from graph preprocessing up to evaluation.
 5. **Modular** combination of components.
@@ -147,6 +154,7 @@ Some of the library's advantages are:
 * Postprocessing (e.g. fairness awareness)
 * Evaluation measures
 * Benchmarks
+* Autotuning
 
 # :thumbsup: Contributing
 Feel free to contribute in any way, for example through the [issue tracker](https://github.com/MKLab-ITI/pygrank/issues) or by participating in [discussions]().
@@ -158,4 +166,4 @@ If `pygrank` has been useful in your research and you would like to cite it in a
 ```
 TBD
 ```
-To publish research that uses provided methods, please cite the appropriate paper(s) listed [here](tutorials/citations.md).
+To publish research that uses provided methods, please cite the [appropriate publications](tutorials/citations.md).

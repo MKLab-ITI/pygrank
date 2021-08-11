@@ -41,7 +41,7 @@ where all other nodes are assigned zeroes.
 To create a graph signal holding this information we can write:
 
 ```python
->>> from pygrank.algorithms.utils.graph_signal import to_signal
+>>> from pygrank.algorithms import to_signal
 >>> import networkx as nx
 >>> G = nx.Graph()
 >>> G.add_edge('A', 'B')
@@ -61,7 +61,8 @@ in the following code we divide a graph signal's elements with their sum.
 Value changes are reflected to the values being accessed.
 
 ```python
->>> from pygrank import backend
+>>>
+from pygrank.core import backend
 >>> print(signal.np)
 [3. 0. 2. 0. 0.]
 >>> signal.np = signal.np / backend.sum(signal.np)
@@ -236,9 +237,9 @@ as the base ranking algorithm and needs to know that algorithm's diffusion
 rate ``alpha``, which is passed as its first argument.
 
 ```python
-from pygrank.algorithms.adhoc import PageRank
-from pygrank.algorithms.utils import RankOrderConvergenceManager
-from pygrank.algorithms.postprocess import Ordinals
+from pygrank.algorithms import PageRank
+from pygrank.algorithms import RankOrderConvergenceManager
+from pygrank.algorithms import Ordinals
 
 G, personalization = ...
 alpha = 0.85
@@ -296,7 +297,7 @@ For example, hashing the outcome of graph normalization to
 speed up multiple calls to the same graph can be achieved
 as per the following code:
 ```python
-from pygrank.algorithms.adhoc import PageRank
+from pygrank.algorithms import PageRank
 G, personalization1, personalization2 = ...
 algorithm = PageRank(alpha=0.85, normalization="col", assume_immutability=True)
 ranks = algorithm.rank(G, personalization1)
@@ -327,8 +328,8 @@ Using the outcome of graph normalization
 to speed up multiple rank calls to the same graph by
 different ranking algorithms can be done as:
 ```python
-from pygrank.algorithms.adhoc import PageRank, HeatKernel
-from pygrank.algorithms.utils import preprocessor
+from pygrank.algorithms import PageRank, HeatKernel
+from pygrank.algorithms import preprocessor
 G, personalization1, personalization2 = ...
 pre = preprocessor(normalization="col", assume_immutability=True)
 ranker1 = PageRank(alpha=0.85, to_scipy=pre)
@@ -359,7 +360,7 @@ There are two ways to apply postprocessors. The first is to simply
 we can write:
 
 ```python
->>> from pygrank.algorithms.postprocess import Normalize
+>>> from pygrank.algorithms import Normalize
 >>> scores = algorithm.rank(G, signal)
 >>> normalized_scores = Normalize().transform(scores)
 >>> print(list(normalized_scores.items()))
@@ -379,7 +380,7 @@ postprocessors:
 
 
 ```python
->>> from pygrank.algorithms.postprocess import Normalize
+>>> from pygrank.algorithms import Normalize
 >>> normalized_algorithm = Normalize(algorithm)
 >>> normalized_scores = normalized_algorithm.rank(G, signal)
 >>> print(list(normalized_scores.items()))
@@ -394,7 +395,7 @@ with the postprocessor `Transformer` *before* normalization
 can be achieved as:
 
 ```python
->>> from pygrank.algorithms.postprocess import Normalize, Transformer
+>>> from pygrank.algorithms import Normalize, Transformer
 >>> import numpy as np
 >>> new_algorithm = Normalize(Transformer(np.exp, algorithm))
 >>> new_scores = new_algorithm.rank(G, signal)

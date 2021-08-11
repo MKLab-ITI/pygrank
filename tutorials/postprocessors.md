@@ -4,7 +4,7 @@
 The following postprocessors can be imported from the package `pygrank.algorithms.postprocess`.
 Constructor details are provided, including arguments inherited from and passed to parent classes.
 All of them can be used through the code patterns presented at the library's [documentation](documentation.md).  
-1. [AdhocFairness](#adhocfairness)
+1. [AdHocFairness](#adhocfairness)
 2. [BoostedSeedOversampling](#boostedseedoversampling)
 3. [FairPersonalizer](#fairpersonalizer)
 4. [Normalize](#normalize)
@@ -15,7 +15,7 @@ All of them can be used through the code patterns presented at the library's [do
 9. [Threshold](#threshold)
 10. [Transformer](#transformer)
 
-### AdhocFairness 
+### AdHocFairness 
 
 Adjusts node scores so that the sum of sensitive nodes is moved closer to the sum of non-sensitive ones based on 
 ad hoc literature assumptions about how unfairness is propagated in graphs. 

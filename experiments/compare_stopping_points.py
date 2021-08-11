@@ -2,8 +2,8 @@
 This file covers the experiments of the paper: Stopping Personalized PageRank without an Error Tolerance Parameter
 """
 
-from pygrank.algorithms.adhoc import PageRank
-from pygrank.algorithms.utils import preprocessor, RankOrderConvergenceManager
+from pygrank.algorithms import PageRank
+from pygrank.algorithms import preprocessor, RankOrderConvergenceManager
 from scipy.stats import spearmanr
 import numpy as np
 import networkx as nx

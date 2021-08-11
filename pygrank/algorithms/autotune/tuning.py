@@ -1,4 +1,5 @@
-from pygrank.algorithms.utils import NodeRanking, preprocessor, to_signal, GraphSignal, _call, _ensure_all_used, _remove_used
+from pygrank.core.signals import GraphSignal, to_signal, NodeRanking
+from pygrank.algorithms.utils import preprocessor, ensure_used_args, remove_used_args
 from pygrank.algorithms.autotune.optimization import optimize
 from pygrank.measures import Supervised, AUC
 from pygrank.measures.utils import split
@@ -63,12 +64,12 @@ class ParameterTuner(Tuner):
             >>> ranks = algorithm.rank(graph, personalization)
         """
         if ranker_generator is None:
-            from pygrank.algorithms.learnable import GenericGraphFilter
+            from pygrank.algorithms import GenericGraphFilter
             if 'to_scipy' not in kwargs and 'assume_immutability' not in kwargs and 'normalization' not in kwargs:
                 kwargs['to_scipy'] = preprocessor(assume_immutability=True)
-            ranker_generator = lambda params: GenericGraphFilter(params, **_remove_used(optimize, kwargs))
+            ranker_generator = lambda params: GenericGraphFilter(params, **remove_used_args(optimize, kwargs))
         else:
-            _ensure_all_used(kwargs, [optimize])
+            ensure_used_args(kwargs, [optimize])
         self.ranker_generator = ranker_generator
         self.measure = measure
         self.fraction_of_training = fraction_of_training

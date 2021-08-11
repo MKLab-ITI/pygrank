@@ -1,11 +1,10 @@
+import inspect
 from pygrank.algorithms.utils.convergence import *
 from pygrank.algorithms.utils.preprocessing import *
-from pygrank.algorithms.utils.graph_signal import *
 from pygrank.algorithms.utils.krylov_space import *
-import inspect
 
 
-def _call(method, kwargs, args=None):
+def call(method, kwargs, args=None):
     """
     This method wraps an argument extraction process and passes only the valid arguments of a given dict to a method.
     This is equivalent to calling method(**kwargs) while ignoring unused arguments.
@@ -16,18 +15,20 @@ def _call(method, kwargs, args=None):
         >>> def func2(arg2):
         >>>     print(arg2)
         >>> def func(**kwargs):
-        >>>     _call(func1, kwargs)
-        >>>     _call(func2, kwargs)
+        >>>     call(func1, kwargs)
+        >>>     call(func2, kwargs)
         >>> func(arg1="passed to func 1", arg2="passed to func 2")
     """
     if args:
         kwargs = dict(kwargs)
         for arg, val in zip(list(inspect.signature(method).parameters)[:len(args)], args):
+            if arg in kwargs:
+                raise Exception("Repeated argument to method "+method.__name__+": "+arg)
             kwargs[arg] = val
-    return method(**{argname: kwargs[argname] for argname in inspect.signature(method).parameters if argname in kwargs})
+    return method(**{kwarg: kwargs[kwarg] for kwarg in inspect.signature(method).parameters if kwarg in kwargs})
 
 
-def _remove_used(method, kwargs, args=None):
+def remove_used_args(method, kwargs, args=None):
     if args:
         kwargs = dict(kwargs)
         for arg, val in zip(list(inspect.signature(method).parameters)[:len(args)], args):
@@ -36,19 +37,20 @@ def _remove_used(method, kwargs, args=None):
     return {kwarg: val for kwarg, val in kwargs.items() if kwarg not in params}
 
 
-def _ensure_all_used(kwargs, methods):
+def ensure_used_args(kwargs, methods=None):
     """
     Makes sure that all named arguments passed to a method reside in the callee methods.
 
     Example:
         >>> def func(**kwargs):
-        >>>     _call(func1, kwargs)
-        >>>     _call(func2, kwargs)
-        >>>     _ensure_all_used(kwargs, [func1, func2])
+        >>>     call(func1, kwargs)
+        >>>     call(func2, kwargs)
+        >>>     ensure_used_args(kwargs, [func1, func2])
     """
     all_args = list()
-    for method in methods:
-        all_args.extend(inspect.signature(method).parameters.keys())
+    if methods is not None:
+        for method in methods:
+            all_args.extend(inspect.signature(method).parameters.keys())
     missing = set(kwargs.keys())-set(all_args)
     if len(missing) != 0:
         raise Exception("No usage of argument(s) "+str(missing)+" found")
