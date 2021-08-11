@@ -76,13 +76,13 @@ class Test(unittest.TestCase):
         from pygrank.algorithms import PageRank
         from pygrank.algorithms.utils import to_signal
         from pygrank.algorithms.postprocess import SeedOversampling, BoostedSeedOversampling
-        from pygrank.measures.utils import split_groups
+        from pygrank.measures.utils import split
         from pygrank.measures import NDCG
         import random
         G, groups = test_block_model_graph(nodes=600, seed=1)
         group = groups[0]
         random.seed(1)
-        training, evaluation = split_groups(list(group), training_samples=3)
+        training, evaluation = split(list(group), training_samples=3)
         training, evaluation = to_signal(G, {v: 1 for v in training}), to_signal(G, {v: 1 for v in evaluation})
 
         base_result = NDCG(evaluation, exclude=training).evaluate(PageRank(0.99).rank(G, training))
@@ -166,24 +166,55 @@ class Test(unittest.TestCase):
         self.assertAlmostEqual(corr[0], 1., 4, msg="converge_to_eigenvectors (VenueRank) should yield similar order to the one of small restart probability")
 
     def test_learnable(self):
-        from pygrank.algorithms.utils.optimization import optimize
+        from pygrank.algorithms.autotune.optimization import optimize
         from pygrank.algorithms import GenericGraphFilter, HeatKernel
         from pygrank.algorithms.utils import to_signal, preprocessor
-        from pygrank.measures.utils import split_groups
+        from pygrank.measures.utils import split
         from pygrank.measures import AUC
         from pygrank.algorithms.postprocess import Normalize
         import random
         G, groups = test_block_model_graph(nodes=600, seed=1)
         group = groups[0]
         random.seed(1)
-        used_for_training, evaluation = split_groups(list(group), training_samples=0.5)
-        training, validation = split_groups(used_for_training, training_samples=0.5)
+        used_for_training, evaluation = split(list(group), training_samples=0.5)
+        training, validation = split(used_for_training, training_samples=0.5)
         training, validation, evaluation = to_signal(G, {v: 1 for v in training}), to_signal(G, {v: 1 for v in validation}), to_signal(G, {v: 1 for v in evaluation})
 
         pre = preprocessor("symmetric", True)
-        params = optimize(lambda params: -AUC(validation, exclude=evaluation).evaluate(
+        params = optimize(lambda params: -AUC(validation, exclude=training).evaluate(
             Normalize("sum", GenericGraphFilter(params, to_scipy=pre, max_iters=10000)).rank(G, training)),
-                          max_vals=[1]*5, tol=0.01, divide_range=2, verbose=True, partitions=5)
+                          max_vals=[1]*5, deviation_tol=0.01, divide_range=2, verbose=True, partitions=5)
+        learnable_result = AUC(validation, exclude=evaluation).evaluate(
+            GenericGraphFilter(params, to_scipy=pre, max_iters=10000).rank(G, training))
+        heat_kernel_result = AUC(evaluation, exclude=used_for_training).evaluate(HeatKernel(7, to_scipy=pre, max_iters=10000).rank(G, training))
+        self.assertLess(heat_kernel_result, learnable_result, msg="Learnable parameters should be meaningful")
+        self.assertGreater(heat_kernel_result, AUC(evaluation).evaluate(HeatKernel(7, to_scipy=pre, max_iters=10000).rank(G, training)),
+                        msg="Metrics correctly apply exclude filter to not skew results")
+
+    def test_chebychev(self):
+        from pygrank.algorithms.autotune.optimization import optimize
+        from pygrank.algorithms import GenericGraphFilter, HeatKernel
+        from pygrank.algorithms.utils import to_signal, preprocessor
+        from pygrank.measures.utils import split
+        from pygrank.measures import AUC
+        from pygrank.algorithms.postprocess import Normalize
+        import random
+        G, groups = test_block_model_graph(nodes=600, seed=1)
+        group = groups[0]
+        random.seed(1)
+        used_for_training, evaluation = split(list(group), training_samples=0.5)
+        training, validation = split(used_for_training, training_samples=0.5)
+        training, validation, evaluation = to_signal(G, {v: 1 for v in training}), to_signal(G, {v: 1 for v in validation}), to_signal(G, {v: 1 for v in evaluation})
+
+        pre = preprocessor("symmetric", True)
+        with self.assertRaises(Exception):
+            optimize(lambda params: -AUC(validation, exclude=training).evaluate(
+                Normalize("sum", GenericGraphFilter(params, coefficient_type="unknown", to_scipy=pre, max_iters=10000)).rank(G, training)),
+                     max_vals=[1]*5, min_vals=[0]*5, deviation_tol=0.01, divide_range=2, verbose=True, partitions=5)
+
+        params = optimize(lambda params: -AUC(validation, exclude=training).evaluate(
+            Normalize("sum", GenericGraphFilter(params, coefficient_type="chebychev", to_scipy=pre, max_iters=10000)).rank(G, training)),
+                          max_vals=[1]*5, min_vals=[0]*5, deviation_tol=0.01, divide_range=2, verbose=True, partitions=5)
         learnable_result = AUC(validation, exclude=evaluation).evaluate(
             GenericGraphFilter(params, to_scipy=pre, max_iters=10000).rank(G, training))
         heat_kernel_result = AUC(evaluation, exclude=used_for_training).evaluate(HeatKernel(7, to_scipy=pre, max_iters=10000).rank(G, training))

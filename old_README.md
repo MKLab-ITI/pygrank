@@ -316,7 +316,7 @@ from pygrank.measures.supervised import AUC
 import pygrank.measures.utils
 
 G, seeds, algorithm = ... # as per the first example
-seeds, ground_truth = pygrank.measures.utils.split_groups(seeds, training_samples=0.5)
+seeds, ground_truth = pygrank.measures.utils.split(seeds, training_samples=0.5)
 
 pygrank.measures.utils.remove_group_edges_from_graph(G, ground_truth)
 ranks = algorithm.rank(G, {v: 1 for v in seeds})
@@ -343,7 +343,7 @@ groups["group1"] = list()
 ... 
 
 # Split to training and test data
-training_groups, test_groups = pygrank.measures.utils.split_groups(groups)
+training_groups, test_groups = pygrank.measures.utils.split(groups)
 pygrank.measures.utils.remove_group_edges_from_graph(G, test_groups)
 
 # Calculate ranks and put them in a map

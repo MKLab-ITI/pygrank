@@ -1,5 +1,6 @@
 import random
 import collections
+from pygrank.algorithms.utils import GraphSignal, to_signal
 
 
 class Measure(object):
@@ -10,14 +11,8 @@ class Measure(object):
         raise Exception("Non-abstract subclasses of Measure should implement an evaluate method")
 
 
-def to_seeds(groups):
-    if not isinstance(groups, collections.Mapping):
-        return {v: 1 for v in groups}
-    return {group_id: {v: 1 for v in group} for group_id, group in groups.items()}
-
-
 def to_nodes(groups):
-    if not isinstance(groups, collections.Mapping):
+    if not isinstance(groups, collections.Mapping) or isinstance(groups, GraphSignal):
         return list(set(groups))
     all_nodes = list()
     for group in groups.values():
@@ -25,9 +20,14 @@ def to_nodes(groups):
     return list(set(all_nodes))
 
 
-def split_groups(groups, training_samples=0.99):
+def split(groups, training_samples=0.8):
     if training_samples == 1:
         return groups, groups
+    if isinstance(groups, GraphSignal):
+        group = list(groups)
+        random.shuffle(group)
+        splt = training_samples if training_samples > 1 else int(len(group) * training_samples)
+        return to_signal(groups, {v: groups[v] for v in group[:splt]}), to_signal(groups, {v: groups[v] for v in group[splt:]})
     if not isinstance(groups, collections.Mapping):
         group = list(groups)
         random.shuffle(group)

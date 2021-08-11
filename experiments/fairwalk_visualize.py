@@ -1,13 +1,13 @@
 from pygrank.algorithms.adhoc import PageRank
 from pygrank.algorithms.postprocess import Normalize, Ordinals
-from pygrank.measures.utils import split_groups
+from pygrank.measures.utils import split
 from sklearn import metrics
 import data.facebook_fairness.importer
 
 G, sensitive, labels = data.facebook_fairness.importer.load("data/facebook_fairness/0")
 
 algorithm = Normalize(PageRank())
-training, evaluation = split_groups(list(G), training_samples=0.1)
+training, evaluation = split(list(G), training_samples=0.1)
 ranks = algorithm.rank(G, {v: labels[v] for v in training if sensitive[v] == 0}, sensitive=sensitive)
 
 

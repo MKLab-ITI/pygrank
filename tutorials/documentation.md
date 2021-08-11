@@ -15,6 +15,7 @@
     + [Wrapping Postprocessors around Graph Filters](#wrapping-postprocessors-around-graph-filters)
     + [Types of Postprocessors](#types-of-postprocessors)
 5. [Evaluation](#evaluation)
+6. [Autotune](#autotune)
 
 For a brief overview of common terms found in this document
 please refer to the [glossary](glossary.md).
@@ -341,6 +342,7 @@ before the first `rank(...)` call to make sure that that call
 does not also perform the first normalization whose outcome will
 be hashed and immediately retrieved by subsequent calls.
 
+
 # Postprocessors
 Postprocessors wrap base graph filters to affect their outcome. Usage
 of the original filters remains identical.
@@ -420,7 +422,6 @@ found [here](postprocessors.md). After initialization with the appropriate
 parameters, these can be used interchangeably in the above example.
 
 
-
 # Evaluation
 TODO
 
@@ -433,4 +434,20 @@ TODO
 ### List of Measures
 An exhaustive list of measures can be
 found [here](measures.md). After initialization with the appropriate
+parameters, these can be used interchangeably in the above example.
+
+
+# Autotune
+Beyond the ability to compare node ranking algorithms,
+`pygrank` provides the ability to automatically tune node ranking 
+algorithms or select the best ones with regards to optimizing a measure
+based on graph and personalization at hand.
+
+This process is abastracted through a `Tuner` base class, which wraps
+any kind of node ranking algorithm. Ideally, this would wrap the end-product
+algorithm.
+
+An exhaustive list of ready-to-use schemes that can be used to automatically
+tune node ranking algorithms can be found [here](tuners.md).
+After initialization with the appropriate
 parameters, these can be used interchangeably in the above example.

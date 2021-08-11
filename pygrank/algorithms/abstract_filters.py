@@ -78,7 +78,7 @@ class ClosedFormGraphFilter(GraphFilter):
     """Implements a graph filter described as an aggregation of graph signal diffusion certain number of hops away
     while weighting these by corresponding coefficients."""
 
-    def __init__(self, krylov_dims=None, *args, **kwargs):
+    def __init__(self, krylov_dims=None, coefficient_type="taylor", *args, **kwargs):
         """
         Args:
             krylov_dims: Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space
@@ -87,12 +87,20 @@ class ClosedFormGraphFilter(GraphFilter):
                 If None (default) filters are not computed through their projection
                 the Krylov space, which may yield slower but exact computations. Otherwise, a numeric value
                 equal to the number of latent dimensions is required.
+            coefficient_type: Optional. If "taylor" (default) provided coefficients are considered
+                to define a Taylor expansion. If "chebychev", they are considered to be the coefficients of a Chebychev
+                expansion, which provides more robust errors but require normalized personalization. These approaches
+                are **not equivalent** for the same coefficient values; changing this argument could cause adhoc
+                filters to not work as indented.
         """
         super().__init__(*args, **kwargs)
         self.krylov_dims = krylov_dims
+        self.coefficient_type = coefficient_type.lower()
 
     def _start(self, M, personalization, ranks, *args, **kwargs):
         self.coefficient = None
+        if self.coefficient_type == "chebychev":
+            self.prev_term = 0
         if self.krylov_dims is not None:
             V, H = krylov_base(M, personalization.np, int(self.krylov_dims))
             self.krylov_base = V
@@ -101,18 +109,38 @@ class ClosedFormGraphFilter(GraphFilter):
             self.krylov_result = 0
             self.Mpower = backend.eye(int(self.krylov_dims))
         else:
-            self.ranks_power = ranks.np
+            self.ranks_power = personalization.np
             ranks.np = backend.repeat(0.0, backend.length(ranks.np))
+
+    def _recursion(self, result, next_term, next_coefficient):
+        if self.coefficient_type == "chebychev":
+            if self.convergence.iteration == 2:
+                self.prev_term = next_term
+            if self.convergence.iteration > 2:
+                next_term = 2*next_term - self.prev_term
+                self.prev_term = next_term
+                if self.coefficient == 0:
+                    return result, next_term
+            return result + next_term*next_coefficient, next_term
+        elif self.coefficient_type == "taylor":
+            if self.coefficient == 0:
+                return result, next_term
+            return result + next_term*next_coefficient, next_term
+        else:
+            raise Exception("Invalid coefficient type")
 
     def _step(self, M, personalization, ranks, *args, **kwargs):
         self.coefficient = self._coefficient(self.coefficient)
         if self.krylov_dims is not None:
+            prevPower = self.Mpower
             self.Mpower = self.Mpower @ self.krylov_H
-            self.krylov_result += self.coefficient * self.Mpower
+            self.krylov_result, self.Mpower = self._recursion(self.krylov_result, self.Mpower, self.coefficient)
+            #self.krylov_result += self.coefficient * self.Mpower
             ranks.np = krylov2original(self.krylov_base, self.krylov_result, int(self.krylov_dims))
         else:
-            if self.coefficient != 0:
-                ranks.np = ranks.np + float(self.coefficient) * self.ranks_power
+            #if self.coefficient != 0:
+            #    ranks.np = ranks.np + float(self.coefficient) * self.ranks_power
+            ranks.np, self.ranks_power = self._recursion(ranks.np, self.ranks_power, float(self.coefficient))
             self.ranks_power = backend.conv(self.ranks_power, M)
 
     def _end(self, M, personalization, ranks, *args, **kwargs):
@@ -124,6 +152,8 @@ class ClosedFormGraphFilter(GraphFilter):
             del self.krylov_H
         else:
             del self.ranks_power
+        if self.coefficient_type == "chebychev":
+            del self.prev_term
         del self.coefficient
 
     def _coefficient(self, previous_coefficient):

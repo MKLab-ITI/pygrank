@@ -4,6 +4,10 @@
 The following filters can be imported from the package `pygrank.algorithms`.
 Constructor details are provided, including arguments inherited from and passed to parent classes.
 All of them can be used through the code patterns presented at the library's [documentation](documentation.md). 
+1. [AbsorbingWalks](#absorbingwalks)
+2. [GenericGraphFilter](#genericgraphfilter)
+3. [HeatKernel](#heatkernel)
+4. [PageRank](#pagerank)
 
 ### AbsorbingWalks 
 
@@ -33,6 +37,7 @@ Initializes the graph filter.
 Args: 
  * *weights:* Optional. A list-like object with elements weights[n] proportional to the importance of propagating personalization graph signals n hops away. Default is [0.9]*10 . 
  * *krylov_dims:* Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space of the graph with degree equal to the provided dimensions. This considerably speeds up filtering but ends up providing an *approximation* of true graph filter outcomes. If None (default) filters are not computed through their projection the Krylov space, which may yield slower but exact computations. Otherwise, a numeric value equal to the number of latent dimensions is required. 
+ * *coefficient_type:* Optional. If "taylor" (default) provided coefficients are considered to define a Taylor expansion. If "chebychev", they are considered to be the coefficients of a Chebychev expansion, which provides more robust errors but require normalized personalization. These approaches are **not equivalent** for the same coefficient values; changing this argument could cause adhoc filters to not work as indented. 
  * *to_scipy:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
  * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
 
@@ -52,6 +57,7 @@ Initializes the HearKernel filter parameters.
 Args: 
  * *t:* Optional. How many hops until the importance of new nodes starts decreasing. Default value is 5. 
  * *krylov_dims:* Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space of the graph with degree equal to the provided dimensions. This considerably speeds up filtering but ends up providing an *approximation* of true graph filter outcomes. If None (default) filters are not computed through their projection the Krylov space, which may yield slower but exact computations. Otherwise, a numeric value equal to the number of latent dimensions is required. 
+ * *coefficient_type:* Optional. If "taylor" (default) provided coefficients are considered to define a Taylor expansion. If "chebychev", they are considered to be the coefficients of a Chebychev expansion, which provides more robust errors but require normalized personalization. These approaches are **not equivalent** for the same coefficient values; changing this argument could cause adhoc filters to not work as indented. 
  * *to_scipy:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
  * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
 

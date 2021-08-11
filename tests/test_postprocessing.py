@@ -123,12 +123,12 @@ class Test(unittest.TestCase):
         from pygrank.algorithms import PageRank
         from pygrank.algorithms.postprocess import Sweep
         from pygrank.measures import AUC
-        from pygrank.measures.utils import split_groups
+        from pygrank.measures.utils import split
         import random
         G, groups = test_block_model_graph(nodes=600, seed=1)
         group = groups[0]
         random.seed(1)
-        training, evaluation = split_groups(list(group), training_samples=0.5)
+        training, evaluation = split(list(group), training_samples=0.5)
         auc1 = AUC({v: 1 for v in evaluation}, exclude=training).evaluate(Sweep(PageRank()).rank(G, {v: 1 for v in training}))
         auc2 = AUC({v: 1 for v in evaluation}, exclude=training).evaluate(PageRank().rank(G, {v: 1 for v in training}))
         self.assertLess(auc2+0.22, auc1, "The Sweep procedure should significantly improve AUC")
@@ -137,12 +137,12 @@ class Test(unittest.TestCase):
         from pygrank.algorithms import PageRank
         from pygrank.algorithms.postprocess import Threshold, Sweep
         from pygrank.measures import Conductance
-        from pygrank.measures.utils import split_groups
+        from pygrank.measures.utils import split
         import random
         G, groups = test_block_model_graph(nodes=600, seed=1)
         group = groups[0]
         random.seed(1)
-        training, evaluation = split_groups(list(group), training_samples=0.5)
+        training, evaluation = split(list(group), training_samples=0.5)
         cond1 = Conductance().evaluate(Threshold(Sweep(PageRank())).rank(G, {v: 1 for v in training}))
         cond2 = Conductance().evaluate(Threshold("gap").transform(PageRank().rank(G, {v: 1 for v in training}))) # try both versions
         self.assertLess(cond2*4.5, cond1, "The Sweep procedure should significantly reduce conductance after gap thresholding")

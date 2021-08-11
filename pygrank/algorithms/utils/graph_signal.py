@@ -20,6 +20,8 @@ def to_signal(graph, obj):
             of ones.
     """
     known_node2id = None
+    if obj is None and isinstance(graph, GraphSignal):
+        obj, graph = graph, obj
     if graph is None:
         if isinstance(obj, GraphSignal):
             graph = obj.graph
@@ -84,6 +86,8 @@ class GraphSignal(MutableMapping):
             for key, value in obj.items():
                 self[key] = value
             self.np = backend.to_array(self.np) # make all operations with numpy and then potentially switch to tensorflow
+        #if len(self.graph) != backend.length(self.np) or len(self.graph) != len(self.node2id):
+        #    raise Exception("Graph signal arrays should have the same dimensions as graphs")
 
     def filter(self, exclude=None):
         if exclude is not None:

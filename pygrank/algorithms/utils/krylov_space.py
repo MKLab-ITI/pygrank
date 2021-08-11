@@ -2,13 +2,14 @@ import numpy as np
 from numpy import dot
 from numpy.linalg import norm
 import sklearn
-
+import warnings
 
 def diags(vecs, offs):
     return np.add.reduce([np.diag(v,k) for v,k in zip(vecs, offs)])
 
 
 def krylov_base(M, s, krylov_space_degree):
+    warnings.warn("Krylov approximation is still under development")
     try:
         sklearn.utils.validation.check_symmetric(M, tol=1e-10, raise_warning=False, raise_exception=True)
     except:

@@ -4,6 +4,26 @@
 The following postprocessors can be imported from the package `pygrank.algorithms.postprocess`.
 Constructor details are provided, including arguments inherited from and passed to parent classes.
 All of them can be used through the code patterns presented at the library's [documentation](documentation.md).  
+1. [AdhocFairness](#adhocfairness)
+2. [BoostedSeedOversampling](#boostedseedoversampling)
+3. [FairPersonalizer](#fairpersonalizer)
+4. [Normalize](#normalize)
+5. [Ordinals](#ordinals)
+6. [SeedOversampling](#seedoversampling)
+7. [Sweep](#sweep)
+8. [Tautology](#tautology)
+9. [Threshold](#threshold)
+10. [Transformer](#transformer)
+
+### AdhocFairness 
+
+Adjusts node scores so that the sum of sensitive nodes is moved closer to the sum of non-sensitive ones based on 
+ad hoc literature assumptions about how unfairness is propagated in graphs. 
+Initializes the fairness-aware postprocessor. 
+
+Args: 
+ * *ranker:* The base ranking algorithm. 
+ * *method:* The method with which to adjust weights. If "O" (default) an optimal gradual adjustment is performed [tsioutsiouliklis2020fairness]. If "B" node scores are weighted according to whether the nodes are sensitive, so that the sum of sensitive node scores becomes equal to the sum of non-sensitive node scores [tsioutsiouliklis2020fairness]. If "fairwalk" the graph is pre-processed so that, when possible, walks are equally probable to visit sensitive or non-sensitive nodes at non-restarting iterations [rahman2019fairwalk]. 
 
 ### BoostedSeedOversampling 
 
@@ -27,19 +47,21 @@ Example:
 ```
 
 
-### AdhocFairness 
+### FairPersonalizer 
 
-Adjusts node scores so that the sum of sensitive nodes is closer to the sum of non-sensitive ones. 
-Initializes the fairness-aware postprocessor. 
+A personalization editing scheme that aims to edit graph signal priors (i.e. personalization) to produce 
+disparate 
+Instantiates a personalization editing scheme that trains towards optimizing 
+retain_rank_weight*error_type(original scores, editing-induced scores) + pRule_weight*min(induced score pRule, target_pRule) 
 
 Args: 
  * *ranker:* The base ranking algorithm. 
- * *method:* The method with which to adjust weights. If "O" (default) an optimal gradual adjustment is performed. If "B" node scores are weighted according to whether the nodes are sensitive, so that the sum of sensitive node scores becomes equal to the sum of non-sensitive node scores. If "reweight" the graph is pre-processed so that, when possible, walks are equally probable to visit sensitive or non-sensitive nodes at non-restarting iterations. 
-
-### FairWeights 
-
-Weights node scores based on whether they are sensitive, so that the sum of sensitive 
-and non-sensitive scores are equal. 
+ * *target_pRule:* Up to which value should pRule be improved. pRule values greater than this are not penalized further. 
+ * *retain_rank_weight:* Can be used to penalize deviations from original posteriors due to editing. Use the default value 1 unless there is a specific reason to scale the error. Higher values correspond to tighter maintenance of original posteriors, but may not improve fairness as much. 
+ * *pRule_weight:* Can be used to penalize low pRule values. Either use the default value 1 or, if you want to place most emphasis on pRule maximization (instead of trading-off between fairness and posterior preservation) 10 is a good empirical starting point. 
+ * *error_type:* The error type used to penalize deviations from original posterior scores. "KL" (default) uses KL-diveregence and is used in [krasanakis2020prioredit]. "mabs" uses the mean absolute error and is used in the earlier [krasanakis2020fairconstr]. The latter does not maintain fairness as well on average, but is sometimes better for specific graphs. 
+ * *parameter_buckets:* How many sets of parameters to be used to . Default is 1. More parameters could be needed to to track, but running time scales **exponentially** to these (with base 4). 
+ * *max_residual:* An upper limit on how much the original personalization is preserved, i.e. a fraction of it in the range [0, max_residual] is preserved. Default is 1 and is introduced by [krasanakis2020prioredit], but 0 can be used for exact replication of [krasanakis2020fairconstr]. 
 
 ### Normalize 
 

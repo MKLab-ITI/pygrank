@@ -69,7 +69,7 @@ if __name__ == "__main__":
             experiments = list()
 
             max_positive_samples = 2000
-            training_groups, test_groups = pygrank.measures.utils.split_groups(groups, training_samples=seed)
+            training_groups, test_groups = pygrank.measures.utils.split(groups, training_samples=seed)
             test_group_ranks = pygrank.measures.utils.to_seeds(test_groups)
             measures = {"AUC": pygrank.measures.multigroup.MultiSupervised(pygrank.measures.supervised.AUC, test_group_ranks),
                         "NDCG": pygrank.measures.multigroup.MultiSupervised(pygrank.measures.supervised.NDCG, test_group_ranks),

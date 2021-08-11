@@ -5,12 +5,14 @@ import setuptools
 # - build  : python setup.py bdist_wheel
 # - deploy : twine upload dist/*
 
-with open("README.md", "r") as file:
-    long_description = file.read()
+#with open("README.md", "r") as file:
+#    long_description = file.read()
+
+long_description = "For tutorials, documentation and contribution guidelines, please visit the project's homepage at https://github.com/MKLab-ITI/pygrank "
 
 setuptools.setup(
     name='pygrank',
-    version='0.2.1',
+    version='0.2.2',
     author="Emmanouil Krasanakis",
     author_email="maniospas@hotmail.com",
     description="Recommendation algorithms for large graphs",

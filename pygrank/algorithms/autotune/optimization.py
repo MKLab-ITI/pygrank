@@ -28,7 +28,7 @@ def __add(weights, index, increment, max_val, min_val):
     return weights
 
 
-def optimize(loss, max_vals=[1 for _ in range(1)], min_vals=None, tol=1.E-8, divide_range=1.01, partitions = 5, parameter_tol=float('inf'), depth=1, weights=None, verbose=False):
+def optimize(loss, max_vals=[1 for _ in range(1)], min_vals=None, deviation_tol=1.E-8, divide_range=1.01, partitions = 5, parameter_tol=float('inf'), depth=1, weights=None, verbose=False):
     """
     Implements a coordinate descent algorithm for optimizing the argument vector of the given loss function.
     Arguments:
@@ -37,7 +37,7 @@ def optimize(loss, max_vals=[1 for _ in range(1)], min_vals=None, tol=1.E-8, div
             Default is a list of ones for one parameter.
         min_vals. Optional. The minimum value for each paramter to search for. If None (default) it becomes a list of
             zeros and equal length to max_vals.
-        tol: Optional. The numerical tolerance to optimize to. Default is 1.E-8.
+        deviation_tol: Optional. The numerical tolerance to optimize to. Default is 1.E-8.
         divide_range: Optional. Value greater than 1 with which to divide the range at each iteration.
     Example:
         >>> p = optimize(loss=lambda p: (1.5-p[0]+p[0]*p[1])**2+(2.25-p[0]+p[0]*p[1]**2)**2+(2.625-p[0]+p[0]*p[1]**3)**2, max_vals=[4.5, 4.5], min_vals=[-4.5, -4.5])
@@ -84,7 +84,7 @@ def optimize(loss, max_vals=[1 for _ in range(1)], min_vals=None, tol=1.E-8, div
         range_deviations[curr_variable] = max([loss for _, loss in loss_pairs])-min([loss for _, loss in loss_pairs])
         if verbose:
             print('Params', weights, '\t Loss', loss(weights), '+-', max(range_deviations), '\t Var',curr_variable, '\t Parameter max range', max(range_search))
-        if max(range_deviations) < tol and max(range_search) < parameter_tol:
+        if max(range_deviations) < deviation_tol and max(range_search) < parameter_tol:
             break
         # move to next var
         iter += 1
@@ -93,5 +93,5 @@ def optimize(loss, max_vals=[1 for _ in range(1)], min_vals=None, tol=1.E-8, div
             curr_variable -= len(max_vals)
     #print("trained weights in", iter, "iterations", weights, "final loss", loss(weights))
     if depth > 1:
-        return optimize(loss, max_vals, min_vals, tol, divide_range, partitions, parameter_tol, depth-1, weights, verbose)
+        return optimize(loss, max_vals, min_vals, deviation_tol, divide_range, partitions, parameter_tol, depth - 1, weights, verbose)
     return weights

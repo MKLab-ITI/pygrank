@@ -6,13 +6,16 @@ Fast recommendation algorithms for large graphs based on link analysis.
 
 **License:** Apache Software License
 <br>**Author:** Emmanouil (Manios) Krasanakis
-<br>**Dependencies:** `networkx, numpy, scipy, sklearn, tqdm`
+<br>**Dependencies:** `networkx, numpy, scipy, sklearn, tqdm` (required) `tensorflow` (optional)
+<br>**Coverage:** 72%
 
 # :hammer_and_wrench: Installation
 `pygrank` is meant to work with Python 3.6 or later. It can be installed with pip per:
 ```
 pip install pygrank
 ```
+
+**Parts of the documentation are still under construction.**
 
 To use machine learning backends (e.g. to integrate the package
 in machine learning projects), such as *tensorflow*,

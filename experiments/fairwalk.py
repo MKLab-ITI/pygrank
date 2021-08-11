@@ -20,7 +20,7 @@ def perc(num):
 
 
 def personalizer(H, G, p, s, fairness_weight=0, fairness_limit=0.8):
-    training, test = split_groups(list(p.keys()), training_samples=0.5)
+    training, test = split(list(p.keys()), training_samples=0.5)
     loss = AM()
     training = set(training)
     #loss.add(Error(p, G))
@@ -51,6 +51,7 @@ for filter, H in graph_filters.items():
     algorithms = {
         "None": lambda G, p, s: Normalize(H).rank(G, p),
         #"AUCPers": lambda G,p,s: personalizer(H, G, p, s, 0, 0),
+        "FairWalk": lambda G,p,s: Normalize(AdhocFairness(H, "fairwalk")).rank(G, p, sensitive=s),
         "Mult": lambda G,p,s: Normalize(AdhocFairness(H, "B")).rank(G, p, sensitive=s),
         "LFRPO": lambda G,p,s: Normalize(AdhocFairness(H, "O")).rank(G, p, sensitive=s),
         "FairPers": lambda G,p,s: Normalize(FairPersonalizer(H, error_type="mabs", max_residual=0)).rank(G, p, sensitive=s),
@@ -75,7 +76,7 @@ for filter, H in graph_filters.items():
                 else:
                     random.seed(seed_seed) # ensure reproducibility'
                     if seeds < 1:
-                        training, evaluation = split_groups(list(labels.keys()), training_samples=seeds)
+                        training, evaluation = split(list(labels.keys()), training_samples=seeds)
                     else:
                         training_pos = [v for v in labels if labels[v] == 1 and sensitive[v] == 0]
                         random.shuffle(training_pos)

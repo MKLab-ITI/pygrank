@@ -1,5 +1,5 @@
 import numpy as np
-from pygrank.algorithms.utils import optimize
+from pygrank.algorithms.autotune.optimization import optimize
 from random import random
 import time
 
@@ -40,7 +40,7 @@ class Personalizer:
                 except:
                     return float('inf')
 
-            params = optimize(param_loss, [1, 10]*self.kernels+[1], min_vals=[-1, -10]*self.kernels+[0], partitions=5, tol=self.tol, divide_range=2, weights=params)
+            params = optimize(param_loss, [1, 10] * self.kernels + [1], min_vals=[-1, -10]*self.kernels+[0], partitions=5, deviation_tol=self.tol, divide_range=2, weights=params)
             personalization = self.__culep(personalization, original_personalization, ranks, params)
             training_personalization = None if training_personalization is None else self.__culep(training_personalization, original_personalization, training_ranks, params)
             ranks = self.ranker.rank(G, personalization, *args, as_dict=False, **kwargs)

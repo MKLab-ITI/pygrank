@@ -1,5 +1,6 @@
+from pygrank.algorithms.autotune.optimization import optimize
 from pygrank.algorithms.postprocess.postprocess import Tautology, Normalize
-from pygrank.algorithms.utils import optimize, to_signal
+from pygrank.algorithms.utils import to_signal
 from pygrank.algorithms.postprocess import Postprocessor
 from pygrank import backend
 from pygrank.measures.supervised import pRule
@@ -80,7 +81,7 @@ class FairPersonalizer(Postprocessor):
             fair_ranks = self.ranker.rank(G, personalization=fair_pers, *args, as_dict=False, **kwargs)
             return self.__prule_loss(fair_ranks, ranks, sensitive, personalization)
 
-        params = optimize(loss, [1, 1, 10, 10]*self.parameter_buckets+[self.max_residual], min_vals=[0, 0, -10, -10]*self.parameter_buckets+[0], tol=1.E-2, divide_range=2, partitions=5)
+        params = optimize(loss, [1, 1, 10, 10] * self.parameter_buckets + [self.max_residual], min_vals=[0, 0, -10, -10]*self.parameter_buckets+[0], deviation_tol=1.E-2, divide_range=2, partitions=5)
         return self.ranker.rank(G, personalization=self.__culep(personalization, sensitive, ranks, params), *args, **kwargs)
 
 
@@ -126,7 +127,7 @@ class AdhocFairness(Postprocessor):
         return ranks
 
     def __reweight(self, G, sensitive):
-        if not getattr(self, "fairwalk", None):
+        if not getattr(self, "reweights", None):
             self.reweights = dict()
         if G not in self.reweights:
             phi = sum(sensitive.values())/len(G)
@@ -157,11 +158,11 @@ class AdhocFairness(Postprocessor):
             sumR /= sum_total
             sumB /= sum_total
             ranks = {v: ranks[v]*(phi*sensitive.get(v, 0)/sumR+(1-phi)*(1-sensitive.get(v, 0))/sumB) for v in ranks}
-        else:
+        elif self.method != 'fairwalk':
             raise Exception("Invalid fairness postprocessing method", self.method)
         return ranks
 
     def transform(self, *args, **kwargs):
         if self.method == "fairwalk":
             raise Exception("Reweighting can only occur by preprocessing the graph")
-        super().transform(*args, **kwargs)
+        return super().transform(*args, **kwargs)

@@ -1,5 +1,4 @@
 from pygrank.algorithms.utils.convergence import *
-from pygrank.algorithms.utils.optimization import *
 from pygrank.algorithms.utils.preprocessing import *
 from pygrank.algorithms.utils.graph_signal import *
 from pygrank.algorithms.utils.krylov_space import *
@@ -26,6 +25,15 @@ def _call(method, kwargs, args=None):
         for arg, val in zip(list(inspect.signature(method).parameters)[:len(args)], args):
             kwargs[arg] = val
     return method(**{argname: kwargs[argname] for argname in inspect.signature(method).parameters if argname in kwargs})
+
+
+def _remove_used(method, kwargs, args=None):
+    if args:
+        kwargs = dict(kwargs)
+        for arg, val in zip(list(inspect.signature(method).parameters)[:len(args)], args):
+            kwargs[arg] = val
+    params = set(inspect.signature(method).parameters)
+    return {kwarg: val for kwarg, val in kwargs.items() if kwarg not in params}
 
 
 def _ensure_all_used(kwargs, methods):

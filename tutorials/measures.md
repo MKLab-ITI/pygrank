@@ -4,6 +4,19 @@
 The following measures can be imported from the package `pygrank.measures`.
 Constructor details are provided, including arguments inherited from and passed to parent classes.
 All of them can be used through the code patterns presented at the library's [documentation](documentation.md).  
+1. [AM](#am)
+2. [AMtarget](#amtarget)
+3. [AUC](#auc)
+4. [Accuracy](#accuracy)
+5. [Conductance](#conductance)
+6. [CrossEntropy](#crossentropy)
+7. [Density](#density)
+8. [Error](#error)
+9. [GM](#gm)
+10. [KLDivergence](#kldivergence)
+11. [Modularity](#modularity)
+12. [NDCG](#ndcg)
+13. [pRule](#prule)
 
 ### AM 
  
@@ -18,6 +31,7 @@ Initializes the supervised measure with desired graph signal outcomes.
 
 Args: 
  * *known_ranks:* The desired graph signal outcomes. 
+ * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
 
 ### Accuracy 
  
@@ -25,6 +39,7 @@ Initializes the supervised measure with desired graph signal outcomes.
 
 Args: 
  * *known_ranks:* The desired graph signal outcomes. 
+ * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
 
 ### Conductance 
 
@@ -58,6 +73,7 @@ Initializes the supervised measure with desired graph signal outcomes.
 
 Args: 
  * *known_ranks:* The desired graph signal outcomes. 
+ * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
 
 ### Density 
 
@@ -88,6 +104,7 @@ Initializes the supervised measure with desired graph signal outcomes.
 
 Args: 
  * *known_ranks:* The desired graph signal outcomes. 
+ * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
 
 ### GM 
  
@@ -99,6 +116,7 @@ Initializes the supervised measure with desired graph signal outcomes.
 
 Args: 
  * *known_ranks:* The desired graph signal outcomes. 
+ * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
 
 ### Modularity 
  
@@ -111,6 +129,7 @@ Initializes the PageRank scheme parameters.
 Attributes: 
  * *k:* Optional. Calculates NDCG@k. If None (default), len(known_ranks) is used. 
  * *known_ranks:* The desired graph signal outcomes. 
+ * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
 
 ### pRule 
 
@@ -119,3 +138,4 @@ Initializes the supervised measure with desired graph signal outcomes.
 
 Args: 
  * *known_ranks:* The desired graph signal outcomes. 
+ * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
