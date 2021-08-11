@@ -51,7 +51,7 @@ def _idfier(*args, **kwargs):
     """
     Converts args and kwargs into a hashable array of object ids.
     """
-    return "["+",".join(str(id(arg)) for arg in args)+"]"+"{"+",".join(v+":"+str(id(kwargs[v])) for v in kwargs)+"}"
+    return "["+",".join(str(hash(arg)) for arg in args)+"]"+"{"+",".join(v+":"+str(hash(kwargs[v])) for v in kwargs)+"}"
 
 
 class MethodHasher:

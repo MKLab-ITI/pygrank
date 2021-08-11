@@ -1,7 +1,7 @@
 import scipy
 import numpy as np
 from scipy.stats import norm
-import time
+from timeit import default_timer as time
 
 
 class ConvergenceManager:
@@ -58,7 +58,7 @@ class ConvergenceManager:
                 performs one iteration before starting comparing values with previous ones.
         """
         if restart_timer or self._start_time is None:
-            self._start_time = time.clock()
+            self._start_time = time()
             self.elapsed_time = None
             self.iteration = 0
             self.min_iters = 0
@@ -81,16 +81,16 @@ class ConvergenceManager:
             self._find_max_iters_dynamically(new_ranks)
         self.iteration += 1
         if self.iteration <= self.min_iters:
-            self.elapsed_time = time.clock()-self._start_time
+            self.elapsed_time = time()-self._start_time
             return True
         if self.iteration > self.max_iters:
-            if self.error_type=="iters":
-                self.elapsed_time = time.clock()-self._start_time
+            if self.error_type == "iters":
+                self.elapsed_time = time()-self._start_time
                 return True
             raise Exception("Could not converge within "+str(self.max_iters)+" iterations")
         converged = False if self.last_ranks is None else self._has_converged(self.last_ranks, new_ranks)
         self.last_ranks = new_ranks
-        self.elapsed_time = time.clock()-self._start_time
+        self.elapsed_time = time()-self._start_time
         return converged
 
     def _has_converged(self, prev_ranks, ranks):
@@ -127,7 +127,7 @@ class RankOrderConvergenceManager:
 
     def start(self, restart_timer=True):
         if restart_timer or self._start_time is None:
-            self._start_time = time.clock()
+            self._start_time = time()
             self.elapsed_time = None
             self.iteration = 0
             #self.accumulated_rank_squares = 0
@@ -142,7 +142,7 @@ class RankOrderConvergenceManager:
         self.iteration += 1
         converged = self.current_fraction_of_random_walks() >= self.needed_fraction_of_random_walks(new_ranks)
         #print(self.current_fraction_of_random_walks(), self.needed_fraction_of_random_walks(new_ranks))
-        self.elapsed_time = time.clock()-self._start_time
+        self.elapsed_time = time()-self._start_time
         return converged
 
     def needed_fraction_of_random_walks(self, ranks):

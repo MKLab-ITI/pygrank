@@ -2,23 +2,49 @@
 
 ## Table of Contents
 1. [Table of Contents](#table-of-contents)
-2. [Graph Signals](#graph-signals)
+2. [Architecture](#architecture)
+3. [Graph Signals](#graph-signals)
     + [Defining and Manipulating Graph Signals](#defining-and-manipulating-graph-signals)
     + [Implicit Use of Signals](#implicit-use-of-signals)
-3. [Graph Filters](#graph-filters)
+4. [Graph Filters](#graph-filters)
     + [Passing Graph Signals through Filters](#passing-graph-signals-through-filters)
     + [Graph Difusion Principles](#graph-diffusion-principles)
     + [Types of Filters](#types-of-filters)
     + [Convergence Criteria](#convergence-criteria)
     + [Graph Preprocessing](#graph-preprocessing)
-4. [Postprocessors](#postprocessors)
+5. [Postprocessors](#postprocessors)
     + [Wrapping Postprocessors around Graph Filters](#wrapping-postprocessors-around-graph-filters)
     + [Types of Postprocessors](#types-of-postprocessors)
-5. [Evaluation](#evaluation)
-6. [Autotune](#autotune)
+6. [Evaluation](#evaluation)
+7. [Autotune](#autotune)
 
 For a brief overview of common terms found in this document
 please refer to the [glossary](glossary.md).
+
+# Architecture
+`pygrank` is designed with a hierarchical architecture in mind, where the roles
+of source code components can be clearly separated. At the core of the library
+lie the concept of graph signals, which wrap machine learning primitives
+(e.g. numpy arrays or tensorflow tensors) to be propagated through graphs.
+Whatever these primitives may be, they can be manipulated through an 
+abstracted backend.
+
+Then, a separate defines several measures that can be used to assess the outcome
+of prediction tasks on graphs. These include both supervised and unsupervised measures,
+as well as ways to combine various measures (e.g. AUC and fairness-aware pRule that
+assesses disparate impact) to quantify the efficacy of multiclass predictions.
+
+Of course, a module is delegated to defining node ranking algorithms on graphs.
+The take the form of graph filters, the outcome of which can be postprocessed 
+towards various objectives by manipulating their outcome or applying iterative
+schemes that edit algorithm inputs. A particularly useful part of the module
+is the ability to automatically tune parameters on-the-fly, in a computationally
+efficient manner. We refer to this practice as *autotune*.
+
+Finally, a separate module is used to support benchmarking experiments that compare
+various node ranking algorithms.
+
+![architecture](architecture.png)
 
 # Graph Signals
 Graph signals are a way to organize numerical values corresponding to respective

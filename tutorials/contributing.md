@@ -30,10 +30,13 @@ are installed and upgraded to their latest versions.
 which new code should maintain for import statements to work.
 For example, do not design evaluation measures that depend on algorithms.
 Rather, such components should be delegated to some of the other modules.
+For reference, we re-iterate here the project's architecture. For more details,
+please refer to the [documentation](documentation.md).
 
 ![architecture](architecture.png)
 
-Please try to import methods and classes through the highest-level 
+We ask that, when contributing new code, you try to import methods and 
+classes through the highest-level 
 architectural component they belong in that does not conflict with the code.
 For example, to design a new filter you need import utility methods
 from `pygrank.algorithms.utils`, since a higher-level import would create

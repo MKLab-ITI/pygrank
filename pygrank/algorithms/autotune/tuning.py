@@ -10,7 +10,7 @@ default_tuning_optimization = {
     "max_vals": [0.95] * 10,
     "min_vals": [0.5] * 10,
     "deviation_tol": 0.005,
-    "parameter_tol": 0.1,
+    "parameter_tol": 1,
     "verbose": False,
     "divide_range": "shrinking",
     "partitions": 5,

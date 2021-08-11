@@ -2,6 +2,7 @@ from typing import Callable, Mapping, Any
 from pygrank.core import to_signal, GraphSignal, NodeRanking
 from pygrank.measures.utils import split
 from pygrank.measures import AUC, Supervised
+from timeit import default_timer as time
 
 
 def _perc(num):
@@ -61,7 +62,12 @@ def supervised_benchmark(algorithms: Mapping[str, NodeRanking],
         training, evaluation = split(list(group), training_samples=0.1)
         training, evaluation = to_signal(graph,{v: 1 for v in training}), to_signal(graph,{v: 1 for v in evaluation})
         for algorithm in algorithms.values():
-            dataset_results += delimiter+fill(_perc(metric(evaluation, training)(algorithm.rank(graph, training))))
+            if metric == "time":
+                tic = time()
+                algorithm.rank(graph, training)
+                dataset_results += delimiter + fill(_perc(time()-tic))
+            else:
+                dataset_results += delimiter+fill(_perc(metric(evaluation, training)(algorithm.rank(graph, training))))
         if verbose:
             print(dataset_results+endline)
         out += dataset_results+endline+"\n"

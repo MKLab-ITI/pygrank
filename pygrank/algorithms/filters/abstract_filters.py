@@ -67,7 +67,9 @@ class RecursiveGraphFilter(GraphFilter):
         if isinstance(self.use_quotient, Postprocessor):
             ranks.np = self.use_quotient.transform(ranks).np
         elif self.use_quotient:
-            ranks.np = ranks.np / backend.sum(ranks.np)
+            ranks_sum = backend.sum(ranks.np)
+            if ranks_sum != 0:
+                ranks.np = ranks.np / ranks_sum
         if self.converge_to_eigenvectors:
             personalization.np = ranks.np
 
@@ -79,7 +81,7 @@ class ClosedFormGraphFilter(GraphFilter):
     """Implements a graph filter described as an aggregation of graph signal diffusion certain number of hops away
     while weighting these by corresponding coefficients."""
 
-    def __init__(self, krylov_dims=None, coefficient_type="taylor", *args, **kwargs):
+    def __init__(self, krylov_dims=None, coefficient_type="taylor", optimization_dict=dict(), *args, **kwargs):
         """
         Args:
             krylov_dims: Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space
@@ -93,10 +95,17 @@ class ClosedFormGraphFilter(GraphFilter):
                 expansion, which provides more robust errors but require normalized personalization. These approaches
                 are **not equivalent** for the same coefficient values; changing this argument could cause adhoc
                 filters to not work as indented.
+            optimization_dict: Optional. If a dict the filter keeps intermediate values that can help it
+                avoid most (if not all) matrix multiplication if it run again for the same graph signal. Setting this
+                parameter to None (default) can save approximately **half the memory** the algorithm uses but
+                slows down tuning iteration times to O(edges) instead of O(nodes). Note that the same dict needs to
+                be potentially passed to multiple algorithms that take the same graph signal as input to see noticeable
+                improvement.
         """
         super().__init__(*args, **kwargs)
         self.krylov_dims = krylov_dims
         self.coefficient_type = coefficient_type.lower()
+        self.optimization_dict = optimization_dict
 
     def _start(self, M, personalization, ranks, *args, **kwargs):
         self.coefficient = None
@@ -130,10 +139,22 @@ class ClosedFormGraphFilter(GraphFilter):
         else:
             raise Exception("Invalid coefficient type")
 
+    def _retrieve_power(self, ranks_power, M, personalization):
+        if self.optimization_dict is not None:
+            # TODO investigate why this does not speed up as much as expected
+            personalization_id = hash(personalization)
+            if personalization_id not in self.optimization_dict:
+                self.optimization_dict.clear() # this ensures that the dict is cleared when new tuning starts
+                self.optimization_dict[personalization_id] = dict()
+            personalization_dict = self.optimization_dict[personalization_id]
+            if self.convergence.iteration not in personalization_dict:
+                personalization_dict[self.convergence.iteration] = backend.conv(ranks_power, M)
+            return personalization_dict[self.convergence.iteration]
+        return backend.conv(ranks_power, M)
+
     def _step(self, M, personalization, ranks, *args, **kwargs):
         self.coefficient = self._coefficient(self.coefficient)
         if self.krylov_dims is not None:
-            prevPower = self.Mpower
             self.Mpower = self.Mpower @ self.krylov_H
             self.krylov_result, self.Mpower = self._recursion(self.krylov_result, self.Mpower, self.coefficient)
             #self.krylov_result += self.coefficient * self.Mpower
@@ -142,7 +163,7 @@ class ClosedFormGraphFilter(GraphFilter):
             #if self.coefficient != 0:
             #    ranks.np = ranks.np + float(self.coefficient) * self.ranks_power
             ranks.np, self.ranks_power = self._recursion(ranks.np, self.ranks_power, float(self.coefficient))
-            self.ranks_power = backend.conv(self.ranks_power, M)
+            self.ranks_power = self._retrieve_power(self.ranks_power, M, personalization)
 
     def _end(self, M, personalization, ranks, *args, **kwargs):
         if self.krylov_dims is not None:

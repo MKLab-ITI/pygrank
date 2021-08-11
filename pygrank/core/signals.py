@@ -31,6 +31,8 @@ class GraphSignal(MutableMapping):
         [('A', 0.6), ('B', 0.0), ('C', 0.4)]
     """
 
+    _signal_counter = 0
+
     def __init__(self, graph, obj, node2id=None):
         """Should **ALWAYS** instantiate graph signals with the method to_signal,
         which handles non-instantiation semantics."""
@@ -50,6 +52,8 @@ class GraphSignal(MutableMapping):
             self.np = backend.to_array(self.np) # make all operations with numpy and then potentially switch to tensorflow
         #if len(self.graph) != backend.length(self.np) or len(self.graph) != len(self.node2id):
         #    raise Exception("Graph signal arrays should have the same dimensions as graphs")
+        GraphSignal._signal_counter += 1
+        self.hash_value = GraphSignal._signal_counter
 
     def filter(self, exclude=None):
         if exclude is not None:
@@ -57,6 +61,9 @@ class GraphSignal(MutableMapping):
             ret = backend.to_array([self[key] for key in self.graph if key not in exclude])
             return ret
         return self.np
+
+    def __hash__(self):
+        return hash("pygrank_GraphSignal__"+str(self.hash_value))
 
     def __getitem__(self, key):
         return float(self.np[self.node2id[key]])
