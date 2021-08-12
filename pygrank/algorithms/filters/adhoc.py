@@ -35,7 +35,7 @@ class HeatKernel(ClosedFormGraphFilter):
     """ Heat kernel filter."""
 
     def __init__(self, t=3, *args, **kwargs):
-        """ Initializes the HearKernel filter parameters.
+        """ Initializes the HeatKernel filter parameters.
 
         Args:
             t: Optional. How many hops until the importance of new nodes starts decreasing. Default value is 5.

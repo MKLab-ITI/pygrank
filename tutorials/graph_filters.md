@@ -4,19 +4,61 @@
 The following filters can be imported from the package `pygrank.algorithms`.
 Constructor details are provided, including arguments inherited from and passed to parent classes.
 All of them can be used through the code patterns presented at the library's [documentation](documentation.md). 
-1. [AbsorbingWalks](#absorbingwalks)
-2. [GenericGraphFilter](#genericgraphfilter)
-3. [HeatKernel](#heatkernel)
-4. [PageRank](#pagerank)
+1. [GenericGraphFilter](#kbdclosedformgraphfilterkbd-genericgraphfilter)
+2. [HeatKernel](#kbdclosedformgraphfilterkbd-heatkernel)
+3. [AbsorbingWalks](#kbdrecursivegraphfilterkbd-absorbingwalks)
+4. [PageRank](#kbdrecursivegraphfilterkbd-pagerank)
 
-### AbsorbingWalks 
+### <kbd>ClosedFormGraphFilter</kbd> GenericGraphFilter
 
-Implementation of partial absorbing random walks for Lambda = (1-alpha)/alpha diag(absorbtion vector) . 
-Initializes the AbsorbingWalks filter parameters. For appropriate parameter values. This can model PageRank 
-but is in principle a generalization that allows custom absorbtion rates per nodes (when not given, these are I). 
+Implements a graph filter with a specific vector of weight parameters. 
+Initializes the graph filter. 
 
 Args: 
- * *alpha:* Optional. (1-alpha)/alpha is the absorbtion rate of the random walk multiplied with individual node absorbtion rates. This is chosen to yield the same underlying meaning as PageRank (for which Lambda = alpha Diag(degrees) ) when the same parameter value alpha is chosen. Default is 1-1.E-6 per the respective publication. 
+ * *weights:* Optional. A list-like object with elements weights[n] proportional to the importance of propagating personalization graph signals n hops away. If None (default) then [0.9]*10 is used. 
+ * *krylov_dims:* Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space of the graph with degree equal to the provided dimensions. This considerably speeds up filtering but ends up providing an *approximation* of true graph filter outcomes. If None (default) filters are not computed through their projection the Krylov space, which may yield slower but exact computations. Otherwise, a numeric value equal to the number of latent dimensions is required. 
+ * *coefficient_type:* Optional. If "taylor" (default) provided coefficients are considered to define a Taylor expansion. If "chebyshev", they are considered to be the coefficients of a Chebyshev expansion, which provides more robust errors but require normalized personalization. These approaches are **not equivalent** for the same coefficient values; changing this argument could cause adhoc filters to not work as indented. 
+ * *optimization_dict:* Optional. If a dict the filter keeps intermediate values that can help it avoid most (if not all) matrix multiplication if it run again for the same graph signal. Setting this parameter to None (default) can save approximately **half the memory** the algorithm uses but slows down tuning iteration times to O(edges) instead of O(nodes). Note that the same dict needs to be potentially passed to multiple algorithms that take the same graph signal as input to see noticeable improvement. 
+ * *to_scipy:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+
+Example:
+
+```python 
+>>> from pygrank import GenericGraphFilter 
+>>> algorithm = GenericGraphFilter([0.5, 0.25, 0.125], tol=1.E-9) # tol passed to ConvergenceManager 
+```
+
+
+### <kbd>ClosedFormGraphFilter</kbd> HeatKernel
+
+Heat kernel filter. 
+Initializes the HeatKernel filter parameters. 
+
+Args: 
+ * *t:* Optional. How many hops until the importance of new nodes starts decreasing. Default value is 5. 
+ * *krylov_dims:* Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space of the graph with degree equal to the provided dimensions. This considerably speeds up filtering but ends up providing an *approximation* of true graph filter outcomes. If None (default) filters are not computed through their projection the Krylov space, which may yield slower but exact computations. Otherwise, a numeric value equal to the number of latent dimensions is required. 
+ * *coefficient_type:* Optional. If "taylor" (default) provided coefficients are considered to define a Taylor expansion. If "chebyshev", they are considered to be the coefficients of a Chebyshev expansion, which provides more robust errors but require normalized personalization. These approaches are **not equivalent** for the same coefficient values; changing this argument could cause adhoc filters to not work as indented. 
+ * *optimization_dict:* Optional. If a dict the filter keeps intermediate values that can help it avoid most (if not all) matrix multiplication if it run again for the same graph signal. Setting this parameter to None (default) can save approximately **half the memory** the algorithm uses but slows down tuning iteration times to O(edges) instead of O(nodes). Note that the same dict needs to be potentially passed to multiple algorithms that take the same graph signal as input to see noticeable improvement. 
+ * *to_scipy:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+
+Example:
+
+```python 
+>>> from pygrank.algorithms import HeatKernel 
+>>> algorithm = HeatKernel(t=3, tol=1.E-9) # tol passed to the ConvergenceManager 
+```
+
+
+### <kbd>RecursiveGraphFilter</kbd> AbsorbingWalks
+
+Implementation of partial absorbing random walks for Lambda = (1-alpha)/alpha diag(absorption vector) . 
+Initializes the AbsorbingWalks filter parameters. For appropriate parameter values. This can model PageRank 
+but is in principle a generalization that allows custom absorption rate per node (when not given, these are I). 
+
+Args: 
+ * *alpha:* Optional. (1-alpha)/alpha is the absorption rate of the random walk multiplied with individual node absorption rates. This is chosen to yield the same underlying meaning as PageRank (for which Lambda = alpha Diag(degrees) ) when the same parameter value alpha is chosen. Default is 1-1.E-6 per the respective publication. 
  * *use_quotient:* Optional. If True (default) performs a L1 re-normalization of ranks after each iteration. This significantly speeds up the convergence speed of symmetric normalization (col normalization preserves the L1 norm during computations on its own). Can also pass Postprocessor instances to adjust node scores after each iteration with the Postprocessor.transform(ranks) method. Can pass False or None to ignore this parameter's functionality. 
  * *to_scipy:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
  * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
@@ -24,52 +66,12 @@ Args:
 Example:
 
 ```python 
->>> from pygrank.algorithms import adhoc 
->>> algorithm = adhoc.AbsorbingWalks(0.85, tol=1.E-9) # tol passed to the ConvergenceManager 
+>>> from pygrank.algorithms import AbsorbingWalks 
+>>> algorithm = AbsorbingWalks(0.85, tol=1.E-9) # tol passed to the ConvergenceManager 
 ```
 
 
-### GenericGraphFilter 
-
-Implements a graph filter with a specific vector of weight parameters. 
-Initializes the graph filter. 
-
-Args: 
- * *weights:* Optional. A list-like object with elements weights[n] proportional to the importance of propagating personalization graph signals n hops away. Default is [0.9]*10 . 
- * *krylov_dims:* Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space of the graph with degree equal to the provided dimensions. This considerably speeds up filtering but ends up providing an *approximation* of true graph filter outcomes. If None (default) filters are not computed through their projection the Krylov space, which may yield slower but exact computations. Otherwise, a numeric value equal to the number of latent dimensions is required. 
- * *coefficient_type:* Optional. If "taylor" (default) provided coefficients are considered to define a Taylor expansion. If "chebychev", they are considered to be the coefficients of a Chebychev expansion, which provides more robust errors but require normalized personalization. These approaches are **not equivalent** for the same coefficient values; changing this argument could cause adhoc filters to not work as indented. 
- * *to_scipy:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
- * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
-
-Example:
-
-```python 
->>> from pygrank.algorithms import learnable 
->>> algorithm = learnable.GenericGraphFilter([0.5, 0.25, 0.125], tol=1.E-9) # tol passed to the ConvergenceManager 
-```
-
-
-### HeatKernel 
-
-Heat kernel filter. 
-Initializes the HearKernel filter parameters. 
-
-Args: 
- * *t:* Optional. How many hops until the importance of new nodes starts decreasing. Default value is 5. 
- * *krylov_dims:* Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space of the graph with degree equal to the provided dimensions. This considerably speeds up filtering but ends up providing an *approximation* of true graph filter outcomes. If None (default) filters are not computed through their projection the Krylov space, which may yield slower but exact computations. Otherwise, a numeric value equal to the number of latent dimensions is required. 
- * *coefficient_type:* Optional. If "taylor" (default) provided coefficients are considered to define a Taylor expansion. If "chebychev", they are considered to be the coefficients of a Chebychev expansion, which provides more robust errors but require normalized personalization. These approaches are **not equivalent** for the same coefficient values; changing this argument could cause adhoc filters to not work as indented. 
- * *to_scipy:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
- * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
-
-Example:
-
-```python 
->>> from pygrank.algorithms import adhoc 
->>> algorithm = adhoc.HeatKernel(t=5, tol=1.E-9) # tol passed to the ConvergenceManager 
-```
-
-
-### PageRank 
+### <kbd>RecursiveGraphFilter</kbd> PageRank
 
 A Personalized PageRank power method algorithm. 
 Initializes the PageRank scheme parameters. 
@@ -83,7 +85,7 @@ Args:
 Example:
 
 ```python 
->>> from pygrank.algorithms import adhoc 
->>> algorithm = adhoc.PageRank(alpha=0.99, tol=1.E-9) # tol passed to the ConvergenceManager 
+>>> from pygrank.algorithms import PageRank 
+>>> algorithm = PageRank(alpha=0.99, tol=1.E-9) # tol passed to the ConvergenceManager 
 ```
 

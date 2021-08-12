@@ -4,44 +4,17 @@
 The following measures can be imported from the package `pygrank.measures`.
 Constructor details are provided, including arguments inherited from and passed to parent classes.
 All of them can be used through the code patterns presented at the library's [documentation](documentation.md).  
-1. [AM](#am)
-2. [AMtarget](#amtarget)
-3. [AUC](#auc)
-4. [Accuracy](#accuracy)
-5. [Conductance](#conductance)
-6. [CrossEntropy](#crossentropy)
-7. [Density](#density)
-8. [Error](#error)
-9. [GM](#gm)
-10. [KLDivergence](#kldivergence)
-11. [Modularity](#modularity)
-12. [NDCG](#ndcg)
-13. [pRule](#prule)
+1. [Conductance](#kbdmeasurekbd-conductance)
+2. [Density](#kbdmeasurekbd-density)
+3. [Modularity](#kbdmeasurekbd-modularity)
+4. [AUC](#kbdsupervisedkbd-auc)
+5. [CrossEntropy](#kbdsupervisedkbd-crossentropy)
+6. [Error](#kbdsupervisedkbd-error)
+7. [KLDivergence](#kbdsupervisedkbd-kldivergence)
+8. [NDCG](#kbdsupervisedkbd-ndcg)
+9. [pRule](#kbdsupervisedkbd-prule)
 
-### AM 
- 
-
-### AMtarget 
- 
-
-### AUC 
-
-Wrapper for sklearn.metrics.auc evaluation. 
-Initializes the supervised measure with desired graph signal outcomes. 
-
-Args: 
- * *known_ranks:* The desired graph signal outcomes. 
- * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
-
-### Accuracy 
- 
-Initializes the supervised measure with desired graph signal outcomes. 
-
-Args: 
- * *known_ranks:* The desired graph signal outcomes. 
- * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
-
-### Conductance 
+### <kbd>Measure</kbd> Conductance
 
 Graph conductance (information flow) of ranks. 
 Assumes a fuzzy set of subgraphs whose nodes are included with probability proportional to their ranks, 
@@ -66,16 +39,7 @@ Example:
 ```
 
 
-### CrossEntropy 
-
-Computes a cross-entropy loss of ranks vs known ranks. 
-Initializes the supervised measure with desired graph signal outcomes. 
-
-Args: 
- * *known_ranks:* The desired graph signal outcomes. 
- * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
-
-### Density 
+### <kbd>Measure</kbd> Density
 
 Extension of graph density that can account for ranks. 
 Assumes a fuzzy set of subgraphs whose nodes are included with probability proportional to their ranks, 
@@ -97,7 +61,28 @@ Example:
 ```
 
 
-### Error 
+### <kbd>Measure</kbd> Modularity
+ 
+
+### <kbd>Supervised</kbd> AUC
+
+Wrapper for sklearn.metrics.auc evaluation. 
+Initializes the supervised measure with desired graph signal outcomes. 
+
+Args: 
+ * *known_ranks:* The desired graph signal outcomes. 
+ * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
+
+### <kbd>Supervised</kbd> CrossEntropy
+
+Computes a cross-entropy loss of ranks vs known ranks. 
+Initializes the supervised measure with desired graph signal outcomes. 
+
+Args: 
+ * *known_ranks:* The desired graph signal outcomes. 
+ * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
+
+### <kbd>Supervised</kbd> Error
 
 Computes the mean absolute error between ranks and known ranks. 
 Initializes the supervised measure with desired graph signal outcomes. 
@@ -106,10 +91,7 @@ Args:
  * *known_ranks:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
 
-### GM 
- 
-
-### KLDivergence 
+### <kbd>Supervised</kbd> KLDivergence
 
 Computes KL-divergence of ranks vs known ranks. 
 Initializes the supervised measure with desired graph signal outcomes. 
@@ -118,10 +100,7 @@ Args:
  * *known_ranks:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
 
-### Modularity 
- 
-
-### NDCG 
+### <kbd>Supervised</kbd> NDCG
 
 Provides evaluation of NDCG@k score between given and known ranks. 
 Initializes the PageRank scheme parameters. 
@@ -131,7 +110,7 @@ Attributes:
  * *known_ranks:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
 
-### pRule 
+### <kbd>Supervised</kbd> pRule
 
 Provides an assessment of stochastic ranking fairness. 
 Initializes the supervised measure with desired graph signal outcomes. 

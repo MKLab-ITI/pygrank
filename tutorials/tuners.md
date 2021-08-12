@@ -4,9 +4,9 @@
 The following tuning mechanisms can be imported from the package `pygrank.algorithms.autotune`.
 Constructor details are provided, including arguments inherited from and passed to parent classes.
 All of them can be used through the code patterns presented at the library's [documentation](documentation.md).  
-1. [ParameterTuner](#parametertuner)
+1. [ParameterTuner](#kbdtunerkbd-parametertuner)
 
-### ParameterTuner 
+### <kbd>Tuner</kbd> ParameterTuner
 
 Tunes a parameterized version of node ranking algorithms under a specific measure by splitting the personalization 
 in training and test sets. 

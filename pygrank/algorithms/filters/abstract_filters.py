@@ -9,7 +9,7 @@ class GraphFilter(NodeRanking):
     """Implements the base functionality of a graph filter that preprocesses a graph and an iterative computation scheme
     that stops based on a convergence manager."""
 
-    def __init__(self, to_scipy = None, convergence = None, ** kwargs):
+    def __init__(self, to_scipy=None, convergence=None, ** kwargs):
         """
         Args:
             to_scipy: Optional. Method to extract a scipy sparse matrix from a networkx graph.
@@ -81,7 +81,7 @@ class ClosedFormGraphFilter(GraphFilter):
     """Implements a graph filter described as an aggregation of graph signal diffusion certain number of hops away
     while weighting these by corresponding coefficients."""
 
-    def __init__(self, krylov_dims=None, coefficient_type="taylor", optimization_dict=dict(), *args, **kwargs):
+    def __init__(self, krylov_dims=None, coefficient_type="taylor", optimization_dict=None, *args, **kwargs):
         """
         Args:
             krylov_dims: Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space
@@ -91,7 +91,7 @@ class ClosedFormGraphFilter(GraphFilter):
                 the Krylov space, which may yield slower but exact computations. Otherwise, a numeric value
                 equal to the number of latent dimensions is required.
             coefficient_type: Optional. If "taylor" (default) provided coefficients are considered
-                to define a Taylor expansion. If "chebychev", they are considered to be the coefficients of a Chebychev
+                to define a Taylor expansion. If "chebyshev", they are considered to be the coefficients of a Chebyshev
                 expansion, which provides more robust errors but require normalized personalization. These approaches
                 are **not equivalent** for the same coefficient values; changing this argument could cause adhoc
                 filters to not work as indented.
@@ -109,7 +109,7 @@ class ClosedFormGraphFilter(GraphFilter):
 
     def _start(self, M, personalization, ranks, *args, **kwargs):
         self.coefficient = None
-        if self.coefficient_type == "chebychev":
+        if self.coefficient_type == "chebyshev":
             self.prev_term = 0
         if self.krylov_dims is not None:
             V, H = krylov_base(M, personalization.np, int(self.krylov_dims))
@@ -123,7 +123,7 @@ class ClosedFormGraphFilter(GraphFilter):
             ranks.np = backend.repeat(0.0, backend.length(ranks.np))
 
     def _recursion(self, result, next_term, next_coefficient):
-        if self.coefficient_type == "chebychev":
+        if self.coefficient_type == "chebyshev":
             if self.convergence.iteration == 2:
                 self.prev_term = next_term
             if self.convergence.iteration > 2:
@@ -144,7 +144,7 @@ class ClosedFormGraphFilter(GraphFilter):
             # TODO investigate why this does not speed up as much as expected
             personalization_id = hash(personalization)
             if personalization_id not in self.optimization_dict:
-                self.optimization_dict.clear() # this ensures that the dict is cleared when new tuning starts
+                self.optimization_dict.clear()  # this ensures that the dict is cleared when new tuning starts
                 self.optimization_dict[personalization_id] = dict()
             personalization_dict = self.optimization_dict[personalization_id]
             if self.convergence.iteration not in personalization_dict:
@@ -157,24 +157,18 @@ class ClosedFormGraphFilter(GraphFilter):
         if self.krylov_dims is not None:
             self.Mpower = self.Mpower @ self.krylov_H
             self.krylov_result, self.Mpower = self._recursion(self.krylov_result, self.Mpower, self.coefficient)
-            #self.krylov_result += self.coefficient * self.Mpower
             ranks.np = krylov2original(self.krylov_base, self.krylov_result, int(self.krylov_dims))
         else:
-            #if self.coefficient != 0:
-            #    ranks.np = ranks.np + float(self.coefficient) * self.ranks_power
             ranks.np, self.ranks_power = self._recursion(ranks.np, self.ranks_power, float(self.coefficient))
             self.ranks_power = self._retrieve_power(self.ranks_power, M, personalization)
 
     def _end(self, M, personalization, ranks, *args, **kwargs):
         if self.krylov_dims is not None:
-            #if self.convergence.iteration >= int(self.krylov_dims):
-            #    warnings.warn("Robust Krylov space approximations require at least one degree higher than the number of coefficients.\n"
-            #                  +"Consider setting krylov_dims="+str(self.convergence.iteration+1)+" or more in the constructor.", stacklevel=2)
             del self.krylov_base
             del self.krylov_H
         else:
             del self.ranks_power
-        if self.coefficient_type == "chebychev":
+        if self.coefficient_type == "chebyshev":
             del self.prev_term
         del self.coefficient
 

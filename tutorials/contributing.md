@@ -22,7 +22,7 @@ such as conda or the one provided by PyCharm.
 The environment should come with Python 3.6 or later installed.
 Make sure that both base library dependencies 
 `networkx, numpy, scipy, sklearn, tqdm`
-and `tensorflow` 
+and `tensorflow` and `coverage`
 are installed and upgraded to their latest versions.
 
 # :hammer_and_wrench: Architecture

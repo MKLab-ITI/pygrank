@@ -4,18 +4,18 @@
 The following postprocessors can be imported from the package `pygrank.algorithms.postprocess`.
 Constructor details are provided, including arguments inherited from and passed to parent classes.
 All of them can be used through the code patterns presented at the library's [documentation](documentation.md).  
-1. [AdHocFairness](#adhocfairness)
-2. [BoostedSeedOversampling](#boostedseedoversampling)
-3. [FairPersonalizer](#fairpersonalizer)
-4. [Normalize](#normalize)
-5. [Ordinals](#ordinals)
-6. [SeedOversampling](#seedoversampling)
-7. [Sweep](#sweep)
-8. [Tautology](#tautology)
-9. [Threshold](#threshold)
-10. [Transformer](#transformer)
+1. [AdHocFairness](#kbdpostprocessorkbd-adhocfairness)
+2. [BoostedSeedOversampling](#kbdpostprocessorkbd-boostedseedoversampling)
+3. [FairPersonalizer](#kbdpostprocessorkbd-fairpersonalizer)
+4. [Normalize](#kbdpostprocessorkbd-normalize)
+5. [Ordinals](#kbdpostprocessorkbd-ordinals)
+6. [SeedOversampling](#kbdpostprocessorkbd-seedoversampling)
+7. [Sweep](#kbdpostprocessorkbd-sweep)
+8. [Tautology](#kbdpostprocessorkbd-tautology)
+9. [Threshold](#kbdpostprocessorkbd-threshold)
+10. [Transformer](#kbdpostprocessorkbd-transformer)
 
-### AdHocFairness 
+### <kbd>Postprocessor</kbd> AdHocFairness
 
 Adjusts node scores so that the sum of sensitive nodes is moved closer to the sum of non-sensitive ones based on 
 ad hoc literature assumptions about how unfairness is propagated in graphs. 
@@ -23,9 +23,10 @@ Initializes the fairness-aware postprocessor.
 
 Args: 
  * *ranker:* The base ranking algorithm. 
- * *method:* The method with which to adjust weights. If "O" (default) an optimal gradual adjustment is performed [tsioutsiouliklis2020fairness]. If "B" node scores are weighted according to whether the nodes are sensitive, so that the sum of sensitive node scores becomes equal to the sum of non-sensitive node scores [tsioutsiouliklis2020fairness]. If "fairwalk" the graph is pre-processed so that, when possible, walks are equally probable to visit sensitive or non-sensitive nodes at non-restarting iterations [rahman2019fairwalk]. 
+ * *method:* The method with which to adjust weights. If "O" (default) an optimal gradual adjustment is performed [tsioutsiouliklis2020fairness]. If "B" node scores are weighted according to whether the nodes are sensitive, so that the sum of sensitive node scores becomes equal to the sum of non-sensitive node scores [tsioutsiouliklis2020fairness].  If "fairwalk" the graph is pre-processed so that, when possible, walks are equally probable to visit sensitive or non-sensitive nodes at non-restarting iterations [rahman2019fairwalk]. 
+ * *eps:* A small value to consider rank redistribution to have converged. Default is 1.E-12. 
 
-### BoostedSeedOversampling 
+### <kbd>Postprocessor</kbd> BoostedSeedOversampling
 
 Iteratively performs seed oversampling and combines found ranks by weighting them with a Boosting scheme. 
 Initializes the class with a base ranker and the boosting scheme's parameters. 
@@ -39,31 +40,31 @@ Attributes:
 Example:
 
 ```python 
->>> from pygrank.algorithms.adhoc import PageRank 
->>> from pygrank.algorithms.oversampling import BoostedSeedOversampling 
->>> G, seed_nodes = ... 
+>>> from pygrank.algorithms import PageRank, BoostedSeedOversampling 
+>>> graph, seed_nodes = ... 
 >>> algorithm = BoostedSeedOversampling(PageRank(alpha=0.99)) 
->>> ranks = algorithm.rank(G, personalization={1 for v in seed_nodes}) 
+>>> ranks = algorithm.rank(graph, personalization={1 for v in seed_nodes}) 
 ```
 
 
-### FairPersonalizer 
+### <kbd>Postprocessor</kbd> FairPersonalizer
 
 A personalization editing scheme that aims to edit graph signal priors (i.e. personalization) to produce 
 disparate 
 Instantiates a personalization editing scheme that trains towards optimizing 
-retain_rank_weight*error_type(original scores, editing-induced scores) + pRule_weight*min(induced score pRule, target_pRule) 
+retain_rank_weight*error_type(original scores, editing-induced scores) 
++ pRule_weight*min(induced score pRule, target_pRule) 
 
 Args: 
  * *ranker:* The base ranking algorithm. 
  * *target_pRule:* Up to which value should pRule be improved. pRule values greater than this are not penalized further. 
  * *retain_rank_weight:* Can be used to penalize deviations from original posteriors due to editing. Use the default value 1 unless there is a specific reason to scale the error. Higher values correspond to tighter maintenance of original posteriors, but may not improve fairness as much. 
  * *pRule_weight:* Can be used to penalize low pRule values. Either use the default value 1 or, if you want to place most emphasis on pRule maximization (instead of trading-off between fairness and posterior preservation) 10 is a good empirical starting point. 
- * *error_type:* The error type used to penalize deviations from original posterior scores. "KL" (default) uses KL-diveregence and is used in [krasanakis2020prioredit]. "mabs" uses the mean absolute error and is used in the earlier [krasanakis2020fairconstr]. The latter does not maintain fairness as well on average, but is sometimes better for specific graphs. 
+ * *error_type:* The error type used to penalize deviations from original posterior scores. "KL" (default) uses KL-divergence and is used in [krasanakis2020prioredit]. "mabs" uses the mean absolute error and is used in the earlier [krasanakis2020fairconstr]. The latter does not maintain fairness as well on average, but is sometimes better for specific graphs. 
  * *parameter_buckets:* How many sets of parameters to be used to . Default is 1. More parameters could be needed to to track, but running time scales **exponentially** to these (with base 4). 
  * *max_residual:* An upper limit on how much the original personalization is preserved, i.e. a fraction of it in the range [0, max_residual] is preserved. Default is 1 and is introduced by [krasanakis2020prioredit], but 0 can be used for exact replication of [krasanakis2020fairconstr]. 
 
-### Normalize 
+### <kbd>Postprocessor</kbd> Normalize
 
 Normalizes ranks by dividing with their maximal value. 
 Initializes the class with a base ranker instance. Args are automatically filled in and 
@@ -92,7 +93,7 @@ Example (same outcome, simpler one-liner):
 ```
 
 
-### Ordinals 
+### <kbd>Postprocessor</kbd> Ordinals
 
 Converts ranking outcome to ordinal numbers. 
 The highest rank is set to 1, the second highest to 2, etc. 
@@ -101,7 +102,7 @@ Initializes the class with a base ranker instance.
 Args: 
  * *ranker:* Optional. The base ranker instance. A Tautology() ranker is created if None (default) was specified. 
 
-### SeedOversampling 
+### <kbd>Postprocessor</kbd> SeedOversampling
 
 Performs seed oversampling on a base ranker to improve the quality of predicted seeds. 
 Initializes the class with a base ranker. 
@@ -113,15 +114,14 @@ Attributes:
 Example:
 
 ```python 
->>> from pygrank.algorithms.postprocess import oversampling 
->>> from pygrank.algorithms import adhoc 
->>> G, seed_nodes = ... 
->>> algorithm = oversampling.SeedOversampling(adhoc.PageRank(alpha=0.99)) 
->>> ranks = algorithm.rank(G, personalization={1 for v in seed_nodes}) 
+>>> from pygrank.algorithms import PageRank, SeedOversampling 
+>>> graph, seed_nodes = ... 
+>>> algorithm = SeedOversampling(PageRank(alpha=0.99)) 
+>>> ranks = algorithm.rank(graph, personalization={1 for v in seed_nodes}) 
 ```
 
 
-### Sweep 
+### <kbd>Postprocessor</kbd> Sweep
 
 Applies a sweep procedure that divides personalized node ranks by corresponding non-personalized ones. 
 Initializes the sweep procedure. 
@@ -130,12 +130,12 @@ Args:
  * *ranker:* The base ranker instance. 
  * *uniform_ranker:* Optional. The ranker instance used to perform non-personalized ranking. If None (default) the base ranker is used. 
 
-### Tautology 
+### <kbd>Postprocessor</kbd> Tautology
 
 Returns ranks as-are. 
 Can be used as a baseline against which to compare other postprocessors. 
 
-### Threshold 
+### <kbd>Postprocessor</kbd> Threshold
 
 Converts ranking outcome to binary values based on a threshold value. 
 Initializes the Threshold postprocessing scheme. Args are automatically filled in and 
@@ -164,7 +164,7 @@ Example (same outcome):
 ```
 
 
-### Transformer 
+### <kbd>Postprocessor</kbd> Transformer
 
 Applies an element-by-element transformation on a graph signal based on a given expression. 
 Initializes the class with a base ranker instance. Args are automatically filled in and 
@@ -172,12 +172,12 @@ re-ordered if at least one is provided.
 
 Args: 
  * *ranker:* Optional. The base ranker instance. A Tautology() ranker is created if None (default) was specified. 
- * *expr:* Optional. A lambda expression to apply on each element. The transformer will automatically try to apply it on the backend array representation of the graph signal first, so prefer use of backend functions for faster computations. For example, backend.exp (default) should be prefered instead of math.exp, because the former can directly parse a numpy array. 
+ * *expr:* Optional. A lambda expression to apply on each element. The transformer will automatically try to apply it on the backend array representation of the graph signal first, so prefer use of backend functions for faster computations. For example, backend.exp (default) should be preferred instead of math.exp, because the former can directly parse numpy arrays, tensors, etc. 
 
 Example:
 
 ```python 
->>> from pygrank.algorithms.postprocess import Normalize, Transformer 
+>>> from pygrank.algorithms import Normalize, Transformer 
 >>> from pygrank import backend 
 >>> graph, personalization, algorithm = ... 
 >>> r1 = Normalize(algorithm, "sum").rank(graph, personalization) 
@@ -185,4 +185,3 @@ Example:
 >>> print(sum(abs(r1[v]-r2[v]) for v in graph)) 
 ```
 
-0 

@@ -3,10 +3,27 @@ from tests.example_graph import test_graph, test_block_model_graph
 
 
 class Test(unittest.TestCase):
+    def test_autotune(self):
+        from pygrank import PageRank, ParameterTuner, AUC, split, to_signal
+        G, groups = test_block_model_graph()
+        group = groups[0]
+        training, evaluation = split(to_signal(G, {v: 1 for v in group}), training_samples=0.5)
+        auc1 = AUC(evaluation, exclude=training)(PageRank().rank(training))
+        auc2 = AUC(evaluation, exclude=training)(ParameterTuner(optimization_dict=dict()).rank(training))
+        self.assertLessEqual(auc1, auc2, "Autotune should find good parameters")
+
+    def test_autotune_manual(self):
+        from pygrank import PageRank, ParameterTuner, AUC, split, to_signal
+        G, groups = test_block_model_graph()
+        group = groups[0]
+        training, evaluation = split(to_signal(G, {v: 1 for v in group}), training_samples=0.5)
+        auc1 = AUC(evaluation, exclude=training)(PageRank().rank(training))
+        alg2 = ParameterTuner(lambda params: PageRank(params[0]), max_vals=[0.99], min_vals=[0.5]).tune(training)
+        auc2 = AUC(evaluation, exclude=training)(alg2.rank(training))
+        self.assertLessEqual(auc1, auc2, "Autotune should find good parameters")
 
     def test_tautology(self):
-        from pygrank.algorithms import PageRank
-        from pygrank.algorithms import Tautology
+        from pygrank import PageRank, Tautology, sum
         G = test_graph()
         r = PageRank().rank(G)
         tr = Tautology(PageRank()).rank(G)
@@ -15,35 +32,30 @@ class Test(unittest.TestCase):
             self.assertEqual(r[u], rt[u])
             self.assertEqual(r[u], tr[u])
 
-        from pygrank.core.backend import sum
         u = Tautology().rank(G)
         self.assertEqual(float(sum(u.np)), len(G))
 
     def test_normalize_range(self):
-        from pygrank.algorithms import PageRank
-        from pygrank.algorithms import Normalize
+        from pygrank import PageRank, Normalize
         G = test_graph()
         r = Normalize(PageRank(), "range").rank(G)
         self.assertAlmostEqual(min(r[v] for v in G), 0, places=16)
         self.assertAlmostEqual(max(r[v] for v in G), 1, places=16)
 
     def test_normalize_sum(self):
-        from pygrank.algorithms import PageRank
-        from pygrank.algorithms import Normalize
+        from pygrank import PageRank, Normalize
         G = test_graph()
         r = Normalize(PageRank(), "sum").rank(G)
         self.assertAlmostEqual(sum(r[v] for v in G), 1, places=16)
 
     def test_normalize_invalid(self):
-        from pygrank.algorithms import PageRank
-        from pygrank.algorithms import Normalize
+        from pygrank import PageRank, Normalize
         G = test_graph()
         with self.assertRaises(Exception):
             Normalize(PageRank(), "unknown").rank(G)
 
     def test_transform_primitives(self):
-        from pygrank.algorithms import PageRank
-        from pygrank.algorithms import Normalize, Transformer
+        from pygrank import PageRank, Normalize, Transformer
         from pygrank.core.backend import sum
         G = test_graph()
         r1 = Normalize(PageRank(), "sum").rank(G)
@@ -52,8 +64,7 @@ class Test(unittest.TestCase):
             self.assertAlmostEqual(r1[v], r2[v], places=16)
 
     def test_transform_individuals(self):
-        from pygrank.algorithms import PageRank
-        from pygrank.algorithms import Transformer
+        from pygrank import PageRank, Transformer
         import math
         from pygrank.core import backend
         G = test_graph()
@@ -63,15 +74,13 @@ class Test(unittest.TestCase):
             self.assertAlmostEqual(r1[v], r2[v], places=16)
 
     def test_ordinals(self):
-        from pygrank.algorithms import PageRank
-        from pygrank.algorithms import Ordinals
+        from pygrank import PageRank, Ordinals
         G = test_graph()
         test_result = Ordinals(Ordinals(Ordinals(PageRank(normalization='col')))).rank(G, {"A": 1}) # three ordinal transformations are the same as one
         self.assertAlmostEqual(test_result["A"], 1, places=16, msg="Ordinals should compute without errors (seed node is highest rank in small graphs)")
 
     def test_normalization(self):
-        from pygrank.algorithms import PageRank
-        from pygrank.algorithms import Normalize
+        from pygrank import PageRank, Normalize
         G = test_graph()
         test_result = Normalize("sum", PageRank(normalization='col')).rank(G)
         self.assertAlmostEqual(sum(test_result.values()), 1, places=16, msg="Sum normalization should sum to 1")
@@ -81,8 +90,7 @@ class Test(unittest.TestCase):
         self.assertAlmostEqual(sum(test_result.values()), 1, places=16, msg="Normalization should be able to use transformations")
 
     def test_oversampling(self):
-        from pygrank.algorithms import PageRank
-        from pygrank.algorithms import SeedOversampling
+        from pygrank import PageRank, SeedOversampling
         G = test_graph()
         test_result = SeedOversampling(PageRank(normalization='col')).rank(G, {"A": 1})
         test_result = SeedOversampling(PageRank(normalization='col'), 'top').rank(G, {"A": 1})
@@ -93,8 +101,7 @@ class Test(unittest.TestCase):
             test_result = SeedOversampling(PageRank(normalization='col')).rank(G, {"A": 0.5, "B": 1})
 
     def test_boosted_oversampling(self):
-        from pygrank.algorithms import PageRank
-        from pygrank.algorithms import BoostedSeedOversampling
+        from pygrank import PageRank, BoostedSeedOversampling
         G = test_graph()
         test_result = BoostedSeedOversampling(PageRank(normalization='col')).rank(G, {"A": 1})
         test_result = BoostedSeedOversampling(PageRank(normalization='col'), 'naive').rank(G, {"A": 1})
@@ -105,8 +112,7 @@ class Test(unittest.TestCase):
             test_result = BoostedSeedOversampling(PageRank(normalization='col'), oversample_from_iteration='unknown').rank(G, {"A": 1})
 
     def test_abstract_postprocessor(self):
-        from pygrank.algorithms import PageRank
-        from pygrank.algorithms import Postprocessor
+        from pygrank import PageRank, Postprocessor
         with self.assertRaises(Exception):
             p = Postprocessor(PageRank())
             G = test_graph()
@@ -120,10 +126,7 @@ class Test(unittest.TestCase):
             optimize(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4, max_vals=[5, 5], min_vals=[5, 6])
 
     def test_sweep(self):
-        from pygrank.algorithms import PageRank
-        from pygrank.algorithms import Sweep
-        from pygrank.measures import AUC
-        from pygrank.measures.utils import split
+        from pygrank import PageRank, Sweep, AUC, split
         import random
         G, groups = test_block_model_graph(nodes=600, seed=1)
         group = groups[0]
@@ -134,10 +137,7 @@ class Test(unittest.TestCase):
         self.assertLess(auc2+0.22, auc1, "The Sweep procedure should significantly improve AUC")
 
     def test_threshold(self):
-        from pygrank.algorithms import PageRank
-        from pygrank.algorithms import Threshold, Sweep
-        from pygrank.measures import Conductance
-        from pygrank.measures.utils import split
+        from pygrank import PageRank, Threshold, Sweep, Conductance, split
         import random
         G, groups = test_block_model_graph(nodes=600, seed=1)
         group = groups[0]
@@ -156,7 +156,7 @@ class Test(unittest.TestCase):
         self.assertAlmostEqual(p[1], 1, places=6, msg="Optimizer should easily optimize a convex function")
 
         # a simple function with redundant inputs and tol instead of parameter tolerance
-        p = optimize(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4, max_vals=[5, 5, 5], min_vals=[0, 0, 5], tol=1.E-6, divide_range="shrinking")
+        p = optimize(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4, max_vals=[5, 5, 5], min_vals=[0, 0, 5], deviation_tol=1.E-6, divide_range="shrinking")
         self.assertAlmostEqual(p[0], 2, places=3, msg="Optimizer should easily optimize a convex function")
         self.assertAlmostEqual(p[1], 1, places=3, msg="Optimizer should easily optimize a convex function")
 

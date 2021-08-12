@@ -82,7 +82,7 @@ def combine_attributes(text, descriptions):
                         ret += to_add
             in_attributes = False
         ret += line+"\n"
-        if line=="Attributes: " or line=="Args: ":
+        if line == "Attributes: " or line == "Args: ":
             in_attributes = True
     if in_attributes:
         for desc in descriptions:
@@ -93,9 +93,8 @@ def combine_attributes(text, descriptions):
 
 
 def base_description(obj, abstract):
-    # parents = [cls.__name__ for cls in inspect.getmro(obj)]
-    extends = ""  # "" if len(parents)<=1 else "(["+parents[1]+"](#"+parents[1].lower()+"))"
-    class_text = "\n### " + obj.__name__ + " " + extends + (
+    extends = "<kbd>"+[cls.__name__ for cls in inspect.getmro(obj)][1]+"</kbd>"
+    class_text = "\n### " + extends+" "+obj.__name__  + (
         "\n *Abstract class*\n\n" if abstract else "") + "\n" + format(obj.__doc__)[:-1]
     for name, method in inspect.getmembers(obj):
         if name == "__init__":
@@ -122,14 +121,19 @@ def generate_filter_docs():
             base_descriptions[obj] = base_description(obj, abstract[obj])
 
     count = 0
-    for obj in base_descriptions:
-        if not abstract[obj]:
-            count += 1
-            text += str(count)+". ["+obj.__name__+"](#"+obj.__name__.lower()+")\n"
+    for abstr in base_descriptions:
+        if abstract[abstr]:
+            #text += "\n**"+abstr.__name__+"**\n"
+            for obj in base_descriptions:
+                if not abstract[obj] and abstr == list(inspect.getmro(obj))[1]:
+                    count += 1
+                    text += str(count)+". ["+obj.__name__+"](#"+"kbd"+[cls.__name__ for cls in inspect.getmro(obj)][1].lower()+"kbd-"+obj.__name__.lower()+")\n"
 
-    for obj in base_descriptions:
-        if not abstract[obj]:
-            text += combine_attributes(base_descriptions[obj], [base_descriptions.get(cls,"") for cls in inspect.getmro(obj)][1:])
+    for abstr in base_descriptions:
+        if abstract[abstr]:
+            for obj in base_descriptions:
+                if not abstract[obj] and abstr == list(inspect.getmro(obj))[1]:
+                    text += combine_attributes(base_descriptions[obj], [base_descriptions.get(cls,"") for cls in inspect.getmro(obj)][1:])
 
     with open("tutorials/graph_filters.md", "w") as file:
         file.write(text)
@@ -158,11 +162,13 @@ def generate_postprocessor_docs():
     for obj in base_descriptions:
         if not abstract[obj]:
             count += 1
-            text += str(count)+". ["+obj.__name__+"](#"+obj.__name__.lower()+")\n"
+            text += str(count)+". ["+obj.__name__+"](#"+"kbd"+[cls.__name__ for cls in inspect.getmro(obj)][1].lower()+"kbd-"+obj.__name__.lower()+")\n"
 
-    for obj in base_descriptions:
-        if not abstract[obj]:
-            text += combine_attributes(base_descriptions[obj], [base_descriptions.get(cls,"") for cls in inspect.getmro(obj)][1:])
+    for abstr in base_descriptions:
+        if abstract[abstr]:
+            for obj in base_descriptions:
+                if not abstract[obj] and abstr in inspect.getmro(obj):
+                    text += combine_attributes(base_descriptions[obj], [base_descriptions.get(cls,"") for cls in inspect.getmro(obj)][1:])
 
     with open("tutorials/postprocessors.md", "w") as file:
         file.write(text)
@@ -190,14 +196,18 @@ def generate_metric_docs():
     abstract[pygrank.measures.Measure] = True
 
     count = 0
-    for obj in base_descriptions:
-        if not abstract[obj]:
-            count += 1
-            text += str(count)+". ["+obj.__name__+"](#"+obj.__name__.lower()+")\n"
+    for abstr in base_descriptions:
+        if abstract[abstr]:
+            for obj in base_descriptions:
+                if not abstract[obj] and abstr == list(inspect.getmro(obj))[1]:
+                    count += 1
+                    text += str(count)+". ["+obj.__name__+"](#"+"kbd"+[cls.__name__ for cls in inspect.getmro(obj)][1].lower()+"kbd-"+obj.__name__.lower()+")\n"
 
-    for obj in base_descriptions:
-        if not abstract[obj]:
-            text += combine_attributes(base_descriptions[obj], [base_descriptions.get(cls,"") for cls in inspect.getmro(obj)][1:])
+    for abstr in base_descriptions:
+        if abstract[abstr]:
+            for obj in base_descriptions:
+                if not abstract[obj] and abstr == list(inspect.getmro(obj))[1]:
+                    text += combine_attributes(base_descriptions[obj], [base_descriptions.get(cls,"") for cls in inspect.getmro(obj)][1:])
 
     with open("tutorials/measures.md", "w") as file:
         file.write(text)
@@ -223,14 +233,18 @@ def generate_tuning_docs():
     abstract[pygrank.algorithms.autotune.Tuner] = True
 
     count = 0
-    for obj in base_descriptions:
-        if not abstract[obj]:
-            count += 1
-            text += str(count)+". ["+obj.__name__+"](#"+obj.__name__.lower()+")\n"
+    for abstr in base_descriptions:
+        if abstract[abstr]:
+            for obj in base_descriptions:
+                if not abstract[obj] and abstr == list(inspect.getmro(obj))[1]:
+                    count += 1
+                    text += str(count)+". ["+obj.__name__+"](#"+"kbd"+[cls.__name__ for cls in inspect.getmro(obj)][1].lower()+"kbd-"+obj.__name__.lower()+")\n"
 
-    for obj in base_descriptions:
-        if not abstract[obj]:
-            text += combine_attributes(base_descriptions[obj], [base_descriptions.get(cls,"") for cls in inspect.getmro(obj)][1:])
+    for abstr in base_descriptions:
+        if abstract[abstr]:
+            for obj in base_descriptions:
+                if not abstract[obj] and abstr == list(inspect.getmro(obj))[1]:
+                    text += combine_attributes(base_descriptions[obj], [base_descriptions.get(cls,"") for cls in inspect.getmro(obj)][1:])
 
     with open("tutorials/tuners.md", "w") as file:
         file.write(text)
