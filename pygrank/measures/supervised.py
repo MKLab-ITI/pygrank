@@ -26,6 +26,13 @@ class Supervised(Measure):
     def to_numpy(self, ranks, normalization=False):
         if isinstance(ranks, GraphSignal):
             return to_signal(ranks, self.known_ranks).filter(exclude=self.exclude), ranks.normalized(normalization).filter(exclude=self.exclude)
+        elif isinstance(self.known_ranks, GraphSignal):
+            return self.known_ranks.filter(exclude=self.exclude), to_signal(self.known_ranks, ranks).normalized(normalization).filter(exclude=self.exclude)
+        else:
+            if self.exclude is not None:
+                raise Exception("Needs to parse graph signal ranks or known_ranks to be able to exclude specific nodes")
+            ranks = backend.self_normalize(backend.to_array(ranks, copy_array=True)) if normalization else backend.to_array(ranks)
+            return backend.to_array(self.known_ranks), ranks
 
 
 class NDCG(Supervised):
@@ -53,12 +60,19 @@ class NDCG(Supervised):
         return DCG / IDCG
 
 
-class Error(Supervised):
+class MaxDifference(Supervised):
+    """Computes the maximum absolute error between ranks and known ranks."""
+    def evaluate(self, ranks):
+        known_ranks, ranks = self.to_numpy(ranks)
+        return backend.max(backend.abs(known_ranks-ranks))
+
+
+class Mabs(Supervised):
     """Computes the mean absolute error between ranks and known ranks."""
 
     def evaluate(self, ranks):
         known_ranks, ranks = self.to_numpy(ranks)
-        return np.abs(known_ranks-ranks).sum()/ranks.size
+        return backend.sum(backend.abs(known_ranks-ranks)) / backend.length(ranks)
 
 
 class CrossEntropy(Supervised):
@@ -66,9 +80,11 @@ class CrossEntropy(Supervised):
 
     def evaluate(self, ranks):
         known_ranks, ranks = self.to_numpy(ranks)
-        thresh = ranks[known_ranks!=0].min()
-        ranks = 1/(1+np.exp(-ranks/thresh+1))
-        return -np.dot(known_ranks, np.log(ranks+1.E-12))/ranks.size -np.dot(1-known_ranks, np.log(1-ranks+1.E-12))
+        #thresh = backend.min(ranks[known_ranks!=0])
+        #ranks = 1/(1+np.exp(-ranks/thresh+1))
+        eps = 1.E-14
+        ret = -backend.dot(known_ranks, backend.log(ranks+eps))-backend.dot(1-known_ranks, backend.log(1-ranks+eps))
+        return ret
 
 
 class KLDivergence(Supervised):
@@ -77,9 +93,10 @@ class KLDivergence(Supervised):
     def evaluate(self, ranks):
         known_ranks, ranks = self.to_numpy(ranks, normalization=True)
         ratio = (ranks+1.E-12)/(known_ranks+1.E-12)
-        if ratio.min() <= 0:
+        if backend.min(ratio) <= 0:
             raise Exception("Invalid KLDivergence calculations (negative ranks or known ranks)")
-        ret = -np.dot(ranks, np.log((ranks+1.E-12)/(known_ranks+1.E-12)))/ranks.size
+        ret = -np.dot(ranks, np.log((known_ranks+1.E-12)/(ranks+1.E-12)))
+        #backend.dot(ranks[original_ranks != 0],-backend.log(original_ranks[original_ranks != 0] / ranks[original_ranks != 0]))
         return ret
 
 
@@ -92,9 +109,10 @@ class AUC(Supervised):
         return sklearn.metrics.auc(fpr, tpr)
 
 
-class Accuracy(Error):
+class Accuracy(Supervised):
     def evaluate(self, ranks):
-        return 1-super().evaluate(ranks)
+        known_ranks, ranks = self.to_numpy(ranks)
+        return 1-backend.sum(backend.abs(known_ranks - ranks)) / backend.length(ranks)
 
 
 class pRule(Supervised):

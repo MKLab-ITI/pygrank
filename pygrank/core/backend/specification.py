@@ -38,7 +38,7 @@ def scipy_sparse_to_backend(M):  # pragma: no cover
     pass
 
 
-def to_array(obj):  # pragma: no cover
+def to_array(obj, copy_array=False):  # pragma: no cover
     pass
 
 

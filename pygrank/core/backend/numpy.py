@@ -11,8 +11,10 @@ def scipy_sparse_to_backend(M):
     return M
 
 
-def to_array(obj):
+def to_array(obj, copy_array=False):
     if isinstance(obj, np.ndarray):
+        if copy_array:
+            return np.copy(obj)
         return obj
     return np.array(obj)
 
@@ -24,7 +26,7 @@ def is_array(obj):
 def self_normalize(obj):
     np_sum = obj.__abs__().sum()
     if np_sum != 0:
-        obj /= np_sum
+        obj = obj / np_sum
     return obj
 
 

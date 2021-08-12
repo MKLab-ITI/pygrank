@@ -1,4 +1,4 @@
-<center><h1 style=font-size:200px>:hammer_and_wrench: Documentation</h1></center> 
+<center><h1>:hammer_and_wrench: Documentation</h1></center> 
 
 ## Table of Contents
 1. [Table of Contents](#table-of-contents)
@@ -67,14 +67,14 @@ where all other nodes are assigned zeroes.
 To create a graph signal holding this information we can write:
 
 ```python
->>> from pygrank.algorithms import to_signal
+>>> import pygrank as pg
 >>> import networkx as nx
->>> G = nx.Graph()
->>> G.add_edge('A', 'B')
->>> G.add_edge('A', 'C')
->>> G.add_edge('C', 'D')
->>> G.add_edge('D', 'E')
->>> signal = to_signal(G, {'A': 3, 'C': 2})
+>>> graph = nx.Graph()
+>>> graph.add_edge('A', 'B')
+>>> graph.add_edge('A', 'C')
+>>> graph.add_edge('C', 'D')
+>>> graph.add_edge('D', 'E')
+>>> signal = pg.to_signal(graph, {'A': 3, 'C': 2})
 >>> print(signal['A'], signal['B'])
 3.0 0.0
 ```
@@ -84,14 +84,13 @@ respective backend through a `signal.np` attribute. For example, if the
 default *numpy* backend is used, this attribute holds a numpy array. 
 Continuing from the previous example,
 in the following code we divide a graph signal's elements with their sum.
+For this, we use of the package's backend.
 Value changes are reflected to the values being accessed.
 
 ```python
->>>
-from pygrank.core import backend
 >>> print(signal.np)
 [3. 0. 2. 0. 0.]
->>> signal.np = signal.np / backend.sum(signal.np)
+>>> signal.np = signal.np / pg.sum(signal.np)
 >>> print([(k,v) for k,v in signal.items()])
 [('A', 0.6), ('B', 0.0), ('C', 0.4), ('D', 0.0), ('E', 0.0)]
 ```
@@ -102,19 +101,18 @@ from pygrank.core import backend
 ### Implicit Use of Signals
 For ease of use, the library can directly parse
 dictionaries that map nodes to values, e.g. the dictionary
-`{'A':0.6,'C':0.4}` were ommitted nodes correspond to zeroes,
+`{'A':0.6,'C':0.4}` were omitted nodes correspond to zero scores,
 or numpy arrays with the same number of elements as graph nodes,
-e.g. `np.ndarray([node_scores.get(v, 0) for v in G])` where `G`
+e.g. `numpy.ndarray([node_scores.get(v, 0) for v in G])` where `G`
 is the networkx graph passed to node ranking algorithms.
 When either of these two conventions is used,
 node ranking algorithms automatically convert them to graph signals.
 
-At the same time, the output of `rank(...)` methods are always graph signals.
+At the same time, the outputs of `rank(...)` methods are always graph signals.
 This datatype implements the same methods as a dictionary and can
 be used interchangeably, whereas access to a numpy array storing
 corresponding node values can be obtained through the object attribute
 `signal.np`.
-
 
 # Graph Filters
 Graph filters are ways to diffuse graph signals through graphs by sending
@@ -159,8 +157,8 @@ tolerance 1.E-9. Smaller tolerances are more accurate in exactly solving
 each algorithm's exact outputs but take longer to converge.
 
 ```python
->>> from pygrank.algorithms import adhoc
->>> algorithm = adhoc.PageRank(alpha=0.99, normalization="col", tol=1.E-9)
+>>> import pygrank as pg
+>>> algorithm = pg.PageRank(alpha=0.99, normalization="col", tol=1.E-9)
 ```
 
 Having defined this algorithm, we will now use the graph `G` and graph signal
@@ -168,7 +166,7 @@ Having defined this algorithm, we will now use the graph `G` and graph signal
 while ignoring any postprocessing for the time being can be done as:
 
 ```python
->>> scores = algorithm.rank(G, signal)
+>>> scores = algorithm.rank(graph, signal)
 Exception: ('Could not converge within 100 iterations')
 ```
 
@@ -181,8 +179,8 @@ to run for. For the sake of demonstration, we chose the second solution and allo
 the algorithm to run for up to 2,000 iterations:
 
 ```python
->>> algorithm = adhoc.PageRank(alpha=0.99, normalization="col", tol=1.E-9, max_iters=2000)
->>> scores = algorithm.rank(G, signal)
+>>> algorithm = pg.PageRank(alpha=0.99, normalization="col", tol=1.E-9, max_iters=2000)
+>>> scores = algorithm.rank(graph, signal)
 >>> print(list(scores.items()))
 [('A', 0.25613418536078547), ('B', 0.12678642237010243), ('C', 0.2517487443382047), ('D', 0.24436832596280528), ('E', 0.12096232196810223)]
 ```
@@ -197,11 +195,12 @@ In the above code, we could also pass to the `rank` method
 the dictionary `{'A':1, 'C': 2}` in place
 of the signal and the library would make the conversion internally.
 Alternatively, if a graph signal is already defined,
-the graph could be ommited, as shown next. We stress that this is possible only because
-the graph signal holds a reference to the graph it is tied to.
+the graph could be ommitred, as shown next. We stress that this is possible 
+only because the graph signal holds a reference to the graph it is tied to
+and directly inputting other kinds of primitives would throw an error message.
 
 ```python
->>> scores = algorithm.rank(personalization=signal)
+>>> scores = algorithm.rank(signal)
 ```
 
 We now examine the structural relatedness of various nodes to the personalization:
@@ -247,36 +246,36 @@ found [here](graph_filters.md). After initialization with the appropriate
 parameters, these can be used interchangeably in the above example.
 
 ### Convergence Criteria
-All graph filter constructors have a ``convergence`` argument that
+All graph filter constructors have a `convergence` argument that
 indicates an object to help determine their convergence criteria, such as type of
 error and tolerance for numerical convergence. If no such argument is passed
-to the constructor, a ``pygrank.algorithms.utils.ConvergenceManager`` object
+to the constructor, a `pygrank.ConvergenceManager` object
 is automatically instantiated by borrowing whichever extra arguments it can
-from those passed to the constructors. Most frequently used is the ``tol``
-argument to indicate the numerical tolerance level required for convergence.
+from those passed to the constructors. These arguments can be:
+- `tol` to indicate the numerical tolerance level required for convergence (default is 1.E-6).
+- `error_type` to indicate how differences between two graph signals are computed. The default value is `pygrank.Mabs` but any other supervised [measure](#evaluation) that computes the differences.
+- `max_iters` to indicate the maximum number of iterations the algorithm can run for (default is 100). This quantity works as a safety net to guarantee algorithm termination. 
 
 Sometimes, it suffices to reach a robust node rank order instead of precise 
 values. To cover such cases we have implemented a different convergence criterion
-``pygrank.algorithms.utils.RankOrderConvergenceManager`` that stops 
-at a robust node order \[krasanakis2020stopping\]. This criterion is specifically intended to be used with PageRank 
+``RankOrderConvergenceManager`` that stops 
+at a robust node order [krasanakis2020stopping]. This criterion is specifically intended to be used with PageRank 
 as the base ranking algorithm and needs to know that algorithm's diffusion
 rate ``alpha``, which is passed as its first argument.
 
 ```python
-from pygrank.algorithms import PageRank
-from pygrank.algorithms import RankOrderConvergenceManager
-from pygrank.algorithms import Ordinals
+import pygrank as pg
 
 G, personalization = ...
 alpha = 0.85
-ordered_ranker = PageRank(alpha=alpha, convergence=RankOrderConvergenceManager(alpha))
-ordered_ranker = Ordinals(ordered_ranker)
+ordered_ranker = pg.PageRank(alpha=alpha, convergence=pg.RankOrderConvergenceManager(alpha))
+ordered_ranker = pg.Ordinals(ordered_ranker)
 ordered_ranks = ordered_ranker.rank(G, personalization)
 ```
 
 :bulb: Since the node order is more important than the specific rank values,
 a post-processing step has been added throught the wrapping expression
-``ordered_ranker = Ordinals(ordered_ranker)`` to output rank order. 
+``ordered_ranker = pg.Ordinals(ordered_ranker)`` to output rank order. 
 
 
 ### Graph Preprocessing
@@ -323,11 +322,11 @@ For example, hashing the outcome of graph normalization to
 speed up multiple calls to the same graph can be achieved
 as per the following code:
 ```python
-from pygrank.algorithms import PageRank
-G, personalization1, personalization2 = ...
-algorithm = PageRank(alpha=0.85, normalization="col", assume_immutability=True)
-ranks = algorithm.rank(G, personalization1)
-ranks = algorithm.rank(G, personalization2) # does not re-compute the normalization
+import pygrank as pg
+graph, personalization1, personalization2 = ...
+algorithm = pg.PageRank(alpha=0.85, normalization="col", assume_immutability=True)
+ranks1 = algorithm.rank(graph, personalization1)
+ranks2 = algorithm.rank(graph, personalization2) # does not re-compute the normalization
 ```
 
 Sometimes, many different algorithms are applied on the
@@ -335,7 +334,7 @@ same graph. In this case, to prevent each one
 from recomputing the hashing already calculated by others,
 they can be made to share the same normalization method. This 
 can be done by using a shared instance of the 
-normalization preprocessing class `preprocessor`, 
+normalization preprocessing `pg.preprocessor`, 
 which can be passed as the `to_scipy` argument of ranking algorithm
 constructors. In this case, the `normalization` and `assume_immutability`
 arguments should be passed to the preprocessor and will be ignored by the
@@ -354,14 +353,13 @@ Using the outcome of graph normalization
 to speed up multiple rank calls to the same graph by
 different ranking algorithms can be done as:
 ```python
-from pygrank.algorithms import PageRank, HeatKernel
-from pygrank.algorithms import preprocessor
-G, personalization1, personalization2 = ...
-pre = preprocessor(normalization="col", assume_immutability=True)
-ranker1 = PageRank(alpha=0.85, to_scipy=pre)
-ranker2 = HeatKernel(alpha=0.85, to_scipy=pre)
-ranks1 = ranker1.rank(G, personalization1)
-ranks2 = ranker2.rank(G, personalization2) # does not re-compute the normalization
+import pygrank as pg
+graph, personalization1, personalization2 = ...
+pre = pg.preprocessor(normalization="col", assume_immutability=True)
+algorithm1 = pg.PageRank(alpha=0.85, to_scipy=pre)
+algorithm2 = pg.HeatKernel(alpha=0.85, to_scipy=pre)
+ranks1 = algorithm1.rank(graph, personalization1)
+ranks2 = algorithm2.rank(graph, personalization2) # does not re-compute the normalization
 ```
 
 :bulb: When benchmarking, in the above code you can call `pre(G)`
@@ -386,9 +384,8 @@ There are two ways to apply postprocessors. The first is to simply
 we can write:
 
 ```python
->>> from pygrank.algorithms import Normalize
->>> scores = algorithm.rank(G, signal)
->>> normalized_scores = Normalize().transform(scores)
+>>> scores = algorithm.rank(graph, signal)
+>>> normalized_scores = pg.Normalize().transform(scores)
 >>> print(list(normalized_scores.items()))
 [('A', 1.0), ('B', 0.4950000024069947), ('C', 0.9828783455187619), ('D', 0.9540636897749238), ('E', 0.472261528845582)]
 ```
@@ -406,9 +403,8 @@ postprocessors:
 
 
 ```python
->>> from pygrank.algorithms import Normalize
->>> normalized_algorithm = Normalize(algorithm)
->>> normalized_scores = normalized_algorithm.rank(G, signal)
+>>> normalized_algorithm = pg.Normalize(algorithm)
+>>> normalized_scores = normalized_algorithm.rank(graph, signal)
 >>> print(list(normalized_scores.items()))
 [('A', 1.0), ('B', 0.4950000024069947), ('C', 0.9828783455187619), ('D', 0.9540636897749238), ('E', 0.472261528845582)]
 ```
@@ -421,13 +417,25 @@ with the postprocessor `Transformer` *before* normalization
 can be achieved as:
 
 ```python
->>> from pygrank.algorithms import Normalize, Transformer
->>> import numpy as np
->>> new_algorithm = Normalize(Transformer(np.exp, algorithm))
->>> new_scores = new_algorithm.rank(G, signal)
+>>> new_algorithm = pg.Normalize(pg.Transformer(np.exp, algorithm))
+>>> new_scores = new_algorithm.rank(graph, signal)
 >>> print(list(new_scores.items()))
 [('A', 1.0), ('B', 0.8786683440755908), ('C', 0.9956241609824301), ('D', 0.9883030876536782), ('E', 0.8735657648099558)]
 ```
+
+:warning: Iterative postprocessors do not support the `transform`
+method, as this requires rerunning ranking algorithms.
+
+:bulb: Postprocessors that support the `transform` method automatically
+match arguments to their types, even if provided in the wrong order.
+For example all three of the following code lines do the same thing:
+
+```python
+scores1 = pg.Normalize(algorithm, "max").rank(graph, signal)
+scores2 = pg.Normalize("max", algorithm).rank(graph, signal)
+scores3 = pg.Normalize("max").transform(algorithm.rank(graph, signal))
+```
+
 
 ### Types of Postprocessors
 There are many ways graph filter posteriors can be processed to provide

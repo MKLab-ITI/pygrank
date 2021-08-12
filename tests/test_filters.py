@@ -4,6 +4,15 @@ from tests.example_graph import test_graph, test_block_model_graph
 
 
 class Test(unittest.TestCase):
+
+    def test_backend_conversion(self):
+        from pygrank import backend
+        self.assertEqual(backend.sum(backend.to_array([1, 2, 3])), 6)
+        self.assertEqual(backend.sum(backend.dot(backend.exp(backend.log(backend.to_array([4, 5]))), backend.to_array([2, 2]))), 18)
+        primitive = backend.to_array([1, 2, 3])
+        self.assertTrue(id(primitive) == id(backend.to_array(primitive, copy_array=False)))
+        self.assertFalse(id(primitive) == id(backend.to_array(primitive, copy_array=True)))
+
     def test_callers(self):
         from pygrank import call, remove_used_args
 
@@ -58,6 +67,23 @@ class Test(unittest.TestCase):
         with self.assertRaises(Exception):
             PageRank().rank(list(test_graph()))
 
+    def test_non_convergence(self):
+        from pygrank import PageRank
+        with self.assertRaises(Exception):
+            PageRank(max_iters=5).rank(test_graph())
+
+    def test_custom_runs(self):
+        from pygrank import PageRank, GenericGraphFilter, Mabs, Normalize
+        G = test_graph()
+        algorithmn = PageRank(0.85, max_iters=5, error_type="iters")
+        ranks1 = algorithmn.rank(G, {"A": 1})
+        self.assertTrue("6" in str(algorithmn.convergence))
+        # TODO find why the following is not exactly the same
+        """ ranks2 = Normalize(GenericGraphFilter([0.85]*1, tol=1.E-12)).rank(G, {"A": 1})
+        print(ranks1.np-ranks2.np)
+        self.assertEqual(Mabs(ranks1)(ranks2), 0)
+        """
+
     def test_completion(self):
         from pygrank import PageRank, HeatKernel, AbsorbingWalks
         G = test_graph()
@@ -69,7 +95,7 @@ class Test(unittest.TestCase):
         from pygrank import PageRank
         G = test_graph()
         test_result = PageRank(normalization='col', tol=1.E-9).rank(G)
-        nx_result = nx.pagerank_scipy(G, tol=1.E-9)
+        nx_result = nx.pagerank(G, tol=1.E-9)
         abs_diffs = sum(abs(test_result[v] - nx_result[v]) for v in nx_result.keys()) / len(nx_result)
         self.assertAlmostEqual(abs_diffs, 0, places=12, msg="PageRank compliance with nx results")
 
@@ -272,6 +298,7 @@ class Test(unittest.TestCase):
         from pygrank import backend
         backend.load_backend("tensorflow")
         self.assertEqual(backend.backend_name(), "tensorflow")
+        self.test_backend_conversion()
         self.test_pagerank()
         self.test_venuerank()
         self.test_absorbing_walk()

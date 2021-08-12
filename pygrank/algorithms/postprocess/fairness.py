@@ -1,7 +1,7 @@
 from pygrank.algorithms.autotune import optimize
 from pygrank.algorithms.postprocess.postprocess import Tautology, Normalize, Postprocessor
 from pygrank.core.signals import GraphSignal, to_signal
-from pygrank.measures import pRule
+from pygrank.measures import pRule, KLDivergence
 from pygrank import backend
 
 
@@ -11,8 +11,14 @@ class FairPersonalizer(Postprocessor):
     disparate
     """
 
-    def __init__(self, ranker, target_pRule=1, retain_rank_weight=1, pRule_weight=1, error_type="KL",
-                 parameter_buckets=1, max_residual=1):
+    def __init__(self,
+                 ranker,
+                 target_pRule=1,
+                 retain_rank_weight=1,
+                 pRule_weight=1,
+                 error_type=KLDivergence,
+                 parameter_buckets=1,
+                 max_residual=1):
         """
         Instantiates a personalization editing scheme that trains towards optimizing
         retain_rank_weight*error_type(original scores, editing-induced scores)
@@ -28,9 +34,9 @@ class FairPersonalizer(Postprocessor):
             pRule_weight: Can be used to penalize low pRule values. Either use the default value 1 or, if you want to
                 place most emphasis on pRule maximization (instead of trading-off between fairness and posterior
                 preservation) 10 is a good empirical starting point.
-            error_type: The error type used to penalize deviations from original posterior scores. "KL" (default) uses
-                KL-divergence and is used in [krasanakis2020prioredit]. "mabs" uses the mean absolute error and is used
-                in the earlier [krasanakis2020fairconstr]. The latter does not maintain fairness as well on average,
+            error_type: The supervised measure used to penalize deviations from original posterior scores.
+                pygrank.KLDivergence (default) uses is used in [krasanakis2020prioredit]. pygrank.Error is used by
+                the earlier [krasanakis2020fairconstr]. The latter does not induce fairness as well on average,
                 but is sometimes better for specific graphs.
             parameter_buckets: How many sets of parameters to be used to . Default is 1. More parameters could be needed to
                 to track, but running time scales **exponentially** to these (with base 4).
@@ -53,7 +59,7 @@ class FairPersonalizer(Postprocessor):
         for i in range(self.parameter_buckets):
             a = sensitive*(params[0+4*i]-params[1+4*i]) + params[1+4*i]
             b = sensitive*(params[2+4*i]-params[3+4*i]) + params[3+4*i]
-            if self.error_type == "mabs":
+            if self.error_type != KLDivergence:
                 res += (1-a)*backend.exp(b*(ranks-personalization)) + a*backend.exp(-b*(ranks-personalization))
             else:
                 res += (1-a)*backend.exp(b*backend.abs(ranks-personalization)) + a*backend.exp(-b*backend.abs(ranks-personalization))
@@ -61,16 +67,10 @@ class FairPersonalizer(Postprocessor):
 
     def __prule_loss(self, ranks: GraphSignal, original_ranks: GraphSignal, sensitive: object, personalization: object) -> object:
         prule = self.pRule(ranks)
-        if self.error_type == "mabs":
-            ranks = ranks.np / backend.max(ranks.np)
-            original_ranks = original_ranks.np / backend.max(original_ranks.np)
-            return self.retain_rank_weight * backend.sum(backend.abs(ranks - original_ranks)) / backend.length(ranks) \
-                  - self.pRule_weight * min(self.target_pRule, prule)
-        if self.error_type == "KL":
-            ranks = ranks.np / backend.sum(ranks.np)
-            original_ranks = original_ranks.np / backend.sum(original_ranks.np)
-            return self.retain_rank_weight * backend.dot(ranks[original_ranks != 0], -backend.log(original_ranks[original_ranks!=0]/ranks[original_ranks!=0])) - self.pRule_weight * min(self.target_pRule, prule)
-        raise Exception("Invalid error type")
+        ranks = ranks.np / backend.sum(ranks.np)
+        original_ranks = original_ranks.np / backend.sum(original_ranks.np)
+        error = self.error_type(original_ranks)(ranks)
+        return self.retain_rank_weight * error - self.pRule_weight * min(self.target_pRule, prule)
 
     def rank(self, G, personalization, sensitive, *args, **kwargs):
         personalization = to_signal(G, personalization)
@@ -119,7 +119,7 @@ class AdHocFairness(Postprocessor):
             ranker, method = method, ranker
             if not callable(getattr(ranker, "rank", None)):
                 ranker = None
-        super.__init__(Tautology() if ranker is None else ranker)
+        super().__init__(Tautology() if ranker is None else ranker)
         self.method = method
         self.eps = eps
 

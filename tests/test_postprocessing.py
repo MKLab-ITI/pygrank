@@ -1,4 +1,6 @@
 import unittest
+
+from experiments.importer import fairness_dataset
 from tests.example_graph import test_graph, test_block_model_graph
 
 
@@ -179,6 +181,17 @@ class Test(unittest.TestCase):
         self.assertAlmostEqual(p[1], 0.5, places=6, msg="Optimizer should optimize the Beale function")
 
     def test_fairness(self):
-        pass
+        from pygrank import Normalize, FairPersonalizer, Mabs, PageRank, pRule
+        H = PageRank(assume_immutability=True, normalization="symmetric")
+        algorithms = {
+            "FairPers": lambda G, p, s: Normalize(FairPersonalizer(H, error_type=Mabs, max_residual=0)).rank(G, p, sensitive=s),
+            "FairPers-C": lambda G, p, s: Normalize(FairPersonalizer(H, .80, pRule_weight=10, error_type=Mabs, max_residual=0)).rank(G, p, sensitive=s),
+            "FairPersKL": lambda G, p, s: Normalize(FairPersonalizer(H, max_residual=0)).rank(G, p, sensitive=s),
+            "FairPersKL-C": lambda G, p, s: Normalize(FairPersonalizer(H, .80, pRule_weight=10, max_residual=0)).rank(G, p, sensitive=s),
+        }
+        graph, sensitive, labels = fairness_dataset("facebook0", 0, sensitive_group=1, path="data/")
+        for algorithm in algorithms.values():
+            ranks = algorithm(graph, labels, sensitive)
+            self.assertGreater(pRule(sensitive)(ranks), 0.8, "should satisfy fairness requirements")
 
 

@@ -28,7 +28,7 @@ def split(groups, training_samples=0.8):
         random.shuffle(group)
         splt = training_samples if training_samples > 1 else int(len(group) * training_samples)
         return to_signal(groups, {v: groups[v] for v in group[:splt]}), to_signal(groups, {v: groups[v] for v in group[splt:]})
-    if not isinstance(groups, collections.Mapping):
+    if not isinstance(groups, collections.abc.Mapping):
         group = list(groups)
         random.shuffle(group)
         splt = training_samples if training_samples > 1 else int(len(group) * training_samples)

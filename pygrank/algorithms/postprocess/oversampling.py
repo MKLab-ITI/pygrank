@@ -2,6 +2,7 @@ import numpy as np
 from pygrank.core.signals import to_signal, NodeRanking
 from pygrank.algorithms.utils import ConvergenceManager, assert_binary
 from pygrank.algorithms.postprocess.postprocess import Postprocessor
+from pygrank.measures import MaxDifference
 
 
 class SeedOversampling(Postprocessor):
@@ -65,7 +66,7 @@ class BoostedSeedOversampling(Postprocessor):
                 previous iteration or "original" to always ovesample the given personalization.
             weight_convergence: Optional.  A ConvergenceManager that helps determine whether the weights placed on
                 boosting iterations have converged. If None (default), initialized with
-                ConvergenceManager(error_type="small_value", tol=0.001, max_iters=100)
+                ConvergenceManager(error_type=pyrgank.MaxDifference, tol=0.001, max_iters=100)
 
         Example:
             >>> from pygrank.algorithms import PageRank, BoostedSeedOversampling
@@ -76,7 +77,7 @@ class BoostedSeedOversampling(Postprocessor):
         super().__init__(ranker)
         self._objective = objective.lower()
         self._oversample_from_iteration = oversample_from_iteration.lower()
-        self._weight_convergence = ConvergenceManager(error_type="small_value", tol=0.001, max_iters=100) \
+        self._weight_convergence = ConvergenceManager(error_type=MaxDifference, tol=0.001, max_iters=100) \
             if weight_convergence is None else weight_convergence
 
     def _boosting_weight(self, r0_N, Rr0_N, RN):

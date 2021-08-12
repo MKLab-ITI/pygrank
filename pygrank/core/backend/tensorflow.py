@@ -24,8 +24,10 @@ def scipy_sparse_to_backend(M):
     return tf.SparseTensor([[coo.col[i], coo.row[i]] for i in range(len(coo.col))], tf.convert_to_tensor(coo.data, dtype=tf.float64), coo.shape)
 
 
-def to_array(obj):
+def to_array(obj, copy_array=False):
     if isinstance(obj, tf.Tensor) and (len(obj.shape)==1 or obj.shape[1] == 1):
+        if copy_array:
+            return tf.identity(obj)
         return obj
     return tf.convert_to_tensor([[v] for v in obj], dtype=tf.float64)
 

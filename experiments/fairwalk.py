@@ -17,16 +17,6 @@ def perc(num):
     return ret
 
 
-def personalizer(H, G, p, s, fairness_weight=0, fairness_limit=0.8):
-    training, test = split(list(p.keys()), training_samples=0.5)
-    loss = AM()
-    training = set(training)
-    #loss.add(Error(p, G))
-    loss.add(AUC({v: p.get(v,0) for v in training}, G), weight=-1)
-    loss.add(pRule(s, evaluation=G), weight=-fairness_weight, max_val=fairness_limit, min_val=0)
-    return Normalize(Personalizer(H)).rank(G, p, loss=loss, training_personalization={v: p.get(v,0) for v in training})
-
-
 #datasets = ["acm", "amazon", "ant", "citeseer","dblp","facebook0","facebook686","log4j","maven","pubmed","squirel", "twitter"]
 datasets = ["facebook0"]
 #datasets = ["facebook0","facebook686","pubmed","squirel","twitter"]
@@ -52,8 +42,8 @@ for filter, H in graph_filters.items():
         "FairWalk": lambda G,p,s: Normalize(AdHocFairness(H, "fairwalk")).rank(G, p, sensitive=s),
         "Mult": lambda G,p,s: Normalize(AdHocFairness(H, "B")).rank(G, p, sensitive=s),
         "LFRPO": lambda G,p,s: Normalize(AdHocFairness(H, "O")).rank(G, p, sensitive=s),
-        "FairPers": lambda G,p,s: Normalize(FairPersonalizer(H, error_type="mabs", max_residual=0)).rank(G, p, sensitive=s),
-        "FairPers-C": lambda G,p,s: Normalize(FairPersonalizer(H,.80, pRule_weight=10, error_type="mabs", max_residual=0)).rank(G, p, sensitive=s),
+        "FairPers": lambda G,p,s: Normalize(FairPersonalizer(H, error_type=Mabs, max_residual=0)).rank(G, p, sensitive=s),
+        "FairPers-C": lambda G,p,s: Normalize(FairPersonalizer(H, .80, pRule_weight=10, error_type=Mabs, max_residual=0)).rank(G, p, sensitive=s),
         "FairPersKL": lambda G,p,s: Normalize(FairPersonalizer(H, max_residual=0)).rank(G, p, sensitive=s),
         "FairPersKL-C": lambda G,p,s: Normalize(FairPersonalizer(H,.80, pRule_weight=10, max_residual=0)).rank(G, p, sensitive=s),
       }
@@ -86,7 +76,6 @@ for filter, H in graph_filters.items():
                     hash_seeds[seed_seed] = (personalization, training, evaluation)
                 ranks = algorithms[algorithm](G, personalization, sensitive)
                 for measure in measures:
-                    mtic = time.clock()
                     measures[measure].exclude = training
                     measure_scores[measure].append(measures[measure](ranks))
             print_algs += " & "+" & ".join([str(perc(sum(measure_scores[measure])/len(measure_scores[measure]))) for measure in measure_scores])

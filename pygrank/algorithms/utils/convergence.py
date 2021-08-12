@@ -1,19 +1,12 @@
-import scipy
 import numpy as np
 from scipy.stats import norm
 from timeit import default_timer as time
+from pygrank.measures import Supervised, Mabs
 
 
 class ConvergenceManager:
     """ Used to keep previous iteration and generally manage convergence of variables. Graph filters
     automatically create instances of this class by passing on appropriate parameters.
-
-    Supported error types:
-        "mabs": mean absolute value of rank differences. Throws exception on iteration max_iters.
-        "msqrt": mean square root error of rank differences. Throws exception on iteration max_iters.
-        "iters": Stops at max_iters (without throwing an exception). Ignores the tol argument.
-        "const": Stops after first iteration.
-
 
     Examples:
         >>> convergence = ConvergenceManager()
@@ -24,7 +17,7 @@ class ConvergenceManager:
         >>>     var = ...
     """
 
-    def __init__(self, tol=1.E-6, error_type="mabs", max_iters=100):
+    def __init__(self, tol=1.E-6, error_type=Mabs, max_iters=100):
         """
         Initializes a convergence manager with a provided tolerance level, error type and number of iterations.
 
@@ -32,17 +25,17 @@ class ConvergenceManager:
             tol: Numerical tolerance to determine the stopping point (algorithms stop if the "error" between
                 consecutive iterations becomes less than this numer). Default is 1.E-6 but for large graphs
                 1.E-9 often yields more robust convergence points.
-            error_type: How to calculate the "error" between consecutive iterations of graph signals. Look
-                at the class definition's supported error type for details. Default is "mabs".
-            max_iters: The number of iterations algorithms can run for. If this number is exceeded,
+            error_type: Optional. How to calculate the "error" between consecutive iterations of graph signals.
+                If "iters", convergence is reached at iteration *max_iters*-1 without throwing an exception.
+                Default is `pygrank.Mabs`.
+            max_iters: Optional. The number of iterations algorithms can run for. If this number is exceeded,
                 an exception is thrown. This could help manage computational resources. Default value is 100,
                 and exceeding this value with graph filters often indicates that either graphs have large diameters
                 or that algorithms of choice converge particularly slowly.
         """
         self.tol = tol
-        self.error_type = error_type.lower()
+        self.error_type = error_type
         self.max_iters = max_iters
-        self.min_iters = 0
         self.iteration = 0
         self.last_ranks = None
         self._start_time = None
@@ -53,22 +46,15 @@ class ConvergenceManager:
         Starts the convergence manager
 
         Args:
-            restart_time: If True (default) timing information, such as the number of iterations and wall
-                clock time measurement, is reset. Otherwise, this only ensures that convergence manager
+            restart_timer: Optional. If True (default) timing information, such as the number of iterations and wall
+                clock time measurement, is reset. Otherwise, this only ensures that the convergence manager
                 performs one iteration before starting comparing values with previous ones.
         """
         if restart_timer or self._start_time is None:
             self._start_time = time()
             self.elapsed_time = None
             self.iteration = 0
-            self.min_iters = 0
         self.last_ranks = None
-
-    def force_next_iteration(self):
-        """
-        Forcefully performs at least one more iteration.
-        """
-        self.min_iters = self.iteration+1
 
     def has_converged(self, new_ranks):
         """
@@ -77,12 +63,7 @@ class ConvergenceManager:
         Args:
             new_ranks: The iteration's numpy array.
         """
-        if self.error_type == "dynamic_iters":
-            self._find_max_iters_dynamically(new_ranks)
         self.iteration += 1
-        if self.iteration <= self.min_iters:
-            self.elapsed_time = time()-self._start_time
-            return True
         if self.iteration > self.max_iters:
             if self.error_type == "iters":
                 self.elapsed_time = time()-self._start_time
@@ -96,17 +77,7 @@ class ConvergenceManager:
     def _has_converged(self, prev_ranks, ranks):
         if self.error_type == "iters":
             return False
-        if self.error_type == "const":
-            return True
-        ranks = np.array(ranks)
-        if self.error_type == "msqrt":
-            return (np.square(ranks - prev_ranks).sum()/ranks.size)**0.5 < self.tol
-        elif self.error_type == "mabs":
-            return np.absolute(ranks - prev_ranks).sum()/ranks.size < self.tol
-        elif self.error_type == "small_value":
-            return np.absolute(ranks).sum()/ranks.size < self.tol
-        else:
-            raise Exception("Supported error types: msqrt, mabs, const, small_value, iters")
+        return self.error_type(prev_ranks)(ranks) < self.tol
 
     def __str__(self):
         return str(self.iteration)+" iterations ("+str(self.elapsed_time)+" sec)"
@@ -165,7 +136,7 @@ class RankOrderConvergenceManager:
         power = 1
         for n in range(1, self.iteration+1):
             power *= self.pagerank_alpha
-            series_sum += power/n # this is faster than np.power(self.pagerank_alpha, n) / n
+            series_sum += power / n  # this is faster than np.power(self.pagerank_alpha, n) / n
         return series_sum / sup_of_series_sum
 
     def __str__(self):
