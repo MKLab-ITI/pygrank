@@ -1,7 +1,7 @@
 import numpy as np
 import warnings
 import sklearn.metrics
-
+from pygrank.measures import AUC
 
 def _cos_similarity(v, u, ranks):
     dot = 0
@@ -27,21 +27,29 @@ def _dot_similarity(v, u, ranks):
     return dot
 
 
-class LinkAUC:
+class LinkAssessment:
     """ Normalizes ranks by dividing with their maximal value.
-
-    Attributes:
-        ranker: Optional. The ranking algorithm.
-        nodes: The list of nodes whose edges are used in for evaluation. If None (default) all graph nodes are used.
     """
-    def __init__(self, G, nodes=None, evaluation="AUC", similarity="cos", hops=1, max_positive_samples=2000, max_negative_samples=2000, seed=None):
-        self.G = G
-        self.nodes = list(G) if nodes is None else list(set(list(nodes)))
+    def __init__(self, graph, nodes=None, measure=AUC, similarity="cos", hops=1, max_positive_samples=2000, max_negative_samples=2000, seed=0):
+        """
+        Args:
+            graph: The graph on which to perform the evaluation.
+            nodes: The list of nodes whose edges are used for evaluation. If None (default) all graph nodes are used.
+            measure: The measure with which to assess prediction quality. Default is pygrank.AUC.
+            similarity: "cos" (default) or "dot"
+            hops: For the default measure, *hops=1* corresponds to LinkAUC and *hops=2* to HopAUC.
+            max_positive_samples: A sampling strategy to reduce running time. Default is 2000.
+            max_negative_samples: A sampling strategy to reduce running time. Default is 2000.
+            seed: A randomization seed to ensure reproducibility (and comparability between experiments) of sampling
+                strategies. If None, re-runing the same experiments may produce different results. Default is 0.
+        """
+        self.G = graph
+        self.nodes = list(graph) if nodes is None else list(set(list(nodes)))
         self.max_positive_samples = max_positive_samples
         self.max_negative_samples = max_negative_samples
         self.hops = hops
         self.seed = seed
-        self.evaluation = evaluation
+        self.measure = measure
         if self.G.is_directed():
             warnings.warn("LinkAUC is designed for undirected graphs", stacklevel=2)
         if similarity == "cos":
@@ -98,14 +106,7 @@ class LinkAUC:
                         real.append(0)
                         predicted.append(self._similarity(node, negative, ranks))
                         weights.append(1)
-        if self.evaluation == "AUC":
-            fpr, tpr, _ = sklearn.metrics.roc_curve(real, predicted, sample_weight=weights)
-            return sklearn.metrics.auc(fpr, tpr)
-        elif self.evaluation == "CrossEntropy":
-            total_weight = len(weights)
-            return sum(-weights[i]/total_weight*(np.log(predicted[i]) if real[i] == 1 else np.log(1-predicted[i])) for i in range(len(real)) if predicted[i]>0 and predicted[i]<1)
-        else:
-            raise Exception("Invalid evaluation function (only AUC and CrossEntropy are accepted)")
+        return self.measure(real)(predicted)
 
 
 class ClusteringCoefficient:
@@ -145,7 +146,6 @@ class ClusteringCoefficient:
         if total_triplet_values == 0:
             return 0
         return existing_triplet_values / total_triplet_values
-
 
 
 class MultiUnsupervised:

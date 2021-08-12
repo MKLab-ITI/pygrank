@@ -32,8 +32,7 @@ Example:
 Example to tune pagerank's float parameter alpha in the range [0.5, 0.99]:
 
 ```python 
->>> from pygrank.algorithms.adhoc import PageRank 
->>> from pygrank.algorithms.autotune import ParameterTuner 
+>>> from pygrank import PageRank, ParameterTuner 
 >>> graph, personalization = ... 
 >>> tuner = ParameterTuner(lambda params: PageRank(alpha=params[0]), measure=AUC, deviation_tol=0.01, max_vals=[0.99], min_vals=[0.5]) 
 >>> ranks = algorithm.rank(graph, personalization) 

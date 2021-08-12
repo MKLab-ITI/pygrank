@@ -4,7 +4,11 @@ from pygrank.measures.utils import Measure
 from pygrank.core.signals import to_signal
 
 
-class Conductance(Measure):
+class Unsupervised(Measure):
+    pass
+
+
+class Conductance(Unsupervised):
     """ Graph conductance (information flow) of ranks.
 
     Assumes a fuzzy set of subgraphs whose nodes are included with probability proportional to their ranks,
@@ -49,7 +53,7 @@ class Conductance(Measure):
         return external_edges / internal_edges if internal_edges !=0 else float('inf')
 
 
-class Density(Measure):
+class Density(Unsupervised):
     """ Extension of graph density that can account for ranks.
 
     Assumes a fuzzy set of subgraphs whose nodes are included with probability proportional to their ranks,
@@ -83,7 +87,7 @@ class Density(Measure):
         return internal_edges / expected_edges
 
 
-class Modularity(Measure):
+class Modularity(Unsupervised):
     def __init__(self, graph, max_rank=1, max_positive_samples=2000):
         self.graph = graph
         self.max_positive_samples = max_positive_samples

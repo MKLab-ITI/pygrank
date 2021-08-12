@@ -35,7 +35,7 @@ Attributes:
  * *ranker:* The base ranker instance. 
  * *objective:* Optional. Can be either "partial" (default) or "naive". 
  * *oversample_from_iteration:* Optional. Can be either "previous" (default) to oversample the ranks of the previous iteration or "original" to always ovesample the given personalization. 
- * *weight_convergence:* Optional.  A ConvergenceManager that helps determine whether the weights placed on boosting iterations have converged. If None (default), initialized with ConvergenceManager(error_type="small_value", tol=0.001, max_iters=100) 
+ * *weight_convergence:* Optional.  A ConvergenceManager that helps determine whether the weights placed on boosting iterations have converged. If None (default), initialized with ConvergenceManager(error_type=pyrgank.MaxDifference, tol=0.001, max_iters=100) 
 
 Example:
 
@@ -60,7 +60,7 @@ Args:
  * *target_pRule:* Up to which value should pRule be improved. pRule values greater than this are not penalized further. 
  * *retain_rank_weight:* Can be used to penalize deviations from original posteriors due to editing. Use the default value 1 unless there is a specific reason to scale the error. Higher values correspond to tighter maintenance of original posteriors, but may not improve fairness as much. 
  * *pRule_weight:* Can be used to penalize low pRule values. Either use the default value 1 or, if you want to place most emphasis on pRule maximization (instead of trading-off between fairness and posterior preservation) 10 is a good empirical starting point. 
- * *error_type:* The error type used to penalize deviations from original posterior scores. "KL" (default) uses KL-divergence and is used in [krasanakis2020prioredit]. "mabs" uses the mean absolute error and is used in the earlier [krasanakis2020fairconstr]. The latter does not maintain fairness as well on average, but is sometimes better for specific graphs. 
+ * *error_type:* The supervised measure used to penalize deviations from original posterior scores. pygrank.KLDivergence (default) uses is used in [krasanakis2020prioredit]. pygrank.Error is used by the earlier [krasanakis2020fairconstr]. The latter does not induce fairness as well on average, but is sometimes better for specific graphs. 
  * *parameter_buckets:* How many sets of parameters to be used to . Default is 1. More parameters could be needed to to track, but running time scales **exponentially** to these (with base 4). 
  * *max_residual:* An upper limit on how much the original personalization is preserved, i.e. a fraction of it in the range [0, max_residual] is preserved. Default is 1 and is introduced by [krasanakis2020prioredit], but 0 can be used for exact replication of [krasanakis2020fairconstr]. 
 

@@ -192,6 +192,8 @@ def generate_metric_docs():
 
     base_descriptions[pygrank.measures.Supervised] = base_description(pygrank.measures.Supervised, True)
     abstract[pygrank.measures.Supervised] = True
+    base_descriptions[pygrank.measures.Unsupervised] = base_description(pygrank.measures.Unsupervised, True)
+    abstract[pygrank.measures.Unsupervised] = True
     base_descriptions[pygrank.measures.Measure] = base_description(pygrank.measures.Measure, True)
     abstract[pygrank.measures.Measure] = True
 

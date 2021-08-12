@@ -78,10 +78,10 @@ if __name__ == "__main__":
                         "Density": pygrank.measures.multigroup.MultiUnsupervised(pygrank.measures.unsupervised.Density, G),
                         "Modularity": pygrank.measures.multigroup.MultiUnsupervised(pygrank.measures.unsupervised.Modularity, G, max_positive_samples=max_positive_samples),
                         #"DotLinkAUC": pygrank.metrics.multigroup.LinkAUC(G, similarity="dot", max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples),
-                        "CosLinkAUC": pygrank.measures.multigroup.LinkAUC(G, similarity="cos", max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples, seed=1),
-                        "HopAUC": pygrank.measures.multigroup.LinkAUC(G, similarity="cos", hops=2, max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples, seed=1),
-                        "LinkCE": pygrank.measures.multigroup.LinkAUC(G, evaluation="CrossEntropy", similarity="cos", hops=1, max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples, seed=1),
-                        "HopCE": pygrank.measures.multigroup.LinkAUC(G, evaluation="CrossEntropy", similarity="cos", hops=2, max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples, seed=1)
+                        "CosLinkAUC": pygrank.measures.multigroup.LinkAssessment(G, similarity="cos", max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples, seed=1),
+                        "HopAUC": pygrank.measures.multigroup.LinkAssessment(G, similarity="cos", hops=2, max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples, seed=1),
+                        "LinkCE": pygrank.measures.multigroup.LinkAssessment(G, measure="CrossEntropy", similarity="cos", hops=1, max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples, seed=1),
+                        "HopCE": pygrank.measures.multigroup.LinkAssessment(G, measure="CrossEntropy", similarity="cos", hops=2, max_positive_samples=max_positive_samples, max_negative_samples=max_positive_samples, seed=1)
                         }
             if len(measure_evaluations) == 0:
                 for measure_name in measures.keys():

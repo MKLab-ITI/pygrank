@@ -4,69 +4,29 @@
 The following measures can be imported from the package `pygrank.measures`.
 Constructor details are provided, including arguments inherited from and passed to parent classes.
 All of them can be used through the code patterns presented at the library's [documentation](documentation.md).  
-1. [Conductance](#kbdmeasurekbd-conductance)
-2. [Density](#kbdmeasurekbd-density)
-3. [Modularity](#kbdmeasurekbd-modularity)
-4. [AUC](#kbdsupervisedkbd-auc)
-5. [CrossEntropy](#kbdsupervisedkbd-crossentropy)
-6. [Error](#kbdsupervisedkbd-error)
-7. [KLDivergence](#kbdsupervisedkbd-kldivergence)
-8. [NDCG](#kbdsupervisedkbd-ndcg)
-9. [pRule](#kbdsupervisedkbd-prule)
-
-### <kbd>Measure</kbd> Conductance
-
-Graph conductance (information flow) of ranks. 
-Assumes a fuzzy set of subgraphs whose nodes are included with probability proportional to their ranks, 
-as per the formulation of [krasanakis2019linkauc] and calculates E[outgoing edges] / E[internal edges] of 
-the fuzzy rank subgraph. 
-If ranks assume binary values, E[.] becomes set size and this calculates the induced subgraph Conductance. 
-Initializes the Conductance metric. 
-
-Args: 
- * *graph:* Optional. The graph on which to calculate the metric. If None (default) it is automatically extracted from graph signals passed for evaluation. 
- * *max_rank:* Optional. The maximum value ranks can assume. To maintain a probabilistic formulation of conductance, this can be greater but not less than the maximum rank during evaluation. Default is 1. 
-
-Example:
-
-```python 
->>> from pygrank.metrics.unsupervised import Conductance 
->>> from pygrank.algorithms.postprocess import Normalize 
->>> graph, seed_nodes, algorithm = ... 
->>> algorithm = Normalize(algorithm) 
->>> ranks = algorithm.rank(graph, seed_nodes) 
->>> conductance = Conductance().evaluate(ranks) 
-```
-
-
-### <kbd>Measure</kbd> Density
-
-Extension of graph density that can account for ranks. 
-Assumes a fuzzy set of subgraphs whose nodes are included with probability proportional to their ranks, 
-as per the formulation of [krasanakis2019linkauc] and calculates E[internal edges] / E[possible edges] of 
-the fuzzy rank subgraph. 
-If ranks assume binary values, E[.] becomes set size and this calculates the induced subgraph Density. 
-Initializes the Density metric. 
-
-Args: 
- * *graph:* Optional. The graph on which to calculate the metric. If None (default) it is automatically extracted from graph signals passed for evaluation. 
-
-Example:
-
-```python 
->>> from pygrank.metrics.unsupervised import Density 
->>> graph, seed_nodes, algorithm = ... 
->>> ranks = algorithm.rank(graph, seed_nodes) 
->>> conductance = Density().evaluate(ranks) 
-```
-
-
-### <kbd>Measure</kbd> Modularity
- 
+1. [AUC](#kbdsupervisedkbd-auc)
+2. [Accuracy](#kbdsupervisedkbd-accuracy)
+3. [CrossEntropy](#kbdsupervisedkbd-crossentropy)
+4. [KLDivergence](#kbdsupervisedkbd-kldivergence)
+5. [Mabs](#kbdsupervisedkbd-mabs)
+6. [MaxDifference](#kbdsupervisedkbd-maxdifference)
+7. [NDCG](#kbdsupervisedkbd-ndcg)
+8. [pRule](#kbdsupervisedkbd-prule)
+9. [Conductance](#kbdunsupervisedkbd-conductance)
+10. [Density](#kbdunsupervisedkbd-density)
+11. [Modularity](#kbdunsupervisedkbd-modularity)
 
 ### <kbd>Supervised</kbd> AUC
 
 Wrapper for sklearn.metrics.auc evaluation. 
+Initializes the supervised measure with desired graph signal outcomes. 
+
+Args: 
+ * *known_ranks:* The desired graph signal outcomes. 
+ * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
+
+### <kbd>Supervised</kbd> Accuracy
+ 
 Initializes the supervised measure with desired graph signal outcomes. 
 
 Args: 
@@ -82,7 +42,16 @@ Args:
  * *known_ranks:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
 
-### <kbd>Supervised</kbd> Error
+### <kbd>Supervised</kbd> KLDivergence
+
+Computes KL-divergence of ranks vs known ranks. 
+Initializes the supervised measure with desired graph signal outcomes. 
+
+Args: 
+ * *known_ranks:* The desired graph signal outcomes. 
+ * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
+
+### <kbd>Supervised</kbd> Mabs
 
 Computes the mean absolute error between ranks and known ranks. 
 Initializes the supervised measure with desired graph signal outcomes. 
@@ -91,9 +60,9 @@ Args:
  * *known_ranks:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
 
-### <kbd>Supervised</kbd> KLDivergence
+### <kbd>Supervised</kbd> MaxDifference
 
-Computes KL-divergence of ranks vs known ranks. 
+Computes the maximum absolute error between ranks and known ranks. 
 Initializes the supervised measure with desired graph signal outcomes. 
 
 Args: 
@@ -118,3 +87,53 @@ Initializes the supervised measure with desired graph signal outcomes.
 Args: 
  * *known_ranks:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
+
+### <kbd>Unsupervised</kbd> Conductance
+
+Graph conductance (information flow) of ranks. 
+Assumes a fuzzy set of subgraphs whose nodes are included with probability proportional to their ranks, 
+as per the formulation of [krasanakis2019linkauc] and calculates E[outgoing edges] / E[internal edges] of 
+the fuzzy rank subgraph. 
+If ranks assume binary values, E[.] becomes set size and this calculates the induced subgraph Conductance. 
+Initializes the Conductance metric. 
+
+Args: 
+ * *graph:* Optional. The graph on which to calculate the metric. If None (default) it is automatically extracted from graph signals passed for evaluation. 
+ * *max_rank:* Optional. The maximum value ranks can assume. To maintain a probabilistic formulation of conductance, this can be greater but not less than the maximum rank during evaluation. Default is 1. 
+
+Example:
+
+```python 
+>>> from pygrank.metrics.unsupervised import Conductance 
+>>> from pygrank.algorithms.postprocess import Normalize 
+>>> graph, seed_nodes, algorithm = ... 
+>>> algorithm = Normalize(algorithm) 
+>>> ranks = algorithm.rank(graph, seed_nodes) 
+>>> conductance = Conductance().evaluate(ranks) 
+```
+
+
+### <kbd>Unsupervised</kbd> Density
+
+Extension of graph density that can account for ranks. 
+Assumes a fuzzy set of subgraphs whose nodes are included with probability proportional to their ranks, 
+as per the formulation of [krasanakis2019linkauc] and calculates E[internal edges] / E[possible edges] of 
+the fuzzy rank subgraph. 
+If ranks assume binary values, E[.] becomes set size and this calculates the induced subgraph Density. 
+Initializes the Density metric. 
+
+Args: 
+ * *graph:* Optional. The graph on which to calculate the metric. If None (default) it is automatically extracted from graph signals passed for evaluation. 
+
+Example:
+
+```python 
+>>> from pygrank.metrics.unsupervised import Density 
+>>> graph, seed_nodes, algorithm = ... 
+>>> ranks = algorithm.rank(graph, seed_nodes) 
+>>> conductance = Density().evaluate(ranks) 
+```
+
+
+### <kbd>Unsupervised</kbd> Modularity
+ 
