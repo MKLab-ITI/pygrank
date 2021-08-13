@@ -14,6 +14,7 @@ datasets = {
                "labels": "https://snap.stanford.edu/data/email-Eu-core-department-labels.txt.gz"}
 }
 
+
 def download_dataset(dataset):
     source = datasets[dataset.lower()]
     if not os.path.isdir("data"):
@@ -59,13 +60,13 @@ def download_dataset(dataset):
     return credentials
 
 
-def import_SNAP(dataset : str,
-                path : str = 'data/',
-                pair_file: str = 'pairs.txt',
-                group_file: str = 'groups.txt',
-                directed: bool = False,
-                min_group_size: int = 10,
-                max_group_number: int = 20):
+def import_snap_format_dataset(dataset : str,
+                               path : str = 'data/',
+                               pair_file: str = 'pairs.txt',
+                               group_file: str = 'groups.txt',
+                               directed: bool = False,
+                               min_group_size: int = 10,
+                               max_group_number: int = 20):
     G = nx.DiGraph() if directed else nx.Graph()
     groups = {}
     with open(path+dataset+'/'+pair_file, 'r', encoding='utf-8') as file:
@@ -92,7 +93,7 @@ def dataset_loader(datasets=datasets):
     for dataset, group_id in datasets:
         if last_loaded_dataset != dataset:
             download_dataset(dataset)
-            G, groups = import_SNAP(dataset, max_group_number=1+max(group_id for dat, group_id in datasets if dat == dataset))
+            graph, groups = import_snap_format_dataset(dataset, max_group_number=1 + max(group_id for dat, group_id in datasets if dat == dataset))
             last_loaded_dataset = dataset
         group = set(groups[group_id])
-        yield dataset, G, group
+        yield dataset, graph, group
