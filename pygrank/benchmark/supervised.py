@@ -59,7 +59,7 @@ def supervised_benchmark(algorithms: Mapping[str, NodeRanking],
     out += delimiter.join([fill()]+[fill(algorithm) for algorithm in algorithms])+endline+"\n"
     for name, graph, group in datasets:
         dataset_results = fill(name)
-        training, evaluation = split(list(group), training_samples=0.1)
+        training, evaluation = split(list(group), training_samples=0.5)
         training, evaluation = to_signal(graph,{v: 1 for v in training}), to_signal(graph,{v: 1 for v in evaluation})
         for algorithm in algorithms.values():
             if metric == "time":

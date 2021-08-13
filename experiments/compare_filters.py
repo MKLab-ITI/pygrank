@@ -1,7 +1,7 @@
 import pygrank as pg
 
 
-datasets = ["ant", "citeseer", "pubmed", "squirel"]
+datasets = ["EUCore", "DBLP"]
 pre = pg.preprocessor(assume_immutability=True, normalization="symmetric")
 algorithms = {
     "ppr0.85": pg.PageRank(alpha=0.85, to_scipy=pre, max_iters=1000000, tol=1.E-9),

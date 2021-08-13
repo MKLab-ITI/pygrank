@@ -26,6 +26,6 @@ setuptools.setup(
          "Operating System :: OS Independent",
      ],
     install_requires=[
-          'tqdm', 'sklearn', 'scipy', 'numpy', 'networkx',
+          'sklearn', 'scipy', 'numpy', 'networkx',
       ],
  )

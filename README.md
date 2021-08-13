@@ -6,7 +6,7 @@ Fast recommendation algorithms for large graphs based on link analysis.
 
 **License:** Apache Software License
 <br>**Author:** Emmanouil (Manios) Krasanakis
-<br>**Dependencies:** `networkx, numpy, scipy, sklearn, tqdm` (required) `tensorflow` (optional)
+<br>**Dependencies:** `networkx, numpy, scipy, sklearn, dload` (required) `tensorflow` (optional)
 <br>**Coverage:** 73% (measured with *codecov*)
 
 # :hammer_and_wrench: Installation
