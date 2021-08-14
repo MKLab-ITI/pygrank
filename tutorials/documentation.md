@@ -454,11 +454,25 @@ such as disparate impact.
 
 An exhaustive list of ready-to-use postprocessors can be
 found [here](postprocessors.md). After initialization with the appropriate
-parameters, these can be used interchangeably in the above example.
+parameters, these can be used interchangeably in the above examples.
+
+:warning: Fairness-aware postprocessors always require an additional **keyword**
+argument `sensitive=...` to be passed to their *rank* or *transform* methods. 
 
 
 # Evaluation
-TODO
+There is often the need to assess the ability of node ranking algorithms to 
+produce desired outcomes. To this end, `pygrank` provides a suite of measures
+which can be used to assess node ranking algorithms, as well as comprehensive
+code interfaces with which to quickly set up experiments of any scale to assess
+the efficacy of new practices.
+
+Most measures are either supervised in that they compare graph signal posteriors
+with some known ground truth or unsupervised in that they explore whether
+posteriors satisfy a desired property, such as low conductance or density.
+Multiple measures can also be aggregated through the `pygrank.AM` and 
+`pygrank.GM` classes, which respectively perform arithmetic and geometric
+averaging of measure outcomes.
 
 ### Examples
 TODO

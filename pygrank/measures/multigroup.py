@@ -3,6 +3,7 @@ import warnings
 import sklearn.metrics
 from pygrank.measures import AUC
 
+
 def _cos_similarity(v, u, ranks):
     dot = 0
     l2v = 0

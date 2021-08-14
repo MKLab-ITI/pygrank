@@ -190,7 +190,7 @@ class Test(unittest.TestCase):
         self.assertAlmostEqual(p[0], 3, places=6, msg="Optimizer should optimize the Beale function")
         self.assertAlmostEqual(p[1], 0.5, places=6, msg="Optimizer should optimize the Beale function")
 
-    def test_fairness(self):
+    def test_fair_personalizer(self):
         from pygrank import Normalize, FairPersonalizer, Mabs, PageRank, pRule
         H = PageRank(assume_immutability=True, normalization="symmetric")
         algorithms = {
@@ -204,4 +204,20 @@ class Test(unittest.TestCase):
             ranks = algorithm(graph, labels, sensitive)
             self.assertGreater(pRule(sensitive)(ranks), 0.8, "should satisfy fairness requirements")
 
+    def test_fair_heuristics(self):
+        from pygrank import Normalize, AdHocFairness, to_signal, PageRank, pRule
+        H = PageRank(assume_immutability=True, normalization="symmetric")
+        algorithms = {
+            "FairO": lambda G, p, s: Normalize(AdHocFairness(H, method="O")).rank(G, p, sensitive=s),
+            "FairB": lambda G, p, s: Normalize()(AdHocFairness("B").transform(H.rank(G, p), sensitive=s))
+        }
+        graph, sensitive, labels = fairness_dataset("facebook0", 0, sensitive_group=1, path="data/")
+        for algorithm in algorithms.values():
+            ranks = algorithm(graph, labels, sensitive)
+            self.assertGreater(pRule(sensitive)(ranks), 0.99, "should satisfy fairness requirements")
+        sensitive = to_signal(graph, sensitive)
+        sensitive.np = 1-sensitive.np
+        for algorithm in algorithms.values():
+            ranks = algorithm(graph, labels, sensitive)
+            self.assertGreater(pRule(sensitive)(ranks), 0.99, "should satisfy fairness requirements")
 

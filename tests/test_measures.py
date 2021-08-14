@@ -21,8 +21,10 @@ class Test(unittest.TestCase):
             NDCG({v: 1 for v in group[len(group)//2:]}, exclude=group[:len(group)//2], k=len(G)+1)(scores2)
 
     def test_edge_cases(self):
-        from pygrank import pRule, KLDivergence, AUC
+        from pygrank import pRule, KLDivergence, AUC, Measure, Supervised
         self.assertEqual(pRule([0])([0]), 0)
+        with self.assertRaises(Exception):
+            Measure()([0, 1, 0])
         with self.assertRaises(Exception):
             AUC([0, 0, 0])([0, 1, 0])
         with self.assertRaises(Exception):
@@ -87,4 +89,27 @@ class Test(unittest.TestCase):
         y3 = [1, 1, 0]
         self.assertEqual(pg.GM().add(pg.AUC(y1), max_val=0.5).add(pg.AUC(y2), min_val=0.9).evaluate(y3), 0.45**0.5)
         self.assertEqual(pg.AM().add(pg.AUC(y1), max_val=0.5).add(pg.AUC(y2), min_val=0.9).evaluate(y3), 0.7)
+
+    def test_split(self):
+        import pygrank as pg
+        data = {"community1": ["A", "B", "C", "D"], "community2": ["B", "E", "F", "G", "H", "I"]}
+        training, test = pg.split(data, 1)
+        self.assertTrue(training==test)
+        training, test = pg.split(data, 0.5)
+        self.assertEqual(len(training["community2"]), 3)
+        self.assertEqual(len(training["community1"]), 2)
+        self.assertEqual(len(test["community2"]), 3)
+        training, test = pg.split(data, 2)
+        self.assertEqual(len(training["community2"]), 2)
+        self.assertEqual(len(test["community1"]), 2)
+
+    def test_remove_edges(self):
+        import pygrank as pg
+        graph = test_graph(directed=True)
+        self.assertTrue(graph.has_edge("A", "B"))
+        self.assertTrue(graph.has_edge("C", "D"))
+        pg.remove_intra_edges(graph, {"community1": ["A", "B"], "community2": ["D", "C"]})
+        self.assertTrue(graph.has_edge("B", "C"))
+        self.assertFalse(graph.has_edge("A", "B"))
+        self.assertFalse(graph.has_edge("C", "D"))
 
