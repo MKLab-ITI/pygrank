@@ -4,16 +4,16 @@
 The following postprocessors can be imported from the package `pygrank.algorithms.postprocess`.
 Constructor details are provided, including arguments inherited from and passed to parent classes.
 All of them can be used through the code patterns presented at the library's [documentation](documentation.md).  
-1. [AdHocFairness](#postprocessorkbd-adhocfairness)
-2. [BoostedSeedOversampling](#postprocessorkbd-boostedseedoversampling)
-3. [FairPersonalizer](#postprocessorkbd-fairpersonalizer)
-4. [Normalize](#postprocessorkbd-normalize)
-5. [Ordinals](#postprocessorkbd-ordinals)
-6. [SeedOversampling](#postprocessorkbd-seedoversampling)
-7. [Sweep](#postprocessorkbd-sweep)
-8. [Tautology](#postprocessorkbd-tautology)
-9. [Threshold](#postprocessorkbd-threshold)
-10. [Transformer](#postprocessorkbd-transformer)
+1. [AdHocFairness](#postprocessor-adhocfairness)
+2. [BoostedSeedOversampling](#postprocessor-boostedseedoversampling)
+3. [FairPersonalizer](#postprocessor-fairpersonalizer)
+4. [Normalize](#postprocessor-normalize)
+5. [Ordinals](#postprocessor-ordinals)
+6. [SeedOversampling](#postprocessor-seedoversampling)
+7. [Sweep](#postprocessor-sweep)
+8. [Tautology](#postprocessor-tautology)
+9. [Threshold](#postprocessor-threshold)
+10. [Transformer](#postprocessor-transformer)
 
 ### <kbd>Postprocessor</kbd> AdHocFairness
 

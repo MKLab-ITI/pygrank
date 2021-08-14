@@ -4,21 +4,21 @@
 The following measures can be imported from the package `pygrank.measures`.
 Constructor details are provided, including arguments inherited from and passed to parent classes.
 All of them can be used through the code patterns presented at the library's [documentation](documentation.md).  
-1. [AM](#measurecombinationkbd-am)
-2. [GM](#measurecombinationkbd-gm)
-3. [AUC](#supervisedkbd-auc)
-4. [Accuracy](#supervisedkbd-accuracy)
-5. [CrossEntropy](#supervisedkbd-crossentropy)
-6. [KLDivergence](#supervisedkbd-kldivergence)
-7. [Mabs](#supervisedkbd-mabs)
-8. [MaxDifference](#supervisedkbd-maxdifference)
-9. [NDCG](#supervisedkbd-ndcg)
-10. [PearsonCorrelation](#supervisedkbd-pearsoncorrelation)
-11. [SpearmanCorrelation](#supervisedkbd-spearmancorrelation)
-12. [pRule](#supervisedkbd-prule)
-13. [Conductance](#unsupervisedkbd-conductance)
-14. [Density](#unsupervisedkbd-density)
-15. [Modularity](#unsupervisedkbd-modularity)
+1. [AM](#measurecombination-am)
+2. [GM](#measurecombination-gm)
+3. [AUC](#supervised-auc)
+4. [Accuracy](#supervised-accuracy)
+5. [CrossEntropy](#supervised-crossentropy)
+6. [KLDivergence](#supervised-kldivergence)
+7. [Mabs](#supervised-mabs)
+8. [MaxDifference](#supervised-maxdifference)
+9. [NDCG](#supervised-ndcg)
+10. [PearsonCorrelation](#supervised-pearsoncorrelation)
+11. [SpearmanCorrelation](#supervised-spearmancorrelation)
+12. [pRule](#supervised-prule)
+13. [Conductance](#unsupervised-conductance)
+14. [Density](#unsupervised-density)
+15. [Modularity](#unsupervised-modularity)
 
 ### <kbd>MeasureCombination</kbd> AM
 
