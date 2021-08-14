@@ -42,7 +42,7 @@ class NDCG(Supervised):
     def __init__(self, known_ranks, exclude=None, k=None):
         """ Initializes the PageRank scheme parameters.
 
-        Attributes:
+        Args:
             k: Optional. Calculates NDCG@k. If None (default), len(known_ranks) is used.
         """
         super().__init__(known_ranks, exclude=exclude)
@@ -63,6 +63,7 @@ class NDCG(Supervised):
 
 class MaxDifference(Supervised):
     """Computes the maximum absolute error between ranks and known ranks."""
+
     def evaluate(self, ranks):
         known_ranks, ranks = self.to_numpy(ranks)
         return backend.max(backend.abs(known_ranks-ranks))
@@ -77,7 +78,7 @@ class Mabs(Supervised):
 
 
 class CrossEntropy(Supervised):
-    """Computes a cross-entropy loss of ranks vs known ranks."""
+    """Computes a cross-entropy loss of given vs known ranks."""
 
     def evaluate(self, ranks):
         known_ranks, ranks = self.to_numpy(ranks)
@@ -89,7 +90,7 @@ class CrossEntropy(Supervised):
 
 
 class KLDivergence(Supervised):
-    """Computes KL-divergence of ranks vs known ranks."""
+    """Computes the KL-divergence of given vs known ranks."""
 
     def evaluate(self, ranks):
         known_ranks, ranks = self.to_numpy(ranks, normalization=True)
@@ -113,25 +114,35 @@ class AUC(Supervised):
 
 
 class Accuracy(Supervised):
+    """Computes the accuracy as 1- mean absolute differences between given and known ranks."""
+
     def evaluate(self, ranks):
         known_ranks, ranks = self.to_numpy(ranks)
         return 1-backend.sum(backend.abs(known_ranks - ranks)) / backend.length(ranks)
 
 
 class SpearmanCorrelation(Supervised):
+    """Computes the Spearman correlation coefficient between given and known ranks."""
+
     def evaluate(self, ranks):
         known_ranks, ranks = self.to_numpy(ranks)
         return scipy.stats.spearmanr(known_ranks, ranks)[0]
 
 
 class PearsonCorrelation(Supervised):
+    """Computes the Pearson correlation coefficient between given and known ranks."""
+
     def evaluate(self, ranks):
         known_ranks, ranks = self.to_numpy(ranks)
         return scipy.stats.pearsonr(known_ranks, ranks)[0]
 
 
 class pRule(Supervised):
-    """Provides an assessment of stochastic ranking fairness."""
+    """Computes an assessment of stochastic ranking fairness.
+    Values near 1 indicate full fairness, whereas lower values indicate disparate impact.
+    Known ranks correspond to whether nodes are sensitive.
+    Usually, pRule > 80% is considered fair.
+    """
 
     def evaluate(self, ranks):
         sensitive, ranks = self.to_numpy(ranks)

@@ -21,8 +21,12 @@ class Test(unittest.TestCase):
             NDCG({v: 1 for v in group[len(group)//2:]}, exclude=group[:len(group)//2], k=len(G)+1)(scores2)
 
     def test_edge_cases(self):
-        from pygrank import pRule, KLDivergence
+        from pygrank import pRule, KLDivergence, AUC
         self.assertEqual(pRule([0])([0]), 0)
+        with self.assertRaises(Exception):
+            AUC([0, 0, 0])([0, 1, 0])
+        with self.assertRaises(Exception):
+            AUC([1, 1, 1])([0, 1, 0])
         with self.assertRaises(Exception):
             KLDivergence([0])([-1])
         with self.assertRaises(Exception):
@@ -75,3 +79,12 @@ class Test(unittest.TestCase):
         self.assertLess(pg.PearsonCorrelation(auc_scores)(conductance_scores), -0.6)
         self.assertLess(pg.SpearmanCorrelation(auc_scores)(density_scores), 0)
         pg.SpearmanCorrelation(auc_scores)(modularity_scores)
+
+    def test_aggregated(self):
+        import pygrank as pg
+        y1 = [1, 1, 0]
+        y2 = [1, 0, 0]
+        y3 = [1, 1, 0]
+        self.assertEqual(pg.GM().add(pg.AUC(y1), max_val=0.5).add(pg.AUC(y2), min_val=0.9).evaluate(y3), 0.45**0.5)
+        self.assertEqual(pg.AM().add(pg.AUC(y1), max_val=0.5).add(pg.AUC(y2), min_val=0.9).evaluate(y3), 0.7)
+

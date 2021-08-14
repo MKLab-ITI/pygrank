@@ -4,17 +4,43 @@
 The following measures can be imported from the package `pygrank.measures`.
 Constructor details are provided, including arguments inherited from and passed to parent classes.
 All of them can be used through the code patterns presented at the library's [documentation](documentation.md).  
-1. [AUC](#kbdsupervisedkbd-auc)
-2. [Accuracy](#kbdsupervisedkbd-accuracy)
-3. [CrossEntropy](#kbdsupervisedkbd-crossentropy)
-4. [KLDivergence](#kbdsupervisedkbd-kldivergence)
-5. [Mabs](#kbdsupervisedkbd-mabs)
-6. [MaxDifference](#kbdsupervisedkbd-maxdifference)
-7. [NDCG](#kbdsupervisedkbd-ndcg)
-8. [pRule](#kbdsupervisedkbd-prule)
-9. [Conductance](#kbdunsupervisedkbd-conductance)
-10. [Density](#kbdunsupervisedkbd-density)
-11. [Modularity](#kbdunsupervisedkbd-modularity)
+1. [AM](#kbdmeasurecombinationkbd-am)
+2. [GM](#kbdmeasurecombinationkbd-gm)
+3. [AUC](#kbdsupervisedkbd-auc)
+4. [Accuracy](#kbdsupervisedkbd-accuracy)
+5. [CrossEntropy](#kbdsupervisedkbd-crossentropy)
+6. [KLDivergence](#kbdsupervisedkbd-kldivergence)
+7. [Mabs](#kbdsupervisedkbd-mabs)
+8. [MaxDifference](#kbdsupervisedkbd-maxdifference)
+9. [NDCG](#kbdsupervisedkbd-ndcg)
+10. [PearsonCorrelation](#kbdsupervisedkbd-pearsoncorrelation)
+11. [SpearmanCorrelation](#kbdsupervisedkbd-spearmancorrelation)
+12. [pRule](#kbdsupervisedkbd-prule)
+13. [Conductance](#kbdunsupervisedkbd-conductance)
+14. [Density](#kbdunsupervisedkbd-density)
+15. [Modularity](#kbdunsupervisedkbd-modularity)
+
+### <kbd>MeasureCombination</kbd> AM
+
+Combines several measures through their arithmetic mean. 
+Instantiates a combination of several measures. More measures with their own weights and threhsolded range 
+can be added with the `add(measure, weight=1, min_val=-inf, max_val=inf)` method. 
+
+Args: 
+ * *measures:* Optional. An iterable of measures to combine. If None (default) no new measure is added. 
+ * *weights:* Optional. A iterable of floats with which to weight the measures provided by the previous argument. The concept of weighting depends on how measures are aggregated, but it corresponds to an importance value placed on each measure. If None (default), provided measures are all weighted by 1. 
+ * *thresholds:* Optional. A tuple of [min_val, max_val] with which to bound measure outcomes. If None (default) provided measures 
+
+### <kbd>MeasureCombination</kbd> GM
+
+Combines several measures through their geometric mean. 
+Instantiates a combination of several measures. More measures with their own weights and threhsolded range 
+can be added with the `add(measure, weight=1, min_val=-inf, max_val=inf)` method. 
+
+Args: 
+ * *measures:* Optional. An iterable of measures to combine. If None (default) no new measure is added. 
+ * *weights:* Optional. A iterable of floats with which to weight the measures provided by the previous argument. The concept of weighting depends on how measures are aggregated, but it corresponds to an importance value placed on each measure. If None (default), provided measures are all weighted by 1. 
+ * *thresholds:* Optional. A tuple of [min_val, max_val] with which to bound measure outcomes. If None (default) provided measures 
 
 ### <kbd>Supervised</kbd> AUC
 
@@ -26,7 +52,8 @@ Args:
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
 
 ### <kbd>Supervised</kbd> Accuracy
- 
+
+Computes the accuracy as 1- mean absolute differences between given and known ranks. 
 Initializes the supervised measure with desired graph signal outcomes. 
 
 Args: 
@@ -35,7 +62,7 @@ Args:
 
 ### <kbd>Supervised</kbd> CrossEntropy
 
-Computes a cross-entropy loss of ranks vs known ranks. 
+Computes a cross-entropy loss of given vs known ranks. 
 Initializes the supervised measure with desired graph signal outcomes. 
 
 Args: 
@@ -44,7 +71,7 @@ Args:
 
 ### <kbd>Supervised</kbd> KLDivergence
 
-Computes KL-divergence of ranks vs known ranks. 
+Computes the KL-divergence of given vs known ranks. 
 Initializes the supervised measure with desired graph signal outcomes. 
 
 Args: 
@@ -74,14 +101,35 @@ Args:
 Provides evaluation of NDCG@k score between given and known ranks. 
 Initializes the PageRank scheme parameters. 
 
-Attributes: 
+Args: 
  * *k:* Optional. Calculates NDCG@k. If None (default), len(known_ranks) is used. 
+ * *known_ranks:* The desired graph signal outcomes. 
+ * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
+
+### <kbd>Supervised</kbd> PearsonCorrelation
+
+Computes the Pearson correlation coefficient between given and known ranks. 
+Initializes the supervised measure with desired graph signal outcomes. 
+
+Args: 
+ * *known_ranks:* The desired graph signal outcomes. 
+ * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
+
+### <kbd>Supervised</kbd> SpearmanCorrelation
+
+Computes the Spearman correlation coefficient between given and known ranks. 
+Initializes the supervised measure with desired graph signal outcomes. 
+
+Args: 
  * *known_ranks:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
 
 ### <kbd>Supervised</kbd> pRule
 
-Provides an assessment of stochastic ranking fairness. 
+Computes an assessment of stochastic ranking fairness. 
+Values near 1 indicate full fairness, whereas lower values indicate disparate impact. 
+Known ranks correspond to whether nodes are sensitive. 
+Usually, pRule > 80% is considered fair. 
 Initializes the supervised measure with desired graph signal outcomes. 
 
 Args: 

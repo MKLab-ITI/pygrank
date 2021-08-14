@@ -4,7 +4,28 @@
 The following tuning mechanisms can be imported from the package `pygrank.algorithms.autotune`.
 Constructor details are provided, including arguments inherited from and passed to parent classes.
 All of them can be used through the code patterns presented at the library's [documentation](documentation.md).  
-1. [ParameterTuner](#kbdtunerkbd-parametertuner)
+1. [AlgorithmSelection](#kbdtunerkbd-algorithmselection)
+2. [ParameterTuner](#kbdtunerkbd-parametertuner)
+
+### <kbd>Tuner</kbd> AlgorithmSelection
+ 
+Instantiates the tuning mechanism. 
+
+Args: 
+ * *rankers:* A list of node ranking algorithms to chose from. Try to make them share a preprocessor for more efficient computations. If None (default), the filters obtained from pygrank.benchmark.create_demo_filters().values() are used instead. 
+ * *measure:* Callable to constuct a supervised measure with given known node scores and an iterable of excluded scores. 
+ * *fraction_of_training:* A number in (0,1) indicating how to split provided graph signals into training and validaton ones by randomly sampling training nodes to meet the required fraction of all graph nodes. Default is 0.5. 
+ * *combined_prediction:* If True (default), after the best version of algorithms is determined, the whole personalization is used to produce the end-result. Otherwise, only the training portion of the training-validation split is used. 
+
+Example:
+
+```python 
+>>> import pygrank as pg 
+>>> graph, personalization = ... 
+>>> tuner = pg.AlgorithmSelection(pg.create_demo_filters().values(), measure=AUC, deviation_tol=0.01) 
+>>> ranks = tuner.rank(graph, personalization) 
+```
+
 
 ### <kbd>Tuner</kbd> ParameterTuner
 
@@ -22,9 +43,9 @@ Args:
 Example:
 
 ```python 
->>> from pygrank.algorithms.autotune import ParameterTuner 
+>>> import pygrank as pg 
 >>> graph, personalization = ... 
->>> tuner = ParameterTuner(measure=AUC, deviation_tol=0.01) 
+>>> tuner = pg.ParameterTuner(measure=AUC, deviation_tol=0.01) 
 >>> ranks = tuner.rank(graph, personalization) 
 ```
 
@@ -32,9 +53,9 @@ Example:
 Example to tune pagerank's float parameter alpha in the range [0.5, 0.99]:
 
 ```python 
->>> from pygrank import PageRank, ParameterTuner 
+>>> import pygrank as pg 
 >>> graph, personalization = ... 
->>> tuner = ParameterTuner(lambda params: PageRank(alpha=params[0]), measure=AUC, deviation_tol=0.01, max_vals=[0.99], min_vals=[0.5]) 
+>>> tuner = pg.ParameterTuner(lambda params: pg.PageRank(alpha=params[0]), measure=AUC, deviation_tol=0.01, max_vals=[0.99], min_vals=[0.5]) 
 >>> ranks = algorithm.rank(graph, personalization) 
 ```
 

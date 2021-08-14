@@ -100,7 +100,7 @@ def load_datasets(datasets=datasets, path='data'):
             download_dataset(dataset, path=path)
             max_group_number = 1 + max(group_id for dat, group_id in datasets if dat == dataset)
             graph, groups = import_snap_format_dataset(dataset,
-                                                       path = path,
+                                                       path=path,
                                                        max_group_number=max_group_number)
             last_loaded_dataset = dataset
         group = set(groups[group_id])

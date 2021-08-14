@@ -196,6 +196,8 @@ def generate_metric_docs():
     abstract[pygrank.measures.Unsupervised] = True
     base_descriptions[pygrank.measures.Measure] = base_description(pygrank.measures.Measure, True)
     abstract[pygrank.measures.Measure] = True
+    base_descriptions[pygrank.measures.MeasureCombination] = base_description(pygrank.measures.MeasureCombination, True)
+    abstract[pygrank.measures.MeasureCombination] = True
 
     count = 0
     for abstr in base_descriptions:
