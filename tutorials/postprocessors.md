@@ -4,16 +4,16 @@
 The following postprocessors can be imported from the package `pygrank.algorithms.postprocess`.
 Constructor details are provided, including arguments inherited from and passed to parent classes.
 All of them can be used through the code patterns presented at the library's [documentation](documentation.md).  
-1. [AdHocFairness](#kbdpostprocessorkbd-adhocfairness)
-2. [BoostedSeedOversampling](#kbdpostprocessorkbd-boostedseedoversampling)
-3. [FairPersonalizer](#kbdpostprocessorkbd-fairpersonalizer)
-4. [Normalize](#kbdpostprocessorkbd-normalize)
-5. [Ordinals](#kbdpostprocessorkbd-ordinals)
-6. [SeedOversampling](#kbdpostprocessorkbd-seedoversampling)
-7. [Sweep](#kbdpostprocessorkbd-sweep)
-8. [Tautology](#kbdpostprocessorkbd-tautology)
-9. [Threshold](#kbdpostprocessorkbd-threshold)
-10. [Transformer](#kbdpostprocessorkbd-transformer)
+1. [AdHocFairness](#postprocessorkbd-adhocfairness)
+2. [BoostedSeedOversampling](#postprocessorkbd-boostedseedoversampling)
+3. [FairPersonalizer](#postprocessorkbd-fairpersonalizer)
+4. [Normalize](#postprocessorkbd-normalize)
+5. [Ordinals](#postprocessorkbd-ordinals)
+6. [SeedOversampling](#postprocessorkbd-seedoversampling)
+7. [Sweep](#postprocessorkbd-sweep)
+8. [Tautology](#postprocessorkbd-tautology)
+9. [Threshold](#postprocessorkbd-threshold)
+10. [Transformer](#postprocessorkbd-transformer)
 
 ### <kbd>Postprocessor</kbd> AdHocFairness
 

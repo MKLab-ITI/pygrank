@@ -4,21 +4,21 @@
 The following measures can be imported from the package `pygrank.measures`.
 Constructor details are provided, including arguments inherited from and passed to parent classes.
 All of them can be used through the code patterns presented at the library's [documentation](documentation.md).  
-1. [AM](#kbdmeasurecombinationkbd-am)
-2. [GM](#kbdmeasurecombinationkbd-gm)
-3. [AUC](#kbdsupervisedkbd-auc)
-4. [Accuracy](#kbdsupervisedkbd-accuracy)
-5. [CrossEntropy](#kbdsupervisedkbd-crossentropy)
-6. [KLDivergence](#kbdsupervisedkbd-kldivergence)
-7. [Mabs](#kbdsupervisedkbd-mabs)
-8. [MaxDifference](#kbdsupervisedkbd-maxdifference)
-9. [NDCG](#kbdsupervisedkbd-ndcg)
-10. [PearsonCorrelation](#kbdsupervisedkbd-pearsoncorrelation)
-11. [SpearmanCorrelation](#kbdsupervisedkbd-spearmancorrelation)
-12. [pRule](#kbdsupervisedkbd-prule)
-13. [Conductance](#kbdunsupervisedkbd-conductance)
-14. [Density](#kbdunsupervisedkbd-density)
-15. [Modularity](#kbdunsupervisedkbd-modularity)
+1. [AM](#measurecombinationkbd-am)
+2. [GM](#measurecombinationkbd-gm)
+3. [AUC](#supervisedkbd-auc)
+4. [Accuracy](#supervisedkbd-accuracy)
+5. [CrossEntropy](#supervisedkbd-crossentropy)
+6. [KLDivergence](#supervisedkbd-kldivergence)
+7. [Mabs](#supervisedkbd-mabs)
+8. [MaxDifference](#supervisedkbd-maxdifference)
+9. [NDCG](#supervisedkbd-ndcg)
+10. [PearsonCorrelation](#supervisedkbd-pearsoncorrelation)
+11. [SpearmanCorrelation](#supervisedkbd-spearmancorrelation)
+12. [pRule](#supervisedkbd-prule)
+13. [Conductance](#unsupervisedkbd-conductance)
+14. [Density](#unsupervisedkbd-density)
+15. [Modularity](#unsupervisedkbd-modularity)
 
 ### <kbd>MeasureCombination</kbd> AM
 

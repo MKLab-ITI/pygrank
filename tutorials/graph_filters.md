@@ -4,10 +4,10 @@
 The following filters can be imported from the package `pygrank.algorithms`.
 Constructor details are provided, including arguments inherited from and passed to parent classes.
 All of them can be used through the code patterns presented at the library's [documentation](documentation.md). 
-1. [GenericGraphFilter](#kbdclosedformgraphfilterkbd-genericgraphfilter)
-2. [HeatKernel](#kbdclosedformgraphfilterkbd-heatkernel)
-3. [AbsorbingWalks](#kbdrecursivegraphfilterkbd-absorbingwalks)
-4. [PageRank](#kbdrecursivegraphfilterkbd-pagerank)
+1. [GenericGraphFilter](#closedformgraphfilterkbd-genericgraphfilter)
+2. [HeatKernel](#closedformgraphfilterkbd-heatkernel)
+3. [AbsorbingWalks](#recursivegraphfilterkbd-absorbingwalks)
+4. [PageRank](#recursivegraphfilterkbd-pagerank)
 
 ### <kbd>ClosedFormGraphFilter</kbd> GenericGraphFilter
 

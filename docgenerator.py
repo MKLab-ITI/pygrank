@@ -127,7 +127,7 @@ def generate_filter_docs():
             for obj in base_descriptions:
                 if not abstract[obj] and abstr == list(inspect.getmro(obj))[1]:
                     count += 1
-                    text += str(count)+". ["+obj.__name__+"](#"+"kbd"+[cls.__name__ for cls in inspect.getmro(obj)][1].lower()+"kbd-"+obj.__name__.lower()+")\n"
+                    text += str(count)+". ["+obj.__name__+"](#"+""+[cls.__name__ for cls in inspect.getmro(obj)][1].lower()+"kbd-"+obj.__name__.lower()+")\n"
 
     for abstr in base_descriptions:
         if abstract[abstr]:
@@ -162,7 +162,7 @@ def generate_postprocessor_docs():
     for obj in base_descriptions:
         if not abstract[obj]:
             count += 1
-            text += str(count)+". ["+obj.__name__+"](#"+"kbd"+[cls.__name__ for cls in inspect.getmro(obj)][1].lower()+"kbd-"+obj.__name__.lower()+")\n"
+            text += str(count)+". ["+obj.__name__+"](#"+""+[cls.__name__ for cls in inspect.getmro(obj)][1].lower()+"kbd-"+obj.__name__.lower()+")\n"
 
     for abstr in base_descriptions:
         if abstract[abstr]:
@@ -205,7 +205,7 @@ def generate_metric_docs():
             for obj in base_descriptions:
                 if not abstract[obj] and abstr == list(inspect.getmro(obj))[1]:
                     count += 1
-                    text += str(count)+". ["+obj.__name__+"](#"+"kbd"+[cls.__name__ for cls in inspect.getmro(obj)][1].lower()+"kbd-"+obj.__name__.lower()+")\n"
+                    text += str(count)+". ["+obj.__name__+"](#"+""+[cls.__name__ for cls in inspect.getmro(obj)][1].lower()+"kbd-"+obj.__name__.lower()+")\n"
 
     for abstr in base_descriptions:
         if abstract[abstr]:
@@ -242,7 +242,7 @@ def generate_tuning_docs():
             for obj in base_descriptions:
                 if not abstract[obj] and abstr == list(inspect.getmro(obj))[1]:
                     count += 1
-                    text += str(count)+". ["+obj.__name__+"](#"+"kbd"+[cls.__name__ for cls in inspect.getmro(obj)][1].lower()+"kbd-"+obj.__name__.lower()+")\n"
+                    text += str(count)+". ["+obj.__name__+"](#"+""+[cls.__name__ for cls in inspect.getmro(obj)][1].lower()+"kbd-"+obj.__name__.lower()+")\n"
 
     for abstr in base_descriptions:
         if abstract[abstr]:
