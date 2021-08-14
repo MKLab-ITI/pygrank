@@ -1,7 +1,7 @@
 import pygrank as pg
 
 
-datasets = ["EUCore", "DBLP"]
+datasets = ["EUCore", "ant"]
 pre = pg.preprocessor(assume_immutability=True, normalization="symmetric")
 algorithms = {
     "ppr0.85": pg.PageRank(alpha=0.85, to_scipy=pre, max_iters=1000000, tol=1.E-9),
@@ -11,8 +11,8 @@ algorithms = {
     "tuned": pg.ParameterTuner(to_scipy=pre, max_iters=1000000, tol=1.E-9),
 }
 #algorithms = benchmark.create_variations(algorithms, {"": pg.Tautology, "+SO": pg.SeedOversampling})
-#loader = pg.dataset_loader(datasets)
+#loader = pg.load_datasets(datasets)
 #pg.supervised_benchmark(algorithms, loader, "time", verbose=True)
 
-loader = pg.dataset_loader(datasets)
-pg.supervised_benchmark(algorithms, loader, pg.AUC, verbose=True)
+loader = pg.load_datasets(datasets)
+pg.benchmark_print(pg.supervised_benchmark(algorithms, loader, pg.AUC))

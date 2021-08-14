@@ -5,6 +5,7 @@ from tests.example_graph import test_graph, test_block_model_graph
 
 
 class Test(unittest.TestCase):
+
     def test_autotune(self):
         from pygrank import PageRank, ParameterTuner, AUC, split, to_signal
         G, groups = test_block_model_graph()
@@ -23,6 +24,17 @@ class Test(unittest.TestCase):
         alg2 = ParameterTuner(lambda params: PageRank(params[0]), max_vals=[0.99], min_vals=[0.5]).tune(training)
         auc2 = AUC(evaluation, exclude=training)(alg2.rank(training))
         self.assertLessEqual(auc1, auc2, "Autotune should find good parameters")
+
+    def test_autotune_methods(self):
+        from pygrank import AlgorithmSelection, AUC, split, to_signal, create_demo_filters
+        G, groups = test_block_model_graph()
+        group = groups[0]
+        training, evaluation = split(to_signal(G, {v: 1 for v in group}), training_samples=0.5)
+
+        auc1 = max(AUC(evaluation, exclude=training)(ranker.rank(training)) for ranker in create_demo_filters().values())
+        auc2 = AUC(evaluation, exclude=training)(AlgorithmSelection().rank(training))
+        self.assertLessEqual(auc1, auc2, "Autotune should find best method")
+
 
     def test_tautology(self):
         from pygrank import PageRank, Tautology, sum
@@ -136,14 +148,12 @@ class Test(unittest.TestCase):
         training, evaluation = split(list(group), training_samples=0.5)
         auc1 = AUC({v: 1 for v in evaluation}, exclude=training).evaluate(Sweep(PageRank()).rank(G, {v: 1 for v in training}))
         auc2 = AUC({v: 1 for v in evaluation}, exclude=training).evaluate(PageRank().rank(G, {v: 1 for v in training}))
-        self.assertLess(auc2+0.22, auc1, "The Sweep procedure should significantly improve AUC")
+        self.assertLess(auc2+0.2, auc1, "The Sweep procedure should significantly improve AUC")
 
     def test_threshold(self):
         from pygrank import PageRank, Threshold, Sweep, Conductance, split
-        import random
-        G, groups = test_block_model_graph(nodes=600, seed=1)
+        G, groups = test_block_model_graph(nodes=600, seed=2)
         group = groups[0]
-        random.seed(1)
         training, evaluation = split(list(group), training_samples=0.5)
         cond1 = Conductance().evaluate(Threshold(Sweep(PageRank())).rank(G, {v: 1 for v in training}))
         cond2 = Conductance().evaluate(Threshold("gap").transform(PageRank().rank(G, {v: 1 for v in training}))) # try both versions

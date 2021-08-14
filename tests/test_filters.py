@@ -51,7 +51,7 @@ class Test(unittest.TestCase):
         self.assertAlmostEqual(abs_diffs, 0, places=16, msg="PageRank compliance with nx results")
 
     def test_abstract_filter(self):
-        from pygrank.algorithms.filters.abstract_filters import GraphFilter, RecursiveGraphFilter, ClosedFormGraphFilter
+        from pygrank import GraphFilter, RecursiveGraphFilter, ClosedFormGraphFilter, Tuner
         G = test_graph()
         with self.assertRaises(Exception):
             GraphFilter().rank(G, {})
@@ -61,6 +61,8 @@ class Test(unittest.TestCase):
             RecursiveGraphFilter().rank(G)
         with self.assertRaises(Exception):
             ClosedFormGraphFilter().rank(G)
+        with self.assertRaises(Exception):
+            Tuner().rank(G)
 
     def test_prevent_passing_node_lists_as_graphs(self):
         from pygrank import PageRank
@@ -236,7 +238,7 @@ class Test(unittest.TestCase):
     def test_chebyshev(self):
         from pygrank import optimize, GenericGraphFilter, HeatKernel, to_signal, preprocessor, split, AUC, Normalize
         import random
-        G, groups = test_block_model_graph(nodes=600, seed=1)
+        G, groups = test_block_model_graph(nodes=600)
         group = groups[0]
         random.seed(1)
         used_for_training, evaluation = split(to_signal(G, {v: 1 for v in group}), training_samples=0.5)

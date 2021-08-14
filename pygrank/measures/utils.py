@@ -20,17 +20,17 @@ def to_nodes(groups):
     return list(set(all_nodes))
 
 
-def split(groups, training_samples=0.8):
+def split(groups, training_samples: float = 0.8, seed: int = 0):
     if training_samples == 1:
         return groups, groups
     if isinstance(groups, GraphSignal):
-        group = list(groups)
-        random.shuffle(group)
+        group = [v for v in groups if groups[v] != 0]
+        random.Random(seed).shuffle(group)
         splt = training_samples if training_samples > 1 else int(len(group) * training_samples)
         return to_signal(groups, {v: groups[v] for v in group[:splt]}), to_signal(groups, {v: groups[v] for v in group[splt:]})
     if not isinstance(groups, collections.abc.Mapping):
         group = list(groups)
-        random.shuffle(group)
+        random.Random(seed).shuffle(group)
         splt = training_samples if training_samples > 1 else int(len(group) * training_samples)
         return group[:splt], group[splt:]
     clusters = {}
@@ -40,7 +40,7 @@ def split(groups, training_samples=0.8):
         if splt < 1:
             splt = 1
         # group = list(group) # not really needed if data are already imported as lists
-        random.shuffle(group)
+        random.Random(seed).shuffle(group)
         training[group_id] = group[:splt]
         clusters[group_id] = group[splt:]
     return training, clusters

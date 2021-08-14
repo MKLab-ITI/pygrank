@@ -88,18 +88,22 @@ class Density(Unsupervised):
 
 
 class Modularity(Unsupervised):
-    def __init__(self, graph, max_rank=1, max_positive_samples=2000):
+    def __init__(self, graph=None, max_rank=1, max_positive_samples=2000, seed=0):
         self.graph = graph
         self.max_positive_samples = max_positive_samples
         self.max_rank = max_rank
+        self.seed = seed
 
     def evaluate(self, ranks):
         ranks = to_signal(self.graph, ranks)
         graph = ranks.graph
         positive_candidates = list(graph)
         if len(positive_candidates) > self.max_positive_samples:
+            np.random.seed(self.seed)
             positive_candidates = np.random.choice(positive_candidates, self.max_positive_samples)
         m = graph.number_of_edges()
+        if m == 0:
+            return 0
         Q = 0
         for v in positive_candidates:
             for u in positive_candidates:

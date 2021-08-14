@@ -26,13 +26,13 @@ def test_graph(directed=False):
     return G
 
 
-def test_block_model_graph(nodes=600, seed=1):
-    random.seed(seed)
+def test_block_model_graph(nodes=600, seed=0):
+    rnd = random.Random(seed)
     G = nx.DiGraph()
     groups = [list(range(300)), list(range(300, nodes))]
     for i in range(nodes):
         for j in range(nodes):
             prob = 0.1 if (i<300)==(j<300) else 0.05
-            if random.uniform(0, 1) < prob:
+            if rnd.uniform(0, 1) < prob:
                 G.add_edge(i, j)
     return G, groups

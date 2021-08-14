@@ -1,6 +1,7 @@
 import numpy as np
 import sklearn.metrics
-from .utils import Measure
+import scipy
+from pygrank.measures.utils import Measure
 from pygrank import backend
 from pygrank.core.signals import GraphSignal, to_signal
 
@@ -105,6 +106,8 @@ class AUC(Supervised):
 
     def evaluate(self, ranks):
         known_ranks, ranks = self.to_numpy(ranks)
+        if backend.min(known_ranks) == backend.max(known_ranks):
+            raise Exception("Cannot evaluate AUC when all labels are the same")
         fpr, tpr, _ = sklearn.metrics.roc_curve(known_ranks, ranks)
         return sklearn.metrics.auc(fpr, tpr)
 
@@ -113,6 +116,18 @@ class Accuracy(Supervised):
     def evaluate(self, ranks):
         known_ranks, ranks = self.to_numpy(ranks)
         return 1-backend.sum(backend.abs(known_ranks - ranks)) / backend.length(ranks)
+
+
+class SpearmanCorrelation(Supervised):
+    def evaluate(self, ranks):
+        known_ranks, ranks = self.to_numpy(ranks)
+        return scipy.stats.spearmanr(known_ranks, ranks)[0]
+
+
+class PearsonCorrelation(Supervised):
+    def evaluate(self, ranks):
+        known_ranks, ranks = self.to_numpy(ranks)
+        return scipy.stats.pearsonr(known_ranks, ranks)[0]
 
 
 class pRule(Supervised):

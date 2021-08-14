@@ -19,7 +19,15 @@ default_tuning_optimization = {
 
 
 class Tuner(NodeRanking):
-    pass
+    def tune(self, graph=None, personalization=None, *args, **kwargs):
+        return self._tune(graph, personalization, *args, **kwargs)[0]
+
+    def rank(self, graph=None, personalization=None, *args, **kwargs):
+        ranker, personalization = self._tune(graph, personalization, *args, **kwargs)
+        return ranker.rank(graph, personalization, *args, **kwargs)
+
+    def _tune(self, graph, personalization, *args, **kwargs):
+        raise Exception("Tuners should implement a _tune method")
 
 
 class ParameterTuner(Tuner):
@@ -43,23 +51,24 @@ class ParameterTuner(Tuner):
             measure: Callable to constuct a supervised measure with given known node scores and an iterable of excluded scores.
             fraction_of_training: A number in (0,1) indicating how to split provided graph signals into training and
                 validaton ones by randomly sampling training nodes to meet the required fraction of all graph nodes. Default is 0.5.
-            combined_prediction: If True (default), after the best version of algorithms is determined, the whole personalization is used
-                to produce the end-result. Otherwise, only the training portion of the training-validation split is used.
+            combined_prediction: If True (default), after the best version of algorithms is determined, the whole
+                personalization is used to produce the end-result. Otherwise, only the training portion of the
+                training-validation split is used.
             kwargs: Additional arguments can be passed to pygrank.algorithms.autotune.optimization.optimize. Otherwise,
                 the respective arguments are retrieved from the variable *default_tuning_optimization*, which is crafted
                 for fast convergence of the default ranker_generator.
                 Make sure to declare both the upper **and** the lower bounds of parameter values.
 
         Example:
-            >>> from pygrank.algorithms.autotune import ParameterTuner
+            >>> import pygrank as pg
             >>> graph, personalization = ...
-            >>> tuner = ParameterTuner(measure=AUC, deviation_tol=0.01)
+            >>> tuner = pg.ParameterTuner(measure=AUC, deviation_tol=0.01)
             >>> ranks = tuner.rank(graph, personalization)
 
         Example to tune pagerank's float parameter alpha in the range [0.5, 0.99]:
-            >>> from pygrank import PageRank, ParameterTuner
+            >>> import pygrank as pg
             >>> graph, personalization = ...
-            >>> tuner = ParameterTuner(lambda params: PageRank(alpha=params[0]), measure=AUC, deviation_tol=0.01, max_vals=[0.99], min_vals=[0.5])
+            >>> tuner = pg.ParameterTuner(lambda params: pg.PageRank(alpha=params[0]), measure=AUC, deviation_tol=0.01, max_vals=[0.99], min_vals=[0.5])
             >>> ranks = algorithm.rank(graph, personalization)
         """
         if ranker_generator is None:
@@ -81,16 +90,54 @@ class ParameterTuner(Tuner):
     def _tune(self, graph=None, personalization=None, *args, **kwargs):
         personalization = to_signal(graph, personalization)
         training, validation = split(personalization, self.fraction_of_training)
+        measure = self.measure(validation, training)
         params = optimize(
-            lambda params: -self.measure(validation, training).evaluate(self._run(training, params, *args, **kwargs)),
+            lambda params: -measure.evaluate(self._run(training, params, *args, **kwargs)),
             **self.optimize_args)
-        return self.ranker_generator(params), training
-
-    def tune(self, graph=None, personalization=None, *args, **kwargs):
-        return self._tune(graph, personalization, *args, **kwargs)[0]
-
-    def rank(self, graph=None, personalization=None, *args, **kwargs):
-        ranker, training = self._tune(graph, personalization, *args, **kwargs)
-        return ranker.rank(graph, personalization if self.combined_prediction else training, *args, **kwargs)
+        return self.ranker_generator(params), personalization if self.combined_prediction else training
 
 
+class AlgorithmSelection(Tuner):
+    def __init__(self, rankers: list = None,
+                 measure: Callable[[GraphSignal, GraphSignal], Supervised] = AUC,
+                 fraction_of_training: float = 0.5,
+                 combined_prediction: bool = True):
+        """
+        Instantiates the tuning mechanism.
+        Args:
+            rankers: A list of node ranking algorithms to chose from. Try to make them share a preprocessor
+                for more efficient computations. If None (default), the filters obtained from
+                pygrank.benchmark.create_demo_filters().values() are used instead.
+            measure: Callable to constuct a supervised measure with given known node scores and an iterable of excluded scores.
+            fraction_of_training: A number in (0,1) indicating how to split provided graph signals into training and
+                validaton ones by randomly sampling training nodes to meet the required fraction of all graph nodes. Default is 0.5.
+            combined_prediction: If True (default), after the best version of algorithms is determined, the whole
+                personalization is used to produce the end-result. Otherwise, only the training portion of the
+                training-validation split is used.
+
+        Example:
+            >>> import pygrank as pg
+            >>> graph, personalization = ...
+            >>> tuner = pg.AlgorithmSelection(pg.create_demo_filters().values(), measure=AUC, deviation_tol=0.01)
+            >>> ranks = tuner.rank(graph, personalization)
+        """
+        if rankers is None:
+            from pygrank.benchmark import create_demo_filters
+            rankers = create_demo_filters().values()
+        self.rankers = rankers
+        self.measure = measure
+        self.fraction_of_training = fraction_of_training
+        self.combined_prediction = combined_prediction
+
+    def _tune(self, graph=None, personalization=None, *args, **kwargs):
+        personalization = to_signal(graph, personalization)
+        training, validation = split(personalization, self.fraction_of_training)
+        best_value = float('inf')
+        best_ranker = None
+        measure = self.measure(validation, training)
+        for ranker in self.rankers:
+            value = -measure.evaluate(ranker.rank(personalization, *args, **kwargs))
+            if value < best_value:
+                best_value = value
+                best_ranker = ranker
+        return best_ranker, personalization if self.combined_prediction else training

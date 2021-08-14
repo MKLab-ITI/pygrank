@@ -6,20 +6,23 @@ import shutil
 import sys
 
 datasets = {
-    "dblp": {"url": "https://snap.stanford.edu/data/com-DBLP.html",
-             "pairs": "https://snap.stanford.edu/data/bigdata/communities/com-dblp.ungraph.txt.gz",
-             "groups": "https://snap.stanford.edu/data/bigdata/communities/com-dblp.all.cmty.txt.gz"},
+    #"dblp": {"url": "https://snap.stanford.edu/data/com-DBLP.html",
+    #         "pairs": "https://snap.stanford.edu/data/bigdata/communities/com-dblp.ungraph.txt.gz",
+    #         "groups": "https://snap.stanford.edu/data/bigdata/communities/com-dblp.all.cmty.txt.gz"},
     "eucore": {"url": "https://snap.stanford.edu/data/email-Eu-core.html",
                "pairs": "https://snap.stanford.edu/data/email-Eu-core.txt.gz",
                "labels": "https://snap.stanford.edu/data/email-Eu-core-department-labels.txt.gz"}
 }
 
 
-def download_dataset(dataset):
-    source = datasets[dataset.lower()]
-    if not os.path.isdir("data"):
-        os.mkdir("data")
-    download_path = "data/"+dataset
+def download_dataset(dataset, path="data"):   # pragma: no cover
+    dataset = dataset.lower()
+    if dataset not in datasets:
+        return
+    source = datasets[dataset]
+    if not os.path.isdir(path):
+        os.mkdir(path)
+    download_path = path+"/"+dataset
     if not os.path.isdir(download_path):
         os.mkdir(download_path)
         pairs_path = download_path+"/pairs."+source["pairs"].split(".")[-1]
@@ -61,7 +64,7 @@ def download_dataset(dataset):
 
 
 def import_snap_format_dataset(dataset : str,
-                               path : str = 'data/',
+                               path : str = 'data',
                                pair_file: str = 'pairs.txt',
                                group_file: str = 'groups.txt',
                                directed: bool = False,
@@ -69,14 +72,14 @@ def import_snap_format_dataset(dataset : str,
                                max_group_number: int = 20):
     G = nx.DiGraph() if directed else nx.Graph()
     groups = {}
-    with open(path+dataset+'/'+pair_file, 'r', encoding='utf-8') as file:
+    with open(path+'/'+dataset+'/'+pair_file, 'r', encoding='utf-8') as file:
         for line in file:
             if len(line) != 0 and line[0] != '#':
                 splt = line[:-1].split()
                 if len(splt) != 0:
                     G.add_edge(splt[0], splt[1])
     if group_file is not None:
-        with open(path+dataset+'/'+group_file, 'r', encoding='utf-8') as file:
+        with open(path+'/'+dataset+'/'+group_file, 'r', encoding='utf-8') as file:
             for line in file:
                 if line[0] != '#':
                     group = [item for item in line[:-1].split() if len(item) > 0 and item in G]
@@ -87,13 +90,18 @@ def import_snap_format_dataset(dataset : str,
     return G, groups
 
 
-def dataset_loader(datasets=datasets):
+def load_datasets(datasets=datasets, path='data'):
+    if not os.path.isdir(path):   # pragma: no cover
+        path = "../"+path
     datasets = [(dataset, 0) if len(dataset) != 2 else dataset for dataset in datasets]
     last_loaded_dataset = None
     for dataset, group_id in datasets:
         if last_loaded_dataset != dataset:
-            download_dataset(dataset)
-            graph, groups = import_snap_format_dataset(dataset, max_group_number=1 + max(group_id for dat, group_id in datasets if dat == dataset))
+            download_dataset(dataset, path=path)
+            max_group_number = 1 + max(group_id for dat, group_id in datasets if dat == dataset)
+            graph, groups = import_snap_format_dataset(dataset,
+                                                       path = path,
+                                                       max_group_number=max_group_number)
             last_loaded_dataset = dataset
         group = set(groups[group_id])
         yield dataset, graph, group
