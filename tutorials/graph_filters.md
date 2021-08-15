@@ -85,7 +85,7 @@ Args:
 Example:
 
 ```python 
->>> from pygrank.algorithms import PageRank 
->>> algorithm = PageRank(alpha=0.99, tol=1.E-9) # tol passed to the ConvergenceManager 
+>>> import pygrank as pg 
+>>> algorithm = pg.PageRank(alpha=0.99, tol=1.E-9) # tol passed to the ConvergenceManager 
 ```
 
