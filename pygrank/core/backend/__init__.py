@@ -9,14 +9,20 @@ def load_backend(mod_name):
     if mod_name not in ['pytorch', 'numpy', 'tensorflow']:
         raise Exception("Unsupported backend "+mod_name)
     mod = importlib.import_module('.%s' % mod_name, __name__)
-    thismod = sys.modules[__name__]
-    for api in specification.__dict__.keys():
-        if api.startswith('__'):
-            continue
-        if api in mod.__dict__:
-            setattr(thismod, api, mod.__dict__[api])
-        else: # pragma: no cover
-            raise Exception("Missing implementation for "+str(api))
+    mod_name = ""
+    for mod_name_part in __name__.split("."):
+        if mod_name:
+            mod_name += "."
+        mod_name += mod_name_part
+        if mod_name in sys.modules:
+            thismod = sys.modules[mod_name]
+            for api in specification.__dict__.keys():
+                if api.startswith('__'):
+                    continue
+                if api in mod.__dict__:
+                    setattr(thismod, api, mod.__dict__[api])
+                else: # pragma: no cover
+                    raise Exception("Missing implementation for "+str(api))
 
 
 def get_backend_preference(): # pragma: no cover

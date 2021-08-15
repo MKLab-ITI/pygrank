@@ -79,7 +79,7 @@ class Test(unittest.TestCase):
         modularity_scores = pg.benchmark_scores(pg.supervised_benchmark(algorithms, pg.load_datasets(["ant"]),
                                                                          lambda _, __: pg.Modularity(max_positive_samples=100)))
         self.assertLess(pg.PearsonCorrelation(auc_scores)(conductance_scores), -0.6)
-        self.assertLess(pg.SpearmanCorrelation(auc_scores)(density_scores), 0)
+        self.assertLess(pg.SpearmanCorrelation(auc_scores)(density_scores), 0.3)
         pg.SpearmanCorrelation(auc_scores)(modularity_scores)
 
     def test_aggregated(self):

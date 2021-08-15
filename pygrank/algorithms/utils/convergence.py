@@ -93,8 +93,6 @@ class RankOrderConvergenceManager:
         self.pagerank_alpha = pagerank_alpha
         self.confidence = confidence
         self.criterion = criterion
-        if self.pagerank_alpha > 1 or self.pagerank_alpha < 0:
-            raise Exception("pagerank_alpha must be in the range [0,1] for RankOrderConvergenceManager")
 
     def start(self, restart_timer=True):
         if restart_timer or self._start_time is None:
@@ -105,8 +103,6 @@ class RankOrderConvergenceManager:
             self.accumulated_ranks = 0
 
     def has_converged(self, new_ranks):
-        if self._start_time is None:
-            raise Exception("Need to start() the convergence manager")
         new_ranks = np.array(new_ranks)
         self.accumulated_ranks = (self.accumulated_ranks*self.iteration + new_ranks) / (self.iteration+1)
         #self.accumulated_rank_squares += (self.accumulated_rank_squares*self.iteration + new_ranks * new_ranks) / (self.iteration+1)
@@ -128,7 +124,6 @@ class RankOrderConvergenceManager:
             return self.confidence
         else:
             raise Exception("criterion can only be 'rank_gap' or 'fraction_of_walks'")
-        return self.fraction_of_random_walks
 
     def current_fraction_of_random_walks(self):
         sup_of_series_sum = -np.log(1 - self.pagerank_alpha)

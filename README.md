@@ -7,7 +7,7 @@ Fast recommendation algorithms for large graphs based on link analysis.
 **License:** Apache Software License
 <br>**Author:** Emmanouil (Manios) Krasanakis
 <br>**Dependencies:** `networkx, numpy, scipy, sklearn, dload` (required) `tensorflow` (optional)
-<br>**Coverage:** 88% (measured with *codecov*)
+<br>**Coverage:** 92% (measured with *codecov*)
 
 # :hammer_and_wrench: Installation
 `pygrank` is meant to work with Python 3.6 or later. It can be installed with pip per:

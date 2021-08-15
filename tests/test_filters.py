@@ -1,43 +1,37 @@
 import unittest
 import networkx as nx
 from tests.example_graph import test_graph, test_block_model_graph
+import pygrank as pg
 
 
 class Test(unittest.TestCase):
 
     def test_backend_conversion(self):
-        from pygrank import backend
-        self.assertEqual(backend.sum(backend.to_array([1, 2, 3])), 6)
-        self.assertEqual(backend.sum(backend.dot(backend.exp(backend.log(backend.to_array([4, 5]))), backend.to_array([2, 2]))), 18)
-        primitive = backend.to_array([1, 2, 3])
-        self.assertTrue(id(primitive) == id(backend.to_array(primitive, copy_array=False)))
-        self.assertFalse(id(primitive) == id(backend.to_array(primitive, copy_array=True)))
+        self.assertEqual(pg.sum(pg.to_array([1, 2, 3])), 6)
+        self.assertEqual(pg.sum(pg.dot(pg.exp(pg.log(pg.to_array([4, 5]))), pg.to_array([2, 2]))), 18)
+        primitive = pg.to_array([1, 2, 3])
+        self.assertTrue(id(primitive) == id(pg.to_array(primitive, copy_array=False)))
+        self.assertFalse(id(primitive) == id(pg.to_array(primitive, copy_array=True)))
 
     def test_callers(self):
-        from pygrank import call, remove_used_args
-
         def test_func(x, y=0):
             return x+y
 
-        self.assertEqual(call(test_func, {"x":1, "y": 2, "z": 3}), 3)
-        self.assertEqual(call(test_func, {"y": 2, "z": 3}, [1]), 3)
-        self.assertEqual(len(remove_used_args(test_func, {"y": 2, "z": 3}, [1])), 1)
+        self.assertEqual(pg.call(test_func, {"x":1, "y": 2, "z": 3}), 3)
+        self.assertEqual(pg.call(test_func, {"y": 2, "z": 3}, [1]), 3)
+        self.assertEqual(len(pg.remove_used_args(test_func, {"y": 2, "z": 3}, [1])), 1)
         with self.assertRaises(Exception):
-            call(test_func, {"y": 2, "z": 3}, [1, 2])
+            pg.call(test_func, {"y": 2, "z": 3}, [1, 2])
+        with self.assertRaises(Exception):
+            pg.PageRank(krylov_dims=5)
 
     def test_signal(self):
-        from pygrank import GraphSignal
         with self.assertRaises(Exception):
-            GraphSignal([1, 2, 3], [1, 2])
-        signal = GraphSignal(test_graph(), {"A": 1, "B": 2})
+            pg.GraphSignal([1, 2, 3], [1, 2])
+        signal = pg.GraphSignal(test_graph(), {"A": 1, "B": 2})
         del signal["A"]
         self.assertEqual(signal["A"], 0)
         self.assertEqual(signal["B"], 2)
-
-    def test_unused_arguments(self):
-        from pygrank import PageRank
-        with self.assertRaises(Exception):
-            PageRank(krylov_dims=5)
 
     def test_node_ranking(self):
         from pygrank import NodeRanking, PageRank
@@ -75,9 +69,8 @@ class Test(unittest.TestCase):
             PageRank(max_iters=5).rank(test_graph())
 
     def test_custom_runs(self):
-        from pygrank import PageRank, GenericGraphFilter, Mabs, Normalize
         G = test_graph()
-        algorithmn = PageRank(0.85, max_iters=5, error_type="iters")
+        algorithmn = pg.PageRank(0.85, max_iters=5, error_type="iters")
         ranks1 = algorithmn.rank(G, {"A": 1})
         self.assertTrue("6" in str(algorithmn.convergence))
         # TODO find why the following is not exactly the same
@@ -87,25 +80,22 @@ class Test(unittest.TestCase):
         """
 
     def test_completion(self):
-        from pygrank import PageRank, HeatKernel, AbsorbingWalks
         G = test_graph()
-        PageRank().rank(G)
-        HeatKernel().rank(G)
-        AbsorbingWalks().rank(G)
+        pg.PageRank().rank(G)
+        pg.HeatKernel().rank(G)
+        pg.AbsorbingWalks().rank(G)
 
     def test_pagerank(self):
-        from pygrank import PageRank
         G = test_graph()
-        test_result = PageRank(normalization='col', tol=1.E-9).rank(G)
+        test_result = pg.PageRank(normalization='col', tol=1.E-9).rank(G)
         nx_result = nx.pagerank(G, tol=1.E-9)
         abs_diffs = sum(abs(test_result[v] - nx_result[v]) for v in nx_result.keys()) / len(nx_result)
         self.assertAlmostEqual(abs_diffs, 0, places=12, msg="PageRank compliance with nx results")
 
     def test_quotient(self):
-        from pygrank import PageRank, Normalize
         G = test_graph()
-        test_result = PageRank(normalization='symmetric', tol=1.E-9, use_quotient=True).rank(G)
-        norm_result = PageRank(normalization='symmetric', tol=1.E-9, use_quotient=Normalize("sum")).rank(G)
+        test_result = pg.PageRank(normalization='symmetric', tol=1.E-9, use_quotient=True).rank(G)
+        norm_result = pg.PageRank(normalization='symmetric', tol=1.E-9, use_quotient=pg.Normalize("sum")).rank(G)
         abs_diffs = sum(abs(test_result[v] - norm_result[v]) for v in norm_result.keys()) / len(norm_result)
         self.assertAlmostEqual(abs_diffs, 0, places=12, msg="Using quotient yields the same result")
 
@@ -190,18 +180,15 @@ class Test(unittest.TestCase):
                         msg="BiasedRank should be more local than PageRank")
 
     def test_venuerank(self):
-        from pygrank.algorithms import PageRank
-        from pygrank.algorithms import Ordinals
-        from scipy.stats import spearmanr
         G = nx.fast_gnp_random_graph(600, 0.001, seed=1)
-        ranker1 = PageRank(max_iters=10000, converge_to_eigenvectors=True, tol=1.E-12)
+        ranker1 = pg.PageRank(max_iters=10000, converge_to_eigenvectors=True, tol=1.E-12)
         ranks1 = ranker1.rank(G, personalization={0: 1, 1: 1})
-        ranker2 = PageRank(alpha=0.99, max_iters=10000, tol=1.E-12)
+        ranker2 = pg.PageRank(alpha=0.99, max_iters=10000, tol=1.E-12)
         ranks2 = ranker2.rank(G, personalization={0: 1, 1: 1})
         self.assertLess(ranker1.convergence.iteration, ranker2.convergence.iteration / 10,
                         msg="converge_to_eigenvectors should be much faster in difficult-to-rank graphs")
-        corr = spearmanr(list(Ordinals().transform(ranks1).values()), list(Ordinals().transform(ranks2).values()))
-        self.assertAlmostEqual(corr[0], 1., 4,
+        corr = pg.SpearmanCorrelation(pg.Ordinals().transform(ranks1))(pg.Ordinals().transform(ranks2))
+        self.assertAlmostEqual(corr, 1., 4,
                                msg="converge_to_eigenvectors should yield similar order to small restart probability")
 
     def test_learnable(self):
@@ -297,17 +284,33 @@ class Test(unittest.TestCase):
                         msg="When immutability is assumed but data cleared, different objects are returned")
 
     def test_backend(self):
-        from pygrank import backend
-        backend.load_backend("tensorflow")
-        self.assertEqual(backend.backend_name(), "tensorflow")
+        pg.load_backend("tensorflow")
+        self.assertEqual(pg.backend_name(), "tensorflow")
         self.test_backend_conversion()
         self.test_pagerank()
         self.test_venuerank()
         self.test_absorbing_walk()
         self.test_prevent_passing_node_lists_as_graphs()
-        backend.load_backend("numpy")
-        self.assertEqual(backend.backend_name(), "numpy")
+        pg.load_backend("numpy")
+        self.assertEqual(pg.backend_name(), "numpy")
         with self.assertRaises(Exception):
-            backend.load_backend("unknown")
-        self.assertEqual(backend.backend_name(), "numpy")
+            pg.load_backend("unknown")
+        self.assertEqual(pg.backend_name(), "numpy")
         self.test_pagerank()
+
+    def test_rank_order_convergence(self):
+        graph = test_graph()
+        algorithm1 = pg.Ordinals(pg.PageRank(0.85, tol=1.E-12, max_iters=1000))
+        algorithm2 = pg.Ordinals(pg.PageRank(0.85, convergence=pg.RankOrderConvergenceManager(0.85)))
+        algorithm3 = pg.Ordinals(pg.PageRank(0.85, convergence=pg.RankOrderConvergenceManager(0.85, 0.99, "fraction_of_walks")))
+        ranks1 = algorithm1.rank(graph, {"A": 1})
+        ranks2 = algorithm2.rank(graph, {"A": 1})
+        ranks3 = algorithm3.rank(graph, {"A": 1})
+        self.assertGreater(pg.SpearmanCorrelation(ranks1)(ranks2), 0.95)
+        self.assertGreater(pg.SpearmanCorrelation(ranks1)(ranks3), 0.95)
+        self.assertGreater(pg.SpearmanCorrelation(ranks3)(ranks2), 0.95)
+        self.assertTrue("17 iterations" in str(algorithm3.ranker.convergence))
+
+        with self.assertRaises(Exception):
+            algorithm = pg.Ordinals(pg.PageRank(0.85, convergence=pg.RankOrderConvergenceManager(0.85, 0.99, "unknown")))
+            algorithm.rank(graph, {"A": 1})

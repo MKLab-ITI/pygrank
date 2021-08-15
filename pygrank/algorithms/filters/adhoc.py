@@ -12,8 +12,8 @@ class PageRank(RecursiveGraphFilter):
         Args:
             alpha: Optional. 1-alpha is the bias towards the personalization. Default value is 0.85.
         Example:
-            >>> from pygrank.algorithms import PageRank
-            >>> algorithm = PageRank(alpha=0.99, tol=1.E-9) # tol passed to the ConvergenceManager
+            >>> import pygrank as pg
+            >>> algorithm = pg.PageRank(alpha=0.99, tol=1.E-9) # tol passed to the ConvergenceManager
         """
         self.alpha = float(alpha)
         super().__init__(*args, **kwargs)

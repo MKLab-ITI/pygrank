@@ -3,13 +3,17 @@ from pygrank.algorithms.utils import call, ensure_used_args
 from pygrank.algorithms.utils import preprocessor, ConvergenceManager, krylov_base, krylov2original
 from pygrank.core import backend
 from pygrank.algorithms.postprocess import Postprocessor
+from typing import Union
 
 
 class GraphFilter(NodeRanking):
     """Implements the base functionality of a graph filter that preprocesses a graph and an iterative computation scheme
     that stops based on a convergence manager."""
 
-    def __init__(self, to_scipy=None, convergence=None, ** kwargs):
+    def __init__(self,
+                 to_scipy=None,
+                 convergence=None,
+                 ** kwargs):
         """
         Args:
             to_scipy: Optional. Method to extract a scipy sparse matrix from a networkx graph.
@@ -47,9 +51,12 @@ class GraphFilter(NodeRanking):
 
 
 class RecursiveGraphFilter(GraphFilter):
-    """Implements a graph filter described through recursion ranks = formula(G, ranks)"""
+    """Implements a graph filter described through a recursion ranks = formula(G, ranks)"""
 
-    def __init__(self, use_quotient=True, converge_to_eigenvectors=False, *args, **kwargs):
+    def __init__(self,
+                 use_quotient: Union[bool, Postprocessor] = True,
+                 converge_to_eigenvectors: bool = False,
+                 *args, **kwargs):
         """
         Args:
             use_quotient: Optional. If True (default) performs a L1 re-normalization of ranks after each iteration.
@@ -81,7 +88,11 @@ class ClosedFormGraphFilter(GraphFilter):
     """Implements a graph filter described as an aggregation of graph signal diffusion certain number of hops away
     while weighting these by corresponding coefficients."""
 
-    def __init__(self, krylov_dims=None, coefficient_type="taylor", optimization_dict=None, *args, **kwargs):
+    def __init__(self,
+                 krylov_dims: int = None,
+                 coefficient_type: str = "taylor",
+                 optimization_dict: dict = None,
+                 *args, **kwargs):
         """
         Args:
             krylov_dims: Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space

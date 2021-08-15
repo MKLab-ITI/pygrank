@@ -3,7 +3,7 @@ current_branch=`git branch | grep '*' | sed 's/* //'`
 
 if [ "$current_branch" = "master" ]; then
     echo "You are about to commit on master. Running unit tests..."
-	  coverage run --source=pygrank -m unittest tests/test_filters.py tests/test_postprocessing.py tests/test_measures.py -b
+	  coverage run --source=pygrank -m unittest discover -b
     if [ $? -eq 0 ]; then
 		echo "Generating code coverage reports..."
 		coverage html

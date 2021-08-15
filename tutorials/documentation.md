@@ -9,14 +9,18 @@
 4. [Graph Filters](#graph-filters)
     + [Passing Graph Signals through Filters](#passing-graph-signals-through-filters)
     + [Graph Difusion Principles](#graph-diffusion-principles)
-    + [Types of Filters](#types-of-filters)
+    + [List of Filters](#list-of-filters)
     + [Convergence Criteria](#convergence-criteria)
     + [Graph Preprocessing](#graph-preprocessing)
 5. [Postprocessors](#postprocessors)
     + [Wrapping Postprocessors around Graph Filters](#wrapping-postprocessors-around-graph-filters)
     + [Types of Postprocessors](#types-of-postprocessors)
 6. [Evaluation](#evaluation)
-7. [Autotune](#autotune)
+    + [Evaluation Examples](#evaluation-examples)
+    + [Benchmarks](#benchmarks)
+    + [List of Measures](#list-of-measures)
+    + [Autotune](#autotune)
+    + [List of Tuners](#list-of-tuners)
 
 For a brief overview of common terms found in this document
 please refer to the [glossary](glossary.md).
@@ -100,10 +104,11 @@ Value changes are reflected to the values being accessed.
 
 ### Implicit Use of Signals
 For ease of use, the library can directly parse
-dictionaries that map nodes to values, e.g. the dictionary
-`{'A':0.6,'C':0.4}` were omitted nodes correspond to zero scores,
-or numpy arrays with the same number of elements as graph nodes,
-e.g. `numpy.ndarray([node_scores.get(v, 0) for v in G])` where `G`
+dictionaries that map nodes to values. For example, in the dictionary
+`{'A':0.6,'C':0.4}` omitted nodes correspond to zero scores. It can also parse
+numpy arrays or tensorflow tensors with the same number of elements as graph nodes.
+For example, a parsable array would be
+`numpy.ndarray([node_scores.get(v, 0) for v in G])`, where `G`
 is the networkx graph passed to node ranking algorithms.
 When either of these two conventions is used,
 node ranking algorithms automatically convert them to graph signals.
@@ -195,7 +200,7 @@ In the above code, we could also pass to the `rank` method
 the dictionary `{'A':1, 'C': 2}` in place
 of the signal and the library would make the conversion internally.
 Alternatively, if a graph signal is already defined,
-the graph could be ommitred, as shown next. We stress that this is possible 
+the graph could be omitted, as shown next. We stress that this is possible 
 only because the graph signal holds a reference to the graph it is tied to
 and directly inputting other kinds of primitives would throw an error message.
 
@@ -227,7 +232,7 @@ yields the following graph signal processing operation:
 
 where *H(M)* is called a *graph filter*.
 
-### Types of Filters
+### List of Filters
 The library provides several graph filters. Their usage pattern consists
 of instantiating them and then calling their `rank(graph, personalization)`
 method to obtain posterior node signals based on diffusing the provided
@@ -474,7 +479,7 @@ Multiple measures can also be aggregated through the `pygrank.AM` and
 `pygrank.GM` classes, which respectively perform arithmetic and geometric
 averaging of measure outcomes.
 
-### Examples
+### Evaluation Examples
 TODO
 
 ### Benchmarks
@@ -486,17 +491,52 @@ found [here](measures.md). After initialization with the appropriate
 parameters, these can be used interchangeably in the above example.
 
 
-# Autotune
+### Autotune
 Beyond the ability to compare node ranking algorithms,
-`pygrank` provides the ability to automatically tune node ranking 
-algorithms or select the best ones with regards to optimizing a measure
-based on graph and personalization at hand.
+we provide the ability to automatically tune node ranking 
+algorithms or select the best ones with respect to optimizing a measure
+based on the graph and personalization at hand. This process is abstracted
+through a `pygrank.Tuner` base class, which wraps
+any kind of node ranking algorithm. Ideally, this would wrap end-product
+algorithms.
 
-This process is abastracted through a `Tuner` base class, which wraps
-any kind of node ranking algorithm. Ideally, this would wrap the end-product
-algorithm.
+:bulb: Tuners differ from benchmarks in that best node ranking algorithms
+can be selected on-the-fly.
 
-An exhaustive list of ready-to-use schemes that can be used to automatically
-tune node ranking algorithms can be found [here](tuners.md).
+Tuner instances with default arguments use commonly seen base settings.
+For example, the following code separates training and evaluation
+data of a provided personalization signal and then uses a tuner that
+by default creates a `GenericGraphFilter` instance with ten parameters.
+
+```python
+>>> import pygrank as pg
+>>> graph, personalization = ...
+>>> training, evaluation = pg.split(pg.to_signal(graph, personalization, training_samples=0.5))
+>>> scores_pagerank = pg.PageRank().rank(graph, training)
+>>> scores_tuned = pg.ParameterTuner().rank(graph, training)
+>>> auc_pagerank = pg.AUC(evaluation, exclude=training).evaluate(scores_pagerank)
+>>> auc_tuned = pg.AUC(evaluation, exclude=training).evaluate(scores_tuned)
+>>> assert auc_pagerank <= auc_tuned
+```
+
+Specific algorithms can also be tuned given specific parameter values given that
+you can write a lambda or normal method to instantiate the algorithm from 
+a given set of parameters. For example, the following code defines and runs
+a tuner, where personalization could be the training personalization of the
+previous example. The tuner finds the optimal alpha value of personalized
+PageRank that optimizes NDCG instead of AUC that tuners use by default.
+
+```python
+>>> import pygrank as pg
+>>> graph, personalization = ...
+>>> algorithm_from_params = lambda params: pg.PageRank(alpha=params[0])
+>>> scores_tuned = pg.ParameterTuner(algorithm_from_params, 
+                                     max_vals=[0.99], 
+                                     min_vals=[0.5],
+                                     measure=pg.NDCG).tune(personalization)
+```
+
+### List of Tuners
+An exhaustive list of ready-to-use tuners can be found [here](tuners.md).
 After initialization with the appropriate
 parameters, these can be used interchangeably in the above example.

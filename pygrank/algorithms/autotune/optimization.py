@@ -28,19 +28,41 @@ def __add(weights, index, increment, max_val, min_val):
     return weights
 
 
-def optimize(loss, max_vals=[1 for _ in range(1)], min_vals=None, deviation_tol=1.E-8, divide_range=1.01, partitions = 5, parameter_tol=float('inf'), depth=1, weights=None, verbose=False):
+def optimize(loss,
+             max_vals=[1 for _ in range(1)],
+             min_vals=None,
+             deviation_tol: float = 1.E-8,
+             divide_range=1.01,
+             partitions = 5,
+             parameter_tol: float = float('inf'),
+             depth=1,
+             weights=None,
+             verbose=False):
     """
     Implements a coordinate descent algorithm for optimizing the argument vector of the given loss function.
     Arguments:
         loss: The loss function. Could be an expression of the form `lambda p: f(p)' where f takes a list as an argument.
         max_vals: Optional. The maximum value for each parameter to search for. Helps determine the number of parameters.
             Default is a list of ones for one parameter.
-        min_vals. Optional. The minimum value for each paramter to search for. If None (default) it becomes a list of
+        min_vals: Optional. The minimum value for each paramter to search for. If None (default) it becomes a list of
             zeros and equal length to max_vals.
-        deviation_tol: Optional. The numerical tolerance to optimize to. Default is 1.E-8.
-        divide_range: Optional. Value greater than 1 with which to divide the range at each iteration.
+        deviation_tol: Optional. The numerical tolerance of the loss to optimize to. Default is 1.E-8.
+        divide_range: Optional. Value greater than 1 with which to divide the range at each iteration. Default is 1.01,
+            which guarantees convergence even for difficult-to-optimize functions, but values such as 1.1, 1.2 or 2 may
+            also be used for much faster, albeit a little coarser, convergence. Can use "shrinking" to perform s
+            hrinking block coordinate descent, but this does not guarantee convergence for some node ranking settings.
+        parameter_tol: Optional. The numerical tolerance of parameter values to optimize to. **Both** this and
+            deviation_tol need to be met. Default is infinity.
+        depth: Optional. Declares the number of times to re-perform the optimization given the previous found solution.
+            Default is 1, which only runs the optimization once. Larger depth values can help offset coarseness
+            introduced by divide_range.
+        weights: Optional. An estimation of parameters to start optimization from. The algorithm tries to center
+            solution search around these - hence the usefulness of *depth* as an iterative scheme. If None (default),
+            the center of the search range (max_vals+min_vals)/2 is used as a starting estimation.
+        verbose: Options. If True, optimization outputs its intermediate steps. Default is False.
     Example:
-        >>> p = optimize(loss=lambda p: (1.5-p[0]+p[0]*p[1])**2+(2.25-p[0]+p[0]*p[1]**2)**2+(2.625-p[0]+p[0]*p[1]**3)**2, max_vals=[4.5, 4.5], min_vals=[-4.5, -4.5])
+        >>> import pygrank as pg
+        >>> p = pg.optimize(loss=lambda p: (1.5-p[0]+p[0]*p[1])**2+(2.25-p[0]+p[0]*p[1]**2)**2+(2.625-p[0]+p[0]*p[1]**3)**2, max_vals=[4.5, 4.5], min_vals=[-4.5, -4.5])
         >>> # desired optimization point for the Beale function of this example is [3, 0.5]
         >>> print(p)
         [3.000000052836577, 0.5000000141895036]

@@ -124,29 +124,17 @@ class AdHocFairness(Postprocessor):
         self.eps = eps
 
     def __distribute(self, DR, ranks, sensitive):
-        while True:
+        min_rank = float('inf')
+        while min_rank >= self.eps:
             ranks = {v: ranks[v] * sensitive.get(v, 0) for v in ranks if ranks[v] * sensitive.get(v, 0) != 0}
             d = DR / len(ranks)
             min_rank = min(ranks.values())
-            if min_rank < self.eps:
-                break
             if min_rank > d:
                 ranks = {v: val - d for v, val in ranks.items()}
                 break
             ranks = {v: val - min_rank for v, val in ranks.items()}
             DR -= len(ranks) * min_rank
         return ranks
-
-    def __reweigh(self, graph, sensitive):
-        if not getattr(self, "reweighs", None):
-            self.reweighs = dict()
-        if graph not in self.reweighs:
-            phi = sum(sensitive.values())/len(graph)
-            new_graph = graph.copy()
-            for u, v, d in new_graph.edges(data=True):
-                d["weight"] = 1./(sensitive[u]*phi+(1-sensitive[u])*(1-phi))
-            self.reweighs[graph] = new_graph
-        return self.reweighs[graph]
 
     def _transform(self, ranks, sensitive):
         phi = sum(sensitive.values())/len(ranks)
@@ -169,11 +157,32 @@ class AdHocFairness(Postprocessor):
             sumR /= sum_total
             sumB /= sum_total
             ranks = {v: ranks[v]*(phi*sensitive.get(v, 0)/sumR+(1-phi)*(1-sensitive.get(v, 0))/sumB) for v in ranks}
-        elif self.method != 'fairwalk':
-            raise Exception("Invalid fairness postprocessing method", self.method)
+        else:
+            raise Exception("Invalid fairness postprocessing method "+self.method)
         return ranks
 
+
+class FairWalk(Postprocessor):
+    def __init__(self, ranker):
+        super().__init__(ranker)
+
+    def _reweigh(self, graph, sensitive):
+        if not getattr(self, "reweighs", None):
+            self.reweighs = dict()
+        if graph not in self.reweighs:
+            phi = sum(sensitive.values())/len(graph)
+            new_graph = graph.copy()
+            for u, v, d in new_graph.edges(data=True):
+                d["weight"] = 1./(sensitive[u]*phi+(1-sensitive[u])*(1-phi))
+            self.reweighs[graph] = new_graph
+        return self.reweighs[graph]
+
+    def rank(self, graph, personalization, sensitive, *args, **kwargs):
+        personalization = to_signal(graph, personalization)
+        graph = personalization.graph
+        graph = self._reweigh(graph, sensitive)
+        personalization = to_signal(graph, dict(personalization.items()))
+        return self.ranker.rank(graph, personalization, *args, **kwargs)
+
     def transform(self, *args, **kwargs):
-        if self.method == "fairwalk":
-            raise Exception("reweighing can only occur by preprocessing the graph")
-        return super().transform(*args, **kwargs)
+        raise Exception("FairWalk can not transform graph signals")
