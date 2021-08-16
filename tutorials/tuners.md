@@ -16,13 +16,25 @@ Args:
  * *measure:* Callable to constuct a supervised measure with given known node scores and an iterable of excluded scores. 
  * *fraction_of_training:* A number in (0,1) indicating how to split provided graph signals into training and validaton ones by randomly sampling training nodes to meet the required fraction of all graph nodes. Default is 0.5. 
  * *combined_prediction:* If True (default), after the best version of algorithms is determined, the whole personalization is used to produce the end-result. Otherwise, only the training portion of the training-validation split is used. 
+ * *tuning_backend:* Specifically switches to a designted backend for the tuning process before restoring the previous one to perform the actual ranking. If None (default), this functionality is ignored. 
 
 Example:
 
 ```python 
 >>> import pygrank as pg 
 >>> graph, personalization = ... 
->>> tuner = pg.AlgorithmSelection(pg.create_demo_filters().values(), measure=AUC, deviation_tol=0.01) 
+>>> tuner = pg.AlgorithmSelection(pg.create_demo_filters().values(), measure=pg.AUC, deviation_tol=0.01) 
+>>> ranks = tuner.rank(graph, personalization) 
+```
+
+
+Example (with more filters):
+
+```python 
+>>> import pygrank as pg 
+>>> graph, personalization = ... 
+>>> algorithms = pg.create_variations(pg.create_many_filters(tol=1.E-9), pg.create_many_variation_types()) 
+>>> tuner = pg.AlgorithmSelection(algorithms.values(), measure=pg.AUC, deviation_tol=0.01) 
 >>> ranks = tuner.rank(graph, personalization) 
 ```
 
@@ -38,6 +50,7 @@ Args:
  * *measure:* Callable to constuct a supervised measure with given known node scores and an iterable of excluded scores. 
  * *fraction_of_training:* A number in (0,1) indicating how to split provided graph signals into training and validaton ones by randomly sampling training nodes to meet the required fraction of all graph nodes. Default is 0.5. 
  * *combined_prediction:* If True (default), after the best version of algorithms is determined, the whole personalization is used to produce the end-result. Otherwise, only the training portion of the training-validation split is used. 
+ * *tuning_backend:* Specifically switches to a designted backend for the tuning process before restoring the previous one to perform the actual ranking. If None (default), this functionality is ignored. 
  * *kwargs:* Additional arguments can be passed to pygrank.algorithms.autotune.optimization.optimize. Otherwise, the respective arguments are retrieved from the variable *default_tuning_optimization*, which is crafted for fast convergence of the default ranker_generator. Make sure to declare both the upper **and** the lower bounds of parameter values. 
 
 Example:

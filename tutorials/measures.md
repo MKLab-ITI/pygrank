@@ -152,12 +152,11 @@ Args:
 Example:
 
 ```python 
->>> from pygrank.metrics.unsupervised import Conductance 
->>> from pygrank.algorithms.postprocess import Normalize 
+>>> import pygrank as pg 
 >>> graph, seed_nodes, algorithm = ... 
->>> algorithm = Normalize(algorithm) 
+>>> algorithm = pg.Normalize(algorithm) 
 >>> ranks = algorithm.rank(graph, seed_nodes) 
->>> conductance = Conductance().evaluate(ranks) 
+>>> conductance = pg.Conductance().evaluate(ranks) 
 ```
 
 
@@ -176,10 +175,10 @@ Args:
 Example:
 
 ```python 
->>> from pygrank.metrics.unsupervised import Density 
+>>> import pygrank as pg 
 >>> graph, seed_nodes, algorithm = ... 
 >>> ranks = algorithm.rank(graph, seed_nodes) 
->>> conductance = Density().evaluate(ranks) 
+>>> conductance = pg.Density().evaluate(ranks) 
 ```
 
 

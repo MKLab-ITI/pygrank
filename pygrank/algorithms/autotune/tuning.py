@@ -127,7 +127,7 @@ class AlgorithmSelection(Tuner):
             combined_prediction: If True (default), after the best version of algorithms is determined, the whole
                 personalization is used to produce the end-result. Otherwise, only the training portion of the
                 training-validation split is used.
-            tuning_backend: Specifically switches to a designted backend for the tuning process before restoring
+            tuning_backend: Specifically switches to a designated backend for the tuning process before restoring
                 the previous one to perform the actual ranking. If None (default), this functionality is ignored.
 
         Example:

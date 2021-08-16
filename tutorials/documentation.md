@@ -21,6 +21,9 @@
     + [List of Measures](#list-of-measures)
     + [Autotune](#autotune)
     + [List of Tuners](#list-of-tuners)
+7. [Applications](#applications)
+    + [Node Classification with Label Propagation](#node-classification-with-label-propagations)
+    + [Node Classification with Graph Neural Networks](#node-classification-with-graph-neural-networks)
 
 For a brief overview of common terms found in this document
 please refer to the [glossary](glossary.md).
@@ -545,3 +548,13 @@ PageRank that optimizes NDCG instead of AUC that tuners use by default.
 An exhaustive list of ready-to-use tuners can be found [here](tuners.md).
 After initialization with the appropriate
 parameters, these can be used interchangeably in the above example.
+
+
+# Applications
+
+### Node Classification with Label Propagation
+TODO
+
+### Node Classification with Graph Neural Networks
+TODO
+
