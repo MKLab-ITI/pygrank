@@ -1,75 +1,22 @@
 import networkx as nx
 import os
-import gzip
-import wget
-import shutil
-import sys
-
-datasets = {
-    #"dblp": {"url": "https://snap.stanford.edu/data/com-DBLP.html",
-    #         "pairs": "https://snap.stanford.edu/data/bigdata/communities/com-dblp.ungraph.txt.gz",
-    #         "groups": "https://snap.stanford.edu/data/bigdata/communities/com-dblp.all.cmty.txt.gz"},
-    "eucore": {"url": "https://snap.stanford.edu/data/email-Eu-core.html",
-               "pairs": "https://snap.stanford.edu/data/email-Eu-core.txt.gz",
-               "labels": "https://snap.stanford.edu/data/email-Eu-core-department-labels.txt.gz"}
-}
+import numpy as np
+from pygrank.core import to_signal
+from pygrank.algorithms import call
+from pygrank.benchmark.download import download_dataset
+from typing import Iterable, Union
 
 
-def download_dataset(dataset, path="data"):   # pragma: no cover
-    dataset = dataset.lower()
-    if dataset not in datasets:
-        return
-    source = datasets[dataset]
-    if not os.path.isdir(path):
-        os.mkdir(path)
-    download_path = path+"/"+dataset
-    if not os.path.isdir(download_path):
-        os.mkdir(download_path)
-        pairs_path = download_path+"/pairs."+source["pairs"].split(".")[-1]
-        wget.download(source["pairs"], pairs_path)
-        with gzip.open(pairs_path, 'rb') as f_in:
-            with open(download_path+"/pairs.txt", 'wb') as f_out:
-                shutil.copyfileobj(f_in, f_out)
-        os.remove(pairs_path)
-
-        if "groups" in source:
-            groups_path = download_path+"/groups."+source["groups"].split(".")[-1]
-            wget.download(source["groups"], groups_path)
-            with gzip.open(groups_path, 'rb') as f_in:
-                with open(download_path+"/groups.txt", 'wb') as f_out:
-                    shutil.copyfileobj(f_in, f_out)
-            os.remove(groups_path)
-        elif "labels" in source:
-            labels_path = download_path+"/labels."+source["labels"].split(".")[-1]
-            wget.download(source["labels"], labels_path)
-            with gzip.open(labels_path, 'rb') as f_in:
-                with open(download_path+"/labels.txt", 'wb') as f_out:
-                    shutil.copyfileobj(f_in, f_out)
-            os.remove(labels_path)
-            groups = dict()
-            with open(download_path+"/labels.txt", 'r', encoding='utf-8') as file:
-                for line in file:
-                    if line[0] != '#':
-                        splt = line[:-1].split()
-                        if len(splt) >= 2:
-                            if splt[1] not in groups:
-                                groups[splt[1]] = list()
-                            groups[splt[1]].append(splt[0])
-            with open(download_path+"/groups.txt", 'w', encoding='utf-8') as file:
-                for group in groups.values():
-                    file.write((" ".join(group))+"\n")
-    credentials = "Please visit the url "+source["url"]+" for instruction on how to cite the dataset "+dataset+" in your research"
-    print(credentials, file=sys.stderr)
-    return credentials
-
-
-def import_snap_format_dataset(dataset : str,
-                               path : str = 'data',
+def import_snap_format_dataset(dataset: str,
+                               path: str = 'data',
                                pair_file: str = 'pairs.txt',
                                group_file: str = 'groups.txt',
                                directed: bool = False,
                                min_group_size: int = 10,
                                max_group_number: int = 20):
+    if not os.path.isdir(path):   # pragma: no cover
+        path = "../"+path
+    download_dataset(dataset, path=path)
     G = nx.DiGraph() if directed else nx.Graph()
     groups = {}
     with open(path+'/'+dataset+'/'+pair_file, 'r', encoding='utf-8') as file:
@@ -90,14 +37,85 @@ def import_snap_format_dataset(dataset : str,
     return G, groups
 
 
-def load_datasets(datasets=datasets, path='data'):
+def _import_features(dataset: str,
+                     path: str = 'data',
+                     feature_file: str = 'features.txt'):
+    if not os.path.isdir(path):   # pragma: no cover
+        path = "../"+path
+    features = dict()
+    with open(path+'/'+dataset+'/'+feature_file, 'r', encoding='utf-8') as file:
+        for line in file:
+            line = line[:-1].split()
+            features[line[0]] = [float(val) for val in line[1:]]
+    return features
+
+
+def _preprocess_features(features: np.ndarray):
+    """Row-normalizes a feature matrix.
+
+    Args:
+        features: A numpy matrix whose rows correspond to node features.
+    Returns:
+        The normalized feature matrix.
+    """
+
+    r_inv = np.asarray(np.sum(features, axis=0), np.float64)
+    r_inv[r_inv != 0] = np.power(r_inv[r_inv != 0], -1)
+    features = features * r_inv
+    return features
+
+
+def import_feature_dataset(dataset: str,
+                           path: str = 'data',
+                           **kwargs):
+    """
+    Imports a dataset comprising node features. Features and labels are organized as numpy matrix.
+    This tries to automatically download the dataset first if not found.
+
+    Args:
+        dataset: The dataset's name. Corresponds to a folder name in which the dataset is stored.
+        path: The dataset's path in which *dataset* is a folder. If path not found in the file system,
+            "../" is prepended. Default is "data".
+        kwargs: Optional. Additional arguments to pass to *import_snap_format_dataset*.
+    Returns:
+        graph: A graph of node relations. Nodes are indexed in the order the graph is traversed.
+        features: A column-normalized numpy matrix whose rows correspond to node features.
+        labels: A numpy matrix whose rows correspond to one-hot encodings of node labels.
+    """
+    graph, groups = call(import_snap_format_dataset, kwargs, [dataset, path])
+    features = call(_import_features, kwargs, [dataset, path])
+    feature_dims = len(features[list(features.keys())[0]])
+    features = np.array([features.get(v, [0] * feature_dims) for v in graph], dtype=np.float64)
+    features = _preprocess_features(features)
+    labels = np.array([to_signal(graph, group).np for group in groups.values()], dtype=np.float64).transpose()
+    return graph, features, labels
+
+
+def load_datasets_one_community(datasets: Iterable[str], path='data'):
+    """
+    Iterates through all available datasets that exhibit structural communities and loads them with
+    *import_snap_format_dataset* for experiments.
+    Found datasets are yielded to iterate through.
+
+    Args:
+        datasets: A iterable of dataset names corresponding to a folder name in which the dataset is stored.
+        path: The dataset's path in which *dataset* is a folder. If path not found in the file system,
+            "../" is prepended. Default is "data".
+    Yields:
+        graph: A graph of node relations. Nodes are indexed in the order the graph is traversed.
+        group: The first structural community found in the dataset.
+
+    Example:
+        >>> import pygrank as pg
+        >>> for graph, group in pg.load_datasets_one_community(pg.downloadable_datasets()):
+        >>>     ...
+    """
     if not os.path.isdir(path):   # pragma: no cover
         path = "../"+path
     datasets = [(dataset, 0) if len(dataset) != 2 else dataset for dataset in datasets]
     last_loaded_dataset = None
     for dataset, group_id in datasets:
         if last_loaded_dataset != dataset:
-            download_dataset(dataset, path=path)
             max_group_number = 1 + max(group_id for dat, group_id in datasets if dat == dataset)
             graph, groups = import_snap_format_dataset(dataset,
                                                        path=path,

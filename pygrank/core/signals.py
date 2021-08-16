@@ -110,6 +110,9 @@ class NodeRanking(object):
     def rank(self, graph=None, personalization=None, *args, **kwargs) -> GraphSignal:
         raise Exception("NodeRanking subclasses should implement a rank method")
 
+    def propagate(self, graph, features, *args, **kwargs):
+        return backend.combine_cols([self.rank(graph, col, *args, **kwargs).np for col in backend.separate_cols(features)])
+
 
 def to_signal(graph, obj) -> GraphSignal:
     """

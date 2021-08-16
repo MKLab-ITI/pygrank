@@ -27,10 +27,13 @@ class GraphFilter(NodeRanking):
         self.convergence = call(ConvergenceManager, kwargs) if convergence is None else convergence
         ensure_used_args(kwargs, [preprocessor, ConvergenceManager])
 
-    def rank(self, graph=None, personalization=None, warm_start=None, normalize_personalization=True, *args, **kwargs):
-        personalization = to_signal(graph, personalization).normalized(normalize_personalization)
-        if backend.sum(backend.abs(personalization.np)) == 0:
-            raise Exception("Personalization should contain at least one non-zero entity")
+    def rank(self, graph=None, personalization=None, warm_start=None, *args, **kwargs):
+        personalization = to_signal(graph, personalization)
+        personalization_norm = backend.sum(backend.abs(personalization.np))
+        if personalization_norm == 0:
+            return personalization
+            #raise Exception("Personalization should contain at least one non-zero entity")
+        personalization.np = personalization.np / personalization_norm
         ranks = to_signal(personalization, backend.copy(personalization.np) if warm_start is None else warm_start)
         M = self.to_scipy(personalization.graph)
         self.convergence.start()
@@ -38,6 +41,7 @@ class GraphFilter(NodeRanking):
         while not self.convergence.has_converged(ranks.np):
             self._step(M, personalization, ranks, *args, **kwargs)
         self._end(M, personalization, ranks, *args, **kwargs)
+        ranks.np = ranks.np * personalization_norm
         return ranks
 
     def _start(self, M, personalization, ranks, *args, **kwargs):

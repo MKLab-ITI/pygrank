@@ -68,6 +68,9 @@ class MaxDifference(Supervised):
         known_ranks, ranks = self.to_numpy(ranks)
         return backend.max(backend.abs(known_ranks-ranks))
 
+    def best_direction(self):
+        return -1
+
 
 class Mabs(Supervised):
     """Computes the mean absolute error between ranks and known ranks."""
@@ -75,6 +78,9 @@ class Mabs(Supervised):
     def evaluate(self, ranks):
         known_ranks, ranks = self.to_numpy(ranks)
         return backend.sum(backend.abs(known_ranks-ranks)) / backend.length(ranks)
+
+    def best_direction(self):
+        return -1
 
 
 class CrossEntropy(Supervised):
@@ -88,6 +94,9 @@ class CrossEntropy(Supervised):
         ret = -backend.dot(known_ranks, backend.log(ranks+eps))-backend.dot(1-known_ranks, backend.log(1-ranks+eps))
         return ret
 
+    def best_direction(self):
+        return -1
+
 
 class KLDivergence(Supervised):
     """Computes the KL-divergence of given vs known ranks."""
@@ -97,9 +106,12 @@ class KLDivergence(Supervised):
         ratio = (ranks+1.E-12)/(known_ranks+1.E-12)
         if backend.min(ratio) <= 0:
             raise Exception("Invalid KLDivergence calculations (negative ranks or known ranks)")
-        ret = -np.dot(ranks, np.log((known_ranks+1.E-12)/(ranks+1.E-12)))
+        ret = -backend.dot(ranks, backend.log((known_ranks+1.E-12)/(ranks+1.E-12)))
         #backend.dot(ranks[original_ranks != 0],-backend.log(original_ranks[original_ranks != 0] / ranks[original_ranks != 0]))
         return ret
+
+    def best_direction(self):
+        return -1
 
 
 class AUC(Supervised):

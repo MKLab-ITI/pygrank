@@ -4,20 +4,23 @@ import scipy
 from pygrank import backend
 
 
-def to_sparse_matrix(G, normalization="auto", weight="weight"):
+def to_sparse_matrix(G, normalization="auto", weight="weight", renormalize=False):
     """ Used to normalize a graph and produce a sparse matrix representation.
 
     Args:
         G: A networkx graph
-        normalization: The type of normalization can be "col", "symmetric" or "auto" (default). The latter selects
-             one of the previous normalization depending on whether the graph is directed or not respectively.
-        weight: The weight attribute of the graph's edges.
-        sensitive: The sensitivity attribute of the graph's nodes.
+        normalization: Optional. The type of normalization can be "col", "symmetric" or "auto" (default). The latter
+            selects the type of normalization depending on whether the graph is directed or not respectively.
+        weight: Optional. The weight attribute of the graph's edges.
+        renormalize: Optional. If True, the renormalization trick employed by graph neural networks to ensure iteration
+            stability by shrinking the spectrum is applied. Default is False.
     """
     normalization = normalization.lower()
     if normalization == "auto":
         normalization = "col" if G.is_directed() else "symmetric"
     M = nx.to_scipy_sparse_matrix(G, weight=weight, dtype=float)
+    if renormalize:
+        M = M + scipy.sparse.eye(M.shape[0])
     if normalization == "col":
         S = np.array(M.sum(axis=1)).flatten()
         S[S != 0] = 1.0 / S[S != 0]
@@ -106,7 +109,7 @@ class MethodHasher:
             return self._method(*args, **kwargs)
 
 
-def preprocessor(normalization="auto", assume_immutability=False):
+def preprocessor(normalization="auto", assume_immutability=False, renormalize=False):
     """ Wrapper function that generates lambda expressions for the method to_sparse_matrix.
 
     Args:
@@ -115,5 +118,5 @@ def preprocessor(normalization="auto", assume_immutability=False):
             calls. Default is False, as graph immutability needs be explicitly assumed but cannot be guaranteed.
     """
     if assume_immutability:
-        return MethodHasher(preprocessor(normalization, False))
-    return lambda G: to_sparse_matrix(G, normalization=normalization)
+        return MethodHasher(preprocessor(normalization, False, renormalize))
+    return lambda G: to_sparse_matrix(G, normalization=normalization, renormalize=renormalize)

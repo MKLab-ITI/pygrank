@@ -27,12 +27,11 @@ class Conductance(Unsupervised):
              conductance, this can be greater but not less than the maximum rank during evaluation. Default is 1.
 
         Example:
-            >>> from pygrank.metrics.unsupervised import Conductance
-            >>> from pygrank.algorithms.postprocess import Normalize
+            >>> import pygrank as pg
             >>> graph, seed_nodes, algorithm = ...
-            >>> algorithm = Normalize(algorithm)
+            >>> algorithm = pg.Normalize(algorithm)
             >>> ranks = algorithm.rank(graph, seed_nodes)
-            >>> conductance = Conductance().evaluate(ranks)
+            >>> conductance = pg.Conductance().evaluate(ranks)
         """
         self.graph = graph
         self.max_rank = max_rank
@@ -52,6 +51,9 @@ class Conductance(Unsupervised):
             internal_edges *= 2
         return external_edges / internal_edges if internal_edges !=0 else float('inf')
 
+    def best_direction(self):
+        return -1
+
 
 class Density(Unsupervised):
     """ Extension of graph density that can account for ranks.
@@ -70,10 +72,10 @@ class Density(Unsupervised):
              from graph signals passed for evaluation.
 
         Example:
-            >>> from pygrank.metrics.unsupervised import Density
+            >>> import pygrank as pg
             >>> graph, seed_nodes, algorithm = ...
             >>> ranks = algorithm.rank(graph, seed_nodes)
-            >>> conductance = Density().evaluate(ranks)
+            >>> conductance = pg.Density().evaluate(ranks)
         """
         self.graph = graph
 

@@ -11,8 +11,8 @@ algorithms = {
     "tuned": pg.ParameterTuner(to_scipy=pre, max_iters=1000000, tol=1.E-9),
 }
 #algorithms = benchmark.create_variations(algorithms, {"": pg.Tautology, "+SO": pg.SeedOversampling})
-#loader = pg.load_datasets(datasets)
+#loader = pg.load_datasets_one_community(datasets)
 #pg.supervised_benchmark(algorithms, loader, "time", verbose=True)
 
-loader = pg.load_datasets(datasets)
+loader = pg.load_datasets_one_community(datasets)
 pg.benchmark_print(pg.supervised_benchmark(algorithms, loader, pg.AUC))

@@ -27,18 +27,18 @@ please refer to the [glossary](glossary.md).
 
 # Architecture
 `pygrank` is designed with a hierarchical architecture in mind, where the roles
-of source code components can be clearly separated. At the core of the library
+of source code components can be clearly separated. At the core of the package
 lie the concept of graph signals, which wrap machine learning primitives
 (e.g. numpy arrays or tensorflow tensors) to be propagated through graphs.
 Whatever these primitives may be, they can be manipulated through an 
 abstracted backend.
 
-Then, a separate defines several measures that can be used to assess the outcome
+Then, a separate module defines several measures that can be used to assess the outcome
 of prediction tasks on graphs. These include both supervised and unsupervised measures,
 as well as ways to combine various measures (e.g. AUC and fairness-aware pRule that
 assesses disparate impact) to quantify the efficacy of multiclass predictions.
 
-Of course, a module is delegated to defining node ranking algorithms on graphs.
+A module is also delegated to defining node ranking algorithms on graphs.
 The take the form of graph filters, the outcome of which can be postprocessed 
 towards various objectives by manipulating their outcome or applying iterative
 schemes that edit algorithm inputs. A particularly useful part of the module
@@ -103,7 +103,7 @@ Value changes are reflected to the values being accessed.
 
 
 ### Implicit Use of Signals
-For ease of use, the library can directly parse
+For ease of use, the package can directly parse
 dictionaries that map nodes to values. For example, in the dictionary
 `{'A':0.6,'C':0.4}` omitted nodes correspond to zero scores. It can also parse
 numpy arrays or tensorflow tensors with the same number of elements as graph nodes.
@@ -198,7 +198,7 @@ assume lower values.
 
 In the above code, we could also pass to the `rank` method
 the dictionary `{'A':1, 'C': 2}` in place
-of the signal and the library would make the conversion internally.
+of the signal and the package would make the conversion internally.
 Alternatively, if a graph signal is already defined,
 the graph could be omitted, as shown next. We stress that this is possible 
 only because the graph signal holds a reference to the graph it is tied to
@@ -233,7 +233,7 @@ yields the following graph signal processing operation:
 where *H(M)* is called a *graph filter*.
 
 ### List of Filters
-The library provides several graph filters. Their usage pattern consists
+The package provides several graph filters. Their usage pattern consists
 of instantiating them and then calling their `rank(graph, personalization)`
 method to obtain posterior node signals based on diffusing the provided
 personalization signal through the graph. However, the outcomes of graph
@@ -284,7 +284,7 @@ a post-processing step has been added throught the wrapping expression
 
 
 ### Graph Preprocessing
-Graph filters all use the same default scheme
+Graph filters all use the same default graph normalization scheme
 that performs symmetric (i.e. Laplacian-like) normalization 
 for undirected graphs and column-wise normalization that
 follows a true probabilistic formulation of transition probabilities
@@ -295,15 +295,20 @@ assume values of:
 * *"auto"* for the above-described default behavior
 * *"col"* for column-wise normalization
 * *"symmetric"* for symmetric normalization
-* *"none"* for avoiding any normalization, 
-for example because edge weights already hold the normalization
-(e.g. this is used to rank graphs after FairWalk is used to
-preprocess edge weights).
+* *"none"* for avoiding any normalization, for example because edge weights already hold the normalization.
+
+In combination to the above types of normalization, ranking
+algorithms can be made to perform the renormalization trick
+often employed by graph neural networks,
+which shrinks their spectrum by adding self-loops to nodes
+before extracting the adjacency matrix and its normalization.
+To enable this behavior, you can use `renormalization=True`
+alongside any `normalization` argument.
 
 In all cases, adjacency matrix normalization involves the
 computationally intensive operation of converting the graph 
 into a scipy sparse matrix each time  the `rank(G, personalization)`
-method of ranking algorithms is called. The *pygrank* library
+method of ranking algorithms is called. The `pygrank` package
 provides a way to avoid recomputing the normalization
 during large-scale experiments by the same algorithm for 
 the same graphs by passing an argument `assume_immutability=True`
@@ -346,8 +351,8 @@ arguments should be passed to the preprocessor and will be ignored by the
 constructors (what would otherwise happen is that the constructors
 would create a prerpocessor with these arguments).
 
-:bulb: Basically, when the default value `to_scipy=None`
-is given, ranking algorithms create a new preprocessing instance
+Basically, when the default value `to_scipy=None` to ranking algorithm
+constructors, thesecreate a new preprocessing instance
 with the `normalization` and `assume_immutability` values passed
 to their constructor. These two arguments are completely ignored
 if a preprocessor instance is passed to the ranking algorithm.

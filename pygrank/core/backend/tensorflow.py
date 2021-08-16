@@ -3,16 +3,29 @@ import numpy as np
 from tensorflow import abs, reduce_sum as sum, exp, eye, identity as copy, reduce_min as min, reduce_max as max
 
 
+def backend_init():
+    # print('Enabling float64 in keras backend')
+    tf.keras.backend.set_floatx('float64')
+
+
+def separate_cols(x):
+    return [tf.gather(x, [col_num], axis=1) for col_num in range(x.shape[1])]
+
+
+def combine_cols(cols):
+    return tf.concat(cols, axis=1)
+
+
+def backend_name():
+    return "tensorflow"
+
+
 def log(x):
     return tf.math.log(x)
 
 
 def dot(x, y):
     return tf.reduce_sum(x*y)
-
-
-def backend_name():
-    return "tensorflow"
 
 
 def repeat(value, times):

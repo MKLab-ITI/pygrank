@@ -5,10 +5,17 @@ import json
 from pygrank.core.backend.specification import *
 
 
+_imported_mods = dict()
+
+
 def load_backend(mod_name):
     if mod_name not in ['pytorch', 'numpy', 'tensorflow']:
         raise Exception("Unsupported backend "+mod_name)
-    mod = importlib.import_module('.%s' % mod_name, __name__)
+    if mod_name in _imported_mods:
+        mod = _imported_mods[mod_name]
+    else:
+        mod = importlib.import_module('.%s' % mod_name, __name__)
+        _imported_mods[mod_name] = mod
     mod_name = ""
     for mod_name_part in __name__.split("."):
         if mod_name:
@@ -23,6 +30,7 @@ def load_backend(mod_name):
                     setattr(thismod, api, mod.__dict__[api])
                 else: # pragma: no cover
                     raise Exception("Missing implementation for "+str(api))
+    mod.backend_init()
 
 
 def get_backend_preference(): # pragma: no cover

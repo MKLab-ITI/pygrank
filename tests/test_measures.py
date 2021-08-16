@@ -56,8 +56,8 @@ class Test(unittest.TestCase):
         self.assertEqual(pg.benchmark.utils._fraction2str(0.1), ".10")
         self.assertEqual(pg.benchmark.utils._fraction2str(0.00001), "0")
         self.assertEqual(pg.benchmark.utils._fraction2str(1), "1.00")
-        pg.benchmark_print(pg.supervised_benchmark(pg.create_demo_filters(), pg.load_datasets(["ant"])))
-        ret = pg.benchmark_dict(pg.supervised_benchmark(pg.create_demo_filters(), pg.load_datasets(["ant"])))
+        pg.benchmark_print(pg.supervised_benchmark(pg.create_demo_filters(), pg.load_datasets_one_community(["ant"])))
+        ret = pg.benchmark_dict(pg.supervised_benchmark(pg.create_demo_filters(), pg.load_datasets_one_community(["ant"])))
         self.assertTrue(isinstance(ret, dict))
         self.assertTrue(isinstance(ret["ant"], dict))
 
@@ -70,14 +70,14 @@ class Test(unittest.TestCase):
     def test_unsupervised_vs_auc(self):
         import pygrank as pg
         algorithms = pg.create_variations(pg.create_many_filters(), pg.create_many_variation_types())
-        auc_scores = pg.benchmark_scores(pg.supervised_benchmark(algorithms, pg.load_datasets(["ant"]), pg.AUC))
-        self.assertGreater(sum(pg.benchmark_scores(pg.supervised_benchmark(algorithms, pg.load_datasets(["ant"]), "time"))), 0)
-        conductance_scores = pg.benchmark_scores(pg.supervised_benchmark(algorithms, pg.load_datasets(["ant"]),
+        auc_scores = pg.benchmark_scores(pg.supervised_benchmark(algorithms, pg.load_datasets_one_community(["ant"]), pg.AUC))
+        self.assertGreater(sum(pg.benchmark_scores(pg.supervised_benchmark(algorithms, pg.load_datasets_one_community(["ant"]), "time"))), 0)
+        conductance_scores = pg.benchmark_scores(pg.supervised_benchmark(algorithms, pg.load_datasets_one_community(["ant"]),
                                                                          lambda _, __: pg.Conductance()))
-        density_scores = pg.benchmark_scores(pg.supervised_benchmark(algorithms, pg.load_datasets(["ant"]),
-                                                                         lambda _, __: pg.Density()))
-        modularity_scores = pg.benchmark_scores(pg.supervised_benchmark(algorithms, pg.load_datasets(["ant"]),
-                                                                         lambda _, __: pg.Modularity(max_positive_samples=100)))
+        density_scores = pg.benchmark_scores(pg.supervised_benchmark(algorithms, pg.load_datasets_one_community(["ant"]),
+                                                                     lambda _, __: pg.Density()))
+        modularity_scores = pg.benchmark_scores(pg.supervised_benchmark(algorithms, pg.load_datasets_one_community(["ant"]),
+                                                                        lambda _, __: pg.Modularity(max_positive_samples=100)))
         self.assertLess(pg.PearsonCorrelation(auc_scores)(conductance_scores), -0.6)
         self.assertLess(pg.SpearmanCorrelation(auc_scores)(density_scores), 0.3)
         pg.SpearmanCorrelation(auc_scores)(modularity_scores)

@@ -2,6 +2,18 @@ def backend_name():  # pragma: no cover
     return "no backend loaded"
 
 
+def backend_init():  # pragma: no cover
+    pass
+
+
+def separate_cols(x):  # pragma: no cover
+    pass
+
+
+def combine_cols(cols):  # pragma: no cover
+    pass
+
+
 def abs(x):  # pragma: no cover
     pass
 

@@ -3,6 +3,18 @@ from numpy import abs, sum, exp, log, copy, repeat, min, max, dot
 from scipy.sparse import eye
 
 
+def backend_init():
+    pass
+
+
+def separate_cols(x, col_num):
+    return [x[:, col_num] for col_num in range(x.shape[1])]
+
+
+def combine_cols(cols):
+    return np.concatenate(cols, axis=1)
+
+
 def backend_name():
     return "numpy"
 
