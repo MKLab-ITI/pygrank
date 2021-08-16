@@ -68,9 +68,6 @@ class MaxDifference(Supervised):
         known_ranks, ranks = self.to_numpy(ranks)
         return backend.max(backend.abs(known_ranks-ranks))
 
-    def best_direction(self):
-        return -1
-
 
 class Mabs(Supervised):
     """Computes the mean absolute error between ranks and known ranks."""
@@ -78,9 +75,6 @@ class Mabs(Supervised):
     def evaluate(self, ranks):
         known_ranks, ranks = self.to_numpy(ranks)
         return backend.sum(backend.abs(known_ranks-ranks)) / backend.length(ranks)
-
-    def best_direction(self):
-        return -1
 
 
 class CrossEntropy(Supervised):
@@ -93,9 +87,6 @@ class CrossEntropy(Supervised):
         eps = 1.E-14
         ret = -backend.dot(known_ranks, backend.log(ranks+eps))-backend.dot(1-known_ranks, backend.log(1-ranks+eps))
         return ret
-
-    def best_direction(self):
-        return -1
 
 
 class KLDivergence(Supervised):
@@ -110,9 +101,6 @@ class KLDivergence(Supervised):
         #backend.dot(ranks[original_ranks != 0],-backend.log(original_ranks[original_ranks != 0] / ranks[original_ranks != 0]))
         return ret
 
-    def best_direction(self):
-        return -1
-
 
 class AUC(Supervised):
     """Wrapper for sklearn.metrics.auc evaluation."""
@@ -123,6 +111,21 @@ class AUC(Supervised):
             raise Exception("Cannot evaluate AUC when all labels are the same")
         fpr, tpr, _ = sklearn.metrics.roc_curve(known_ranks, ranks)
         return sklearn.metrics.auc(fpr, tpr)
+
+    def best_direction(self):
+        """
+        Automatically determines if higher or lower values of the measure are better.
+        Design measures so that outcomes of this method depends **only** on their class,
+        as it follows a class-based hashing to guarantee speed.
+
+        Returns:
+            1 if higher values of the measure are better, -1 otherwise.
+        """
+        ret = getattr(self.__class__, "__best_direction", None)
+        if ret is None:
+            ret = 1 if self.__class__([1, 0])([1, 0]) > self.__class__([1, 0])([0, 1]) else -1
+            setattr(self.__class__, "__best_direction", ret)
+        return ret
 
 
 class Accuracy(Supervised):

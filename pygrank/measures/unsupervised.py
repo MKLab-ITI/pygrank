@@ -51,9 +51,6 @@ class Conductance(Unsupervised):
             internal_edges *= 2
         return external_edges / internal_edges if internal_edges !=0 else float('inf')
 
-    def best_direction(self):
-        return -1
-
 
 class Density(Unsupervised):
     """ Extension of graph density that can account for ranks.

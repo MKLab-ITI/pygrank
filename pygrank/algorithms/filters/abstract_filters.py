@@ -2,7 +2,7 @@ from pygrank.core.signals import to_signal, NodeRanking
 from pygrank.algorithms.utils import call, ensure_used_args
 from pygrank.algorithms.utils import preprocessor, ConvergenceManager, krylov_base, krylov2original
 from pygrank.core import backend
-from pygrank.algorithms.postprocess import Postprocessor
+from pygrank.algorithms.postprocess import Postprocessor, Tautology
 from typing import Union
 
 
@@ -13,6 +13,7 @@ class GraphFilter(NodeRanking):
     def __init__(self,
                  to_scipy=None,
                  convergence=None,
+                 personalization_transform: Postprocessor= None,
                  ** kwargs):
         """
         Args:
@@ -22,18 +23,22 @@ class GraphFilter(NodeRanking):
             convergence: Optional. The ConvergenceManager that determines when iterations stop. If None (default),
                 a ConvergenceManager is used with keyword arguments
                 automatically extracted from the ones passed to this constructor.
+            personalization_transform: Optional. A Postprocessor whose `transform` method is used to transform
+                the personalization before applying the graph filter. If None (default) a Tautology is used.
         """
         self.to_scipy = call(preprocessor, kwargs) if to_scipy is None else to_scipy
         self.convergence = call(ConvergenceManager, kwargs) if convergence is None else convergence
+        self.personalization_transform = Tautology() if personalization_transform is None else personalization_transform
         ensure_used_args(kwargs, [preprocessor, ConvergenceManager])
 
     def rank(self, graph=None, personalization=None, warm_start=None, *args, **kwargs):
         personalization = to_signal(graph, personalization)
+        personalization = self.personalization_transform(personalization)
         personalization_norm = backend.sum(backend.abs(personalization.np))
         if personalization_norm == 0:
             return personalization
             #raise Exception("Personalization should contain at least one non-zero entity")
-        personalization.np = personalization.np / personalization_norm
+        personalization = to_signal(personalization, personalization.np / personalization_norm)
         ranks = to_signal(personalization, backend.copy(personalization.np) if warm_start is None else warm_start)
         M = self.to_scipy(personalization.graph)
         self.convergence.start()

@@ -11,10 +11,11 @@ def gnn_cross_entropy(labels, predictions, nodes):
 
 def gnn_train(model, graph, features, labels, training, validation,
               optimizer=tf.optimizers.Adam(learning_rate=0.01),
-              regularization=tf.keras.regularizers.L2(5.E-4)):
+              regularization=tf.keras.regularizers.L2(5.E-4),
+              epochs=100):
     best_loss = float('inf')
     best_params = None
-    for epoch in range(100):
+    for epoch in range(epochs):
         with tf.GradientTape() as tape:
             predictions = model(graph, features, training=True)
             loss = gnn_cross_entropy(labels, predictions, training)

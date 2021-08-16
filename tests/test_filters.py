@@ -33,6 +33,9 @@ class Test(unittest.TestCase):
         self.assertEqual(signal["A"], 0)
         self.assertEqual(signal["B"], 2)
 
+    def test_zero_personalization(self):
+        self.assertEqual(pg.sum(pg.PageRank()(test_graph(),{}).np), 0)
+
     def test_node_ranking(self):
         from pygrank import NodeRanking, PageRank
         G = test_graph()
@@ -45,28 +48,23 @@ class Test(unittest.TestCase):
         self.assertAlmostEqual(abs_diffs, 0, places=16, msg="PageRank compliance with nx results")
 
     def test_abstract_filter(self):
-        from pygrank import GraphFilter, RecursiveGraphFilter, ClosedFormGraphFilter, Tuner
         G = test_graph()
         with self.assertRaises(Exception):
-            GraphFilter().rank(G, {})
+            pg.GraphFilter().rank(G)
         with self.assertRaises(Exception):
-            GraphFilter().rank(G)
+            pg.RecursiveGraphFilter().rank(G)
         with self.assertRaises(Exception):
-            RecursiveGraphFilter().rank(G)
+            pg.ClosedFormGraphFilter().rank(G)
         with self.assertRaises(Exception):
-            ClosedFormGraphFilter().rank(G)
-        with self.assertRaises(Exception):
-            Tuner().rank(G)
+            pg.Tuner().rank(G)
 
     def test_prevent_passing_node_lists_as_graphs(self):
-        from pygrank import PageRank
         with self.assertRaises(Exception):
-            PageRank().rank(list(test_graph()))
+            pg.PageRank().rank(list(test_graph()))
 
     def test_non_convergence(self):
-        from pygrank import PageRank
         with self.assertRaises(Exception):
-            PageRank(max_iters=5).rank(test_graph())
+            pg.PageRank(max_iters=5).rank(test_graph())
 
     def test_custom_runs(self):
         G = test_graph()
@@ -87,7 +85,7 @@ class Test(unittest.TestCase):
 
     def test_pagerank(self):
         G = test_graph()
-        test_result = pg.PageRank(normalization='col', tol=1.E-9).rank(G)
+        test_result = pg.PageRank(normalization='col', tol=1.E-9, personalization_transform=pg.Normalize("sum")).rank(G)
         nx_result = nx.pagerank(G, tol=1.E-9)
         abs_diffs = sum(abs(test_result[v] - nx_result[v]) for v in nx_result.keys()) / len(nx_result)
         self.assertAlmostEqual(abs_diffs, 0, places=12, msg="PageRank compliance with nx results")
@@ -100,21 +98,20 @@ class Test(unittest.TestCase):
         self.assertAlmostEqual(abs_diffs, 0, places=12, msg="Using quotient yields the same result")
 
     def test_oversampling(self):
-        from pygrank import PageRank, to_signal, SeedOversampling, BoostedSeedOversampling, split, NDCG
         import random
         G, groups = test_block_model_graph(nodes=600, seed=1)
         group = groups[0]
         random.seed(1)
-        training, evaluation = split(list(group), training_samples=3)
-        training, evaluation = to_signal(G, {v: 1 for v in training}), to_signal(G, {v: 1 for v in evaluation})
+        training, evaluation = pg.split(list(group), training_samples=3)
+        training, evaluation = pg.to_signal(G, {v: 1 for v in training}), pg.to_signal(G, {v: 1 for v in evaluation})
 
-        base_result = NDCG(evaluation, training).evaluate(PageRank(0.99).rank(G, training))
-        so_result = NDCG(evaluation, training).evaluate(SeedOversampling(PageRank(0.99)).rank(G, training))
-        bso_result = NDCG(evaluation, training).evaluate(BoostedSeedOversampling(PageRank(0.99)).rank(G, training))
+        base_result = pg.NDCG(evaluation, training).evaluate(pg.PageRank(0.99).rank(G, training))
+        so_result = pg.NDCG(evaluation, training).evaluate(pg.SeedOversampling(pg.PageRank(0.99)).rank(G, training))
+        bso_result = pg.NDCG(evaluation, training).evaluate(pg.BoostedSeedOversampling(pg.PageRank(0.99)).rank(G, training))
         self.assertLessEqual(base_result, so_result)
         self.assertLessEqual(so_result, bso_result)
 
-        SeedOversampling(PageRank(0.99), "top").rank(G, training)
+        pg.SeedOversampling(pg.PageRank(0.99), "top").rank(G, training)
 
     def test_implicit_graph(self):
         from pygrank.algorithms import PageRank
@@ -211,7 +208,7 @@ class Test(unittest.TestCase):
         pre = preprocessor("symmetric", True)
         optimal_params = optimize(lambda params: -AUC(validation, exclude=training).evaluate(
             Normalize("sum", GenericGraphFilter(params, to_scipy=pre, max_iters=10000)).rank(G, training)),
-                          max_vals=[1] * 5, deviation_tol=0.01, divide_range=2, verbose=True, partitions=5)
+                          max_vals=[1] * 5, deviation_tol=0.01, divide_range=2, verbose=False, partitions=5)
         learnable_result = AUC(validation, exclude=evaluation).evaluate(
             GenericGraphFilter(optimal_params, to_scipy=pre, max_iters=10000).rank(G, training))
         heat_kernel_result = AUC(evaluation, used_for_training).evaluate(
@@ -236,12 +233,12 @@ class Test(unittest.TestCase):
             optimize(lambda params: -AUC(validation, exclude=training).evaluate(
                 Normalize("sum",
                           GenericGraphFilter(params, coefficient_type="unknown", to_scipy=pre, max_iters=10000)).rank(G, training)),
-                     max_vals=[1] * 5, min_vals=[0] * 5, deviation_tol=0.01, divide_range=2, verbose=True, partitions=5)
+                     max_vals=[1] * 5, min_vals=[0] * 5, deviation_tol=0.01, divide_range=2, verbose=False, partitions=5)
 
         optimal_params = optimize(lambda params: -AUC(validation, exclude=training).evaluate(
             Normalize("sum",
                       GenericGraphFilter(params, coefficient_type="Chebyshev", to_scipy=pre, max_iters=10000)).rank(G, training)),
-                                  max_vals=[1] * 5, min_vals=[0] * 5, deviation_tol=0.01, divide_range=2, verbose=True,
+                                  max_vals=[1] * 5, min_vals=[0] * 5, deviation_tol=0.01, divide_range=2, verbose=False,
                                   partitions=5)
         learnable_result = AUC(validation, exclude=evaluation).evaluate(
             GenericGraphFilter(optimal_params, to_scipy=pre, max_iters=10000).rank(G, training))

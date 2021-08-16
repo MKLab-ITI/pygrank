@@ -8,9 +8,6 @@ class Measure(object):
     def __call__(self, ranks):
         return self.evaluate(ranks)
 
-    def best_direction(self):
-        return 1
-
     def evaluate(self, ranks):
         raise Exception("Non-abstract subclasses of Measure should implement an evaluate method")
 

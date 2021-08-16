@@ -47,13 +47,13 @@ class Test(unittest.TestCase):
     def test_normalize_range(self):
         G = test_graph()
         r = pg.Normalize(pg.PageRank(), "range").rank(G)
-        self.assertAlmostEqual(min(r[v] for v in G), 0, places=16)
-        self.assertAlmostEqual(max(r[v] for v in G), 1, places=16)
+        self.assertAlmostEqual(min(r[v] for v in G), 0, places=15)
+        self.assertAlmostEqual(max(r[v] for v in G), 1, places=15)
 
     def test_normalize_sum(self):
         G = test_graph()
         r = pg.Normalize(pg.PageRank(), "sum").rank(G)
-        self.assertAlmostEqual(sum(r[v] for v in G), 1, places=16)
+        self.assertAlmostEqual(sum(r[v] for v in G), 1, places=15)
 
     def test_normalize_invalid(self):
         G = test_graph()
@@ -66,7 +66,7 @@ class Test(unittest.TestCase):
         r1 = pg.Normalize(pg.PageRank(), "sum").rank(G)
         r2 = pg.Transformer(pg.PageRank(), lambda x: x/sum(x)).rank(G)
         for v in G:
-            self.assertAlmostEqual(r1[v], r2[v], places=16)
+            self.assertAlmostEqual(r1[v], r2[v], places=15)
 
     def test_transform_individuals(self):
         import math
@@ -74,21 +74,21 @@ class Test(unittest.TestCase):
         r1 = pg.Transformer(math.exp).transform(pg.PageRank()(G))
         r2 = pg.Transformer(pg.PageRank(), pg.exp).rank(G)
         for v in G:
-            self.assertAlmostEqual(r1[v], r2[v], places=16)
+            self.assertAlmostEqual(r1[v], r2[v], places=15)
 
     def test_ordinals(self):
         G = test_graph()
         test_result = pg.Ordinals(pg.Ordinals(pg.Ordinals(pg.PageRank(normalization='col')))).rank(G, {"A": 1}) # three ordinal transformations are the same as one
-        self.assertAlmostEqual(test_result["A"], 1, places=16, msg="Ordinals should compute without errors (seed node is highest rank in small graphs)")
+        self.assertAlmostEqual(test_result["A"], 1, places=15, msg="Ordinals should compute without errors (seed node is highest rank in small graphs)")
 
     def test_normalization(self):
         G = test_graph()
         test_result = pg.Normalize("sum", pg.PageRank(normalization='col')).rank(G)
-        self.assertAlmostEqual(sum(test_result.values()), 1, places=16, msg="Sum normalization should sum to 1")
+        self.assertAlmostEqual(sum(test_result.values()), 1, places=15, msg="Sum normalization should sum to 1")
         test_result = pg.Normalize("max", pg.PageRank(normalization='col')).rank(G)
-        self.assertAlmostEqual(max(test_result.values()), 1, places=16, msg="Max should have max 1")
+        self.assertAlmostEqual(max(test_result.values()), 1, places=15, msg="Max should have max 1")
         test_result = pg.Normalize("sum").transform(pg.PageRank(normalization='col').rank(G))
-        self.assertAlmostEqual(sum(test_result.values()), 1, places=16, msg="Normalization should be able to use transformations")
+        self.assertAlmostEqual(sum(test_result.values()), 1, places=15, msg="Normalization should be able to use transformations")
 
     def test_oversampling(self):
         graph = test_graph()
@@ -144,7 +144,7 @@ class Test(unittest.TestCase):
     def test_optimizer(self):
         # a simple function
         p = pg.optimize(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4, max_vals=[5, 5], parameter_tol=1.E-8)
-        self.assertAlmostEqual(p[0], 2, places=6, msg="Optimizer should easily optimize a convex function")
+        self.assertAlmostEqual(p[0], 2, places=6, msg="Optimizer should easily optimize a convex function", verbose=True)
         self.assertAlmostEqual(p[1], 1, places=6, msg="Optimizer should easily optimize a convex function")
 
         # a simple function with redundant inputs and tol instead of parameter tolerance

@@ -47,7 +47,7 @@ def assert_binary(ranks):
     """
     for v in ranks.values():
         if v not in [0, 1]:
-            raise Exception('Binary ranks required')
+            raise Exception('Binary ranks required', v)
 
 
 def _idfier(*args, **kwargs):

@@ -16,7 +16,7 @@ Args:
  * *measure:* Callable to constuct a supervised measure with given known node scores and an iterable of excluded scores. 
  * *fraction_of_training:* A number in (0,1) indicating how to split provided graph signals into training and validaton ones by randomly sampling training nodes to meet the required fraction of all graph nodes. Default is 0.5. 
  * *combined_prediction:* If True (default), after the best version of algorithms is determined, the whole personalization is used to produce the end-result. Otherwise, only the training portion of the training-validation split is used. 
- * *tuning_backend:* Specifically switches to a designted backend for the tuning process before restoring the previous one to perform the actual ranking. If None (default), this functionality is ignored. 
+ * *tuning_backend:* Specifically switches to a designated backend for the tuning process before restoring the previous one to perform the actual ranking. If None (default), this functionality is ignored. 
 
 Example:
 
