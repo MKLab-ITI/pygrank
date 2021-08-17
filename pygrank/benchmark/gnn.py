@@ -28,6 +28,6 @@ def gnn_train(model, graph, features, labels, training, validation,
         if loss < best_loss:
             best_loss = loss
             best_params = [tf.identity(param) for param in model.trainable_variables]
-        print("Epoch", epoch, "loss", loss, "acc", gnn_accuracy(labels, predictions, validation))
+            print("Epoch", epoch, "loss", float(loss), "acc", gnn_accuracy(labels, predictions, validation))
     for variable, best_value in zip(model.trainable_variables, best_params):
         variable.assign(best_value)

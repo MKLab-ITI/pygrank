@@ -48,7 +48,8 @@ class HeatKernel(ClosedFormGraphFilter):
         super().__init__(*args, **kwargs)
 
     def _coefficient(self, previous_coefficient):
-        return backend.exp(-self.t) if previous_coefficient is None else (previous_coefficient * self.t / (self.convergence.iteration + 1))
+        # backend.exp(-self.t)
+        return 1. if previous_coefficient is None else (previous_coefficient * self.t / (self.convergence.iteration + 1))
 
 
 class AbsorbingWalks(RecursiveGraphFilter):

@@ -17,8 +17,8 @@
     + [Types of Postprocessors](#types-of-postprocessors)
 6. [Evaluation](#evaluation)
     + [Evaluation Examples](#evaluation-examples)
-    + [Benchmarks](#benchmarks)
     + [List of Measures](#list-of-measures)
+    + [Benchmarks](#benchmarks)
     + [Autotune](#autotune)
     + [List of Tuners](#list-of-tuners)
 7. [Applications](#applications)
@@ -36,14 +36,15 @@ lie the concept of graph signals, which wrap machine learning primitives
 Whatever these primitives may be, they can be manipulated through an 
 abstracted backend.
 
-Then, a separate module defines several measures that can be used to assess the outcome
+Then, a separate module defines measures that can be used to assess the outcome
 of prediction tasks on graphs. These include both supervised and unsupervised measures,
-as well as ways to combine various measures (e.g. AUC and fairness-aware pRule that
+as well as ways to combine multiple ones (e.g. AUC and fairness-aware pRule that
 assesses disparate impact) to quantify the efficacy of multiclass predictions.
 
 A module is also delegated to defining node ranking algorithms on graphs.
-The take the form of graph filters, the outcome of which can be postprocessed 
-towards various objectives by manipulating their outcome or applying iterative
+These are defined graph filters, which diffuse node scores to their neighbors.
+The outcome of filtering can be postprocessed 
+towards various objectives through direct transformations or applying iterative
 schemes that edit algorithm inputs. A particularly useful part of the module
 is the ability to automatically tune parameters on-the-fly, in a computationally
 efficient manner. We refer to this practice as *autotune*.
@@ -55,7 +56,7 @@ various node ranking algorithms.
 
 # Graph Signals
 Graph signals are a way to organize numerical values corresponding to respective
-nodes. They are returned by ranking algorithms, but for ease-of-use,
+nodes. They are returned by ranking algorithms, but for ease of use,
 you can also pass to ranking algorithms maps of node values
 (e.g.  `{'A': 3, 'C': 2}`) or numpy arrays (e.g. `np.array([3, 0, 2, 0])`
 where positions correspond to the order networkx traverse graph nodes) to them.
@@ -349,20 +350,22 @@ they can be made to share the same normalization method. This
 can be done by using a shared instance of the 
 normalization preprocessing `pg.preprocessor`, 
 which can be passed as the `to_scipy` argument of ranking algorithm
-constructors. In this case, the `normalization` and `assume_immutability`
+constructors. In this case, the `normalization`, `renormalization` 
+and `assume_immutability`
 arguments should be passed to the preprocessor and will be ignored by the
 constructors (what would otherwise happen is that the constructors
 would create a prerpocessor with these arguments).
 
-Basically, when the default value `to_scipy=None` to ranking algorithm
-constructors, thesecreate a new preprocessing instance
-with the `normalization` and `assume_immutability` values passed
+Basically, when the default value `to_scipy=None` is passed to ranking algorithm
+constructors, these create a new preprocessing instance
+with the `normalization`, `renormalization` and `assume_immutability`
+values passed
 to their constructor. These two arguments are completely ignored
 if a preprocessor instance is passed to the ranking algorithm.
 Direct use of these arguments without needing to instantiate a
 preprocessor was demonstrated in the previous code example.
 
-Using the outcome of graph normalization 
+Using the same outcome of graph preprocessing 
 to speed up multiple rank calls to the same graph by
 different ranking algorithms can be done as:
 ```python
@@ -375,7 +378,7 @@ ranks1 = algorithm1.rank(graph, personalization1)
 ranks2 = algorithm2.rank(graph, personalization2) # does not re-compute the normalization
 ```
 
-:bulb: When benchmarking, in the above code you can call `pre(G)`
+:bulb: When benchmarking, in the above code you can call `pre(graph)`
 before the first `rank(...)` call to make sure that that call
 does not also perform the first normalization whose outcome will
 be hashed and immediately retrieved by subsequent calls.
@@ -383,7 +386,8 @@ be hashed and immediately retrieved by subsequent calls.
 
 # Postprocessors
 Postprocessors wrap base graph filters to affect their outcome. Usage
-of the original filters remains identical.
+of node ranking algorithms remains the same as for the original graph
+filters.
 
 ### Wrapping Postprocessors around Graph Filters
 Let us consider a simple scenario where we want the graph signal outputted
@@ -490,13 +494,45 @@ averaging of measure outcomes.
 ### Evaluation Examples
 TODO
 
-### Benchmarks
-TODO
 
 ### List of Measures
 An exhaustive list of measures can be
 found [here](measures.md). After initialization with the appropriate
 parameters, these can be used interchangeably in the above example.
+
+### Benchmarks
+`pygrank` offers the ability to conduct benchmark experiments that compare
+node ranking algorithms and parameters on a wide range of graphs. For example,
+a simple way to obtain some fastly-running algorithms and small datasets and
+compare them under AUC would be as: 
+
+```python
+>>> import pygrank as pg
+>>> dataset_names = pg.downloadable_small_datasets()
+>>> print(dataset_names)
+['citeseer', 'eucore']
+>>> algorithms = pg.create_demo_filters()
+>>> print(algorithms.keys())
+dict_keys(['PPR.85', 'PPR.9', 'PPR.99', 'HK3', 'HK5', 'HK7'])
+>>> loader = pg.load_datasets_one_community(dataset_names)
+>>> pg.benchmark_print(pg.supervised_benchmark(algorithms, loader, pg.AUC))
+               	 PPR.85         	 PPR.9          	 PPR.99         	 HK3            	 HK5            	 HK7
+citeseer       	 .89            	 .89            	 .89            	 .88            	 .89            	 .89
+eucore         	 .82            	 .72            	 .72            	 .84            	 .84            	 .82
+#REQUIRED CITATION: Please visit the url https://linqs.soe.ucsc.edu/data for instructions on how to cite the dataset citeseer in your research
+#REQUIRED CITATION: Please visit the url https://snap.stanford.edu/data/email-Eu-core.html for instructions on how to cite the dataset eucore in your research
+```
+
+Of course, in the above scheme a customly-defined algorithms could also be added
+or used in place of `algorithms`. For example, we could add an automatically-tuned
+algorithm (more on these later) with default parameters per the following code and
+then re-run experiments to compare this with alternatives.
+
+```python
+>>> algorithms["Tuned"] = pg.ParameterTuner()
+```
+
+:warning: To run a new series of benchmark experiments, a new loader needs to be created.
 
 
 ### Autotune

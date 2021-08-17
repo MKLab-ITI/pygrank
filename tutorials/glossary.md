@@ -8,4 +8,5 @@ Graph signal | Scores (not ordinalities) assigned to nodes. They typically assum
 Graph filter | A strategy of diffusing node scores through graphs through edges.
 Personalization | The graph signal inputted in grap filters. This is also known as graph signal priors or personalization vector.
 Node ranking algorithm | An algorithm that starts with a graph and personalization and outputs graph signals that boast higher quality than the personalization, for example by making predictions for all graph ndes. Typically consists of combinations of graph filters with postprocessing schemes.
+Graph neural network | A combination of traditional neural networks and node ranking algorithm
 
