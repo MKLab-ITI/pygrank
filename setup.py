@@ -12,7 +12,7 @@ long_description = "For tutorials, documentation and contribution guidelines, pl
 
 setuptools.setup(
     name='pygrank',
-    version='0.2.2',
+    version='0.2.3',
     author="Emmanouil Krasanakis",
     author_email="maniospas@hotmail.com",
     description="Recommendation algorithms for large graphs",
