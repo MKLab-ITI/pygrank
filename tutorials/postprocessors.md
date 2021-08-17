@@ -8,13 +8,14 @@ All of them can be used through the code patterns presented at the library's [do
 2. [BoostedSeedOversampling](#postprocessor-boostedseedoversampling)
 3. [FairPersonalizer](#postprocessor-fairpersonalizer)
 4. [FairWalk](#postprocessor-fairwalk)
-5. [Normalize](#postprocessor-normalize)
-6. [Ordinals](#postprocessor-ordinals)
-7. [SeedOversampling](#postprocessor-seedoversampling)
-8. [Sweep](#postprocessor-sweep)
-9. [Tautology](#postprocessor-tautology)
-10. [Threshold](#postprocessor-threshold)
-11. [Transformer](#postprocessor-transformer)
+5. [NormMaintain](#postprocessor-normmaintain)
+6. [Normalize](#postprocessor-normalize)
+7. [Ordinals](#postprocessor-ordinals)
+8. [SeedOversampling](#postprocessor-seedoversampling)
+9. [Sweep](#postprocessor-sweep)
+10. [Tautology](#postprocessor-tautology)
+11. [Threshold](#postprocessor-threshold)
+12. [Transformer](#postprocessor-transformer)
 
 ### <kbd>Postprocessor</kbd> AdHocFairness
 
@@ -66,6 +67,9 @@ Args:
  * *max_residual:* An upper limit on how much the original personalization is preserved, i.e. a fraction of it in the range [0, max_residual] is preserved. Default is 1 and is introduced by [krasanakis2020prioredit], but 0 can be used for exact replication of [krasanakis2020fairconstr]. 
 
 ### <kbd>Postprocessor</kbd> FairWalk
+ 
+
+### <kbd>Postprocessor</kbd> NormMaintain
  
 
 ### <kbd>Postprocessor</kbd> Normalize
