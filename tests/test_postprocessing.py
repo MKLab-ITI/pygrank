@@ -143,8 +143,8 @@ class Test(unittest.TestCase):
 
     def test_optimizer(self):
         # a simple function
-        p = pg.optimize(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4, max_vals=[5, 5], parameter_tol=1.E-8)
-        self.assertAlmostEqual(p[0], 2, places=6, msg="Optimizer should easily optimize a convex function", verbose=True)
+        p = pg.optimize(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4, max_vals=[5, 5], parameter_tol=1.E-8, verbose=True)
+        self.assertAlmostEqual(p[0], 2, places=6, msg="Optimizer should easily optimize a convex function")
         self.assertAlmostEqual(p[1], 1, places=6, msg="Optimizer should easily optimize a convex function")
 
         # a simple function with redundant inputs and tol instead of parameter tolerance
