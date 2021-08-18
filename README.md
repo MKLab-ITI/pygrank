@@ -144,12 +144,13 @@ Some of the library's advantages are:
 
 
 # :link: Material
-* [Tutorials & Documentation](tutorials/documentation.md)
-* Quick links:
-  * [Measures](tutorials/measures.md)
-  * [Graph Filters](tutorials/graph_filters.md)
-  * [Postprocessors](tutorials/postprocessors.md)
-  * [Tuners](tutorials/tuners.md)
+[Tutorials & Documentation](tutorials/documentation.md)
+
+**Quick links**<br>
+[Measures](tutorials/measures.md)<br>
+[Graph Filters](tutorials/graph_filters.md)<br>
+[Postprocessors](tutorials/postprocessors.md)<br>
+[Tuners](tutorials/tuners.md)<br>
 
 # :fire: Features
 * Graph filters
