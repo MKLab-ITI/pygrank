@@ -1,4 +1,4 @@
-<center><h1>:hammer_and_wrench: Documentation</h1></center> 
+<center><h1>:hammer_and_wrench: Tutorials & Documentation</h1></center> 
 
 ## Table of Contents
 1. [Table of Contents](#table-of-contents)

@@ -20,7 +20,7 @@ def to_sparse_matrix(G, normalization="auto", weight="weight", renormalize=False
         normalization = "col" if G.is_directed() else "symmetric"
     M = nx.to_scipy_sparse_matrix(G, weight=weight, dtype=float)
     if renormalize:
-        M = M + scipy.sparse.eye(M.shape[0])
+        M = M + scipy.sparse.eye(M.shape[0])*float(renormalize)
     if normalization == "col":
         S = np.array(M.sum(axis=1)).flatten()
         S[S != 0] = 1.0 / S[S != 0]
@@ -54,7 +54,7 @@ def _idfier(*args, **kwargs):
     """
     Converts args and kwargs into a hashable array of object ids.
     """
-    return "["+",".join(str(hash(arg)) for arg in args)+"]"+"{"+",".join(v+":"+str(hash(kwargs[v])) for v in kwargs)+"}"
+    return "["+",".join(str(hash(arg)) for arg in args)+"]"+"{"+",".join(v+":"+str(hash(kwargs[v])) for v in kwargs)+"}"+backend.backend_name()
 
 
 class MethodHasher:

@@ -38,7 +38,7 @@ class ParameterTuner(Tuner):
     """
     def __init__(self, ranker_generator: Callable[[list], NodeRanking] = None,
                  measure: Callable[[GraphSignal, GraphSignal], Supervised] = AUC,
-                 fraction_of_training: float = 0.5,
+                 fraction_of_training: float = 0.8,
                  combined_prediction: bool = True,
                  tuning_backend: str = None,
                  **kwargs):
@@ -50,9 +50,11 @@ class ParameterTuner(Tuner):
                 is constructed with automatic normalization and assuming immutability (this is the most common setting).
                 These parameters can be overriden and other ones can be passed to the algorithm's constructor simply
                 by including them in kwargs.
-            measure: Callable to constuct a supervised measure with given known node scores and an iterable of excluded scores.
+            measure: Callable to constuct a supervised measure with given known node scores and an iterable of excluded
+                scores.
             fraction_of_training: A number in (0,1) indicating how to split provided graph signals into training and
-                validaton ones by randomly sampling training nodes to meet the required fraction of all graph nodes. Default is 0.5.
+                validaton ones by randomly sampling training nodes to meet the required fraction of all graph nodes.
+                Default is 0.8.
             combined_prediction: If True (default), after the best version of algorithms is determined, the whole
                 personalization is used to produce the end-result. Otherwise, only the training portion of the
                 training-validation split is used.
@@ -77,8 +79,8 @@ class ParameterTuner(Tuner):
         """
         if ranker_generator is None:
             from pygrank.algorithms import GenericGraphFilter
-            if 'to_scipy' not in kwargs and 'assume_immutability' not in kwargs and 'normalization' not in kwargs:
-                kwargs['to_scipy'] = preprocessor(assume_immutability=True)
+            if 'preprocessor' not in kwargs and 'assume_immutability' not in kwargs and 'normalization' not in kwargs:
+                kwargs['preprocessor'] = preprocessor(assume_immutability=True)
             ranker_generator = lambda params: GenericGraphFilter(params, **remove_used_args(optimize, kwargs))
         else:
             ensure_used_args(kwargs, [optimize])
@@ -105,14 +107,15 @@ class ParameterTuner(Tuner):
             **self.optimize_args)
         if self.tuning_backend is not None and self.tuning_backend != previous_backend:
             backend.load_backend(previous_backend)
-            training.np = backend.to_array(training.np)
+            if not self.combined_prediction:
+                training.np = backend.to_array(training.np)
         return self.ranker_generator(params), personalization if self.combined_prediction else training
 
 
 class AlgorithmSelection(Tuner):
     def __init__(self, rankers: list = None,
                  measure: Callable[[GraphSignal, GraphSignal], Supervised] = AUC,
-                 fraction_of_training: float = 0.5,
+                 fraction_of_training: float = 0.8,
                  combined_prediction: bool = True,
                  tuning_backend: str = None):
         """
@@ -121,9 +124,11 @@ class AlgorithmSelection(Tuner):
             rankers: A list of node ranking algorithms to chose from. Try to make them share a preprocessor
                 for more efficient computations. If None (default), the filters obtained from
                 pygrank.benchmark.create_demo_filters().values() are used instead.
-            measure: Callable to constuct a supervised measure with given known node scores and an iterable of excluded scores.
+            measure: Callable to constuct a supervised measure with given known node scores and an iterable of excluded
+                scores.
             fraction_of_training: A number in (0,1) indicating how to split provided graph signals into training and
-                validaton ones by randomly sampling training nodes to meet the required fraction of all graph nodes. Default is 0.5.
+                validaton ones by randomly sampling training nodes to meet the required fraction of all graph nodes.
+                Default is 0.8.
             combined_prediction: If True (default), after the best version of algorithms is determined, the whole
                 personalization is used to produce the end-result. Otherwise, only the training portion of the
                 training-validation split is used.

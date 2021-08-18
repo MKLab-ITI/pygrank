@@ -26,9 +26,9 @@ pre = preprocessor(assume_immutability=True, normalization="symmetric")
 
 graph_filters = {
     "ppr0.85": PageRank(alpha=0.85, to_scipy=pre, max_iters=1000000, tol=1.E-6, assume_immutability=True),
-    #"ppr0.99": PageRank(alpha=0.99, to_scipy=pre, max_iters=1000000, tol=1.E-6, assume_immutability=True),
-    #"hk3": HeatKernel(t=3, to_scipy=pre, max_iters=1000000, tol=1.E-9, assume_immutability=True),
-    #"hk7": HeatKernel(t=7, to_scipy=pre, max_iters=1000000, tol=1.E-9, assume_immutability=True),
+    #"ppr0.99": PageRank(alpha=0.99, preprocessor=pre, max_iters=1000000, tol=1.E-6, assume_immutability=True),
+    #"hk3": HeatKernel(t=3, preprocessor=pre, max_iters=1000000, tol=1.E-9, assume_immutability=True),
+    #"hk7": HeatKernel(t=7, preprocessor=pre, max_iters=1000000, tol=1.E-9, assume_immutability=True),
 }
 for filter in list(graph_filters.keys()):
     graph_filters["sweep "+filter] = Sweep(graph_filters[filter])

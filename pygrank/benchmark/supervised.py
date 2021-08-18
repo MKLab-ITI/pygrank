@@ -8,6 +8,7 @@ from timeit import default_timer as time
 def supervised_benchmark(algorithms: Mapping[str, NodeRanking],
                          datasets: Any,
                          metric: Callable[[GraphSignal, GraphSignal], Supervised] = AUC,
+                         fraction_of_training: float = 0.5,
                          seed: int = 0):
     """
     Compares the outcome of provided algorithms on given datasets using a desired metric.
@@ -17,6 +18,7 @@ def supervised_benchmark(algorithms: Mapping[str, NodeRanking],
         datasets: A list of datasets to compare the algorithms on. List elements should either be strings or (string, num) tuples
             indicating the dataset name and number of community of interest respectively.
         metric: A method to instantiate a measure type to assess the efficacy of algorithms with.
+        fraction_of_training: The fraction of training samples to split on. The rest are used for testing.
         seed: A seed to ensure reproducibility. Default is 0.
     Returns:
         Yields an array of outcomes. Is meant to be used with wrapping methods, such as print_benchmark.
@@ -27,7 +29,7 @@ def supervised_benchmark(algorithms: Mapping[str, NodeRanking],
     """
     yield [""] + [algorithm for algorithm in algorithms]
     for name, graph, group in datasets:
-        training, evaluation = split(list(group), training_samples=0.5, seed=seed)
+        training, evaluation = split(list(group), training_samples=fraction_of_training, seed=seed)
         training, evaluation = to_signal(graph, {v: 1 for v in training}), to_signal(graph, {v: 1 for v in evaluation})
         dataset_results = [name]
         for algorithm in algorithms.values():

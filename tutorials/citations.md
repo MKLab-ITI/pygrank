@@ -102,7 +102,7 @@ this library are presented in reverse chronological order.
 @inproceedings{krasanakis2020prioredit,
   title={Prior Signal Editing for Graph Filter Posterior Fairness Constraints},
   author={Krasanakis, Emmanouil and Papadopoulos, Symeon and Kompatsiaris, Ioannis},
-  booktitle={under review},
+  booktitle={preprint},
 }
 ```
 

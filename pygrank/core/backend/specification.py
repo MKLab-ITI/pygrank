@@ -6,6 +6,10 @@ def backend_init():  # pragma: no cover
     pass
 
 
+def graph_dropout(M, dropout):  # pragma: no cover
+    pass
+
+
 def separate_cols(x):  # pragma: no cover
     pass
 
