@@ -29,7 +29,7 @@ class Test(unittest.TestCase):
         training, evaluation = pg.split(pg.to_signal(G, {v: 1 for v in group}), training_samples=0.5)
 
         auc1 = max(pg.AUC(evaluation, exclude=training)(ranker.rank(training)) for ranker in pg.create_demo_filters().values())
-        auc2 = pg.AUC(evaluation, exclude=training)(pg.AlgorithmSelection().rank(training))
+        auc2 = pg.AUC(evaluation, exclude=training)(pg.AlgorithmSelection(tuning_backend="tensorflow").rank(training))
         self.assertLessEqual(auc1, auc2, "Autotune should find best method")
 
     def test_tautology(self):
@@ -45,10 +45,16 @@ class Test(unittest.TestCase):
         self.assertEqual(float(sum(u.np)), len(G))
 
     def test_normalize_range(self):
-        G = test_graph()
-        r = pg.Normalize(pg.PageRank(), "range").rank(G)
-        self.assertAlmostEqual(min(r[v] for v in G), 0, places=15)
-        self.assertAlmostEqual(max(r[v] for v in G), 1, places=15)
+        graph = test_graph()
+        r = pg.Normalize(pg.PageRank(), "range").rank(graph)
+        self.assertAlmostEqual(min(r[v] for v in graph), 0, places=15)
+        self.assertAlmostEqual(max(r[v] for v in graph), 1, places=15)
+
+    def test_norm_maintain(self):
+        graph = test_graph()
+        prior = pg.to_signal(graph, {"A": 2})
+        posterior = pg.MabsMaintain(pg.Normalize(pg.PageRank(), "range")).rank(prior)
+        self.assertEqual(pg.sum(pg.abs(posterior.np)), 2)
 
     def test_normalize_sum(self):
         G = test_graph()

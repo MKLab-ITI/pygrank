@@ -2,7 +2,7 @@ import pygrank as pg
 import tensorflow as tf
 
 
-graph, features, labels = pg.import_feature_dataset('citeseer')
+graph, features, labels = pg.load_feature_dataset('citeseer')
 training, test = pg.split(list(range(len(graph))), 0.8)
 training, validation = pg.split(training, 1-0.2/0.8)
 

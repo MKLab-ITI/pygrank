@@ -107,8 +107,7 @@ class ParameterTuner(Tuner):
             **self.optimize_args)
         if self.tuning_backend is not None and self.tuning_backend != previous_backend:
             backend.load_backend(previous_backend)
-            if not self.combined_prediction:
-                training.np = backend.to_array(training.np)
+            # TODO: make training backpropagate through tensorflow for combined_prediction==False
         return self.ranker_generator(params), personalization if self.combined_prediction else training
 
 
@@ -164,15 +163,15 @@ class AlgorithmSelection(Tuner):
             backend.load_backend(self.tuning_backend)
         backend_personalization = to_signal(graph, backend.to_array(personalization.np))
         training, validation = split(backend_personalization, self.fraction_of_training)
+        measure = self.measure(validation, training)
         best_value = float('inf')
         best_ranker = None
-        measure = self.measure(validation, training)
         for ranker in self.rankers:
-            value = -measure.best_direction()*measure.evaluate(ranker.rank(personalization, *args, **kwargs))
+            value = -measure.best_direction()*measure.evaluate(ranker.rank(backend_personalization, *args, **kwargs))
             if value < best_value:
                 best_value = value
                 best_ranker = ranker
         if self.tuning_backend is not None and self.tuning_backend != previous_backend:
             backend.load_backend(previous_backend)
-            training.np = backend.to_array(training.np)
+            # TODO: make training backpropagate through tensorflow for combined_prediction==False
         return best_ranker, personalization if self.combined_prediction else training

@@ -57,6 +57,7 @@ def benchmark_print(benchmark, delimiter: str = " \t ", end_line: str = ""):
             print(delimiter.join([_fill(_fraction2str(value), tab) for tab, value in zip(tabs, line)]) + end_line)
     finally:
         sys.stderr = old_stderr
+        sys.stdout.flush()
         print(buffered_error.getvalue(), file=sys.stderr)
 
 

@@ -70,7 +70,7 @@ class Test(unittest.TestCase):
         G = test_graph()
         algorithmn = pg.PageRank(0.85, max_iters=5, error_type="iters")
         ranks1 = algorithmn.rank(G, {"A": 1})
-        self.assertTrue("6" in str(algorithmn.convergence))
+        self.assertTrue("5" in str(algorithmn.convergence))
         # TODO find why the following is not exactly the same
         """ ranks2 = Normalize(GenericGraphFilter([0.85]*1, tol=1.E-12)).rank(G, {"A": 1})
         print(ranks1.np-ranks2.np)
@@ -207,16 +207,16 @@ class Test(unittest.TestCase):
 
         pre = preprocessor("symmetric", True)
         optimal_params = optimize(lambda params: -AUC(validation, exclude=training).evaluate(
-            Normalize("sum", GenericGraphFilter(params, to_scipy=pre, max_iters=10000)).rank(G, training)),
+            Normalize("sum", GenericGraphFilter(params, preprocessor=pre, max_iters=10000)).rank(G, training)),
                           max_vals=[1] * 5, deviation_tol=0.01, divide_range=2, verbose=False, partitions=5)
         learnable_result = AUC(validation, exclude=evaluation).evaluate(
-            GenericGraphFilter(optimal_params, to_scipy=pre, max_iters=10000).rank(G, training))
+            GenericGraphFilter(optimal_params, preprocessor=pre, max_iters=10000).rank(G, training))
         heat_kernel_result = AUC(evaluation, used_for_training).evaluate(
-            HeatKernel(7, to_scipy=pre, max_iters=10000).rank(G, training))
+            HeatKernel(7, preprocessor=pre, max_iters=10000).rank(G, training))
         self.assertLess(heat_kernel_result, learnable_result,
                         msg="Learnable parameters should be meaningful")
         self.assertGreater(heat_kernel_result,
-                           AUC(evaluation).evaluate(HeatKernel(7, to_scipy=pre, max_iters=10000).rank(G, training)),
+                           AUC(evaluation).evaluate(HeatKernel(7, preprocessor=pre, max_iters=10000).rank(G, training)),
                            msg="Metrics correctly apply exclude filter to not skew results")
 
     def test_chebyshev(self):
@@ -232,22 +232,22 @@ class Test(unittest.TestCase):
         with self.assertRaises(Exception):
             optimize(lambda params: -AUC(validation, exclude=training).evaluate(
                 Normalize("sum",
-                          GenericGraphFilter(params, coefficient_type="unknown", to_scipy=pre, max_iters=10000)).rank(G, training)),
+                          GenericGraphFilter(params, coefficient_type="unknown", preprocessor=pre, max_iters=10000)).rank(G, training)),
                      max_vals=[1] * 5, min_vals=[0] * 5, deviation_tol=0.01, divide_range=2, verbose=False, partitions=5)
 
         optimal_params = optimize(lambda params: -AUC(validation, exclude=training).evaluate(
             Normalize("sum",
-                      GenericGraphFilter(params, coefficient_type="Chebyshev", to_scipy=pre, max_iters=10000)).rank(G, training)),
+                      GenericGraphFilter(params, coefficient_type="Chebyshev", preprocessor=pre, max_iters=10000)).rank(G, training)),
                                   max_vals=[1] * 5, min_vals=[0] * 5, deviation_tol=0.01, divide_range=2, verbose=False,
                                   partitions=5)
         learnable_result = AUC(validation, exclude=evaluation).evaluate(
-            GenericGraphFilter(optimal_params, to_scipy=pre, max_iters=10000).rank(G, training))
+            GenericGraphFilter(optimal_params, preprocessor=pre, max_iters=10000).rank(G, training))
         heat_kernel_result = AUC(evaluation, exclude=used_for_training).evaluate(
-            HeatKernel(7, to_scipy=pre, max_iters=10000).rank(G, training))
+            HeatKernel(7, preprocessor=pre, max_iters=10000).rank(G, training))
         self.assertLess(heat_kernel_result, learnable_result,
                         msg="Learnable parameters should be meaningful")
         self.assertGreater(heat_kernel_result,
-                           AUC(evaluation).evaluate(HeatKernel(7, to_scipy=pre, max_iters=10000).rank(G, training)),
+                           AUC(evaluation).evaluate(HeatKernel(7, preprocessor=pre, max_iters=10000).rank(G, training)),
                            msg="Metrics correctly apply exclude filter to not skew results")
 
     def test_preprocessor(self):

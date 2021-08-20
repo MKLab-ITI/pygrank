@@ -65,9 +65,9 @@ def _preprocess_features(features: np.ndarray):
     return features
 
 
-def import_feature_dataset(dataset: str,
-                           path: str = 'data',
-                           **kwargs):
+def load_feature_dataset(dataset: str,
+                         path: str = 'data',
+                         **kwargs):
     """
     Imports a dataset comprising node features. Features and labels are organized as numpy matrix.
     This tries to automatically download the dataset first if not found.
@@ -89,6 +89,20 @@ def import_feature_dataset(dataset: str,
     features = _preprocess_features(features)
     labels = np.array([to_signal(graph, group).np for group in groups.values()], dtype=np.float64).transpose()
     return graph, features, labels
+
+
+def load_datasets_multiple_communities(datasets: Iterable[str], path='data'):
+    if not os.path.isdir(path):   # pragma: no cover
+        path = "../"+path
+    for dataset in datasets:
+        graph, groups = import_snap_format_dataset(dataset, path=path)
+        yield dataset, graph, groups
+
+
+def load_datasets_all_communities(datasets: Iterable[str], path='data'):
+    for dataset, graph, groups in load_datasets_multiple_communities(datasets, path):
+            for group_id, group in groups.items():
+                yield dataset+str(group_id), graph, group
 
 
 def load_datasets_one_community(datasets: Iterable[str], path='data'):

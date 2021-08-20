@@ -7,7 +7,7 @@ Fast recommendation algorithms for large graphs based on link analysis.
 **License:** Apache Software License
 <br>**Author:** Emmanouil (Manios) Krasanakis
 <br>**Dependencies:** `networkx, numpy, scipy, sklearn, dload` (required) `tensorflow` (optional)
-<br>**Coverage:** 91% (measured with *codecov*)
+<br>**Coverage:** 97% (measured with *codecov*)
 
 # :hammer_and_wrench: Installation
 `pygrank` is meant to work with Python 3.6 or later. It can be installed with pip per:
@@ -138,7 +138,7 @@ and testing of new algorithms.
 Some of the library's advantages are:
 1. **Compatibility** with [networkx](https://github.com/networkx/networkx) and [tensorflow](https://www.tensorflow.org/).
 2. **Datacentric** interfaces that do not require transformations to identifiers.
-3. **Large** graph support with sparse representations.
+3. **Large** graph support with sparse representations and fast algorithms.
 4. **Seamless** pipelines, from graph preprocessing up to evaluation.
 5. **Modular** combination of components.
 

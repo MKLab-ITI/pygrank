@@ -8,7 +8,7 @@ All of them can be used through the code patterns presented at the library's [do
 2. [BoostedSeedOversampling](#postprocessor-boostedseedoversampling)
 3. [FairPersonalizer](#postprocessor-fairpersonalizer)
 4. [FairWalk](#postprocessor-fairwalk)
-5. [NormMaintain](#postprocessor-normmaintain)
+5. [MabsMaintain](#postprocessor-mabsmaintain)
 6. [Normalize](#postprocessor-normalize)
 7. [Ordinals](#postprocessor-ordinals)
 8. [SeedOversampling](#postprocessor-seedoversampling)
@@ -69,8 +69,9 @@ Args:
 ### <kbd>Postprocessor</kbd> FairWalk
  
 
-### <kbd>Postprocessor</kbd> NormMaintain
- 
+### <kbd>Postprocessor</kbd> MabsMaintain
+
+Forces node ranking posteriors to have the same mean absolute value as prior inputs. 
 
 ### <kbd>Postprocessor</kbd> Normalize
 

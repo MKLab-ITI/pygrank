@@ -125,13 +125,12 @@ class AdHocFairness(Postprocessor):
 
     def __distribute(self, DR, ranks, sensitive):
         min_rank = float('inf')
-        while min_rank >= self.eps:
+        while min_rank >= self.eps and DR > 0:
             ranks = {v: ranks[v] * sensitive.get(v, 0) for v in ranks if ranks[v] * sensitive.get(v, 0) != 0}
             d = DR / len(ranks)
             min_rank = min(ranks.values())
             if min_rank > d:
-                ranks = {v: val - d for v, val in ranks.items()}
-                break
+                min_rank = d
             ranks = {v: val - min_rank for v, val in ranks.items()}
             DR -= len(ranks) * min_rank
         return ranks

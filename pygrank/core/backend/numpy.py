@@ -7,13 +7,11 @@ def backend_init():
     pass
 
 
-def graph_dropout(M, dropout):
-    if dropout == 0:
-        return M
-    raise Exception("Graph dropout can not be delegated to numpy")
+def graph_dropout(M, _):
+    return M
 
 
-def separate_cols(x, col_num):
+def separate_cols(x):
     return [x[:, col_num] for col_num in range(x.shape[1])]
 
 

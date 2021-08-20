@@ -30,7 +30,7 @@ class GraphFilter(NodeRanking):
         self.preprocessor = call(default_preprocessor, kwargs) if preprocessor is None else preprocessor
         self.convergence = call(ConvergenceManager, kwargs) if convergence is None else convergence
         self.personalization_transform = Tautology() if personalization_transform is None else personalization_transform
-        ensure_used_args(kwargs, [preprocessor, ConvergenceManager])
+        ensure_used_args(kwargs, [default_preprocessor, ConvergenceManager])
 
     def rank(self, graph=None, personalization=None, warm_start=None, graph_dropout: float = 0, *args, **kwargs):
         personalization = to_signal(graph, personalization)

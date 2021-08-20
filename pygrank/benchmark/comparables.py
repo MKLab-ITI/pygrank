@@ -23,12 +23,12 @@ def create_demo_filters(pre=None,
     """
     if pre is None:
         pre = preprocessor(assume_immutability=True)
-    return {"PPR.85": PageRank(alpha=0.85, to_scipy=pre, max_iters=max_iters, tol=tol),
-            "PPR.9": PageRank(alpha=0.95, to_scipy=pre, max_iters=max_iters, tol=tol),
-            "PPR.99": PageRank(alpha=0.95, to_scipy=pre, max_iters=max_iters, tol=tol),
-            "HK3": HeatKernel(t=3, to_scipy=pre, max_iters=max_iters, tol=tol),
-            "HK5": HeatKernel(t=5, to_scipy=pre, max_iters=max_iters, tol=tol),
-            "HK7": HeatKernel(t=7, to_scipy=pre, max_iters=max_iters, tol=tol)
+    return {"PPR.85": PageRank(alpha=0.85, preprocessor=pre, max_iters=max_iters, tol=tol),
+            "PPR.9": PageRank(alpha=0.95, preprocessor=pre, max_iters=max_iters, tol=tol),
+            "PPR.99": PageRank(alpha=0.95, preprocessor=pre, max_iters=max_iters, tol=tol),
+            "HK3": HeatKernel(t=3, preprocessor=pre, max_iters=max_iters, tol=tol),
+            "HK5": HeatKernel(t=5, preprocessor=pre, max_iters=max_iters, tol=tol),
+            "HK7": HeatKernel(t=7, preprocessor=pre, max_iters=max_iters, tol=tol)
             }
 
 
@@ -50,22 +50,22 @@ def create_many_filters(tol: float = 1.E-6,
     pre = preprocessor('col', assume_immutability=True)
     preL = preprocessor('symmetric', assume_immutability=True)
     return {
-        "PPRL.85": PageRank(alpha=0.85, to_scipy=preL, max_iters=max_iters, tol=tol),
-        "PPRL.90": PageRank(alpha=0.9, to_scipy=preL, max_iters=max_iters, tol=tol),
-        "PPRL.95": PageRank(alpha=0.95, to_scipy=preL, max_iters=max_iters, tol=tol),
-        "PPRL.99": PageRank(alpha=0.99, to_scipy=preL, max_iters=max_iters, tol=tol),
-        "PPR.85": PageRank(alpha=0.85, to_scipy=pre, max_iters=max_iters, tol=tol),
-        "PPR.90": PageRank(alpha=0.9, to_scipy=pre, max_iters=max_iters, tol=tol),
-        "PPR.95": PageRank(alpha=0.95, to_scipy=pre, max_iters=max_iters, tol=tol),
-        "PPR.99": PageRank(alpha=0.99, to_scipy=pre, max_iters=max_iters, tol=tol),
-        "HK1": HeatKernel(t=1, to_scipy=pre, max_iters=max_iters, tol=tol),
-        "HK3": HeatKernel(t=3, to_scipy=pre, max_iters=max_iters, tol=tol),
-        "HK5": HeatKernel(t=5, to_scipy=pre, max_iters=max_iters, tol=tol),
-        "HK7": HeatKernel(t=7, to_scipy=pre, max_iters=max_iters, tol=tol),
-        "HKL1": HeatKernel(t=1, to_scipy=preL, max_iters=max_iters, tol=tol),
-        "HKL3": HeatKernel(t=3, to_scipy=preL, max_iters=max_iters, tol=tol),
-        "HKL5": HeatKernel(t=5, to_scipy=preL, max_iters=max_iters, tol=tol),
-        "HKL7": HeatKernel(t=7, to_scipy=preL, max_iters=max_iters, tol=tol),
+        "PPRL.85": PageRank(alpha=0.85, preprocessor=preL, max_iters=max_iters, tol=tol),
+        "PPRL.90": PageRank(alpha=0.9, preprocessor=preL, max_iters=max_iters, tol=tol),
+        "PPRL.95": PageRank(alpha=0.95, preprocessor=preL, max_iters=max_iters, tol=tol),
+        "PPRL.99": PageRank(alpha=0.99, preprocessor=preL, max_iters=max_iters, tol=tol),
+        "PPR.85": PageRank(alpha=0.85, preprocessor=pre, max_iters=max_iters, tol=tol),
+        "PPR.90": PageRank(alpha=0.9, preprocessor=pre, max_iters=max_iters, tol=tol),
+        "PPR.95": PageRank(alpha=0.95, preprocessor=pre, max_iters=max_iters, tol=tol),
+        "PPR.99": PageRank(alpha=0.99, preprocessor=pre, max_iters=max_iters, tol=tol),
+        "HK1": HeatKernel(t=1, preprocessor=pre, max_iters=max_iters, tol=tol),
+        "HK3": HeatKernel(t=3, preprocessor=pre, max_iters=max_iters, tol=tol),
+        "HK5": HeatKernel(t=5, preprocessor=pre, max_iters=max_iters, tol=tol),
+        "HK7": HeatKernel(t=7, preprocessor=pre, max_iters=max_iters, tol=tol),
+        "HKL1": HeatKernel(t=1, preprocessor=preL, max_iters=max_iters, tol=tol),
+        "HKL3": HeatKernel(t=3, preprocessor=preL, max_iters=max_iters, tol=tol),
+        "HKL5": HeatKernel(t=5, preprocessor=preL, max_iters=max_iters, tol=tol),
+        "HKL7": HeatKernel(t=7, preprocessor=preL, max_iters=max_iters, tol=tol),
         }
 
 

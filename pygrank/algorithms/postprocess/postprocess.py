@@ -20,16 +20,6 @@ class Postprocessor(NodeRanking):
         raise Exception("_transform method not implemented for the class "+self.__class__.__name__)
 
 
-class NormMaintain(Postprocessor):
-    def rank(self, graph=None, personalization=None, *args, **kwargs):
-        personalization = to_signal(graph, personalization)
-        norm = backend.sum(backend.abs(personalization.np))
-        ranks = self.ranker(graph, personalization, *args, **kwargs)
-        if norm != 0:
-            ranks.np = ranks.np * norm / backend.sum(backend.abs(ranks.np))
-        return ranks
-
-
 class Tautology(Postprocessor):
     """ Returns ranks as-are.
 
@@ -46,6 +36,18 @@ class Tautology(Postprocessor):
         if self.ranker is not None:
             return self.ranker.rank(graph, personalization, *args, **kwargs)
         return to_signal(graph, personalization)
+
+
+class MabsMaintain(Postprocessor):
+    """Forces node ranking posteriors to have the same mean absolute value as prior inputs."""
+
+    def rank(self, graph=None, personalization=None, *args, **kwargs):
+        personalization = to_signal(graph, personalization)
+        norm = backend.sum(backend.abs(personalization.np))
+        ranks = self.ranker(graph, personalization, *args, **kwargs)
+        if norm != 0:
+            ranks.np = ranks.np * norm / backend.sum(backend.abs(ranks.np))
+        return ranks
 
 
 class Normalize(Postprocessor):
