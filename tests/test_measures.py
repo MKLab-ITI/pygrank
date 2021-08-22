@@ -3,6 +3,7 @@ from tests.example_graph import test_graph, test_block_model_graph
 import pygrank as pg
 import networkx as nx
 
+
 class Test(unittest.TestCase):
 
     def test_auc_ndcg_compliance(self):
@@ -118,6 +119,11 @@ class Test(unittest.TestCase):
 
         loader = pg.load_datasets_one_community(datasets)
         pg.benchmark_print(pg.supervised_benchmark(algorithms, loader, pg.AUC, fraction_of_training=.8))
+        loader = pg.load_datasets_one_community(datasets)
+        pg.benchmark_print(pg.unsupervised_benchmark(algorithms, loader, pg.Conductance, fraction_of_training=.8))
+
+    def test_load_datasets_all_communities(self):
+        self.assertGreater(len(list(pg.load_datasets_all_communities(["citeseer"]))), 1)
 
     def test_dataset_generation(self):
         self.assertEquals(len(pg.downloadable_datasets()), len(pg.datasets))
@@ -140,7 +146,12 @@ class Test(unittest.TestCase):
         loader = pg.load_datasets_multiple_communities(datasets)
         pg.benchmark_print(pg.unsupervised_benchmark(algorithms, loader,
                                                    lambda graph: pg.LinkAssessment(graph, hops=2, similarity="dot", max_positive_samples=200, max_negative_samples=200)))
+        loader = pg.load_datasets_multiple_communities(datasets)
         pg.benchmark_print(pg.unsupervised_benchmark(algorithms, loader,
                                                    lambda graph: pg.ClusteringCoefficient(graph)))
+        loader = pg.load_datasets_multiple_communities(datasets)
+        pg.benchmark_print(pg.unsupervised_benchmark(algorithms, loader,
+                                                   lambda graph: pg.ClusteringCoefficient(graph, similarity="dot")))
+        loader = pg.load_datasets_multiple_communities(datasets)
         pg.benchmark_print(pg.unsupervised_benchmark(algorithms, loader,
                                                    lambda graph: pg.MultiUnsupervised(pg.Conductance, graph)))

@@ -311,3 +311,5 @@ class Test(unittest.TestCase):
         with self.assertRaises(Exception):
             algorithm = pg.Ordinals(pg.PageRank(0.85, convergence=pg.RankOrderConvergenceManager(0.85, 0.99, "unknown")))
             algorithm.rank(graph, {"A": 1})
+            
+    

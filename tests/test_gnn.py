@@ -24,8 +24,8 @@ class Test(unittest.TestCase):
                 pre = pg.preprocessor(renormalize=True, assume_immutability=True)
                 self.ranker = pg.ParameterTuner(
                     lambda params: pg.GenericGraphFilter([params[0]] * int(params[1]), preprocessor=pre, tol=1.E-16),
-                    max_vals=[0.99, 20], min_vals=[0.5, 5],
-                    measure=pg.KLDivergence, deviation_tol=0.1, tuning_backend="numpy")
+                    max_vals=[0.95, 12], min_vals=[0.5, 5],
+                    measure=pg.KLDivergence, deviation_tol=0.1, tuning_backend="numpy", divide_range=2)
 
             def __call__(self, graph, features, training=False):
                 predict = self.mlp(features, training=training)

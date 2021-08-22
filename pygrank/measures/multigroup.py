@@ -106,11 +106,10 @@ class ClusteringCoefficient:
         if self.G.is_directed():
             warnings.warn("ClusteringCoefficient is designed for undirected graphs", stacklevel=2)
         if similarity == "cos":
-            self._similarity = _cos_similarity
+            similarity = _cos_similarity
         elif similarity == "dot":
-            self._similarity = _dot_similarity
-        else:
-            self._similarity = similarity
+            similarity = _dot_similarity
+        self._similarity = similarity
 
     def evaluate(self, ranks):
         np.random.seed(self.seed)
