@@ -11,13 +11,21 @@ Fast recommendation algorithms for large graphs based on link analysis.
 
 [![Downloads](https://static.pepy.tech/personalized-badge/pygrank?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads)](https://pepy.tech/project/pygrank)
 
+# :tent: Roadmap for 0.2.X
+The following roadmap overviews short-term development goals and will be updated appropriately.
+
+:heavy_check_mark: Reach a stable architecture with comprehensive development management (achieved as of 0.2.3, no longer backwards compatible with 0.1.17, most important change `to_scipy` >> `preprocessor`.) <br>
+:heavy_check_mark: Graph neural network support with dropout, renormalization and tensorflow backend<br>
+:x: 100% code coverage (mandatory continuous integration for future master commits)<br>
+:x: Complete documentation<br>
+:x: Automatic download of all datasets in related publications<br>
+:x: Updated reference docs and automated citation discovery for algorithms<br>
+
 # :hammer_and_wrench: Installation
 `pygrank` is meant to work with Python 3.9 or later. It can be installed with pip per:
 ```
 pip install pygrank
 ```
-
-**Parts of the documentation are still under construction.**
 
 To use machine learning backends (e.g. to integrate the package
 in machine learning projects), such as *tensorflow*,
