@@ -1,5 +1,4 @@
 from typing import Callable, Mapping
-from networkx import Graph
 from pygrank.algorithms import NodeRanking, preprocessor, PageRank, AbsorbingWalks, HeatKernel, BiasedKernel
 from pygrank.algorithms import Postprocessor, Tautology, Sweep, SeedOversampling
 

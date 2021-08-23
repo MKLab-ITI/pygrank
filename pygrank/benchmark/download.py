@@ -3,6 +3,7 @@ import wget
 import shutil
 import sys
 import os
+from pygrank.benchmark import dataset_processors
 
 datasets = {
     "dblp": {"url": "https://snap.stanford.edu/data/com-DBLP.html",
@@ -15,7 +16,21 @@ datasets = {
                  "all": "https://linqs-data.soe.ucsc.edu/public/lbc/citeseer.tgz",
                  "pairs": "citeseer/citeseer.cites",
                  "features": "citeseer/citeseer.content",
-                 "remove": "citeseer/"}
+                 "remove": "citeseer/"},
+    "amazon": {"url": "https://snap.stanford.edu/data/amazon-meta.html",
+               "all": "https://snap.stanford.edu/data/bigdata/amazon/amazon-meta.txt.gz",
+               "script": dataset_processors.amazon_processor},
+    "graph5": {"url": "https://github.com/maniospas/pygrank-datasets",
+               "pairs": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/graph5/pairs.txt",
+               },
+    "graph9": {"url": "https://github.com/maniospas/pygrank-datasets",
+               "pairs": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/graph9/pairs.txt",
+               "groups": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/graph9/groups.txt",
+               },
+    "bigraph": {"url": "https://github.com/maniospas/pygrank-datasets",
+               "pairs": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/biblock/pairs.txt",
+               "groups": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/biblock/groups.txt",
+               },
 }
 
 
@@ -24,7 +39,7 @@ def downloadable_datasets():
 
 
 def downloadable_small_datasets():
-    return ["citeseer", "eucore"]
+    return ["citeseer", "eucore", "graph5", "graph9", "bigraph"]
 
 
 def download_dataset(dataset, path: str = "data"):   # pragma: no cover
@@ -45,14 +60,18 @@ def download_dataset(dataset, path: str = "data"):   # pragma: no cover
             tarfile.open(all_path, 'r').extractall(download_path+"/")
             os.remove(all_path)
 
+        if "script" in source:
+            source["script"](path)
+
         if "pairs" in source:
             if source["pairs"].startswith("http"):
                 pairs_path = download_path+"/pairs."+source["pairs"].split(".")[-1]
                 wget.download(source["pairs"], pairs_path)
-                with gzip.open(pairs_path, 'rb') as f_in:
-                    with open(download_path+"/pairs.txt", 'wb') as f_out:
-                        shutil.copyfileobj(f_in, f_out)
-                os.remove(pairs_path)
+                if pairs_path.split(".")[-1] not in ["txt", "csv"]:
+                    with gzip.open(pairs_path, 'rb') as f_in:
+                        with open(download_path+"/pairs.txt", 'wb') as f_out:
+                            shutil.copyfileobj(f_in, f_out)
+                    os.remove(pairs_path)
             else:
                 shutil.move(download_path+"/"+source["pairs"], download_path+"/pairs.txt")
 
@@ -81,10 +100,11 @@ def download_dataset(dataset, path: str = "data"):   # pragma: no cover
         elif "groups" in source:
             groups_path = download_path+"/groups."+source["groups"].split(".")[-1]
             wget.download(source["groups"], groups_path)
-            with gzip.open(groups_path, 'rb') as f_in:
-                with open(download_path+"/groups.txt", 'wb') as f_out:
-                    shutil.copyfileobj(f_in, f_out)
-            os.remove(groups_path)
+            if groups_path.split(".")[-1] not in ["txt", "csv"]:
+                with gzip.open(groups_path, 'rb') as f_in:
+                    with open(download_path+"/groups.txt", 'wb') as f_out:
+                        shutil.copyfileobj(f_in, f_out)
+                os.remove(groups_path)
         elif "labels" in source:
             labels_path = download_path+"/labels."+source["labels"].split(".")[-1]
             wget.download(source["labels"], labels_path)

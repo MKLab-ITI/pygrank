@@ -12,7 +12,7 @@ def import_snap_format_dataset(dataset: str,
                                pair_file: str = 'pairs.txt',
                                group_file: str = 'groups.txt',
                                directed: bool = False,
-                               min_group_size: int = 10,
+                               min_group_size: float = 0.01,
                                max_group_number: int = 20):
     if not os.path.isdir(path):   # pragma: no cover
         path = "../"+path
@@ -25,7 +25,9 @@ def import_snap_format_dataset(dataset: str,
                 splt = line[:-1].split()
                 if len(splt) != 0:
                     G.add_edge(splt[0], splt[1])
-    if group_file is not None:
+    if min_group_size < 1:
+        min_group_size *= len(G)
+    if group_file is not None and os.path.isfile(path+'/'+dataset+'/'+group_file):
         with open(path+'/'+dataset+'/'+group_file, 'r', encoding='utf-8') as file:
             for line in file:
                 if line[0] != '#':
@@ -96,13 +98,42 @@ def load_datasets_multiple_communities(datasets: Iterable[str], path='data'):
         path = "../"+path
     for dataset in datasets:
         graph, groups = import_snap_format_dataset(dataset, path=path)
-        yield dataset, graph, groups
+        if len(groups) != 0:
+            yield dataset, graph, groups
 
 
 def load_datasets_all_communities(datasets: Iterable[str], path='data'):
     for dataset, graph, groups in load_datasets_multiple_communities(datasets, path):
             for group_id, group in groups.items():
                 yield dataset+str(group_id), graph, group
+
+
+def load_datasets_graph(datasets: Iterable[str], path='data'):
+    """
+    Iterates through all available datasets that exhibit structural communities and loads them with
+    *import_snap_format_dataset* for experiments.
+    Found datasets are yielded to iterate through.
+
+    Args:
+        datasets: A iterable of dataset names corresponding to a folder name in which the dataset is stored.
+        path: The dataset's path in which *dataset* is a folder. If path not found in the file system,
+            "../" is prepended. Default is "data".
+    Yields:
+        graph: A graph of node relations. Nodes are indexed in the order the graph is traversed.
+
+    Example:
+        >>> import pygrank as pg
+        >>> for graph, group in pg.load_datasets_one_community(pg.downloadable_datasets()):
+        >>>     ...
+    """
+    if not os.path.isdir(path):   # pragma: no cover
+        path = "../"+path
+    datasets = [(dataset, 0) if len(dataset) != 2 else dataset for dataset in datasets]
+    for dataset, group_id in datasets:
+        graph, _ = import_snap_format_dataset(dataset,
+                                              path=path,
+                                              max_group_number=0)
+        yield graph
 
 
 def load_datasets_one_community(datasets: Iterable[str], path='data'):
@@ -135,5 +166,6 @@ def load_datasets_one_community(datasets: Iterable[str], path='data'):
                                                        path=path,
                                                        max_group_number=max_group_number)
             last_loaded_dataset = dataset
-        group = set(groups[group_id])
-        yield dataset, graph, group
+        if len(groups) > group_id:
+            group = set(groups[group_id])
+            yield dataset, graph, group

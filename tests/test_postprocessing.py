@@ -1,48 +1,20 @@
 import unittest
 import pygrank as pg
-from experiments.importer import fairness_dataset
-from tests.example_graph import test_graph, test_block_model_graph
 
 
 class Test(unittest.TestCase):
 
-    def test_autotune(self):
-        G, groups = test_block_model_graph()
-        group = groups[0]
-        training, evaluation = pg.split(pg.to_signal(G, {v: 1 for v in group}), training_samples=0.5)
-        auc1 = pg.AUC(evaluation, exclude=training)(pg.PageRank().rank(training))
-        auc2 = pg.AUC(evaluation, exclude=training)(pg.ParameterTuner(optimization_dict=dict()).rank(training))
-        self.assertLessEqual(auc1, auc2, "Autotune should find good parameters")
-
-    def test_autotune_manual(self):
-        G, groups = test_block_model_graph()
-        group = groups[0]
-        training, evaluation = pg.split(pg.to_signal(G, {v: 1 for v in group}), training_samples=0.5)
-        auc1 = pg.AUC(evaluation, exclude=training)(pg.PageRank().rank(training))
-        alg2 = pg.ParameterTuner(lambda params: pg.PageRank(params[0]), max_vals=[0.99], min_vals=[0.5]).tune(training)
-        auc2 = pg.AUC(evaluation, exclude=training)(alg2.rank(training))
-        self.assertLessEqual(auc1, auc2, "Autotune should find good parameters")
-
-    def test_autotune_methods(self):
-        G, groups = test_block_model_graph()
-        group = groups[0]
-        training, evaluation = pg.split(pg.to_signal(G, {v: 1 for v in group}), training_samples=0.5)
-
-        auc1 = max(pg.AUC(evaluation, exclude=training)(ranker.rank(training)) for ranker in pg.create_demo_filters().values())
-        auc2 = pg.AUC(evaluation, exclude=training)(pg.AlgorithmSelection(tuning_backend="tensorflow").rank(training))
-        self.assertLessEqual(auc1, auc2, "Autotune should find best method")
-
     def test_tautology(self):
-        G = test_graph()
-        r = pg.PageRank().rank(G)
-        tr = pg.Tautology(pg.PageRank()).rank(G)
+        graph = next(pg.load_datasets_graph(["bigraph"]))
+        r = pg.PageRank().rank(graph)
+        tr = pg.Tautology(pg.PageRank()).rank(graph)
         rt = pg.Tautology().transform(r)
-        for u in G:
+        for u in graph:
             self.assertEqual(r[u], rt[u])
             self.assertEqual(r[u], tr[u])
 
-        u = pg.Tautology().rank(G)
-        self.assertEqual(float(sum(u.np)), len(G))
+        u = pg.Tautology().rank(graph)
+        self.assertEqual(float(sum(u.np)), len(graph))
 
     def test_normalize_range(self):
         graph = test_graph()

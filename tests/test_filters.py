@@ -1,6 +1,5 @@
 import unittest
 import networkx as nx
-from tests.example_graph import test_graph, test_block_model_graph
 import pygrank as pg
 
 
@@ -28,54 +27,53 @@ class Test(unittest.TestCase):
     def test_signal(self):
         with self.assertRaises(Exception):
             pg.GraphSignal([1, 2, 3], [1, 2])
-        signal = pg.GraphSignal(test_graph(), {"A": 1, "B": 2})
+        signal = pg.GraphSignal(next(pg.load_datasets_graph(["graph9"])), {"A": 1, "B": 2})
         del signal["A"]
         self.assertEqual(signal["A"], 0)
         self.assertEqual(signal["B"], 2)
 
     def test_zero_personalization(self):
-        self.assertEqual(pg.sum(pg.PageRank()(test_graph(),{}).np), 0)
+        self.assertEqual(pg.sum(pg.PageRank()(next(pg.load_datasets_graph(["graph9"])),{}).np), 0)
 
     def test_node_ranking(self):
         from pygrank import NodeRanking, PageRank
-        G = test_graph()
+        graph = next(pg.load_datasets_graph(["graph9"]))
         with self.assertRaises(Exception):
-            NodeRanking().rank(G)
+            NodeRanking().rank(graph)
         ranker = PageRank(normalization='col', tol=1.E-9)
-        test_result = ranker.rank(G)
-        test_result2 = ranker(G)
+        test_result = ranker.rank(graph)
+        test_result2 = ranker(graph)
         abs_diffs = sum(abs(test_result[v] - test_result2[v]) for v in test_result2.keys()) / len(test_result2)
         self.assertAlmostEqual(abs_diffs, 0, places=16, msg="PageRank compliance with nx results")
 
     def test_abstract_filter(self):
-        G = test_graph()
+        graph = next(pg.load_datasets_graph(["graph5"]))
         with self.assertRaises(Exception):
-            pg.GraphFilter().rank(G)
+            pg.GraphFilter().rank(graph)
         with self.assertRaises(Exception):
-            pg.RecursiveGraphFilter().rank(G)
+            pg.RecursiveGraphFilter().rank(graph)
         with self.assertRaises(Exception):
-            pg.ClosedFormGraphFilter().rank(G)
+            pg.ClosedFormGraphFilter().rank(graph)
         with self.assertRaises(Exception):
-            pg.Tuner().rank(G)
+            pg.Tuner().rank(graph)
 
     def test_prevent_passing_node_lists_as_graphs(self):
+        graph = next(pg.load_datasets_graph(["graph5"]))
         with self.assertRaises(Exception):
-            pg.PageRank().rank(list(test_graph()))
+            pg.PageRank().rank(list(graph))
 
     def test_non_convergence(self):
+        graph = next(pg.load_datasets_graph(["graph9"]))
         with self.assertRaises(Exception):
-            pg.PageRank(max_iters=5).rank(test_graph())
+            pg.PageRank(max_iters=5).rank(graph)
 
     def test_custom_runs(self):
-        G = test_graph()
-        algorithmn = pg.PageRank(0.85, max_iters=5, error_type="iters")
-        ranks1 = algorithmn.rank(G, {"A": 1})
-        self.assertTrue("5" in str(algorithmn.convergence))
+        graph = next(pg.load_datasets_graph(["graph9"]))
+        ranks1 = pg.Normalize(pg.PageRank(0.85, tol=1.E-12, max_iters=1000)).rank(graph, {"A": 1})
         # TODO find why the following is not exactly the same
-        """ ranks2 = Normalize(GenericGraphFilter([0.85]*1, tol=1.E-12)).rank(G, {"A": 1})
-        print(ranks1.np-ranks2.np)
-        self.assertEqual(Mabs(ranks1)(ranks2), 0)
-        """
+        ranks2 = pg.Normalize(pg.GenericGraphFilter([0.85**i for i in range(20)], tol=1.E-12)).rank(graph, {"A": 1})
+        #print(ranks1.np-ranks2.np)
+        #self.assertAlmostEqual(pg.Mabs(ranks1)(ranks2), 0, places=11)
 
     def test_completion(self):
         G = test_graph()
