@@ -48,11 +48,16 @@ def benchmark_print(benchmark, delimiter: str = " \t ", end_line: str = ""):
     """
     old_stderr = sys.stderr
     sys.stderr = buffered_error = io.StringIO()
+    tabs = None
     try:
         for line in benchmark:
-            print(delimiter.join([_fill(_fraction2str(value)) for value in line]) + end_line)
+            if tabs is None:
+                tabs = [len(value)+1 for value in line]  # first line should be algorithm names
+                tabs[0] = 14
+            print(delimiter.join([_fill(_fraction2str(value), tab) for tab, value in zip(tabs, line)]) + end_line)
     finally:
         sys.stderr = old_stderr
+        sys.stdout.flush()
         print(buffered_error.getvalue(), file=sys.stderr)
 
 

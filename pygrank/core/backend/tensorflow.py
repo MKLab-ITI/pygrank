@@ -8,6 +8,12 @@ def backend_init():
     tf.keras.backend.set_floatx('float64')
 
 
+def graph_dropout(M, dropout):
+    if dropout == 0:
+        return M
+    return tf.SparseTensor(M.indices, tf.nn.dropout(M.values, dropout), M.shape)
+
+
 def separate_cols(x):
     return [tf.gather(x, [col_num], axis=1) for col_num in range(x.shape[1])]
 

@@ -1,6 +1,7 @@
 from pygrank.core.signals import to_signal, NodeRanking
 from pygrank.algorithms.utils import call, ensure_used_args
-from pygrank.algorithms.utils import preprocessor, ConvergenceManager, krylov_base, krylov2original
+from pygrank.algorithms.utils import preprocessor as default_preprocessor, ConvergenceManager
+from pygrank.algorithms.utils import krylov_base, krylov2original
 from pygrank.core import backend
 from pygrank.algorithms.postprocess import Postprocessor, Tautology
 from typing import Union
@@ -11,13 +12,13 @@ class GraphFilter(NodeRanking):
     that stops based on a convergence manager."""
 
     def __init__(self,
-                 to_scipy=None,
+                 preprocessor=None,
                  convergence=None,
-                 personalization_transform: Postprocessor= None,
+                 personalization_transform: Postprocessor = None,
                  ** kwargs):
         """
         Args:
-            to_scipy: Optional. Method to extract a scipy sparse matrix from a networkx graph.
+            preprocessor: Optional. Method to extract a scipy sparse matrix from a networkx graph.
                 If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments
                 automatically extracted from the ones passed to this constructor.
             convergence: Optional. The ConvergenceManager that determines when iterations stop. If None (default),
@@ -26,26 +27,25 @@ class GraphFilter(NodeRanking):
             personalization_transform: Optional. A Postprocessor whose `transform` method is used to transform
                 the personalization before applying the graph filter. If None (default) a Tautology is used.
         """
-        self.to_scipy = call(preprocessor, kwargs) if to_scipy is None else to_scipy
+        self.preprocessor = call(default_preprocessor, kwargs) if preprocessor is None else preprocessor
         self.convergence = call(ConvergenceManager, kwargs) if convergence is None else convergence
         self.personalization_transform = Tautology() if personalization_transform is None else personalization_transform
-        ensure_used_args(kwargs, [preprocessor, ConvergenceManager])
+        ensure_used_args(kwargs, [default_preprocessor, ConvergenceManager])
 
-    def rank(self, graph=None, personalization=None, warm_start=None, *args, **kwargs):
+    def rank(self, graph=None, personalization=None, warm_start=None, graph_dropout: float = 0, *args, **kwargs):
         personalization = to_signal(graph, personalization)
         personalization = self.personalization_transform(personalization)
         personalization_norm = backend.sum(backend.abs(personalization.np))
         if personalization_norm == 0:
             return personalization
-            #raise Exception("Personalization should contain at least one non-zero entity")
         personalization = to_signal(personalization, personalization.np / personalization_norm)
         ranks = to_signal(personalization, backend.copy(personalization.np) if warm_start is None else warm_start)
-        M = self.to_scipy(personalization.graph)
+        M = self.preprocessor(personalization.graph)
         self.convergence.start()
-        self._start(M, personalization, ranks, *args, **kwargs)
+        self._start(backend.graph_dropout(M, graph_dropout), personalization, ranks, *args, **kwargs)
         while not self.convergence.has_converged(ranks.np):
-            self._step(M, personalization, ranks, *args, **kwargs)
-        self._end(M, personalization, ranks, *args, **kwargs)
+            self._step(backend.graph_dropout(M, graph_dropout), personalization, ranks, *args, **kwargs)
+        self._end(backend.graph_dropout(M, graph_dropout), personalization, ranks, *args, **kwargs)
         ranks.np = ranks.np * personalization_norm
         return ranks
 

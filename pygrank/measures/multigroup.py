@@ -54,11 +54,10 @@ class LinkAssessment:
         if self.G.is_directed():
             warnings.warn("LinkAUC is designed for undirected graphs", stacklevel=2)
         if similarity == "cos":
-            self._similarity = _cos_similarity
+            similarity = _cos_similarity
         elif similarity == "dot":
-            self._similarity = _dot_similarity
-        else:
-            self._similarity = similarity
+            similarity = _dot_similarity
+        self._similarity = similarity
 
     def evaluate(self, ranks):
         if self.seed is not None:
@@ -69,45 +68,33 @@ class LinkAssessment:
         negative_candidates = list(self.G)
         real = list()
         predicted = list()
-        if self.hops == -1:
-            for v in positive_candidates:
-                for u in self.G._adj[v]:
+        weights = list()
+        for node in positive_candidates:#tqdm.tqdm(positive_candidates, desc="LinkAUC"):
+            neighbors = {node: 0.}
+            pending = [node]
+            while len(pending) != 0:
+                next_node = pending.pop()
+                hops = neighbors[next_node]
+                if hops < self.hops:
+                    for neighbor in self.G._adj[next_node]:
+                        if neighbor not in neighbors:
+                            neighbors[neighbor] = hops + 1
+                            pending.append(neighbor)
+            for positive in neighbors:
+                if positive != node:
                     real.append(1)
-                    predicted.append(self._similarity(v, u, ranks))
-                    for negative in self.G._adj[v]:
-                        if not self.G.has_edge(u, negative):
-                            real.append(0)
-                            predicted.append(self._similarity(u, negative, ranks))
-                    for negative in self.G._adj[u]:
-                        if not self.G.has_edge(v, negative):
-                            real.append(0)
-                            predicted.append(self._similarity(v, negative, ranks))
-                    fpr, tpr, _ = sklearn.metrics.roc_curve(real, predicted)
-        else:
-            weights = list()
-            for node in positive_candidates:#tqdm.tqdm(positive_candidates, desc="LinkAUC"):
-                neighbors = {node: 0.}
-                pending = [node]
-                while len(pending) != 0:
-                    next_node = pending.pop()
-                    hops = neighbors[next_node]
-                    if hops < self.hops:
-                        for neighbor in self.G._adj[next_node]:
-                            if neighbor not in neighbors:
-                                neighbors[neighbor] = hops + 1
-                                pending.append(neighbor)
-                for positive in neighbors:
-                    if positive != node:
-                        real.append(1)
-                        predicted.append(self._similarity(node, positive, ranks))
-                        weights.append(1)
-                        #weights.append(1.-(neighbors[positive]-1)/self.hops)
-                for negative in np.random.choice(negative_candidates, min(self.max_negative_samples, len(negative_candidates))):
-                    if negative != node and negative not in neighbors:
-                        real.append(0)
-                        predicted.append(self._similarity(node, negative, ranks))
-                        weights.append(1)
+                    predicted.append(self._similarity(node, positive, ranks))
+                    weights.append(1)
+                    #weights.append(1.-(neighbors[positive]-1)/self.hops)
+            for negative in np.random.choice(negative_candidates, min(self.max_negative_samples, len(negative_candidates))):
+                if negative != node and negative not in neighbors:
+                    real.append(0)
+                    predicted.append(self._similarity(node, negative, ranks))
+                    weights.append(1)
         return self.measure(real)(predicted)
+
+    def __call__(self, ranks):
+        return self.evaluate(ranks)
 
 
 class ClusteringCoefficient:
@@ -119,11 +106,10 @@ class ClusteringCoefficient:
         if self.G.is_directed():
             warnings.warn("ClusteringCoefficient is designed for undirected graphs", stacklevel=2)
         if similarity == "cos":
-            self._similarity = _cos_similarity
+            similarity = _cos_similarity
         elif similarity == "dot":
-            self._similarity = _dot_similarity
-        else:
-            self._similarity = similarity
+            similarity = _dot_similarity
+        self._similarity = similarity
 
     def evaluate(self, ranks):
         np.random.seed(self.seed)
@@ -148,6 +134,9 @@ class ClusteringCoefficient:
             return 0
         return existing_triplet_values / total_triplet_values
 
+    def __call__(self, ranks):
+        return self.evaluate(ranks)
+
 
 class MultiUnsupervised:
     def __init__(self, metric_type, G, **kwargs):
@@ -157,11 +146,17 @@ class MultiUnsupervised:
         evaluations = [self.metric.evaluate(group_ranks) for group_ranks in ranks.values()]
         return sum(evaluations) / len(evaluations)
 
+    def __call__(self, ranks):
+        return self.evaluate(ranks)
+
 
 class MultiSupervised:
-    def __init__(self, metric_type, ground_truth):
-        self.metrics = {group_id: metric_type(group_truth) for group_id, group_truth in ground_truth.items()}
+    def __init__(self, metric_type, ground_truth, exclude=None):
+        self.metrics = {group_id: metric_type(group_truth, exclude[group_id] if exclude is not None else None) for group_id, group_truth in ground_truth.items()}
 
     def evaluate(self, ranks):
         evaluations = [self.metrics[group_id].evaluate(group_ranks) for group_id, group_ranks in ranks.items()]
         return sum(evaluations) / len(evaluations)
+    
+    def __call__(self, ranks):
+        return self.evaluate(ranks)

@@ -7,7 +7,11 @@ def backend_init():
     pass
 
 
-def separate_cols(x, col_num):
+def graph_dropout(M, _):
+    return M
+
+
+def separate_cols(x):
     return [x[:, col_num] for col_num in range(x.shape[1])]
 
 

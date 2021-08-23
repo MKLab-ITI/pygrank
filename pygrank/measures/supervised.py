@@ -35,6 +35,21 @@ class Supervised(Measure):
             ranks = backend.self_normalize(backend.to_array(ranks, copy_array=True)) if normalization else backend.to_array(ranks)
             return backend.to_array(self.known_ranks), ranks
 
+    def best_direction(self):
+        """
+        Automatically determines if higher or lower values of the measure are better.
+        Design measures so that outcomes of this method depends **only** on their class,
+        as it follows a class-based hashing to guarantee speed.
+
+        Returns:
+            1 if higher values of the measure are better, -1 otherwise.
+        """
+        ret = getattr(self.__class__, "__best_direction", None)
+        if ret is None:
+            ret = 1 if self.__class__([1, 0])([1, 0]) > self.__class__([1, 0])([0, 1]) else -1
+            setattr(self.__class__, "__best_direction", ret)
+        return ret
+
 
 class NDCG(Supervised):
     """Provides evaluation of NDCG@k score between given and known ranks."""
@@ -111,21 +126,6 @@ class AUC(Supervised):
             raise Exception("Cannot evaluate AUC when all labels are the same")
         fpr, tpr, _ = sklearn.metrics.roc_curve(known_ranks, ranks)
         return sklearn.metrics.auc(fpr, tpr)
-
-    def best_direction(self):
-        """
-        Automatically determines if higher or lower values of the measure are better.
-        Design measures so that outcomes of this method depends **only** on their class,
-        as it follows a class-based hashing to guarantee speed.
-
-        Returns:
-            1 if higher values of the measure are better, -1 otherwise.
-        """
-        ret = getattr(self.__class__, "__best_direction", None)
-        if ret is None:
-            ret = 1 if self.__class__([1, 0])([1, 0]) > self.__class__([1, 0])([0, 1]) else -1
-            setattr(self.__class__, "__best_direction", ret)
-        return ret
 
 
 class Accuracy(Supervised):

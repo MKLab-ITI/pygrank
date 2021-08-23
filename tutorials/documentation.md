@@ -1,4 +1,4 @@
-<center><h1>:hammer_and_wrench: Documentation</h1></center> 
+<center><h1>:hammer_and_wrench: Tutorials & Documentation</h1></center> 
 
 ## Table of Contents
 1. [Table of Contents](#table-of-contents)
@@ -349,14 +349,14 @@ from recomputing the hashing already calculated by others,
 they can be made to share the same normalization method. This 
 can be done by using a shared instance of the 
 normalization preprocessing `pg.preprocessor`, 
-which can be passed as the `to_scipy` argument of ranking algorithm
+which can be passed as the `preprocessor` argument of ranking algorithm
 constructors. In this case, the `normalization`, `renormalization` 
 and `assume_immutability`
 arguments should be passed to the preprocessor and will be ignored by the
 constructors (what would otherwise happen is that the constructors
 would create a prerpocessor with these arguments).
 
-Basically, when the default value `to_scipy=None` is passed to ranking algorithm
+Basically, when the default value `preprocessor=None` is passed to ranking algorithm
 constructors, these create a new preprocessing instance
 with the `normalization`, `renormalization` and `assume_immutability`
 values passed
@@ -372,8 +372,8 @@ different ranking algorithms can be done as:
 import pygrank as pg
 graph, personalization1, personalization2 = ...
 pre = pg.preprocessor(normalization="col", assume_immutability=True)
-algorithm1 = pg.PageRank(alpha=0.85, to_scipy=pre)
-algorithm2 = pg.HeatKernel(alpha=0.85, to_scipy=pre)
+algorithm1 = pg.PageRank(alpha=0.85, preprocessor=pre)
+algorithm2 = pg.HeatKernel(alpha=0.85, preprocessor=pre)
 ranks1 = algorithm1.rank(graph, personalization1)
 ranks2 = algorithm2.rank(graph, personalization2) # does not re-compute the normalization
 ```

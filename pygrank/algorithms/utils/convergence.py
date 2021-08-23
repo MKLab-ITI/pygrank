@@ -64,7 +64,7 @@ class ConvergenceManager:
             new_ranks: The iteration's numpy array.
         """
         self.iteration += 1
-        if self.iteration > self.max_iters:
+        if self.iteration >= self.max_iters:
             if self.error_type == "iters":
                 self.elapsed_time = time()-self._start_time
                 return True

@@ -38,13 +38,14 @@ if [ "$current_branch" = "master" ]; then
 		while read_dom; do
 			parse_dom;
 		done < coverage.xml
-		
+
 		echo "Running docgenerator..."
 		python docgenerator.py
 		echo "Updating commit..."
 		git add tutorials/graph_filters.md
 		git add tutorials/postprocessors.md
 		git add tutorials/measures.md
+		git add tutorials/tuners.md
         # tests passed, proceed to prepare commit message
         exit 0
     else
