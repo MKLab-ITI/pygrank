@@ -18,10 +18,11 @@
 6. [Evaluation](#evaluation)
     + [Evaluation Examples](#evaluation-examples)
     + [List of Measures](#list-of-measures)
+    + [Datasets](#datasets)
     + [Benchmarks](#benchmarks)
-    + [Autotune](#autotune)
+7. [Autotune](#autotune)
     + [List of Tuners](#list-of-tuners)
-7. [Applications](#applications)
+8. [Applications](#applications)
     + [Node Classification with Label Propagation](#node-classification-with-label-propagations)
     + [Node Classification with Graph Neural Networks](#node-classification-with-graph-neural-networks)
 
@@ -491,20 +492,69 @@ Multiple measures can also be aggregated through the `pygrank.AM` and
 `pygrank.GM` classes, which respectively perform arithmetic and geometric
 averaging of measure outcomes.
 
-### Evaluation Examples
-TODO
-
-
 ### List of Measures
 An exhaustive list of measures can be
 found [here](measures.md). After initialization with the appropriate
 parameters, these can be used interchangeably in the above example.
 
+### Datasets
+`pygrank` provides a variety of datasets. Most of these are retrieved from
+the [SNAP](https://snap.stanford.edu/) 
+and [LINQS](https://linqs.soe.ucsc.edu/data)
+repositories by automatically downloading and importing them.  data
+
+or from [](https://github.com/maniospas/pygrank-datasets)
+To help researchers provide appropriate citations to dataset sources,
+we provide messages in the error console pointing.
+
+A comprehensive list of all dataset which can be used by the project can 
+be found [here](datasets.md). A lists of all dataset names can be obtained 
+programmatically with the method `downloadable_small_datasets()`, but 
+you can also use `downloadable_small_datasets()` to limit experiments
+on datasets that run fastly (within seconds instead of minutes or tens of minutes)
+in modern machines.
+
+Given a list of datasets, these can be inputted to loader methods that
+iteratively yield the outcome of loading. Five methods with the ability to load
+incrementally more information are provided, where datasets lacking that information
+are ommited:
+
+1. `load_datasets_graph` Yields respective dataset graphs.
+2. `load_datasets_one_community` Yields tuples of dataset names, graphs and node lists, where the lists correspond to one of the (structural or metadata) communities of graph nodes.
+3. `load_datasets_all_communities` Yields the same tuples as before, but also traverses all possible datasets node communities (thus, there are many loading outcomes for each dataset). Community identifiers are appended to dataset names.
+4. `load_datasets_multiple_communities` Yields tuples of dataset names, graphs and hashmaps, where the latter map community identifiers to lists of nodes. 
+5. `load_feature_dataset` Yields respective tuples of graphs, features and node labels, where the last two are organized into numpy arrays whose lines correspond to graph nodes (based on the order the graphs are traversed).
+
+:warning: To make sure that any kind of experiment is performed only adequately many data, communities with less than
+1% of graph nodes are ommitted from loaders 1-4.
+
+All the above loaders take as an argument a list of datasets and, if convenient,
+a secondary argument of a folder location `path="data"`
+(take care *not* to add a trailing slash) 
+in which to download or load the datasets from. Loaders are iterables and thus they need to be re-defined to traverse
+through datasets again. For example, the following code can be used to load datasets for overlapping community detection
+given that each node community should be experimented on separately.
+
+```python
+>>> import pygrank as pg
+>>> datasets = pg.downloadable_small_datasets()
+>>> print(datasets)
+['citeseer', 'eucore', 'graph5', 'graph9', 'bigraph']
+>>> for dataset, graph, group in pg.load_datasets_all_communities(datasets):
+>>>     print(dataset, ":", len(group), "community members", len(graph), "nodes",  graph.number_of_edges(), "edges")
+# REQUIRED CITATION: Please visit the url https://linqs.soe.ucsc.edu/data for instructions on how to cite the dataset citeseer in your research
+citeseer0 : 596 community members 3327 nodes 4676 edges
+citeseer1 : 668 community members 3327 nodes 4676 edges
+citeseer2 : 701 community members 3327 nodes 4676 edges
+...
+```
+
+
 ### Benchmarks
 `pygrank` offers the ability to conduct benchmark experiments that compare
 node ranking algorithms and parameters on a wide range of graphs. For example,
 a simple way to obtain some fastly-running algorithms and small datasets and
-compare them under AUC would be as: 
+compare them under AUC would be as:
 
 ```python
 >>> import pygrank as pg
@@ -535,7 +585,8 @@ then re-run experiments to compare this with alternatives.
 :warning: To run a new series of benchmark experiments, a new loader needs to be created.
 
 
-### Autotune
+
+# Autotune
 Beyond the ability to compare node ranking algorithms,
 we provide the ability to automatically tune node ranking 
 algorithms or select the best ones with respect to optimizing a measure
@@ -561,6 +612,7 @@ by default creates a `GenericGraphFilter` instance with ten parameters.
 >>> auc_pagerank = pg.AUC(evaluation, exclude=training).evaluate(scores_pagerank)
 >>> auc_tuned = pg.AUC(evaluation, exclude=training).evaluate(scores_tuned)
 >>> assert auc_pagerank <= auc_tuned
+True
 ```
 
 Specific algorithms can also be tuned given specific parameter values given that
