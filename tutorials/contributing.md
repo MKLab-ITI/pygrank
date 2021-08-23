@@ -21,8 +21,9 @@ You can use any (virtual) environment to edit the local clone,
 such as conda or the one provided by PyCharm.
 The environment should come with Python 3.6 or later installed.
 Make sure that both base library dependencies 
-`networkx, numpy, scipy, sklearn, tqdm`
-and `tensorflow` and `coverage`
+`networkx, numpy, scipy, sklearn, wget`, as well as`tensorflow` (to support
+unit testing for the respective pipeline)
+and `coverage` (to support code coverage measurements)
 are installed and upgraded to their latest versions.
 
 # :hammer_and_wrench: Architecture

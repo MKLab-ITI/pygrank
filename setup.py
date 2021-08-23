@@ -13,7 +13,7 @@ long_description = "For tutorials, documentation and contribution guidelines, pl
 setuptools.setup(
     name='pygrank',
     version='0.2.3',
-    author="Emmanouil Krasanakis",
+    author="Emmanouil (Manios) Krasanakis",
     author_email="maniospas@hotmail.com",
     description="Recommendation algorithms for large graphs",
     long_description=long_description,
@@ -26,6 +26,6 @@ setuptools.setup(
          "Operating System :: OS Independent",
      ],
     install_requires=[
-          'sklearn', 'scipy', 'numpy', 'networkx',
+          'sklearn', 'scipy', 'numpy', 'networkx', 'wget'
       ],
  )
