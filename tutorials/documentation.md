@@ -501,11 +501,17 @@ parameters, these can be used interchangeably in the above example.
 `pygrank` provides a variety of datasets. Most of these are retrieved from
 the [SNAP](https://snap.stanford.edu/) 
 and [LINQS](https://linqs.soe.ucsc.edu/data)
-repositories by automatically downloading and importing them.  data
-
-or from [](https://github.com/maniospas/pygrank-datasets)
-To help researchers provide appropriate citations to dataset sources,
-we provide messages in the error console pointing.
+repositories by automatically downloading and importing them,
+but synthetically generated datasets have also been
+[generated for pygrank](https://github.com/maniospas/pygrank-datasets).
+To help researchers provide appropriate citations,
+we provide messages in the error console pointing to respective sources.
+Researchers can also add their own datasets by placing them in the loading
+directory (usually a `data` directory in their project, alongside automatically
+downloaded datasets). Please visited the repository of datasets
+[generated for pygrank](https://github.com/maniospas/pygrank-datasets) for
+a description of conventions needed to create new datasets - these follow
+the pairs.txt and groups.txt conventions of the SNAP repository.
 
 A comprehensive list of all dataset which can be used by the project can 
 be found [here](datasets.md). A lists of all dataset names can be obtained 
@@ -529,7 +535,7 @@ are ommited:
 1% of graph nodes are ommitted from loaders 1-4.
 
 All the above loaders take as an argument a list of datasets and, if convenient,
-a secondary argument of a folder location `path="data"`
+a secondary argument of a directory location `path="data"`
 (take care *not* to add a trailing slash) 
 in which to download or load the datasets from. Loaders are iterables and thus they need to be re-defined to traverse
 through datasets again. For example, the following code can be used to load datasets for overlapping community detection
