@@ -1,18 +1,22 @@
-import tensorflow as tf
-
-
 def gnn_accuracy(labels, predictions, nodes):
+    import tensorflow as tf
     return float(1 - tf.math.count_nonzero(tf.argmax(tf.gather(labels, nodes, axis=0), axis=1) - tf.argmax(tf.gather(predictions, nodes, axis=0), axis=1)) / len(nodes))
 
 
 def gnn_cross_entropy(labels, predictions, nodes):
+    import tensorflow as tf
     return tf.keras.losses.CategoricalCrossentropy()(tf.gather(labels, nodes, axis=0), tf.gather(predictions, nodes, axis=0))
 
 
 def gnn_train(model, graph, features, labels, training, validation,
-              optimizer=tf.optimizers.Adam(learning_rate=0.01),
-              regularization=tf.keras.regularizers.L2(5.E-4),
+              optimizer=None,
+              regularization=None,
               epochs=100, test=None):
+    import tensorflow as tf
+    if optimizer is None:
+        optimizer = tf.optimizers.Adam(learning_rate=0.01)
+    if regularization is None:
+        regularization = tf.keras.regularizers.L2(5.E-4)
     best_loss = float('inf')
     best_params = None
     if test is None:
