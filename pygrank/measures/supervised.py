@@ -4,6 +4,7 @@ import scipy
 from pygrank.measures.utils import Measure
 from pygrank import backend
 from pygrank.core.signals import GraphSignal, to_signal
+import numbers
 
 
 class Supervised(Measure):
@@ -25,7 +26,9 @@ class Supervised(Measure):
         self.exclude = exclude
 
     def to_numpy(self, ranks, normalization=False):
-        if isinstance(ranks, GraphSignal):
+        if isinstance(ranks, numbers.Number) and isinstance(self.known_ranks, numbers.Number):
+            return backend.to_array([self.known_ranks]), backend.to_array([ranks])
+        elif isinstance(ranks, GraphSignal):
             return to_signal(ranks, self.known_ranks).filter(exclude=self.exclude), ranks.normalized(normalization).filter(exclude=self.exclude)
         elif isinstance(self.known_ranks, GraphSignal):
             return self.known_ranks.filter(exclude=self.exclude), to_signal(self.known_ranks, ranks).normalized(normalization).filter(exclude=self.exclude)
@@ -61,7 +64,7 @@ class NDCG(Supervised):
             k: Optional. Calculates NDCG@k. If None (default), len(known_ranks) is used.
         """
         super().__init__(known_ranks, exclude=exclude)
-        if not k is None and k > len(known_ranks):
+        if k is not None and k > len(known_ranks):
             raise Exception("NDCG@k cannot be computed for k greater than the number of known ranks")
         self.k = len(known_ranks) if k is None else k
 

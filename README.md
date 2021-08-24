@@ -9,6 +9,7 @@ Fast recommendation algorithms for large graphs based on link analysis.
 <br>**Dependencies:** `networkx, numpy, scipy, sklearn, wget` (required) `tensorflow` (optional)
 <br>**Coverage:** <span style="color:red">restructuring tests, last known coverage 99%</span> (measured with *codecov*)
 
+![build](https://github.com/maniospas/pygrank/actions/workflows/tests.yml/badge.svg)
 [![Downloads](https://static.pepy.tech/personalized-badge/pygrank?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads)](https://pepy.tech/project/pygrank)
 
 # :tent: Roadmap for 0.2.X

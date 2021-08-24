@@ -1,7 +1,6 @@
-import numpy as np
-from numpy import dot
+from pygrank.core import backend
 from numpy.linalg import norm
-import sklearn
+import numpy as np
 import warnings
 
 def diags(vecs, offs):
@@ -10,17 +9,15 @@ def diags(vecs, offs):
 
 def krylov_base(M, s, krylov_space_degree):
     warnings.warn("Krylov approximation is still under development")
-    try:
-        sklearn.utils.validation.check_symmetric(M, tol=1e-10, raise_warning=False, raise_exception=True)
-    except:
-        raise Exception("Krylov approximation can only be performed for \"symmetric\" adjacency matrix normalization during preprocessing")
-    base = [s / norm(s, 2)]
+    # TODO: throw exception for non-symmetric matrix
+    s = backend.to_array(s)
+    base = [s / backend.dot(s, s)**0.5]
     base_norms = []
     alphas = []
     for j in range(0, krylov_space_degree):
         v = base[j]
-        w = M*v
-        a = dot(v, w)
+        w = backend.conv(M, v)
+        a = backend.dot(v, w)
         alphas.append(a)
         next_w = w - a*v
         if j > 0:
@@ -35,6 +32,6 @@ def krylov_base(M, s, krylov_space_degree):
 
 
 def krylov2original(V, filterH, krylov_space_degree):
-    e1 = np.repeat(0.0, krylov_space_degree)
+    e1 = backend.repeat(0.0, krylov_space_degree)
     e1[0] = 1
     return (V @ filterH) @ e1

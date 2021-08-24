@@ -49,7 +49,7 @@ class AM(MeasureCombination):
                 eval = self.measures[i].evaluate(ranks)
                 #print("metric", i, ":", eval, "->", min(max(eval, self.thresholds[i][0]), self.thresholds[i][1]))
                 result += self.weights[i]*min(max(eval, self.thresholds[i][0]), self.thresholds[i][1])
-        return result/backend.sum(self.weights)
+        return result/sum(self.weights)
 
 
 class GM(MeasureCombination):
@@ -62,4 +62,4 @@ class GM(MeasureCombination):
                 eval = self.measures[i].evaluate(ranks)
                 #print("metric", i, ":", eval, "->", min(max(eval, self.thresholds[i][0]), self.thresholds[i][1]))
                 result += self.weights[i]*backend.log(min(max(eval, self.thresholds[i][0]), max(1.E-12, self.thresholds[i][1])))
-        return backend.exp(result/backend.sum(self.weights))
+        return backend.exp(result/sum(self.weights))

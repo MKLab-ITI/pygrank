@@ -107,7 +107,6 @@ class BoostedSeedOversampling(Postprocessor):
             r0_N = {u: 1 for u in RN if RN[u] >= threshold}
             Rr0_N = self.ranker.rank(graph, r0_N, **kwargs)
             a_N = self._boosting_weight(r0_N, Rr0_N, RN)
-            for u in graph.nodes():
-                RN[u] = RN.get(u, 0) + a_N*Rr0_N[u]
+            RN = to_signal(RN, [RN.get(u, 0) + a_N*Rr0_N[u] for u in graph])
             sum_a_N += a_N
         return RN

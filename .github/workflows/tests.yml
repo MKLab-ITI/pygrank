@@ -1,4 +1,4 @@
-name: Unit testing
+name: tests
 on: [push]
 
 jobs:
@@ -24,7 +24,7 @@ jobs:
           pip install wget
           pip install tensorflow
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-      - name: Test with unittest
+      - name: Test with pytest
         run: |
           pip install pytest
-          pytest tests/test_autotune.py
+          pytest tests/test_core.py tests/test_measures.py tests/test_filters.py tests/test_autotune.py tests/test_filter_optimization.py

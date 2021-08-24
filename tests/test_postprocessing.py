@@ -1,20 +1,35 @@
-import unittest
 import pygrank as pg
+import pytest
+from .test_core import supported_backends
 
 
-class Test(unittest.TestCase):
+def test_tautology():
+    graph = next(pg.load_datasets_graph(["bigraph"]))
+    r = pg.PageRank().rank(graph)
+    tr = pg.Tautology(pg.PageRank()).rank(graph)
+    rt = pg.Tautology().transform(r)
+    for u in graph:
+        assert r[u] == rt[u]
+        assert r[u] == tr[u]
+    u = pg.Tautology().rank(graph)
+    assert float(sum(u.np)) == len(graph)
 
-    def test_tautology(self):
-        graph = next(pg.load_datasets_graph(["bigraph"]))
-        r = pg.PageRank().rank(graph)
-        tr = pg.Tautology(pg.PageRank()).rank(graph)
-        rt = pg.Tautology().transform(r)
-        for u in graph:
-            self.assertEqual(r[u], rt[u])
-            self.assertEqual(r[u], tr[u])
 
-        u = pg.Tautology().rank(graph)
-        self.assertEqual(float(sum(u.np)), len(graph))
+def test_seed_oversampling():
+    _, graph, group = next(pg.load_datasets_one_community(["bigraph"]))
+    training, evaluation = pg.split(list(group), training_samples=3)
+    for _ in supported_backends():
+        training, evaluation = pg.to_signal(graph, {v: 1 for v in training}), pg.to_signal(graph, {v: 1 for v in evaluation})
+        for measure in [pg.NDCG, pg.AUC]:
+            base_result = measure(evaluation, training).evaluate(pg.PageRank(0.99).rank(graph, training))
+            so_result = measure(evaluation, training).evaluate(
+                pg.SeedOversampling(pg.PageRank(0.99)).rank(graph, training))
+            bso_result = measure(evaluation, training).evaluate(
+                pg.BoostedSeedOversampling(pg.PageRank(0.99)).rank(graph, training))
+            assert base_result <= so_result
+            assert so_result <= bso_result
+        pg.SeedOversampling(pg.PageRank(0.99), "top").rank(graph, training)
+        assert True
 
     def test_normalize_range(self):
         graph = test_graph()

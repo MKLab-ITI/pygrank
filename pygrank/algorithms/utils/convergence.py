@@ -2,7 +2,7 @@ import numpy as np
 from scipy.stats import norm
 from timeit import default_timer as time
 from pygrank.measures import Supervised, Mabs
-
+from pygrank.core import backend
 
 class ConvergenceManager:
     """ Used to keep previous iteration and generally manage convergence of variables. Graph filters
@@ -103,7 +103,7 @@ class RankOrderConvergenceManager:
             self.accumulated_ranks = 0
 
     def has_converged(self, new_ranks):
-        new_ranks = np.array(new_ranks)
+        new_ranks = np.array(new_ranks).squeeze()
         self.accumulated_ranks = (self.accumulated_ranks*self.iteration + new_ranks) / (self.iteration+1)
         #self.accumulated_rank_squares += (self.accumulated_rank_squares*self.iteration + new_ranks * new_ranks) / (self.iteration+1)
         self.iteration += 1
