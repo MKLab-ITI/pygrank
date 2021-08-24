@@ -33,7 +33,7 @@ def _fill(text="", tab=14):
     return text+(" "*(tab-len(text)))
 
 
-def benchmark_print(benchmark, delimiter: str = " \t ", end_line: str = ""):
+def benchmark_print(benchmark, delimiter: str = " \t ", end_line: str = "", out: object = sys.stdout, err=sys.stderr):
     """
     Print outcomes provided by a given benchmark as a table in the console. To ensure that `sys.stderr`
     does not interrupt printing, this method buffers it and prints all error messages at once in the end.
@@ -45,6 +45,11 @@ def benchmark_print(benchmark, delimiter: str = " \t ", end_line: str = ""):
             indicating the dataset name and number of community of interest respectively.
         delimiter: How to separate columns. Use " & " when exporting to latex format.
         end_line: What to print before the end of line. Use "\\\\" when exporting to latex format.
+        out: The stream in which to print behchmark results. Default is sys.stdout .
+        err: The stream in which to print errors. Default is sys.stderr .
+
+    Example:
+        >>> benchmark_print(..., delimiter=" & ", end_line="\\\\") #  latex output
     """
     old_stderr = sys.stderr
     sys.stderr = buffered_error = io.StringIO()
@@ -54,11 +59,13 @@ def benchmark_print(benchmark, delimiter: str = " \t ", end_line: str = ""):
             if tabs is None:
                 tabs = [len(value)+1 for value in line]  # first line should be algorithm names
                 tabs[0] = 14
-            print(delimiter.join([_fill(_fraction2str(value), tab) for tab, value in zip(tabs, line)]) + end_line)
+            print(delimiter.join([_fill(_fraction2str(value), tab) for tab, value in zip(tabs, line)]) + end_line, file=out)
     finally:
         sys.stderr = old_stderr
-        sys.stdout.flush()
-        print(buffered_error.getvalue(), file=sys.stderr)
+        out.flush()
+        if err is not None:
+            print(buffered_error.getvalue(), file=err)
+    return out
 
 
 def benchmark_scores(benchmark):
@@ -72,5 +79,5 @@ def benchmark_dict(benchmark):
         if not names:
             names = line[1:]
         else:
-            ret = {line[0]: {name: value for name, value in zip(names, line[1:])}}
+            ret[line[0]] = {name: value for name, value in zip(names, line[1:])}
     return ret

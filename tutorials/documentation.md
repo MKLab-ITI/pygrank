@@ -563,20 +563,40 @@ a simple way to obtain some fastly-running algorithms and small datasets and
 compare them under AUC would be as:
 
 ```python
->>> import pygrank as pg
->>> dataset_names = pg.downloadable_small_datasets()
->>> print(dataset_names)
+>> > import pygrank as pg
+>> > dataset_names = pg.downloadable_small_datasets()
+>> > print(dataset_names)
 ['citeseer', 'eucore']
->>> algorithms = pg.create_demo_filters()
->>> print(algorithms.keys())
+>> > algorithms = pg.create_demo_filters()
+>> > print(algorithms.keys())
 dict_keys(['PPR.85', 'PPR.9', 'PPR.99', 'HK3', 'HK5', 'HK7'])
->>> loader = pg.load_datasets_one_community(dataset_names)
->>> pg.benchmark_print(pg.supervised_benchmark(algorithms, loader, pg.AUC))
-               	 PPR.85         	 PPR.9          	 PPR.99         	 HK3            	 HK5            	 HK7
-citeseer       	 .89            	 .89            	 .89            	 .88            	 .89            	 .89
-eucore         	 .82            	 .72            	 .72            	 .84            	 .84            	 .82
-#REQUIRED CITATION: Please visit the url https://linqs.soe.ucsc.edu/data for instructions on how to cite the dataset citeseer in your research
-#REQUIRED CITATION: Please visit the url https://snap.stanford.edu/data/email-Eu-core.html for instructions on how to cite the dataset eucore in your research
+>> > loader = pg.load_datasets_one_community(dataset_names)
+>> > pg.benchmark_print(pg.benchmark(algorithms, loader, pg.AUC))
+PPR
+.85
+PPR
+.9
+PPR
+.99
+HK3
+HK5
+HK7
+citeseer
+.89
+.89
+.89
+.88
+.89
+.89
+eucore
+.82
+.72
+.72
+.84
+.84
+.82
+# REQUIRED CITATION: Please visit the url https://linqs.soe.ucsc.edu/data for instructions on how to cite the dataset citeseer in your research
+# REQUIRED CITATION: Please visit the url https://snap.stanford.edu/data/email-Eu-core.html for instructions on how to cite the dataset eucore in your research
 ```
 
 Of course, in the above scheme a customly-defined algorithms could also be added

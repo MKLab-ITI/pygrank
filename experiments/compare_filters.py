@@ -12,7 +12,7 @@ algorithms = {
 }
 #algorithms = benchmark.create_variations(algorithms, {"": pg.Tautology, "+SO": pg.SeedOversampling})
 #loader = pg.load_datasets_one_community(datasets)
-#pg.supervised_benchmark(algorithms, loader, "time", verbose=True)
+#pg.benchmark(algorithms, loader, "time", verbose=True)
 
 loader = pg.load_datasets_one_community(datasets)
-pg.benchmark_print(pg.supervised_benchmark(algorithms, loader, pg.AUC, fraction_of_training=.8))
+pg.benchmark_print(pg.benchmark(algorithms, loader, pg.AUC, fraction_of_training=.8))

@@ -57,6 +57,7 @@ def test_edge_cases():
     for _ in supported_backends():
         assert pg.Density(nx.Graph())([]) == 0
         assert pg.Modularity(nx.Graph())([]) == 0
+        assert pg.KLDivergence([0,1,0])([0,1,0]) == 0
 
 
 def test_strange_input_types():

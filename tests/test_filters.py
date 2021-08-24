@@ -4,7 +4,7 @@ import pytest
 from .test_core import supported_backends
 
 
-eps = 2.E-16
+eps = 1.E-15
 
 
 def test_zero_personalization():

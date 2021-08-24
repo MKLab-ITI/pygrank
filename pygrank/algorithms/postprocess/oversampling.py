@@ -25,23 +25,23 @@ class SeedOversampling(Postprocessor):
         super().__init__(ranker)
         self.method = method.lower()
 
-    def rank(self, graph, personalization, **kwargs):
+    def rank(self, graph=None, personalization=None, **kwargs):
         personalization = to_signal(graph, personalization)
+        graph = personalization.graph
         assert_binary(personalization)
         if self.method == 'safe':
             ranks = self.ranker.rank(graph, personalization, **kwargs)
             threshold = min(ranks[u] for u in personalization if personalization[u] == 1)
             personalization = {v: 1 for v in graph.nodes() if ranks[v] >= threshold}
-            ranks = self.ranker.rank(graph, personalization, **kwargs)
-            return ranks
+            return self.ranker.rank(graph, personalization, **kwargs)
         elif self.method == 'top':
             ranks = self.ranker.rank(graph, personalization, **kwargs)
             top = int(graph.number_of_nodes() * graph.number_of_nodes() / graph.number_of_edges())
             threshold = np.sort(list(ranks.values()))[len(ranks) - top]  # get top ranks
             personalization = {v: 1 for v in graph.nodes() if ranks[v] >= threshold or personalization.get(v, 0) == 1}
-            ranks = self.ranker.rank(graph, personalization, **kwargs)
-            return ranks
+            return self.ranker.rank(graph, personalization, **kwargs)
         elif self.method == 'neighbors':
+            personalization = dict(personalization.items())
             for u in [u for u in personalization if personalization[u] == 1]:
                 for v in graph.neighbors(u):
                     personalization[v] = 1
