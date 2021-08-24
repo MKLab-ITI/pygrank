@@ -40,7 +40,7 @@ def test_seed_oversampling():
             assert float(base_result) <= float(so_result)
             assert float(so_result) <= float(bso_result)
         pg.SeedOversampling(pg.PageRank(0.99), "top").rank(graph, training)
-        pg.SeedOversampling(pg.PageRank(0.99), "neighbor").rank(graph, training)
+        pg.SeedOversampling(pg.PageRank(0.99), "neighbors").rank(graph, training)
         pg.BoostedSeedOversampling(pg.PageRank(), 'naive', oversample_from_iteration='original').rank(graph, {"1": 1})
 
     with pytest.raises(Exception):

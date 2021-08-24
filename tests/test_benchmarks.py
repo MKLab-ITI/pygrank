@@ -47,7 +47,7 @@ def test_unsupervised_vs_auc():
 
 
 def test_one_community_benchmarks():
-    datasets = pg.downloadable_small_datasets()
+    datasets = ["graph5", "graph9", "bigraph"]
     pre = pg.preprocessor(assume_immutability=True, normalization="symmetric")
     algorithms = {
         "ppr0.85": pg.PageRank(alpha=0.85, preprocessor=pre, max_iters=10000, tol=1.E-9),
