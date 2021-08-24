@@ -2,10 +2,9 @@ import pygrank as pg
 import tensorflow as tf
 
 
-graph, features, labels = pg.load_feature_dataset('citeseer')
+graph, features, labels = pg.load_feature_dataset('synthfeats')
 training, test = pg.split(list(range(len(graph))), 0.8)
 training, validation = pg.split(training, 1-0.2/0.8)
-
 
 class APPNP:
     def __init__(self, num_inputs, num_outputs, hidden=64):
@@ -17,9 +16,11 @@ class APPNP:
         ])
         self.num_outputs = num_outputs
         self.trainable_variables = self.mlp.trainable_variables
-        #self.ranker = pg.GenericGraphFilter([0.9**i for i in range(10)], renormalize=True, assume_immutability=True, tol=1.E-16)
+        #self.ranker = pg.GenericGraphFilter(([0.9]+[0]*9)*5
+        #                                    , error_type="iters", max_iters=50
+        #                                    , renormalize=True, assume_immutability=True)
         #self.ranker = pg.GenericGraphFilter([0.9]*10, renormalize=True, assume_immutability=True, tol=1.E-16)
-        self.ranker = pg.PageRank(0.9, renormalize=True, assume_immutability=True, error_type="iters", tol=10)
+        self.ranker = pg.PageRank(0.9, renormalize=True, assume_immutability=True, error_type="iters", max_iters=10)
         """pre = pg.preprocessor(renormalize=True, assume_immutability=True)
         self.ranker = pg.ParameterTuner(
             lambda params: pg.GenericGraphFilter([params[0]] * int(params[1]), preprocessor=pre, tol=1.E-16),
@@ -28,8 +29,10 @@ class APPNP:
 
     def __call__(self, graph, features, training=False):
         predict = self.mlp(features, training=training)
-        propagate = self.ranker.propagate(graph, predict, graph_dropout=0 if training else 0)
-        return tf.nn.softmax(propagate, axis=1)
+        predict = tf.nn.softmax(predict, axis=1)
+        if not training:
+            predict = self.ranker.propagate(graph, predict, graph_dropout=0.5 if training else 0)
+        return predict
 
 
 pg.load_backend('tensorflow')

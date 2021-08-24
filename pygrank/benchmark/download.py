@@ -31,6 +31,11 @@ datasets = {
                "pairs": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/biblock/pairs.txt",
                "groups": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/biblock/groups.txt",
                },
+    "synthfeats": {"url": "https://github.com/maniospas/pygrank-datasets",
+               "pairs": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/synthfeats/pairs.txt",
+               "groups": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/synthfeats/groups.txt",
+               "features": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/synthfeats/features.txt",
+               },
 }
 
 
@@ -75,7 +80,7 @@ def download_dataset(dataset, path: str = "data"):   # pragma: no cover
             else:
                 shutil.move(download_path+"/"+source["pairs"], download_path+"/pairs.txt")
 
-        if "features" in source:
+        if "features" in source and "groups" not in source:
             features_path = download_path+"/"+source["features"]
             groups = dict()
             features = dict()
@@ -97,7 +102,20 @@ def download_dataset(dataset, path: str = "data"):   # pragma: no cover
             with open(download_path+'/features.txt', 'w', encoding='utf-8') as file:
                 for p in features:
                     file.write(str(p) + '\t' + '\t'.join(features[p]) + '\n')
-        elif "groups" in source:
+
+        if "features" in source and "groups" in source:
+            if source["features"].startswith("http"):
+                pairs_path = download_path+"/features."+source["features"].split(".")[-1]
+                wget.download(source["features"], pairs_path)
+                if pairs_path.split(".")[-1] not in ["txt", "csv"]:
+                    with gzip.open(pairs_path, 'rb') as f_in:
+                        with open(download_path+"/features.txt", 'wb') as f_out:
+                            shutil.copyfileobj(f_in, f_out)
+                    os.remove(pairs_path)
+            else:
+                shutil.move(download_path+"/"+source["features"], download_path+"/features.txt")
+
+        if "groups" in source:
             groups_path = download_path+"/groups."+source["groups"].split(".")[-1]
             wget.download(source["groups"], groups_path)
             if groups_path.split(".")[-1] not in ["txt", "csv"]:

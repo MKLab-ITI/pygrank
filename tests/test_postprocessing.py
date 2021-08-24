@@ -92,16 +92,16 @@ def test_ordinals():
 def test_sweep():
     _, graph, group = next(pg.load_datasets_one_community(["bigraph"]))
     for _ in supported_backends():
-        training, evaluation = pg.split(list(group), training_samples=0.5)
+        training, evaluation = pg.split(list(group), training_samples=0.1)
         auc1 = pg.AUC({v: 1 for v in evaluation}, exclude=training).evaluate(pg.Sweep(pg.PageRank()).rank(graph, {v: 1 for v in training}))
         auc2 = pg.AUC({v: 1 for v in evaluation}, exclude=training).evaluate(pg.PageRank().rank(graph, {v: 1 for v in training}))
-        assert auc1 > auc2 + 0.2
+        assert auc1 > auc2
 
 
 def test_threshold():
     _, graph, group = next(pg.load_datasets_one_community(["bigraph"]))
     for _ in supported_backends():
-        training, evaluation = pg.split(list(group), training_samples=0.5)
+        training, evaluation = pg.split(list(group), training_samples=0.1)
         cond1 = pg.Conductance().evaluate(pg.Threshold(pg.Sweep(pg.PageRank())).rank(graph, {v: 1 for v in training}))
         cond2 = pg.Conductance().evaluate(pg.Threshold("gap").transform(pg.PageRank().rank(graph, {v: 1 for v in training}))) # try both api types
         assert cond1 >= cond2
