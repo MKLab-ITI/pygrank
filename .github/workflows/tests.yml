@@ -1,4 +1,4 @@
-name: tests
+name: Tests
 on: [push]
 
 jobs:
@@ -23,8 +23,15 @@ jobs:
           pip install networkx
           pip install wget
           pip install tensorflow
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-      - name: Test with pytest
-        run: |
           pip install pytest
-          pytest tests/test_core.py tests/test_measures.py tests/test_filters.py tests/test_autotune.py tests/test_filter_optimization.py
+          pip install pytest-cov
+        pytest --cov=./ --cov-report=xml
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Run tests
+        run: |
+          pytest --cov=pygrank --cov-report=xml tests/test_core.py tests/test_measures.py tests/test_filters.py tests/test_autotune.py tests/test_filter_optimization.py
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          fail_ci_if_error: true
+          verbose: true
