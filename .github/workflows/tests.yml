@@ -22,8 +22,9 @@ jobs:
           pip install numpy
           pip install networkx
           pip install wget
+          pip install tensorflow
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       - name: Test with unittest
         run: |
-          pip install unittest
-          unittest tests/test_autotune.py
+          pip install pytest
+          pytest tests/test_autotune.py
