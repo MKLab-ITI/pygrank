@@ -67,7 +67,7 @@ def test_one_community_benchmarks():
 
 
 def test_load_datasets_all_communities():
-    assert len(list(pg.load_datasets_all_communities(["citeseer"]))) > 1
+    assert len(list(pg.load_datasets_all_communities(["graph9"]))) > 1
 
 
 def test_dataset_generation():
