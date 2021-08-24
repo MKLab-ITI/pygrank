@@ -9,7 +9,7 @@ import numbers
 
 class Supervised(Measure):
     """Provides a base class with the ability to simultaneously convert ranks and known ranks to numpy arrays.
-    This class is used as a base for other supervised evaluation metrics."""
+    This class is used as a base for other supervised evaluation measures."""
 
     def __init__(self, known_ranks, exclude=None):
         """

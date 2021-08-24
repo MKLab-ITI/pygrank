@@ -18,10 +18,10 @@ class Conductance(Unsupervised):
     """
 
     def __init__(self, graph=None, max_rank=1):
-        """ Initializes the Conductance metric.
+        """ Initializes the Conductance measure.
 
         Args:
-            graph: Optional. The graph on which to calculate the metric. If None (default) it is automatically extracted
+            graph: Optional. The graph on which to calculate the measure. If None (default) it is automatically extracted
              from graph signals passed for evaluation.
             max_rank: Optional. The maximum value ranks can assume. To maintain a probabilistic formulation of
              conductance, this can be greater but not less than the maximum rank during evaluation. Default is 1.
@@ -62,10 +62,10 @@ class Density(Unsupervised):
     """
 
     def __init__(self, graph=None):
-        """ Initializes the Density metric.
+        """ Initializes the Density measure.
 
         Args:
-            graph: Optional. The graph on which to calculate the metric. If None (default) it is automatically extracted
+            graph: Optional. The graph on which to calculate the measure. If None (default) it is automatically extracted
              from graph signals passed for evaluation.
 
         Example:
