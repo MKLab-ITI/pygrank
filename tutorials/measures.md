@@ -143,10 +143,10 @@ Assumes a fuzzy set of subgraphs whose nodes are included with probability propo
 as per the formulation of [krasanakis2019linkauc] and calculates E[outgoing edges] / E[internal edges] of 
 the fuzzy rank subgraph. 
 If ranks assume binary values, E[.] becomes set size and this calculates the induced subgraph Conductance. 
-Initializes the Conductance metric. 
+Initializes the Conductance measure. 
 
 Args: 
- * *graph:* Optional. The graph on which to calculate the metric. If None (default) it is automatically extracted from graph signals passed for evaluation. 
+ * *graph:* Optional. The graph on which to calculate the measure. If None (default) it is automatically extracted from graph signals passed for evaluation. 
  * *max_rank:* Optional. The maximum value ranks can assume. To maintain a probabilistic formulation of conductance, this can be greater but not less than the maximum rank during evaluation. Default is 1. 
 
 Example:
@@ -167,10 +167,10 @@ Assumes a fuzzy set of subgraphs whose nodes are included with probability propo
 as per the formulation of [krasanakis2019linkauc] and calculates E[internal edges] / E[possible edges] of 
 the fuzzy rank subgraph. 
 If ranks assume binary values, E[.] becomes set size and this calculates the induced subgraph Density. 
-Initializes the Density metric. 
+Initializes the Density measure. 
 
 Args: 
- * *graph:* Optional. The graph on which to calculate the metric. If None (default) it is automatically extracted from graph signals passed for evaluation. 
+ * *graph:* Optional. The graph on which to calculate the measure. If None (default) it is automatically extracted from graph signals passed for evaluation. 
 
 Example:
 

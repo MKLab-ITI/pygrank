@@ -1,8 +1,8 @@
-import unittest
 import sys, inspect
 import pygrank.algorithms
 import pygrank.algorithms.postprocess
 import pygrank.measures
+import pygrank as pg
 
 """
 THIS FILE IS AUTOMATICALLY RUN BY THE pre-commit HOOK FOR git
@@ -44,8 +44,7 @@ def format(doc):
     return ret
 
 
-from tests.example_graph import test_graph
-G = test_graph()
+G = next(pg.load_datasets_graph(["graph5"]))
 
 
 def is_abstract(cls, *args):
