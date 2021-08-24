@@ -513,7 +513,8 @@ downloaded datasets). Please visited the repository of datasets
 a description of conventions needed to create new datasets - these follow
 the pairs.txt and groups.txt conventions of the SNAP repository.
 
-A comprehensive list of all dataset which can be used by the project can 
+A comprehensive list of all datasets which are automatically downloaded by the project 
+and their available types of data can 
 be found [here](datasets.md). A lists of all dataset names can be obtained 
 programmatically with the method `downloadable_small_datasets()`, but 
 you can also use `downloadable_small_datasets()` to limit experiments
@@ -563,40 +564,25 @@ a simple way to obtain some fastly-running algorithms and small datasets and
 compare them under AUC would be as:
 
 ```python
->> > import pygrank as pg
->> > dataset_names = pg.downloadable_small_datasets()
->> > print(dataset_names)
+>>> import pygrank as pg
+>>> dataset_names = pg.downloadable_small_datasets()
+>>> print(dataset_names)
 ['citeseer', 'eucore']
->> > algorithms = pg.create_demo_filters()
->> > print(algorithms.keys())
+>>> algorithms = pg.create_demo_filters()
+>>> print(algorithms.keys())
 dict_keys(['PPR.85', 'PPR.9', 'PPR.99', 'HK3', 'HK5', 'HK7'])
->> > loader = pg.load_datasets_one_community(dataset_names)
->> > pg.benchmark_print(pg.benchmark(algorithms, loader, pg.AUC))
-PPR
-.85
-PPR
-.9
-PPR
-.99
-HK3
-HK5
-HK7
-citeseer
-.89
-.89
-.89
-.88
-.89
-.89
-eucore
-.82
-.72
-.72
-.84
-.84
-.82
+>>> loader = pg.load_datasets_one_community(dataset_names)
+>>> pg.benchmark_print(pg.benchmark(algorithms, loader, pg.AUC))
+               	 PPR.85  	 PPR.9  	 PPR.99  	 HK3  	 HK5  	 HK7 
+citeseer       	 .89     	 .89    	 .89     	 .89  	 .89  	 .89 
+eucore         	 .85     	 .71    	 .71     	 .91  	 .89  	 .83 
+graph9         	 1.00    	 1.00   	 1.00    	 1.00 	 1.00 	 1.00
+bigraph        	 .96     	 .77    	 .77     	 1.00 	 .98  	 .86 
 # REQUIRED CITATION: Please visit the url https://linqs.soe.ucsc.edu/data for instructions on how to cite the dataset citeseer in your research
 # REQUIRED CITATION: Please visit the url https://snap.stanford.edu/data/email-Eu-core.html for instructions on how to cite the dataset eucore in your research
+# REQUIRED CITATION: Please visit the url https://github.com/maniospas/pygrank-datasets for instructions on how to cite the dataset graph5 in your research
+# REQUIRED CITATION: Please visit the url https://github.com/maniospas/pygrank-datasets for instructions on how to cite the dataset graph9 in your research
+# REQUIRED CITATION: Please visit the url https://github.com/maniospas/pygrank-datasets for instructions on how to cite the dataset bigraph in your research
 ```
 
 Of course, in the above scheme a customly-defined algorithms could also be added

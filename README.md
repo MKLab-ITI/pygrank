@@ -150,7 +150,7 @@ Some of the library's advantages are:
 1. **Compatibility** with [networkx](https://github.com/networkx/networkx) and [tensorflow](https://www.tensorflow.org/).
 2. **Datacentric** interfaces that do not require transformations to identifiers.
 3. **Large** graph support with sparse representations and fast algorithms.
-4. **Seamless** pipelines, from graph preprocessing up to evaluation.
+4. **Seamless** pipelines, from graph preprocessing up to benchmarking and evaluation.
 5. **Modular** combination of components.
 
 
@@ -162,6 +162,7 @@ Some of the library's advantages are:
 [Graph Filters](tutorials/graph_filters.md)<br>
 [Postprocessors](tutorials/postprocessors.md)<br>
 [Tuners](tutorials/tuners.md)<br>
+[Downloadable Datasets](tutorials/datasets.md)<br>
 
 # :fire: Features
 * Graph filters

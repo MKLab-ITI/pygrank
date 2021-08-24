@@ -3,7 +3,7 @@ import wget
 import shutil
 import sys
 import os
-from pygrank.benchmark import dataset_processors
+from pygrank.benchmarks import dataset_processors
 
 datasets = {
     "dblp": {"url": "https://snap.stanford.edu/data/com-DBLP.html",

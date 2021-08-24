@@ -148,7 +148,7 @@ class AlgorithmSelection(Tuner):
             >>> ranks = tuner.rank(graph, personalization)
         """
         if rankers is None:
-            from pygrank.benchmark import create_demo_filters
+            from pygrank.benchmarks import create_demo_filters
             rankers = create_demo_filters().values()
         self.rankers = rankers
         self.measure = measure

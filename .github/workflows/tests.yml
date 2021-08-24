@@ -28,7 +28,7 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       - name: Run tests
         run: |
-          pytest --cov=pygrank --cov-report=xml tests/test_core.py tests/test_measures.py tests/test_filters.py tests/test_autotune.py tests/test_filter_optimization.py tests/test_gnn.py tests/test_postprocessing.py
+          pytest --cov=pygrank --cov-report=xml tests/test_core.py tests/test_measures.py tests/test_filters.py tests/test_autotune.py tests/test_filter_optimization.py tests/test_gnn.py tests/test_postprocessing.py tests/test_benchmarks.py
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         with:

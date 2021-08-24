@@ -3,7 +3,7 @@ import os
 import numpy as np
 from pygrank.core import to_signal
 from pygrank.algorithms import call
-from pygrank.benchmark.download import download_dataset
+from pygrank.benchmarks.download import download_dataset
 from typing import Iterable, Union
 
 

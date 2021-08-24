@@ -3,9 +3,9 @@ import io
 
 
 def test_benchmark_print():
-    assert pg.benchmark.utils._fraction2str(0.1) == ".10"
-    assert pg.benchmark.utils._fraction2str(0.00001) == "0"
-    assert pg.benchmark.utils._fraction2str(1) == "1.00"
+    assert pg.benchmarks.utils._fraction2str(0.1) == ".10"
+    assert pg.benchmarks.utils._fraction2str(0.00001) == "0"
+    assert pg.benchmarks.utils._fraction2str(1) == "1.00"
     loader = pg.load_datasets_one_community(["graph9", "bigraph"])
     console = pg.benchmark_print(pg.benchmark(pg.create_demo_filters(), loader),
                                  out=io.StringIO(""), err=None).getvalue()
@@ -19,7 +19,7 @@ def test_benchmark_print():
 
 def test_unsupervised_vs_auc():
     def loader():
-        return pg.load_datasets_one_community(["graph9"])
+        return pg.load_datasets_multiple_communities(["graph9"])
     algorithms = pg.create_variations(pg.create_many_filters(), pg.create_many_variation_types())
     time_scores = pg.benchmark_scores(pg.benchmark(algorithms, loader(), "time"))
     assert sum(time_scores) > 0
@@ -38,13 +38,15 @@ def test_unsupervised_vs_auc():
 
     scores = {measure: pg.benchmark_scores(pg.benchmark(algorithms, loader(), measures[measure])) for measure in measures}
     supervised = {"AUC", "NDCG"}
+    evaluations = dict()
     for measure in measures:
-        if measure not in supervised:
-            print(measure, pg.SpearmanCorrelation(scores["AUC"], scores[measure]))
+        evaluations[measure] = abs(pg.SpearmanCorrelation(scores["AUC"])(scores[measure]))
+    for measure in measures:
+        print(measure, evaluations[measure])
+    assert max([evaluations[measure] for measure in measures if measure not in supervised]) == evaluations["LinkAUCdot"]
 
 
-
-def test_benchmarks(self):
+def test_one_community_benchmarks():
     datasets = pg.downloadable_small_datasets()
     pre = pg.preprocessor(assume_immutability=True, normalization="symmetric")
     algorithms = {
@@ -64,37 +66,9 @@ def test_benchmarks(self):
     pg.benchmark_print(pg.benchmark(algorithms, loader, pg.Conductance, fraction_of_training=.8))
 
 
+def test_load_datasets_all_communities():
+    assert len(list(pg.load_datasets_all_communities(["citeseer"]))) > 1
 
-def test_load_datasets_all_communities(self):
-    self.assertGreater(len(list(pg.load_datasets_all_communities(["citeseer"]))), 1)
 
-def test_dataset_generation(self):
-    self.assertEquals(len(pg.downloadable_datasets()), len(pg.datasets))
-
-    def test_multigroup(self):
-        datasets = pg.downloadable_small_datasets()
-        pre = pg.preprocessor(assume_immutability=True, normalization="symmetric")
-        algorithms = {
-            "ppr0.85": pg.PageRank(alpha=0.85, preprocessor=pre, max_iters=10000, tol=1.E-9),
-            "ppr0.99": pg.PageRank(alpha=0.99, preprocessor=pre, max_iters=10000, tol=1.E-9),
-            "hk3": pg.HeatKernel(t=3, preprocessor=pre, max_iters=10000, tol=1.E-9),
-            "hk5": pg.HeatKernel(t=5, preprocessor=pre, max_iters=10000, tol=1.E-9),
-        }
-        loader = pg.load_datasets_multiple_communities(datasets)
-        pg.benchmark_print(pg.benchmark(algorithms, loader,
-                                        lambda ground_truth, exlude: pg.MultiSupervised(pg.AUC, ground_truth, exlude)))
-        loader = pg.load_datasets_multiple_communities(datasets)
-        pg.benchmark_print(pg.unsupervised_benchmark(algorithms, loader,
-                                                   lambda graph: pg.LinkAssessment(graph, max_positive_samples=200, max_negative_samples=200)))
-        loader = pg.load_datasets_multiple_communities(datasets)
-        pg.benchmark_print(pg.unsupervised_benchmark(algorithms, loader,
-                                                   lambda graph: pg.LinkAssessment(graph, hops=2, similarity="dot", max_positive_samples=200, max_negative_samples=200)))
-        loader = pg.load_datasets_multiple_communities(datasets)
-        pg.benchmark_print(pg.unsupervised_benchmark(algorithms, loader,
-                                                   lambda graph: pg.ClusteringCoefficient(graph)))
-        loader = pg.load_datasets_multiple_communities(datasets)
-        pg.benchmark_print(pg.unsupervised_benchmark(algorithms, loader,
-                                                   lambda graph: pg.ClusteringCoefficient(graph, similarity="dot")))
-        loader = pg.load_datasets_multiple_communities(datasets)
-        pg.benchmark_print(pg.unsupervised_benchmark(algorithms, loader,
-                                                   lambda graph: pg.MultiUnsupervised(pg.Conductance, graph)))
+def test_dataset_generation():
+    assert len(pg.downloadable_datasets()) == len(pg.datasets)

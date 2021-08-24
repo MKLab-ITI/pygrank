@@ -32,7 +32,7 @@ def create_demo_filters(pre=None,
 
 
 def create_many_filters(tol: float = 1.E-6,
-                        max_iters: int = 1000) -> Mapping[str, NodeRanking]:
+                        max_iters: int = 10000) -> Mapping[str, NodeRanking]:
     """
     Creates a wide range of base filters to use for benchmarking of evaluation measures. It is recommended that
     variations of recommended filters are also applied. This includes both symmetric and non-symmetric filters.
@@ -65,14 +65,24 @@ def create_many_filters(tol: float = 1.E-6,
         "HKL3": HeatKernel(t=3, preprocessor=preL, max_iters=max_iters, tol=tol),
         "HKL5": HeatKernel(t=5, preprocessor=preL, max_iters=max_iters, tol=tol),
         "HKL7": HeatKernel(t=7, preprocessor=preL, max_iters=max_iters, tol=tol),
-        }
+        "AbsorbL.85": AbsorbingWalks(alpha=0.85, preprocessor=preL, max_iters=max_iters, tol=tol),
+        "AbsorbL.90": AbsorbingWalks(alpha=0.9, preprocessor=preL, max_iters=max_iters, tol=tol),
+        "AbsorbL.95": AbsorbingWalks(alpha=0.95, preprocessor=preL, max_iters=max_iters, tol=tol),
+        "AbsorbL.99": AbsorbingWalks(alpha=0.99, preprocessor=preL, max_iters=max_iters, tol=tol),
+        "Absorb.85": AbsorbingWalks(alpha=0.85, preprocessor=pre, max_iters=max_iters, tol=tol),
+        "Absorb.90": AbsorbingWalks(alpha=0.9, preprocessor=pre, max_iters=max_iters, tol=tol),
+        "Absorb.95": AbsorbingWalks(alpha=0.95, preprocessor=pre, max_iters=max_iters, tol=tol),
+        "Absorb.99": AbsorbingWalks(alpha=0.99, preprocessor=pre, max_iters=max_iters, tol=tol),
+    }
 
 
 def create_many_variation_types() -> Mapping[str, Callable[[NodeRanking], Postprocessor]]:
     return {"": Tautology,
             "Sweep": Sweep,
             "O": lambda alg: SeedOversampling(alg, "safe"),
-            "SweepO": lambda alg: SeedOversampling(Sweep(alg), "safe")
+            "SweepO": lambda alg: SeedOversampling(Sweep(alg), "safe"),
+            "Neigh": lambda alg: SeedOversampling(alg, "neighbors"),
+            "SweepNeigh": lambda alg: SeedOversampling(Sweep(alg), "neighbors")
             }
 
 

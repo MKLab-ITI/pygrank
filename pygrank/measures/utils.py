@@ -62,7 +62,5 @@ def remove_intra_edges(G, group):
     else:
         for v in group:
             for u in group:
-                if G.has_edge(v,u):
-                    G.remove_edge(v,u)
-                if G.has_edge(u, v):
-                    G.remove_edge(u,v)
+                if G.has_edge(v, u) or G.has_edge(u, v):
+                    G.remove_edge(v, u)

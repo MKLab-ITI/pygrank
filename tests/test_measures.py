@@ -70,6 +70,16 @@ def test_strange_input_types():
         assert ndcg < ndcg_biased
 
 
+def test_correlation_compliance():
+    graph = next(pg.load_datasets_graph(["graph5"]))
+    # TODO: Make spearman and pearson correlation support tensorflow
+    alg1 = pg.PageRank(alpha=0.5)
+    alg2 = pg.PageRank(alpha=0.99)
+    pearson_ordinals = pg.PearsonCorrelation(pg.Ordinals(alg1)(graph))(pg.Ordinals(alg2)(graph))
+    spearman = pg.SpearmanCorrelation(alg1(graph))(alg2(graph))
+    assert pearson_ordinals == spearman
+
+
 def test_computations():
     for _ in supported_backends():
         assert pg.Accuracy([1, 2, 3])([1, 2, 3]) == 1

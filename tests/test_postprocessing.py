@@ -40,7 +40,8 @@ def test_seed_oversampling():
             assert float(base_result) <= float(so_result)
             assert float(so_result) <= float(bso_result)
         pg.SeedOversampling(pg.PageRank(0.99), "top").rank(graph, training)
-        assert True
+        pg.SeedOversampling(pg.PageRank(0.99), "neighbor").rank(graph, training)
+        pg.BoostedSeedOversampling(pg.PageRank(), 'naive', oversample_from_iteration='original').rank(graph, {"1": 1})
 
     with pytest.raises(Exception):
         pg.SeedOversampling(pg.PageRank(), 'unknown').rank(graph, {"0": 1})
@@ -59,8 +60,10 @@ def test_norm_maintain():
 
 
 def test_normalize():
+    import networkx as nx
     graph = next(pg.load_datasets_graph(["graph5"]))
     for _ in supported_backends():
+        assert float(pg.sum(pg.Normalize("range").transform(pg.to_signal(nx.Graph([("A", "B")]), [2, 2])).np)) == 4
         r = pg.Normalize(pg.PageRank(), "range").rank(graph)
         assert pg.min(r.np) == 0
         assert pg.max(r.np) == 1

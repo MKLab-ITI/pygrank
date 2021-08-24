@@ -16,7 +16,7 @@ def separate_cols(x):
 
 
 def combine_cols(cols):
-    return np.concatenate(cols, axis=1)
+    return np.column_stack(cols)
 
 
 def backend_name():
