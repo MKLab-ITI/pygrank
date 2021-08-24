@@ -176,7 +176,7 @@ Some of the library's advantages are:
 
 # :thumbsup: Contributing
 Feel free to contribute in any way, for example through the [issue tracker](https://github.com/MKLab-ITI/pygrank/issues) or by participating in [discussions]().
-Please check out the [contribution guidelines](tutorials/contributing.md) to bring modifications to the code base.
+Please check out the [contribution guidelines](CONTRIBUTING.md) to bring modifications to the code base.
 If so, make sure to **follow the pull checklist** described in the guidelines.
  
 # :notebook: Citation

@@ -32,7 +32,7 @@ which new code should maintain for import statements to work.
 For example, do not design evaluation measures that depend on algorithms.
 Rather, such components should be delegated to some of the other modules.
 For reference, we re-iterate here the project's architecture. For more details,
-please refer to the [documentation](documentation.md).
+please refer to the [documentation](tutorials/documentation.md).
 
 ![architecture](architecture.png)
 
