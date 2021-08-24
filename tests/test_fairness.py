@@ -37,7 +37,7 @@ def test_fair_heuristics():
     sensitive = 1- sensitive.np
     for algorithm in algorithms.values():
         ranks = algorithm(graph, labels, sensitive)
-        pg.pRule(sensitive.np)(ranks) > 0.6
+        pg.pRule(sensitive)(ranks) > 0.6
 
 
 def test_fairwalk_invalid():

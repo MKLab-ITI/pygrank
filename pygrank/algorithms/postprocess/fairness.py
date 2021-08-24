@@ -136,6 +136,7 @@ class AdHocFairness(Postprocessor):
         return ranks
 
     def _transform(self, ranks, sensitive):
+        sensitive = to_signal(ranks, sensitive)
         phi = sum(sensitive.values())/len(ranks)
         if self.method == "O":
             ranks = Normalize("sum").transform(ranks)
@@ -166,6 +167,7 @@ class FairWalk(Postprocessor):
         super().__init__(ranker)
 
     def _reweigh(self, graph, sensitive):
+        sensitive = to_signal(graph, sensitive)
         if not getattr(self, "reweighs", None):
             self.reweighs = dict()
         if graph not in self.reweighs:
