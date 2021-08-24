@@ -42,9 +42,9 @@ Attributes:
 Example:
 
 ```python 
->>> from pygrank.algorithms import PageRank, BoostedSeedOversampling 
+>>> import pygrank as pg 
 >>> graph, seed_nodes = ... 
->>> algorithm = BoostedSeedOversampling(PageRank(alpha=0.99)) 
+>>> algorithm = pg.BoostedSeedOversampling(pg.PageRank(alpha=0.99)) 
 >>> ranks = algorithm.rank(graph, personalization={1 for v in seed_nodes}) 
 ```
 
@@ -86,9 +86,9 @@ Args:
 Example:
 
 ```python 
->>> from pygrank.algorithms.postprocess import Normalize 
+>>> import pygrank as pg 
 >>> graph, personalization, algorithm = ... 
->>> algorithm = Normalize(0.5, algorithm) # sets ranks >= 0.5 to 1 and lower ones to 0 
+>>> algorithm = pg.Normalize(0.5, algorithm) # sets ranks >= 0.5 to 1 and lower ones to 0 
 >>> ranks = algorithm.rank(graph, personalization) 
 ```
 
@@ -96,9 +96,9 @@ Example:
 Example (same outcome, simpler one-liner):
 
 ```python 
->>> from pygrank.algorithms.postprocess import Normalize 
+>>> import pygrank as pg 
 >>> graph, personalization, algorithm = ... 
->>> ranks = Normalize(0.5).transform(algorithm.rank(graph, personalization)) 
+>>> ranks = pg.Normalize(0.5).transform(algorithm.rank(graph, personalization)) 
 ```
 
 
@@ -110,6 +110,25 @@ Initializes the class with a base ranker instance.
 
 Args: 
  * *ranker:* Optional. The base ranker instance. A Tautology() ranker is created if None (default) was specified. 
+
+Example:
+
+```python 
+>>> import pygrank as pg 
+>>> graph, personalization, algorithm = ... 
+>>> algorithm = pg.Ordinals(algorithm) 
+>>> ranks = algorithm.rank(graph, personalization) 
+```
+
+
+Example (same outcome, simpler one-liner):
+
+```python 
+>>> import pygrank as pg 
+>>> graph, personalization, algorithm = ... 
+>>> ranks = pg.Ordinals().transform(algorithm.rank(graph, personalization)) 
+```
+
 
 ### <kbd>Postprocessor</kbd> SeedOversampling
 
@@ -123,9 +142,9 @@ Attributes:
 Example:
 
 ```python 
->>> from pygrank.algorithms import PageRank, SeedOversampling 
+>>> import pygrank as pg 
 >>> graph, seed_nodes = ... 
->>> algorithm = SeedOversampling(PageRank(alpha=0.99)) 
+>>> algorithm = pg.SeedOversampling(pg.PageRank(alpha=0.99)) 
 >>> ranks = algorithm.rank(graph, personalization={1 for v in seed_nodes}) 
 ```
 
@@ -138,6 +157,35 @@ Initializes the sweep procedure.
 Args: 
  * *ranker:* The base ranker instance. 
  * *uniform_ranker:* Optional. The ranker instance used to perform non-personalized ranking. If None (default) the base ranker is used. 
+
+Example:
+
+```python 
+>>> import pygrank as pg 
+>>> graph, personalization, algorithm = ... 
+>>> algorithm = pg.Sweep(algorithm) # divides node scores by uniform ranker's non-personalized outcome 
+>>> ranks = algorithm.rank(graph, personalization 
+```
+
+
+Example with different rankers:
+
+```python 
+>>> import pygrank as pg 
+>>> graph, personalization, algorithm, uniform_ranker = ... 
+>>> algorithm = pg.Sweep(algorithm, uniform_ranker=uniform_ranker) 
+>>> ranks = algorithm.rank(graph, personalization) 
+```
+
+
+Example (same outcome):
+
+```python 
+>>> import pygrank as pg 
+>>> graph, personalization, uniform_ranker, algorithm = ... 
+>>> ranks = pg.Threshold(uniform_ranker).transform(algorithm.rank(graph, personalization)) 
+```
+
 
 ### <kbd>Postprocessor</kbd> Tautology
 
@@ -157,9 +205,9 @@ Args:
 Example:
 
 ```python 
->>> from pygrank.algorithms.postprocess import Threshold 
+>>> import pygrank as pg 
 >>> graph, personalization, algorithm = ... 
->>> algorithm = Threshold(algorithm, 0.5) # sets ranks >= 0.5 to 1 and lower ones to 0 
+>>> algorithm = pg.Threshold(algorithm, 0.5) # sets ranks >= 0.5 to 1 and lower ones to 0 
 >>> ranks = algorithm.rank(graph, personalization) 
 ```
 
@@ -167,9 +215,9 @@ Example:
 Example (same outcome):
 
 ```python 
->>> from pygrank.algorithms.postprocess import Threshold 
+>>> import pygrank as pg 
 >>> graph, personalization, algorithm = ... 
->>> ranks = Threshold(0.5).transform(algorithm.rank(graph, personalization)) 
+>>> ranks = pg.Threshold(0.5).transform(algorithm.rank(graph, personalization)) 
 ```
 
 
@@ -181,16 +229,15 @@ re-ordered if at least one is provided.
 
 Args: 
  * *ranker:* Optional. The base ranker instance. A Tautology() ranker is created if None (default) was specified. 
- * *expr:* Optional. A lambda expression to apply on each element. The transformer will automatically try to apply it on the backend array representation of the graph signal first, so prefer use of backend functions for faster computations. For example, backend.exp (default) should be preferred instead of math.exp, because the former can directly parse numpy arrays, tensors, etc. 
+ * *expr:* Optional. A lambda expression to apply on each element. The transformer will automatically try to apply it on the backend array representation of the graph signal first, so prefer use of pygrank's backend functions for faster computations. For example, backend.exp (default) should be preferred instead of math.exp, because the former can directly parse numpy arrays, tensors, etc. 
 
 Example:
 
 ```python 
->>> from pygrank.algorithms import Normalize, Transformer 
->>> from pygrank import backend 
+>>> import pygrank as pg 
 >>> graph, personalization, algorithm = ... 
->>> r1 = Normalize(algorithm, "sum").rank(graph, personalization) 
->>> r2 = Transformer(algorithm, lambda x: x/backend.sum(x)).rank(graph, personalization) 
->>> print(sum(abs(r1[v]-r2[v]) for v in graph)) 
+>>> r1 = pg.Normalize(algorithm, "sum").rank(graph, personalization) 
+>>> r2 = pg.Transformer(algorithm, lambda x: x/pg.sum(x)).rank(graph, personalization) 
+>>> print(pg.Mabs(r1)(r2)) 
 ```
 

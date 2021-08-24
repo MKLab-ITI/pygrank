@@ -178,10 +178,12 @@ class FairWalk(Postprocessor):
 
     def rank(self, graph, personalization, sensitive, *args, **kwargs):
         personalization = to_signal(graph, personalization)
-        graph = personalization.graph
-        graph = self._reweigh(graph, sensitive)
+        original_graph = personalization.graph
+        graph = self._reweigh(original_graph, sensitive)
         personalization = to_signal(graph, dict(personalization.items()))
-        return self.ranker.rank(graph, personalization, *args, **kwargs)
+        ranks = self.ranker.rank(graph, personalization, *args, **kwargs)
+        ranks.graph = original_graph
+        return ranks
 
     def transform(self, *args, **kwargs):
         raise Exception("FairWalk can not transform graph signals")

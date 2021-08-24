@@ -34,7 +34,7 @@ Rather, such components should be delegated to some of the other modules.
 For reference, we re-iterate here the project's architecture. For more details,
 please refer to the [documentation](tutorials/documentation.md).
 
-![architecture](architecture.png)
+![architecture](tutorials/architecture.png)
 
 We ask that, when contributing new code, you try to import methods and 
 classes through the highest-level 
@@ -51,7 +51,7 @@ Before creating a pull request, make sure that your submission checks the follow
 Additionally, code examples should be prefaced by a line starting with the word
 `Example ` and ending in `:` and their code lines start with `>>>`.
 2. When implementing new or existing research (we are more than happy to accomodate this),
-you are required to also update the library's [citations](citations.md).
+you are required to also update the library's [citations](tutorials/citations.md).
 3. New code should maintain *CamelCase* notation for classes and 
 *lower_case_with_underscores* for methods and variables.
 4. New files should be placed in appropriate modules and new methods and classes

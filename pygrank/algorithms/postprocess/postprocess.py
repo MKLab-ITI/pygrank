@@ -63,15 +63,15 @@ class Normalize(Postprocessor):
                 by subtracting their mean before diving by their max.
 
         Example:
-            >>> from pygrank.algorithms.postprocess import Normalize
+            >>> import pygrank as pg
             >>> graph, personalization, algorithm = ...
-            >>> algorithm = Normalize(0.5, algorithm) # sets ranks >= 0.5 to 1 and lower ones to 0
+            >>> algorithm = pg.Normalize(0.5, algorithm) # sets ranks >= 0.5 to 1 and lower ones to 0
             >>> ranks = algorithm.rank(graph, personalization)
 
         Example (same outcome, simpler one-liner):
-            >>> from pygrank.algorithms.postprocess import Normalize
+            >>> import pygrank as pg
             >>> graph, personalization, algorithm = ...
-            >>> ranks = Normalize(0.5).transform(algorithm.rank(graph, personalization))
+            >>> ranks = pg.Normalize(0.5).transform(algorithm.rank(graph, personalization))
         """
         if ranker is not None and not callable(getattr(ranker, "rank", None)):
             ranker, method = method, ranker
@@ -109,6 +109,17 @@ class Ordinals(Postprocessor):
 
         Args:
             ranker: Optional. The base ranker instance. A Tautology() ranker is created if None (default) was specified.
+
+        Example:
+            >>> import pygrank as pg
+            >>> graph, personalization, algorithm = ...
+            >>> algorithm = pg.Ordinals(algorithm)
+            >>> ranks = algorithm.rank(graph, personalization)
+
+        Example (same outcome, simpler one-liner):
+            >>> import pygrank as pg
+            >>> graph, personalization, algorithm = ...
+            >>> ranks = pg.Ordinals().transform(algorithm.rank(graph, personalization))
         """
         super().__init__(Tautology() if ranker is None else ranker)
 
@@ -127,17 +138,16 @@ class Transformer(Postprocessor):
         Args:
             ranker: Optional. The base ranker instance. A Tautology() ranker is created if None (default) was specified.
             expr: Optional. A lambda expression to apply on each element. The transformer will automatically try to
-                apply it on the backend array representation of the graph signal first, so prefer use of backend
+                apply it on the backend array representation of the graph signal first, so prefer use of pygrank's backend
                 functions for faster computations. For example, backend.exp (default) should be preferred instead of
                 math.exp, because the former can directly parse numpy arrays, tensors, etc.
 
         Example:
-            >>> from pygrank.algorithms import Normalize, Transformer
-            >>> from pygrank import backend
+            >>> import pygrank as pg
             >>> graph, personalization, algorithm = ...
-            >>> r1 = Normalize(algorithm, "sum").rank(graph, personalization)
-            >>> r2 = Transformer(algorithm, lambda x: x/backend.sum(x)).rank(graph, personalization)
-            >>> print(sum(abs(r1[v]-r2[v]) for v in graph))
+            >>> r1 = pg.Normalize(algorithm, "sum").rank(graph, personalization)
+            >>> r2 = pg.Transformer(algorithm, lambda x: x/pg.sum(x)).rank(graph, personalization)
+            >>> print(pg.Mabs(r1)(r2))
         """
         if ranker is not None and not callable(getattr(ranker, "rank", None)):
             ranker, expr = expr, ranker
@@ -170,15 +180,15 @@ class Threshold(Postprocessor):
                 ranks.
 
         Example:
-            >>> from pygrank.algorithms.postprocess import Threshold
+            >>> import pygrank as pg
             >>> graph, personalization, algorithm = ...
-            >>> algorithm = Threshold(algorithm, 0.5) # sets ranks >= 0.5 to 1 and lower ones to 0
+            >>> algorithm = pg.Threshold(algorithm, 0.5) # sets ranks >= 0.5 to 1 and lower ones to 0
             >>> ranks = algorithm.rank(graph, personalization)
 
         Example (same outcome):
-            >>> from pygrank.algorithms.postprocess import Threshold
+            >>> import pygrank as pg
             >>> graph, personalization, algorithm = ...
-            >>> ranks = Threshold(0.5).transform(algorithm.rank(graph, personalization))
+            >>> ranks = pg.Threshold(0.5).transform(algorithm.rank(graph, personalization))
         """
         if ranker is not None and not callable(getattr(ranker, "rank", None)):
             ranker, threshold = threshold, ranker
@@ -217,6 +227,23 @@ class Sweep(Postprocessor):
             ranker: The base ranker instance.
             uniform_ranker: Optional. The ranker instance used to perform non-personalized ranking. If None (default)
                 the base ranker is used.
+
+        Example:
+            >>> import pygrank as pg
+            >>> graph, personalization, algorithm = ...
+            >>> algorithm = pg.Sweep(algorithm) # divides node scores by uniform ranker's non-personalized outcome
+            >>> ranks = algorithm.rank(graph, personalization
+
+        Example with different rankers:
+            >>> import pygrank as pg
+            >>> graph, personalization, algorithm, uniform_ranker = ...
+            >>> algorithm = pg.Sweep(algorithm, uniform_ranker=uniform_ranker)
+            >>> ranks = algorithm.rank(graph, personalization)
+
+        Example (same outcome):
+            >>> import pygrank as pg
+            >>> graph, personalization, uniform_ranker, algorithm = ...
+            >>> ranks = pg.Threshold(uniform_ranker).transform(algorithm.rank(graph, personalization))
         """
         super().__init__(ranker)
         self.uniform_ranker = ranker if uniform_ranker is None else uniform_ranker
