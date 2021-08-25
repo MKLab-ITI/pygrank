@@ -8,7 +8,7 @@ import setuptools
 #with open("README.md", "r") as file:
 #    long_description = file.read()
 
-long_description = "For tutorials, documentation and contribution guidelines, please visit the project's homepage at https://github.com/MKLab-ITI/pygrank "
+long_description = "For tutorials, documentation and contribution guidelines, please visit the project'personalization homepage at https://github.com/MKLab-ITI/pygrank "
 
 setuptools.setup(
     name='pygrank',

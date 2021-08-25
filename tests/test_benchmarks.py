@@ -18,6 +18,7 @@ def test_benchmark_print():
 
 
 def test_unsupervised_vs_auc():
+    pg.load_backend("numpy")
     def loader():
         return pg.load_datasets_multiple_communities(["graph9"])
     algorithms = pg.create_variations(pg.create_many_filters(), pg.create_many_variation_types())
@@ -47,6 +48,7 @@ def test_unsupervised_vs_auc():
 
 
 def test_one_community_benchmarks():
+    pg.load_backend("numpy")
     datasets = ["graph5", "graph9", "bigraph"]
     pre = pg.preprocessor(assume_immutability=True, normalization="symmetric")
     algorithms = {
@@ -66,11 +68,11 @@ def test_one_community_benchmarks():
     pg.benchmark_print(pg.benchmark(algorithms, loader, pg.Conductance, fraction_of_training=.8))
 
 
-def test_load_datasets_all_communities():
+def test_load_dataset_load():
     assert len(list(pg.load_datasets_all_communities(["graph9"]))) > 1
 
 
-def test_dataset_generation():
+def test_dataset_lists():
     assert len(pg.downloadable_small_datasets()) > 1
     assert len(pg.downloadable_small_datasets()) < len(pg.datasets)
     assert len(pg.downloadable_datasets()) == len(pg.datasets)

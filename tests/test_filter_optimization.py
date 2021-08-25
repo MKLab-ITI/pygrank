@@ -33,14 +33,31 @@ def test_rank_order_convergence():
             algorithm.rank(graph, {"A": 1})
 
 
+def test_krylov_space():
+    graph = next(pg.load_datasets_graph(["bigraph"]))
+    M = pg.preprocessor(normalization="symmetric")(graph)
+    nodes = list(graph)
+    personalization = pg.to_signal(graph, {nodes[0]: 1, nodes[1]: 1})
+    krylov_dims = 5
+    krylov_result = pg.eye(int(krylov_dims))
+    krylov_base, H = pg.krylov_base(M, personalization.np, int(krylov_dims))
+    error_bound = pg.krylov_error_bound(krylov_base, H, M, personalization.np)
+    assert error_bound < 0.01
+    for _ in range(100):
+        krylov_result = krylov_result @ H
+        personalization.np = pg.conv(M, personalization.np)
+        # print(pg.Mabs(personalization.np)(pg.krylov2original(krylov_base, krylov_result, int(krylov_dims))))
+        assert pg.Mabs(personalization.np)(pg.krylov2original(krylov_base, krylov_result, int(krylov_dims))) <= error_bound
+        assert pg.krylov2original(krylov_base, krylov_result, int(krylov_dims)).shape == personalization.np.shape
+
+
 def test_lanczos_speedup():
-    graph = next(pg.load_datasets_graph(["graph9"]))
+    graph = next(pg.load_datasets_graph(["bigraph"]))
     #  TODO: implement krylov space for tensorflow
     for algorithm in [pg.HeatKernel]:
-        result = pg.Normalize(algorithm(normalization='symmetric')).rank(graph)
-        result_lanczos = pg.Normalize(algorithm(normalization='symmetric', krylov_dims=5)).rank(graph,
-                                                                                                personalization=None)
-        assert pg.Mabs(result)(result_lanczos) < 1  #  TODO: fix optimization for stronger approximation
+        result = pg.Normalize(algorithm(normalization='symmetric')).rank(graph, {"0": 1})
+        result_lanczos = pg.Normalize(algorithm(normalization='symmetric', krylov_dims=5)).rank(graph, {"0": 1})
+        assert pg.Mabs(result)(result_lanczos) < 0.01
 
 
 def test_chebyshev():

@@ -57,7 +57,7 @@ class BoostedSeedOversampling(Postprocessor):
                  objective: str = 'partial',
                  oversample_from_iteration: str = 'previous',
                  weight_convergence: ConvergenceManager = None):
-        """ Initializes the class with a base ranker and the boosting scheme's parameters.
+        """ Initializes the class with a base ranker and the boosting scheme'personalization parameters.
 
         Attributes:
             ranker: The base ranker instance.

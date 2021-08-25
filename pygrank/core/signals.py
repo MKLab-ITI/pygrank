@@ -41,7 +41,8 @@ class GraphSignal(MutableMapping):
         self.node2id = {v: i for i, v in enumerate(graph)} if node2id is None else node2id
         if backend.is_array(obj):
             if backend.length(graph) != backend.length(obj):
-                raise Exception("Graph signal arrays should have the same dimensions as graphs")
+                raise Exception("Graph signal array dimensions " + str(backend.length(obj)) +
+                                " should be equal to graph nodes " + str(backend.length(graph)))
             self.np = backend.to_array(obj)
         elif obj is None:
             self.np = backend.repeat(1.0, len(graph))
@@ -122,8 +123,8 @@ def to_signal(graph, obj) -> GraphSignal:
     for accessing values with the speed provided by numpy arrays.
 
     Args:
-        graph: Either a graph or a GraphSignal, where in the second case it takes the value of the latter's graph.
-            Prefer using a GraphSignal as reference, as this copies the latter's node2id property without additional
+        graph: Either a graph or a GraphSignal, where in the second case it takes the value of the latter'personalization graph.
+            Prefer using a GraphSignal as reference, as this copies the latter'personalization node2id property without additional
             memory or computations. If the graph is None, the second argument needs to be a GraphSignal.
         obj: Either a numpy array or a hashmap between graph nodes and their values, in which cases the appropriate
             GraphSignal contructor is called, or a GraphSignal in which case it is also returned and a check is

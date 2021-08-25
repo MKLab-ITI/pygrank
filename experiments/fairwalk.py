@@ -38,7 +38,7 @@ for filter, H in graph_filters.items():
     print("=====", filter, "=====")
     algorithms = {
         "None": lambda G, p, s: Normalize(H).rank(G, p),
-        #"AUCPers": lambda G,p,s: personalizer(H, G, p, s, 0, 0),
+        #"AUCPers": lambda G,p,personalization: personalizer(H, G, p, personalization, 0, 0),
         "FairWalk": lambda G,p,s: Normalize(AdHocFairness(H, "fairwalk")).rank(G, p, sensitive=s),
         "Mult": lambda G,p,s: Normalize(AdHocFairness(H, "B")).rank(G, p, sensitive=s),
         "LFRPO": lambda G,p,s: Normalize(AdHocFairness(H, "O")).rank(G, p, sensitive=s),

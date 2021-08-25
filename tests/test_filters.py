@@ -36,7 +36,7 @@ def test_convergence_string_conversion():
     graph = next(pg.load_datasets_graph(["graph5"]))
     ranker = pg.PageRank()
     ranker(graph)
-    assert str(ranker.convergence.iterations)+" iterations" in str(ranker.convergence)
+    assert str(ranker.convergence.iteration)+" iterations" in str(ranker.convergence)
 
 
 def test_pagerank_vs_networkx():

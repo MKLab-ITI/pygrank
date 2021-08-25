@@ -53,4 +53,4 @@ def ensure_used_args(kwargs, methods=None):
             all_args.extend(inspect.signature(method).parameters.keys())
     missing = set(kwargs.keys())-set(all_args)
     if len(missing) != 0:
-        raise Exception("No usage of argument(s) "+str(missing)+" found")
+        raise Exception("No usage of argument(personalization) "+str(missing)+" found")

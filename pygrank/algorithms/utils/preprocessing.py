@@ -11,7 +11,7 @@ def to_sparse_matrix(G, normalization="auto", weight="weight", renormalize=False
         G: A networkx graph
         normalization: Optional. The type of normalization can be "col", "symmetric" or "auto" (default). The latter
             selects the type of normalization depending on whether the graph is directed or not respectively.
-        weight: Optional. The weight attribute of the graph's edges.
+        weight: Optional. The weight attribute of the graph'personalization edges.
         renormalize: Optional. If True, the renormalization trick employed by graph neural networks to ensure iteration
             stability by shrinking the spectrum is applied. Default is False.
     """

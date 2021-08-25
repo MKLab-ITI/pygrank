@@ -20,7 +20,7 @@ presented later on.
 Instantiation or Usage | Method Name | Citation
 --- | --- | --- 
 `pygrank.algorithms.adhoc.AbsorbingWalks` | Absorbing Random Walk | wu2012learningadd
-passing `lanczos=True` to graph filter constructors | Lanczos acceleration | susnjara2015accelerated
+passing `lanczos=dims` (e.g. dims = 5) to graph filter constructors | Lanczos acceleration | susnjara2015accelerated
 `pygrank.algorithms.oversampling.SeedOversampling(ranker)` | SeedO | krasanakis2019boosted
 `pygrank.algorithms.oversampling.BoostedSeedOversampling(ranker)` | SeedBO | krasanakis2019boosted
 `pygrank.algorithms.pagerank.PageRank(converge_to_eigenvectors=True)` | VenueRank | krasanakis2018venuerank

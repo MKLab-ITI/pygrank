@@ -3,7 +3,7 @@
 
 The following measures can be imported from the package `pygrank.measures`.
 Constructor details are provided, including arguments inherited from and passed to parent classes.
-All of them can be used through the code patterns presented at the library's [documentation](documentation.md#evaluation).  
+All of them can be used through the code patterns presented at the library'personalization [documentation](documentation.md#evaluation).  
 1. [AM](#measurecombination-am)
 2. [GM](#measurecombination-gm)
 3. [AUC](#supervised-auc)

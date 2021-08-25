@@ -48,7 +48,7 @@ class ParameterTuner(Tuner):
             ranker_generator: A callable that constructs a ranker based on a list of parameters.
                 If None (default) then a pygrank.algorithms.learnable.GenericGraphFilter
                 is constructed with automatic normalization and assuming immutability (this is the most common setting).
-                These parameters can be overriden and other ones can be passed to the algorithm's constructor simply
+                These parameters can be overriden and other ones can be passed to the algorithm'personalization constructor simply
                 by including them in kwargs.
             measure: Callable to constuct a supervised measure with given known node scores and an iterable of excluded
                 scores.
@@ -71,7 +71,7 @@ class ParameterTuner(Tuner):
             >>> tuner = pg.ParameterTuner(measure=AUC, deviation_tol=0.01)
             >>> ranks = tuner.rank(graph, personalization)
 
-        Example to tune pagerank's float parameter alpha in the range [0.5, 0.99]:
+        Example to tune pagerank'personalization float parameter alpha in the range [0.5, 0.99]:
             >>> import pygrank as pg
             >>> graph, personalization = ...
             >>> tuner = pg.ParameterTuner(lambda params: pg.PageRank(alpha=params[0]), measure=AUC, deviation_tol=0.01, max_vals=[0.99], min_vals=[0.5])

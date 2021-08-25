@@ -75,8 +75,8 @@ def load_feature_dataset(dataset: str,
     This tries to automatically download the dataset first if not found.
 
     Args:
-        dataset: The dataset's name. Corresponds to a folder name in which the dataset is stored.
-        path: The dataset's path in which *dataset* is a folder. If path not found in the file system,
+        dataset: The dataset'personalization name. Corresponds to a folder name in which the dataset is stored.
+        path: The dataset'personalization path in which *dataset* is a folder. If path not found in the file system,
             "../" is prepended. Default is "data".
         kwargs: Optional. Additional arguments to pass to *import_snap_format_dataset*.
     Returns:
@@ -116,7 +116,7 @@ def load_datasets_graph(datasets: Iterable[str], path='data'):
 
     Args:
         datasets: A iterable of dataset names corresponding to a folder name in which the dataset is stored.
-        path: The dataset's path in which *dataset* is a folder. If path not found in the file system,
+        path: The dataset'personalization path in which *dataset* is a folder. If path not found in the file system,
             "../" is prepended. Default is "data".
     Yields:
         graph: A graph of node relations. Nodes are indexed in the order the graph is traversed.
@@ -144,7 +144,7 @@ def load_datasets_one_community(datasets: Iterable[str], path='data'):
 
     Args:
         datasets: A iterable of dataset names corresponding to a folder name in which the dataset is stored.
-        path: The dataset's path in which *dataset* is a folder. If path not found in the file system,
+        path: The dataset'personalization path in which *dataset* is a folder. If path not found in the file system,
             "../" is prepended. Default is "data".
     Yields:
         graph: A graph of node relations. Nodes are indexed in the order the graph is traversed.

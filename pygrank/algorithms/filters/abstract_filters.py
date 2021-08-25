@@ -1,10 +1,11 @@
 from pygrank.core.signals import to_signal, NodeRanking
 from pygrank.algorithms.utils import call, ensure_used_args
 from pygrank.algorithms.utils import preprocessor as default_preprocessor, ConvergenceManager
-from pygrank.algorithms.utils import krylov_base, krylov2original
+from pygrank.algorithms.utils import krylov_base, krylov2original, krylov_error_bound
 from pygrank.core import backend
 from pygrank.algorithms.postprocess import Postprocessor, Tautology
 from typing import Union
+import warnings
 
 
 class GraphFilter(NodeRanking):
@@ -72,7 +73,7 @@ class RecursiveGraphFilter(GraphFilter):
                 This significantly speeds up the convergence speed of symmetric normalization (col normalization
                 preserves the L1 norm during computations on its own). Can also pass Postprocessor instances
                 to adjust node scores after each iteration with the Postprocessor.transform(ranks) method.
-                Can pass False or None to ignore this parameter's functionality.
+                Can pass False or None to ignore this parameter'personalization functionality.
         """
         super().__init__(*args, **kwargs)
         self.use_quotient = use_quotient
@@ -138,6 +139,9 @@ class ClosedFormGraphFilter(GraphFilter):
             self.zero_coefficient = self.coefficient
             self.krylov_result = 0
             self.Mpower = backend.eye(int(self.krylov_dims))
+            error_bound = krylov_error_bound(V, H, M, personalization.np)
+            if error_bound > 0.01:
+                warnings.warn("Krylov approximation with estimated relative error "+str(error_bound)+" > 0.01 is too rough to be meaningful (try on lager graphs)", stacklevel=2)
         else:
             self.ranks_power = personalization.np
             ranks.np = backend.repeat(0.0, backend.length(ranks.np))
@@ -175,9 +179,9 @@ class ClosedFormGraphFilter(GraphFilter):
     def _step(self, M, personalization, ranks, *args, **kwargs):
         self.coefficient = self._coefficient(self.coefficient)
         if self.krylov_dims is not None:
-            self.Mpower = self.Mpower @ self.krylov_H
             self.krylov_result, self.Mpower = self._recursion(self.krylov_result, self.Mpower, self.coefficient)
             ranks.np = krylov2original(self.krylov_base, self.krylov_result, int(self.krylov_dims))
+            self.Mpower = self.Mpower @ self.krylov_H
         else:
             ranks.np, self.ranks_power = self._recursion(ranks.np, self.ranks_power, float(self.coefficient))
             self.ranks_power = self._retrieve_power(self.ranks_power, M, personalization)

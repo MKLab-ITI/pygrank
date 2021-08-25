@@ -1,17 +1,19 @@
 from pygrank.core import backend
+from pygrank import measures
 from numpy.linalg import norm
 import numpy as np
 import warnings
+
 
 def diags(vecs, offs):
     return np.add.reduce([np.diag(v,k) for v,k in zip(vecs, offs)])
 
 
-def krylov_base(M, s, krylov_space_degree):
+def krylov_base(M, personalization, krylov_space_degree):
     warnings.warn("Krylov approximation is still under development")
     # TODO: throw exception for non-symmetric matrix
-    s = backend.to_array(s)
-    base = [s / backend.dot(s, s)**0.5]
+    personalization = backend.to_array(personalization)
+    base = [personalization / backend.dot(personalization, personalization) ** 0.5]
     base_norms = []
     alphas = []
     for j in range(0, krylov_space_degree):
@@ -34,4 +36,19 @@ def krylov_base(M, s, krylov_space_degree):
 def krylov2original(V, filterH, krylov_space_degree):
     e1 = backend.repeat(0.0, krylov_space_degree)
     e1[0] = 1
-    return (V @ filterH) @ e1
+    ret = (V @ filterH) @ e1
+    return np.asarray(ret).squeeze() # TODO: find why a matrix ends up here sometimes
+
+
+def krylov_error_bound(V, H, M, personalization, measure=measures.Mabs, max_powers=1):
+    personalization = personalization / backend.dot(personalization, personalization) ** 0.5
+    krylov_dims = V.shape[1]
+    krylov_result = backend.eye(int(krylov_dims))
+    errors = list()
+    for power in range(max_powers+1):
+        errors.append(measure(personalization)(krylov2original(V, krylov_result, int(krylov_dims))))
+        if power < max_powers:
+            krylov_result = krylov_result @ H
+            personalization = backend.conv(M, personalization)
+    return max(errors)
+

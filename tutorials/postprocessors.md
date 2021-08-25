@@ -3,7 +3,7 @@
 
 The following postprocessors can be imported from the package `pygrank.algorithms.postprocess`.
 Constructor details are provided, including arguments inherited from and passed to parent classes.
-All of them can be used through the code patterns presented at the library's [documentation](documentation.md#postprocessors).  
+All of them can be used through the code patterns presented at the library'personalization [documentation](documentation.md#postprocessors).  
 1. [AdHocFairness](#postprocessor-adhocfairness)
 2. [BoostedSeedOversampling](#postprocessor-boostedseedoversampling)
 3. [FairPersonalizer](#postprocessor-fairpersonalizer)
@@ -31,7 +31,7 @@ Args:
 ### <kbd>Postprocessor</kbd> BoostedSeedOversampling
 
 Iteratively performs seed oversampling and combines found ranks by weighting them with a Boosting scheme. 
-Initializes the class with a base ranker and the boosting scheme's parameters. 
+Initializes the class with a base ranker and the boosting scheme'personalization parameters. 
 
 Attributes: 
  * *ranker:* The base ranker instance. 
@@ -163,7 +163,7 @@ Example:
 ```python 
 >>> import pygrank as pg 
 >>> graph, personalization, algorithm = ... 
->>> algorithm = pg.Sweep(algorithm) # divides node scores by uniform ranker's non-personalized outcome 
+>>> algorithm = pg.Sweep(algorithm) # divides node scores by uniform ranker'personalization non-personalized outcome 
 >>> ranks = algorithm.rank(graph, personalization 
 ```
 
@@ -229,7 +229,7 @@ re-ordered if at least one is provided.
 
 Args: 
  * *ranker:* Optional. The base ranker instance. A Tautology() ranker is created if None (default) was specified. 
- * *expr:* Optional. A lambda expression to apply on each element. The transformer will automatically try to apply it on the backend array representation of the graph signal first, so prefer use of pygrank's backend functions for faster computations. For example, backend.exp (default) should be preferred instead of math.exp, because the former can directly parse numpy arrays, tensors, etc. 
+ * *expr:* Optional. A lambda expression to apply on each element. The transformer will automatically try to apply it on the backend array representation of the graph signal first, so prefer use of pygrank'personalization backend functions for faster computations. For example, backend.exp (default) should be preferred instead of math.exp, because the former can directly parse numpy arrays, tensors, etc. 
 
 Example:
 

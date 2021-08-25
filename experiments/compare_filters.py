@@ -1,7 +1,6 @@
 import pygrank as pg
 
-
-datasets = pg.downloadable_small_datasets()
+datasets = ["graph5", "graph9", "bigraph"]
 pre = pg.preprocessor(assume_immutability=True, normalization="symmetric")
 algorithms = {
     "ppr0.85": pg.PageRank(alpha=0.85, preprocessor=pre, max_iters=10000, tol=1.E-9),
@@ -10,9 +9,11 @@ algorithms = {
     "hk5": pg.HeatKernel(t=5, preprocessor=pre, max_iters=10000, tol=1.E-9),
     "tuned": pg.ParameterTuner(preprocessor=pre, max_iters=10000, tol=1.E-9),
 }
-#algorithms = benchmark.create_variations(algorithms, {"": pg.Tautology, "+SO": pg.SeedOversampling})
-#loader = pg.load_datasets_one_community(datasets)
-#pg.benchmark(algorithms, loader, "time", verbose=True)
+# algorithms = benchmark.create_variations(algorithms, {"": pg.Tautology, "+SO": pg.SeedOversampling})
+# loader = pg.load_datasets_one_community(datasets)
+# pg.benchmark(algorithms, loader, "time", verbose=True)
 
 loader = pg.load_datasets_one_community(datasets)
 pg.benchmark_print(pg.benchmark(algorithms, loader, pg.AUC, fraction_of_training=.8))
+loader = pg.load_datasets_one_community(datasets)
+pg.benchmark_print(pg.benchmark(algorithms, loader, pg.Conductance, fraction_of_training=.8))

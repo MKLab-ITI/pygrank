@@ -143,7 +143,7 @@ class NewAlgorithm(ClosedFormGraphFilter):
         """
         Instantiates the new algorithm.
         Args:
-            alpha: Optional. The new algorithm's parameter. Default value is 0.85.
+            alpha: Optional. The new algorithm'personalization parameter. Default value is 0.85.
         """
         super().__init__(**kwargs)
         self.alpha = alpha

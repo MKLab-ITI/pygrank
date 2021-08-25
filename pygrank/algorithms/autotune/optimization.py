@@ -49,7 +49,7 @@ def optimize(loss,
         deviation_tol: Optional. The numerical tolerance of the loss to optimize to. Default is 1.E-8.
         divide_range: Optional. Value greater than 1 with which to divide the range at each iteration. Default is 1.01,
             which guarantees convergence even for difficult-to-optimize functions, but values such as 1.1, 1.2 or 2 may
-            also be used for much faster, albeit a little coarser, convergence. Can use "shrinking" to perform s
+            also be used for much faster, albeit a little coarser, convergence. Can use "shrinking" to perform personalization
             hrinking block coordinate descent, but this does not guarantee convergence for some node ranking settings.
         parameter_tol: Optional. The numerical tolerance of parameter values to optimize to. **Both** this and
             deviation_tol need to be met. Default is infinity.
