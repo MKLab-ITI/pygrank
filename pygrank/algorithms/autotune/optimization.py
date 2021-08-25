@@ -74,7 +74,7 @@ def optimize(loss,
     for min_val, max_val in zip(min_vals, max_vals):
         if min_val > max_val:
             raise Exception("Empty parameter range ["+str(min_val)+","+str(max_val)+"]")
-    if str(divide_range)!="shrinking" and divide_range <= 1:
+    if str(divide_range) != "shrinking" and divide_range <= 1:
         raise Exception("divide_range should be greater than 1, otherwise the search space never shrinks.")
     #weights = [1./dims for i in range(dims)]
     if weights is None:

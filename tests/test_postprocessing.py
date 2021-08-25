@@ -46,6 +46,8 @@ def test_seed_oversampling():
     with pytest.raises(Exception):
         pg.SeedOversampling(pg.PageRank(), 'unknown').rank(graph, {"0": 1})
     with pytest.raises(Exception):
+        pg.SeedOversampling(pg.PageRank()).rank(graph, {"0": 0.1, "1": 1})
+    with pytest.raises(Exception):
         pg.BoostedSeedOversampling(pg.PageRank(), 'unknown').rank(graph, {"1": 1})
     with pytest.raises(Exception):
         pg.BoostedSeedOversampling(pg.PageRank(), 'naive', oversample_from_iteration='unknown').rank(graph, {"1": 1})

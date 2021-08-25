@@ -38,24 +38,12 @@ def test_appnp():
     pg.load_backend('tensorflow')
     model = AutotuneAPPNP(features.shape[1], labels.shape[1])
     pg.gnn_train(model, graph, features, labels, training, validation,
-                 optimizer=tf.optimizers.Adam(learning_rate=0.01),
-                 regularization=tf.keras.regularizers.L2(5.E-4),
-                 epochs=50)
-    assert float(pg.gnn_accuracy(labels, model(graph, features), test)) > 0.5
-
-    pg.load_backend('tensorflow')
-    model = AutotuneAPPNP(features.shape[1], labels.shape[1])
-    pg.gnn_train(model, graph, features, labels, training, validation,
-                 optimizer=tf.optimizers.Adam(learning_rate=0.01),
-                 regularization=tf.keras.regularizers.L2(5.E-4),
                  epochs=50)
     assert float(pg.gnn_accuracy(labels, model(graph, features), test)) >= 0.5
 
     pg.load_backend('tensorflow')
     model = AutotuneAPPNP(features.shape[1], labels.shape[1], decoupled=True)
     pg.gnn_train(model, graph, features, labels, training, validation,
-                 optimizer=tf.optimizers.Adam(learning_rate=0.01),
-                 regularization=tf.keras.regularizers.L2(5.E-4),
                  epochs=50)
     assert float(pg.gnn_accuracy(labels, model(graph, features), test)) >= 0.5
 

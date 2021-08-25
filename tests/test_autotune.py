@@ -10,6 +10,16 @@ def test_optimizer_errors():
         optimize(loss=lambda p: (p[0] - 2) ** 2 + (p[1] - 1) ** 4, max_vals=[5, 5], min_vals=[5, 6])
 
 
+def test_optimizer_verbose():
+    import sys, io
+    prev_stdout = sys.stdout
+    sys.stdout = io.StringIO("")
+    pg.optimize(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4, max_vals=[5, 5], parameter_tol=1.E-8, verbose=True)
+    output = sys.stdout.getvalue()
+    sys.stdout = prev_stdout
+    assert len(output) > 0
+
+
 def test_optimizer():
     # https://en.wikipedia.org/wiki/Test_functions_for_optimization
 

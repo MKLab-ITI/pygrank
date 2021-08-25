@@ -71,4 +71,6 @@ def test_load_datasets_all_communities():
 
 
 def test_dataset_generation():
+    assert len(pg.downloadable_small_datasets()) > 1
+    assert len(pg.downloadable_small_datasets()) < len(pg.datasets)
     assert len(pg.downloadable_datasets()) == len(pg.datasets)

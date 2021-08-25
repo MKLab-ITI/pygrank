@@ -23,6 +23,22 @@ def test_abstract_filter_types():
         pg.Tuner().rank(graph)
 
 
+def test_filter_invalid_parameters():
+    graph = next(pg.load_datasets_graph(["graph5"]))
+    with pytest.raises(Exception):
+        pg.HeatKernel(normalization="unknown").rank(graph)
+    with pytest.raises(Exception):
+        pg.HeatKernel(coefficient_type="unknown").rank(graph)
+
+
+def test_convergence_string_conversion():
+    # TODO: make convergence trackable from wrapping objects
+    graph = next(pg.load_datasets_graph(["graph5"]))
+    ranker = pg.PageRank()
+    ranker(graph)
+    assert str(ranker.convergence.iterations)+" iterations" in str(ranker.convergence)
+
+
 def test_pagerank_vs_networkx():
     graph = next(pg.load_datasets_graph(["graph9"]))
     for _ in supported_backends():
