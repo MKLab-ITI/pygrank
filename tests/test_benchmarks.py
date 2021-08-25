@@ -64,8 +64,8 @@ def test_one_community_benchmarks():
 
     loader = pg.load_datasets_one_community(datasets)
     pg.benchmark_print(pg.benchmark(algorithms, loader, pg.AUC, fraction_of_training=.8))
-    loader = pg.load_datasets_one_community(datasets)
-    pg.benchmark_print(pg.benchmark(algorithms, loader, pg.Conductance, fraction_of_training=.8))
+    #loader = pg.load_datasets_one_community(datasets)
+    #pg.benchmark_print(pg.benchmark(algorithms, loader, pg.Conductance, fraction_of_training=.8))
 
 
 def test_load_dataset_load():
