@@ -62,7 +62,8 @@ class ParameterTuner(Tuner):
                 the previous one to perform the actual ranking. If None (default), this functionality is ignored.
             kwargs: Additional arguments can be passed to pygrank.algorithms.autotune.optimization.optimize. Otherwise,
                 the respective arguments are retrieved from the variable *default_tuning_optimization*, which is crafted
-                for fast convergence of the default ranker_generator.
+                for fast convergence of the default ranker_generator. Arguments passable to the ranker_generator are
+                also passed to it.
                 Make sure to declare both the upper **and** the lower bounds of parameter values.
 
         Example:

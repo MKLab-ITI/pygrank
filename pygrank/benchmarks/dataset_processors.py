@@ -3,7 +3,7 @@ def amazon_processor(path: str = "data"):   # pragma: no cover
     id2title = {}
     id2group = {}
     group2ids = {}
-    with open('amazon-meta.txt', 'r', encoding='utf-8') as file:
+    with open(path+'/amazon/all.txt', 'r', encoding='utf-8') as file:
         product = ""
         for line in file:
             line = line.strip()
@@ -20,11 +20,11 @@ def amazon_processor(path: str = "data"):   # pragma: no cover
                 for similar in [other for other in line[8:].strip().split(' ') if len(other)>0][1:]:
                     pairs.append((product, similar))
 
-    with open(path+'/pairs.txt', 'w') as file:
+    with open(path+'/amazon/pairs.txt', 'w') as file:
         for p1, p2 in pairs:
             file.write(p1+'\t'+p2+'\n')
 
-    with open(path+'/groups.txt', 'w') as file:
+    with open(path+'/amazon/groups.txt', 'w') as file:
         for g in group2ids.values():
             for uid in g:
                 file.write(uid+'\t')
