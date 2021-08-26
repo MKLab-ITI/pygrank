@@ -5,7 +5,8 @@ The following tuning mechanisms can be imported from the package `pygrank.algori
 Constructor details are provided, including arguments inherited from and passed to parent classes.
 All of them can be used through the code patterns presented at the library'personalization [documentation](documentation.md#autotune).  
 1. [AlgorithmSelection](#tuner-algorithmselection)
-2. [ParameterTuner](#tuner-parametertuner)
+2. [HopTuner](#tuner-hoptuner)
+3. [ParameterTuner](#tuner-parametertuner)
 
 ### <kbd>Tuner</kbd> AlgorithmSelection
  
@@ -39,6 +40,29 @@ Example (with more filters):
 ```
 
 
+### <kbd>Tuner</kbd> HopTuner
+
+Tunes a GenericGraphFilter specific measure by splitting the personalization 
+in training and test sets and measuring the similarity of hops at given number of steps 
+away. 
+Instantiates the tuning mechanism. 
+
+Args: 
+ * *ranker_generator:* A callable that constructs a ranker based on a list of parameters. If None (default) then a pygrank.algorithms.learnable.GenericGraphFilter is constructed with automatic normalization and assuming immutability (this is the most common setting). These parameters can be overriden and other ones can be passed to the algorithm'personalization constructor simply by including them in kwargs. 
+ * *measure:* Callable to constuct a supervised measure with given known node scores. 
+ * *tuning_backend:* Specifically switches to a designted backend for the tuning process before restoring the previous one to perform the actual ranking. If None (default), this functionality is ignored. 
+ * *kwargs:* Additional arguments are passed to the automatically instantiated GenericGraphFilter. 
+
+Example:
+
+```python 
+>>> import pygrank as pg 
+>>> graph, personalization = ... 
+>>> tuner = pg.HopTuner(measure=AUC) 
+>>> ranks = tuner.rank(graph, personalization) 
+```
+
+
 ### <kbd>Tuner</kbd> ParameterTuner
 
 Tunes a parameterized version of node ranking algorithms under a specific measure by splitting the personalization 
@@ -51,7 +75,7 @@ Args:
  * *fraction_of_training:* A number in (0,1) indicating how to split provided graph signals into training and validaton ones by randomly sampling training nodes to meet the required fraction of all graph nodes. Default is 0.8. 
  * *combined_prediction:* If True (default), after the best version of algorithms is determined, the whole personalization is used to produce the end-result. Otherwise, only the training portion of the training-validation split is used. 
  * *tuning_backend:* Specifically switches to a designted backend for the tuning process before restoring the previous one to perform the actual ranking. If None (default), this functionality is ignored. 
- * *kwargs:* Additional arguments can be passed to pygrank.algorithms.autotune.optimization.optimize. Otherwise, the respective arguments are retrieved from the variable *default_tuning_optimization*, which is crafted for fast convergence of the default ranker_generator. Make sure to declare both the upper **and** the lower bounds of parameter values. 
+ * *kwargs:* Additional arguments can be passed to pygrank.algorithms.autotune.optimization.optimize. Otherwise, the respective arguments are retrieved from the variable *default_tuning_optimization*, which is crafted for fast convergence of the default ranker_generator. Arguments passable to the ranker_generator are also passed to it. Make sure to declare both the upper **and** the lower bounds of parameter values. 
 
 Example:
 

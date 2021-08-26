@@ -65,7 +65,7 @@ class HopTuner(Tuner):
             best_parameters[i] = ((measure(propagated)-(measure_best+measure_worst)/2))*2/(measure_best-measure_worst)
             propagated = backend.conv(propagated, M)
         for i in range(1, len(best_parameters)):
-            assert best_parameters[i] >= 0
+            assert best_parameters[i] >= -1
             best_parameters[i] = best_parameters[i-1] * (best_parameters[i]+1)/2
         #print(best_parameters)
 

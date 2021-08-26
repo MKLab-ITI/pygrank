@@ -8,17 +8,19 @@ All of them can be used through the code patterns presented at the library'perso
 2. [GM](#measurecombination-gm)
 3. [AUC](#supervised-auc)
 4. [Accuracy](#supervised-accuracy)
-5. [CrossEntropy](#supervised-crossentropy)
-6. [KLDivergence](#supervised-kldivergence)
-7. [Mabs](#supervised-mabs)
-8. [MaxDifference](#supervised-maxdifference)
-9. [NDCG](#supervised-ndcg)
-10. [PearsonCorrelation](#supervised-pearsoncorrelation)
-11. [SpearmanCorrelation](#supervised-spearmancorrelation)
-12. [pRule](#supervised-prule)
-13. [Conductance](#unsupervised-conductance)
-14. [Density](#unsupervised-density)
-15. [Modularity](#unsupervised-modularity)
+5. [Cos](#supervised-cos)
+6. [CrossEntropy](#supervised-crossentropy)
+7. [Dot](#supervised-dot)
+8. [KLDivergence](#supervised-kldivergence)
+9. [Mabs](#supervised-mabs)
+10. [MaxDifference](#supervised-maxdifference)
+11. [NDCG](#supervised-ndcg)
+12. [PearsonCorrelation](#supervised-pearsoncorrelation)
+13. [SpearmanCorrelation](#supervised-spearmancorrelation)
+14. [pRule](#supervised-prule)
+15. [Conductance](#unsupervised-conductance)
+16. [Density](#unsupervised-density)
+17. [Modularity](#unsupervised-modularity)
 
 ### <kbd>MeasureCombination</kbd> AM
 
@@ -60,9 +62,27 @@ Args:
  * *known_ranks:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
 
+### <kbd>Supervised</kbd> Cos
+
+Computes the cosine similarity between given and known ranks 
+Initializes the supervised measure with desired graph signal outcomes. 
+
+Args: 
+ * *known_ranks:* The desired graph signal outcomes. 
+ * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
+
 ### <kbd>Supervised</kbd> CrossEntropy
 
 Computes a cross-entropy loss of given vs known ranks. 
+Initializes the supervised measure with desired graph signal outcomes. 
+
+Args: 
+ * *known_ranks:* The desired graph signal outcomes. 
+ * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
+
+### <kbd>Supervised</kbd> Dot
+
+Computes the dot similarity between given and known ranks 
 Initializes the supervised measure with desired graph signal outcomes. 
 
 Args: 
