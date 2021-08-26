@@ -43,6 +43,7 @@ def test_auc_ndcg_compliance():
 
 def test_edge_cases():
     assert pg.pRule([0])([0]) == 0
+    assert pg.Cos([0])([0]) == 0
     with pytest.raises(Exception):
         pg.Measure()([0, 1, 0])
     with pytest.raises(Exception):
@@ -85,6 +86,9 @@ def test_computations():
         assert pg.Accuracy([1, 2, 3])([1, 2, 3]) == 1
         assert pg.Mabs([3, 1, 1])([2, 0, 2]) == 1
         assert pg.CrossEntropy([1, 1, 1])([1, 1, 1]) < 1.E-12
+        assert float(pg.Cos([2, 0, 1])([2, 0, 1])) == 1
+        assert float(pg.Cos([2, 0, 1])([-2, 0, -1])) == -1
+        assert float(pg.Dot([1, 1, 1])([1, 1, 1])) == 3
 
 
 def test_aggregated():

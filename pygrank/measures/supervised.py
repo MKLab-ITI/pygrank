@@ -120,6 +120,25 @@ class KLDivergence(Supervised):
         return ret
 
 
+class Cos(Supervised):
+    """Computes the cosine similarity between given and known ranks"""
+
+    def evaluate(self, ranks):
+        known_ranks, ranks = self.to_numpy(ranks)
+        divide = backend.dot(known_ranks, known_ranks) * backend.dot(ranks, ranks)
+        if divide == 0:
+            return 0
+        return backend.dot(known_ranks, ranks) / (divide**0.5)
+
+
+class Dot(Supervised):
+    """Computes the dot similarity between given and known ranks"""
+
+    def evaluate(self, ranks):
+        known_ranks, ranks = self.to_numpy(ranks)
+        return backend.dot(known_ranks, ranks)
+
+
 class AUC(Supervised):
     """Wrapper for sklearn.metrics.auc evaluation."""
 
