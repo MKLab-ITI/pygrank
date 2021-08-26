@@ -62,9 +62,13 @@ def download_dataset(dataset, path: str = "data"):   # pragma: no cover
         if "all" in source:
             all_path = download_path+"/all."+source["all"].split(".")[-1]
             wget.download(source["all"], all_path)
-            tarfile.open(all_path, 'r').extractall(download_path+"/")
+            try:
+                tarfile.open(all_path, 'r').extractall(download_path+"/")
+            except tarfile.ReadError:
+                with gzip.open(all_path, 'rb') as f_in:
+                    with open(download_path+"/all.txt", 'wb') as f_out:
+                        shutil.copyfileobj(f_in, f_out)
             os.remove(all_path)
-
         if "script" in source:
             source["script"](path)
 

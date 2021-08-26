@@ -2,6 +2,7 @@ import warnings
 import numpy as np
 from pygrank.measures.utils import Measure
 from pygrank.core.signals import to_signal
+from pygrank.core import backend
 
 
 class Unsupervised(Measure):
@@ -79,8 +80,8 @@ class Density(Unsupervised):
     def evaluate(self, ranks):
         ranks = to_signal(self.graph, ranks)
         graph = ranks.graph
-        internal_edges = sum(ranks.get(i, 0) * ranks.get(j, 0) for i,j  in graph.edges())
-        expected_edges = sum(ranks.values()) ** 2 - sum(rank ** 2 for rank in ranks.values()) # without self-loops
+        internal_edges = sum(ranks.get(i, 0) * ranks.get(j, 0) for i,j in graph.edges())
+        expected_edges = backend.sum(ranks.np) ** 2 - backend.sum(ranks.np ** 2) # without self-loops
         if internal_edges == 0:
             return 0
         return internal_edges / expected_edges
