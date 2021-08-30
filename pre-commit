@@ -4,8 +4,8 @@ echo "Running docgenerator..."
 python docgenerator.py
 echo "Updating commit..."
 
-git add tutorials/tuners.md
-git add tutorials/graph_filters.md
-git add tutorials/measures.md
-git add tutorials/postprocessors.md
-git add tutorials/datasets.md
+git add documentation/tuners.md
+git add documentation/graph_filters.md
+git add documentation/measures.md
+git add documentation/postprocessors.md
+git add documentation/datasets.md
