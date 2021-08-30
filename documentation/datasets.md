@@ -13,4 +13,7 @@ All datasets can be imported with code patterns presented at the library'persona
 | graph5 | https://github.com/maniospas/pygrank-datasets | :heavy_check_mark: |  |  |
 | graph9 | https://github.com/maniospas/pygrank-datasets | :heavy_check_mark: | :heavy_check_mark: |  |
 | bigraph | https://github.com/maniospas/pygrank-datasets | :heavy_check_mark: | :heavy_check_mark: |  |
+| blockmodel | https://github.com/maniospas/pygrank-datasets | :heavy_check_mark: | :heavy_check_mark: |  |
 | synthfeats | https://github.com/maniospas/pygrank-datasets | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| pubmed | https://linqs.soe.ucsc.edu/data | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| cora | https://www.dgl.ai/ | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |

@@ -15,7 +15,7 @@ Instantiates the tuning mechanism.
 Args: 
  * *rankers:* A list of node ranking algorithms to chose from. Try to make them share a preprocessor for more efficient computations. If None (default), the filters obtained from pygrank.benchmark.create_demo_filters().values() are used instead. 
  * *measure:* Callable to constuct a supervised measure with given known node scores and an iterable of excluded scores. 
- * *fraction_of_training:* A number in (0,1) indicating how to split provided graph signals into training and validaton ones by randomly sampling training nodes to meet the required fraction of all graph nodes. Default is 0.8. 
+ * *fraction_of_training:* A number in (0,1) indicating how to split provided graph signals into training and validaton ones by randomly sampling training nodes to meet the required fraction of all graph nodes. Numbers outside this range can also be used (not recommended without specific reason) per the conventions of `pygrank.split(...)`. Default is 0.8. 
  * *combined_prediction:* If True (default), after the best version of algorithms is determined, the whole personalization is used to produce the end-result. Otherwise, only the training portion of the training-validation split is used. 
  * *tuning_backend:* Specifically switches to a designated backend for the tuning process before restoring the previous one to perform the actual ranking. If None (default), this functionality is ignored. 
 
@@ -50,6 +50,7 @@ Instantiates the tuning mechanism.
 Args: 
  * *ranker_generator:* A callable that constructs a ranker based on a list of parameters. If None (default) then a pygrank.algorithms.learnable.GenericGraphFilter is constructed with automatic normalization and assuming immutability (this is the most common setting). These parameters can be overriden and other ones can be passed to the algorithm'personalization constructor simply by including them in kwargs. 
  * *measure:* Callable to constuct a supervised measure with given known node scores. 
+ * *fraction_of_training:* A number in (0,1) indicating how to split provided graph signals into training and validaton ones by randomly sampling training nodes to meet the required fraction of all graph nodes. Numbers outside this range can also be used (not recommended without specific reason) per the conventions of `pygrank.split(...)`. Default is 0.8. 
  * *tuning_backend:* Specifically switches to a designted backend for the tuning process before restoring the previous one to perform the actual ranking. If None (default), this functionality is ignored. 
  * *kwargs:* Additional arguments are passed to the automatically instantiated GenericGraphFilter. 
 
@@ -72,7 +73,7 @@ Instantiates the tuning mechanism.
 Args: 
  * *ranker_generator:* A callable that constructs a ranker based on a list of parameters. If None (default) then a pygrank.algorithms.learnable.GenericGraphFilter is constructed with automatic normalization and assuming immutability (this is the most common setting). These parameters can be overriden and other ones can be passed to the algorithm'personalization constructor simply by including them in kwargs. 
  * *measure:* Callable to constuct a supervised measure with given known node scores and an iterable of excluded scores. 
- * *fraction_of_training:* A number in (0,1) indicating how to split provided graph signals into training and validaton ones by randomly sampling training nodes to meet the required fraction of all graph nodes. Default is 0.8. 
+ * *fraction_of_training:* A number in (0,1) indicating how to split provided graph signals into training and validaton ones by randomly sampling training nodes to meet the required fraction of all graph nodes. Numbers outside this range can also be used (not recommended without specific reason) per the conventions of `pygrank.split(...)`. Default is 0.8. 
  * *combined_prediction:* If True (default), after the best version of algorithms is determined, the whole personalization is used to produce the end-result. Otherwise, only the training portion of the training-validation split is used. 
  * *tuning_backend:* Specifically switches to a designted backend for the tuning process before restoring the previous one to perform the actual ranking. If None (default), this functionality is ignored. 
  * *kwargs:* Additional arguments can be passed to pygrank.algorithms.autotune.optimization.optimize. Otherwise, the respective arguments are retrieved from the variable *default_tuning_optimization*, which is crafted for fast convergence of the default ranker_generator. Arguments passable to the ranker_generator are also passed to it. Make sure to declare both the upper **and** the lower bounds of parameter values. 

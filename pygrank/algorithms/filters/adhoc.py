@@ -15,7 +15,7 @@ class PageRank(RecursiveGraphFilter):
             >>> import pygrank as pg
             >>> algorithm = pg.PageRank(alpha=0.99, tol=1.E-9) # tol passed to the ConvergenceManager
         """
-        self.alpha = float(alpha)
+        self.alpha = alpha
         super().__init__(*args, **kwargs)
 
     def _start(self, M, personalization, ranks, *args, **kwargs):
@@ -24,7 +24,7 @@ class PageRank(RecursiveGraphFilter):
 
     def _formula(self, M, personalization, ranks, *args, **kwargs):
         # TODO: return self.alpha * (ranks * M + backend.sum(ranks[self.is_dangling]) * personalization) + (1 - self.alpha) * personalization
-        return self.alpha * backend.conv(ranks, M) + (1 - self.alpha) * personalization
+        return backend.conv(ranks, M) * self.alpha + personalization * (1 - self.alpha)
 
     def _end(self, M, personalization, ranks, *args, **kwargs):
         # TODO: del self.is_dangling
@@ -44,7 +44,7 @@ class HeatKernel(ClosedFormGraphFilter):
             >>> from pygrank.algorithms import HeatKernel
             >>> algorithm = HeatKernel(t=3, tol=1.E-9) # tol passed to the ConvergenceManager
         """
-        self.t = float(t)
+        self.t = t
         super().__init__(*args, **kwargs)
 
     def _coefficient(self, previous_coefficient):
@@ -72,7 +72,7 @@ class AbsorbingWalks(RecursiveGraphFilter):
         """
 
         super().__init__(*args, **kwargs)
-        self.alpha = float(alpha)  # typecast to make sure that a graph is not accidentally the first argument
+        self.alpha = alpha  # typecast to make sure that a graph is not accidentally the first argument
 
     def _start(self, M, personalization, ranks, absorption=None, **kwargs):
         self.absorption = to_signal(personalization.graph, absorption).np * (1 - self.alpha) / self.alpha
@@ -92,8 +92,8 @@ class BiasedKernel(RecursiveGraphFilter):
     """ Heuristic kernel-like method that places emphasis on shorter random walks."""
 
     def __init__(self, alpha=0.85, t=1, *args, **kwargs):
-        self.alpha = float(alpha)
-        self.t = float(t)
+        self.alpha = alpha
+        self.t = t
         super().__init__(*args, **kwargs)
         warnings.warn("BiasedKernel is a low-quality heuristic", stacklevel=2)
 

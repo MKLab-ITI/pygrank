@@ -183,7 +183,7 @@ class ClosedFormGraphFilter(GraphFilter):
             ranks.np = krylov2original(self.krylov_base, self.krylov_result, int(self.krylov_dims))
             self.Mpower = self.Mpower @ self.krylov_H
         else:
-            ranks.np, self.ranks_power = self._recursion(ranks.np, self.ranks_power, float(self.coefficient))
+            ranks.np, self.ranks_power = self._recursion(ranks.np, self.ranks_power, self.coefficient)
             self.ranks_power = self._retrieve_power(self.ranks_power, M, personalization)
 
     def _end(self, M, personalization, ranks, *args, **kwargs):

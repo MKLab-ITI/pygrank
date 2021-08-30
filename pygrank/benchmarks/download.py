@@ -31,11 +31,25 @@ datasets = {
                "pairs": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/biblock/pairs.txt",
                "groups": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/biblock/groups.txt",
                },
+    "blockmodel": {"url": "https://github.com/maniospas/pygrank-datasets",
+                   "pairs": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/blockmodel/pairs.txt",
+                   "groups": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/blockmodel/groups.txt",
+                   },
     "synthfeats": {"url": "https://github.com/maniospas/pygrank-datasets",
                "pairs": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/synthfeats/pairs.txt",
                "groups": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/synthfeats/groups.txt",
                "features": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/synthfeats/features.txt",
                },
+    "pubmed": {"url": "https://linqs.soe.ucsc.edu/data",
+               "all": "https://linqs-data.soe.ucsc.edu/public/Pubmed-Diabetes.tgz",
+               "pairs": "Pubmed-Diabetes/data/Pubmed-Diabetes.DIRECTED.cites.tab",
+               "pair_process": lambda row: None if len(row)<4 else [row[0].split(":")[-1], row[3].split(":")[-1]],
+               "features": "Pubmed-Diabetes/data/Pubmed-Diabetes.NODE.paper.tab",
+               "feature_process": lambda row: None if len(row)<3 or "cat=" in row[0] else [row[0]]+[val for val in row[2:] if "summary=" not in val]+[row[1].split("=")[-1]]
+              },
+    "cora": {"url": "https://www.dgl.ai/",
+             "all": "https://data.dgl.ai/dataset/cora_v2.zip"
+             }
 }
 
 
@@ -44,7 +58,7 @@ def downloadable_datasets():
 
 
 def downloadable_small_datasets():
-    return ["citeseer", "eucore", "graph5", "graph9", "bigraph"]
+    return ["bigraph", "blockmodel", "citeseer", "eucore", "graph5", "graph9"]
 
 
 def download_dataset(dataset, path: str = "data"):   # pragma: no cover
@@ -68,7 +82,7 @@ def download_dataset(dataset, path: str = "data"):   # pragma: no cover
                 with gzip.open(all_path, 'rb') as f_in:
                     with open(download_path+"/all.txt", 'wb') as f_out:
                         shutil.copyfileobj(f_in, f_out)
-            os.remove(all_path)
+            #os.remove(all_path)
         if "script" in source:
             source["script"](path)
 
@@ -83,6 +97,17 @@ def download_dataset(dataset, path: str = "data"):   # pragma: no cover
                     os.remove(pairs_path)
             else:
                 shutil.move(download_path+"/"+source["pairs"], download_path+"/pairs.txt")
+        if "pair_process" in source:
+            pairs = list()
+            with open(download_path+"/pairs.txt", "r") as file:
+                for line in file:
+                    pair = source["pair_process"](line[:-1].split())
+                    if pair is not None:
+                        pairs.append(pair)
+            os.remove(download_path+"/pairs.txt")
+            with open(download_path+"/pairs.txt", "w") as file:
+                for pair in pairs:
+                    file.write(pair[0]+"\t"+pair[1]+"\n")
 
         if "features" in source and "groups" not in source:
             features_path = download_path+"/"+source["features"]
@@ -91,6 +116,10 @@ def download_dataset(dataset, path: str = "data"):   # pragma: no cover
             with open(features_path) as features_file:
                 for line in features_file:
                     line = line[:-1].split()
+                    if "feature_process" in source:
+                        line = source["feature_process"](line)
+                        if line is None:
+                            continue
                     node_id = line[0]
                     group = line[-1]
                     if group not in groups:

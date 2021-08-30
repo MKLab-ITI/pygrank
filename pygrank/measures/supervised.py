@@ -115,7 +115,7 @@ class KLDivergence(Supervised):
         ratio = (ranks+1.E-12)/(known_ranks+1.E-12)
         if backend.min(ratio) <= 0:
             raise Exception("Invalid KLDivergence calculations (negative ranks or known ranks)")
-        ret = -backend.dot(ranks, backend.log((known_ranks+1.E-12)/(ranks+1.E-12)))
+        ret = -backend.sum(ranks*backend.log((known_ranks+1.E-12)/(ranks+1.E-12)))
         #backend.dot(ranks[original_ranks != 0],-backend.log(original_ranks[original_ranks != 0] / ranks[original_ranks != 0]))
         return ret
 

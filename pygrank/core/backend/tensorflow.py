@@ -4,8 +4,8 @@ from tensorflow import abs, reduce_sum as sum, exp, eye, identity as copy, reduc
 
 
 def backend_init():
-    # print('Enabling float64 in keras backend')
-    tf.keras.backend.set_floatx('float64')
+    # print('Enabling float32 in keras backend')
+    tf.keras.backend.set_floatx('float32')
 
 
 def graph_dropout(M, dropout):
@@ -35,12 +35,12 @@ def dot(x, y):
 
 
 def repeat(value, times):
-    return tf.ones(shape=(times, 1), dtype=tf.float64)*value # default repeat creates an 1D tensor
+    return tf.ones(shape=(times, 1), dtype=tf.float32)*value # default repeat creates an 1D tensor
 
 
 def scipy_sparse_to_backend(M):
     coo = M.tocoo()
-    return tf.SparseTensor([[coo.col[i], coo.row[i]] for i in range(len(coo.col))], tf.convert_to_tensor(coo.data, dtype=tf.float64), coo.shape)
+    return tf.SparseTensor([[coo.col[i], coo.row[i]] for i in range(len(coo.col))], tf.convert_to_tensor(coo.data, dtype=tf.float32), coo.shape)
 
 
 def to_array(obj, copy_array=False):
@@ -48,7 +48,7 @@ def to_array(obj, copy_array=False):
         if copy_array:
             return tf.identity(obj)
         return obj
-    return tf.convert_to_tensor([[v] for v in obj], dtype=tf.float64)
+    return tf.convert_to_tensor([[v] for v in obj], dtype=tf.float32)
 
 
 def is_array(obj):

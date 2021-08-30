@@ -54,7 +54,8 @@ class ParameterTuner(Tuner):
                 scores.
             fraction_of_training: A number in (0,1) indicating how to split provided graph signals into training and
                 validaton ones by randomly sampling training nodes to meet the required fraction of all graph nodes.
-                Default is 0.8.
+                Numbers outside this range can also be used (not recommended without specific reason) per the
+                conventions of `pygrank.split(...)`. Default is 0.8.
             combined_prediction: If True (default), after the best version of algorithms is determined, the whole
                 personalization is used to produce the end-result. Otherwise, only the training portion of the
                 training-validation split is used.
@@ -128,7 +129,8 @@ class AlgorithmSelection(Tuner):
                 scores.
             fraction_of_training: A number in (0,1) indicating how to split provided graph signals into training and
                 validaton ones by randomly sampling training nodes to meet the required fraction of all graph nodes.
-                Default is 0.8.
+                Numbers outside this range can also be used (not recommended without specific reason) per the
+                conventions of `pygrank.split(...)`. Default is 0.8.
             combined_prediction: If True (default), after the best version of algorithms is determined, the whole
                 personalization is used to produce the end-result. Otherwise, only the training portion of the
                 training-validation split is used.
@@ -165,11 +167,11 @@ class AlgorithmSelection(Tuner):
         backend_personalization = to_signal(graph, backend.to_array(personalization.np))
         training, validation = split(backend_personalization, self.fraction_of_training)
         measure = self.measure(validation, training)
-        best_value = float('inf')
+        best_value = -float('inf')
         best_ranker = None
         for ranker in self.rankers:
-            value = -measure.best_direction()*measure.evaluate(ranker.rank(backend_personalization, *args, **kwargs))
-            if value < best_value:
+            value = measure.best_direction()*measure.evaluate(ranker.rank(training, *args, **kwargs))
+            if value > best_value:
                 best_value = value
                 best_ranker = ranker
         if self.tuning_backend is not None and self.tuning_backend != previous_backend:

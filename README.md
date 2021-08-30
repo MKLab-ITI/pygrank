@@ -1,4 +1,4 @@
-![pygrank](tutorials/pygrank.png)
+![pygrank](documentation/pygrank.png)
 
 Fast recommendation algorithms for large graphs based on link analysis.
 <br>
@@ -58,7 +58,7 @@ As a quick start, let us construct a networkx graph `G` and a set of nodes `seed
 >>> seeds = {"A", "B"}
 ```
 
-We now run a personalized PageRank [graph filter](tutorials/documentation.md#graph-filters)
+We now run a personalized PageRank [graph filter](documentation/documentation.md#graph-filters)
 to score the structural relatedness of graph nodes to the ones of the given set.
  We start by importing the library, 
 ```python
@@ -81,7 +81,7 @@ or not respectively.
 ```
 
 Node ranking output is always organized into
-[graph signals](tutorials/documentation.md#graph-signals)
+[graph signals](documentation/documentation.md#graph-signals)
 which can be used like dictionaries. For example, we can
 print the scores of some nodes per:
 ```python
@@ -155,14 +155,14 @@ Some of the library's advantages are:
 
 
 # :link: Material
-[Tutorials & Documentation](tutorials/documentation.md)
+[Tutorials & Documentation](documentation/documentation.md)
 
 **Quick links**<br>
-[Measures](tutorials/measures.md)<br>
-[Graph Filters](tutorials/graph_filters.md)<br>
-[Postprocessors](tutorials/postprocessors.md)<br>
-[Tuners](tutorials/tuners.md)<br>
-[Downloadable Datasets](tutorials/datasets.md)<br>
+[Measures](documentation/measures.md)<br>
+[Graph Filters](documentation/graph_filters.md)<br>
+[Postprocessors](documentation/postprocessors.md)<br>
+[Tuners](documentation/tuners.md)<br>
+[Downloadable Datasets](documentation/datasets.md)<br>
 
 # :fire: Features
 * Graph filters
@@ -184,4 +184,4 @@ If `pygrank` has been useful in your research and you would like to cite it in a
 ```
 TBD
 ```
-To publish research that uses provided methods, please cite the [appropriate publications](tutorials/citations.md).
+To publish research that uses provided methods, please cite the [appropriate publications](documentation/citations.md).

@@ -1,8 +1,10 @@
 import io
+import math
 import sys
+import scipy.stats
 
 
-def _fraction2str(num):
+def _fraction2str(num, decimals=2):
     """
     Helper method to pretty print percentages.
     Args:
@@ -10,10 +12,11 @@ def _fraction2str(num):
     """
     if isinstance(num, str):
         return num
-    if num < 0.005:
+    mult = math.pow(10, decimals)
+    if num < 0.5/mult:
         return "0"
-    ret = str(int(num*100+.5)/100.)
-    if len(ret) < 4:
+    ret = str(int(num*mult+.5)/float(mult))
+    if len(ret) < decimals+2:
         ret += "0"
     if ret[0] == "0":
         return ret[1:]
@@ -33,7 +36,7 @@ def _fill(text="", tab=14):
     return text+(" "*(tab-len(text)))
 
 
-def benchmark_print(benchmark, delimiter: str = " \t ", end_line: str = "", out: object = sys.stdout, err=sys.stderr):
+def benchmark_print(benchmark, delimiter: str = " \t ", end_line: str = "", out: object = sys.stdout, err=sys.stderr, decimals=2):
     """
     Print outcomes provided by a given benchmark as a table in the console. To ensure that `sys.stderr`
     does not interrupt printing, this method buffers it and prints all error messages at once in the end.
@@ -59,7 +62,7 @@ def benchmark_print(benchmark, delimiter: str = " \t ", end_line: str = "", out:
             if tabs is None:
                 tabs = [len(value)+1 for value in line]  # first line should be algorithm names
                 tabs[0] = 14
-            print(delimiter.join([_fill(_fraction2str(value), tab) for tab, value in zip(tabs, line)]) + end_line, file=out)
+            print(delimiter.join([_fill(_fraction2str(value, decimals=decimals), tab) for tab, value in zip(tabs, line)]) + end_line, file=out)
     finally:
         sys.stderr = old_stderr
         out.flush()

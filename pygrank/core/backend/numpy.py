@@ -30,8 +30,8 @@ def scipy_sparse_to_backend(M):
 def to_array(obj, copy_array=False):
     if isinstance(obj, np.ndarray):
         if copy_array:
-            return np.copy(obj)
-        return obj
+            return np.copy(obj).ravel()
+        return obj.ravel()
     return np.array(obj)
 
 

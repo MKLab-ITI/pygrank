@@ -134,7 +134,7 @@ def generate_filter_docs():
                 if not abstract[obj] and abstr == list(inspect.getmro(obj))[1]:
                     text += combine_attributes(base_descriptions[obj], [base_descriptions.get(cls,"") for cls in inspect.getmro(obj)][1:])
 
-    with open("tutorials/graph_filters.md", "w") as file:
+    with open("documentation/graph_filters.md", "w") as file:
         file.write(text)
 
 
@@ -169,7 +169,7 @@ def generate_postprocessor_docs():
                 if not abstract[obj] and abstr in inspect.getmro(obj):
                     text += combine_attributes(base_descriptions[obj], [base_descriptions.get(cls,"") for cls in inspect.getmro(obj)][1:])
 
-    with open("tutorials/postprocessors.md", "w") as file:
+    with open("documentation/postprocessors.md", "w") as file:
         file.write(text)
 
 
@@ -212,7 +212,7 @@ def generate_metric_docs():
                 if not abstract[obj] and abstr == list(inspect.getmro(obj))[1]:
                     text += combine_attributes(base_descriptions[obj], [base_descriptions.get(cls,"") for cls in inspect.getmro(obj)][1:])
 
-    with open("tutorials/measures.md", "w") as file:
+    with open("documentation/measures.md", "w") as file:
         file.write(text)
 
 
@@ -249,7 +249,7 @@ def generate_tuning_docs():
                 if not abstract[obj] and abstr == list(inspect.getmro(obj))[1]:
                     text += combine_attributes(base_descriptions[obj], [base_descriptions.get(cls,"") for cls in inspect.getmro(obj)][1:])
 
-    with open("tutorials/tuners.md", "w") as file:
+    with open("documentation/tuners.md", "w") as file:
         file.write(text)
 
 
@@ -276,7 +276,7 @@ def generate_dataset_docs():
             text += ":heavy_check_mark:"
         text += " |\n"
 
-    with open("tutorials/datasets.md", "w") as file:
+    with open("documentation/datasets.md", "w") as file:
         file.write(text)
 
 

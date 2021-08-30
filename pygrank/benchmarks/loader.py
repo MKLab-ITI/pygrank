@@ -45,15 +45,29 @@ def _import_features(dataset: str,
     if not os.path.isdir(path):   # pragma: no cover
         path = "../"+path
     features = dict()
+    pos_dict = dict()
+    feature_length = 0
     with open(path+'/'+dataset+'/'+feature_file, 'r', encoding='utf-8') as file:
         for line in file:
             line = line[:-1].split()
-            features[line[0]] = [float(val) for val in line[1:]]
+            if "=" in line[1]:
+                found = dict()
+                for feat in line[1:]:
+                    feat = feat.split("=")
+                    if feat[0] not in pos_dict:
+                        pos_dict[feat[0]] = len(pos_dict)
+                    found[pos_dict[feat[0]]] = float(feat[1])
+                features[line[0]] = [found.get(i, 0.) for i in range(max(found.keys()))]
+            else:
+                features[line[0]] = [float(val) for val in line[1:]]
+            feature_length = max(feature_length, len(features[line[0]]))
+    features = {v: row+[0]*(feature_length-len(row)) for v, row in features.items()}
     return features
 
 
 def _preprocess_features(features: np.ndarray):
     """Row-normalizes a feature matrix.
+    Follows the implementation of: https://github.com/tkipf/gcn/blob/master/gcn/utils.py
 
     Args:
         features: A numpy matrix whose rows correspond to node features.
@@ -61,10 +75,20 @@ def _preprocess_features(features: np.ndarray):
         The normalized feature matrix.
     """
 
-    r_inv = np.asarray(np.sum(features, axis=0), np.float64)
-    r_inv[r_inv != 0] = np.power(r_inv[r_inv != 0], -1)
-    features = features * r_inv
+
+    #r_inv = np.asarray(np.sum(features, axis=0), np.float64)
+    #r_inv[r_inv != 0] = np.power(r_inv[r_inv != 0], -1)
+    #features = features * r_inv
+    #return features
+    import scipy.sparse
+    rowsum = np.array(features.sum(1))
+    r_inv = np.power(rowsum, -1).flatten()
+    r_inv[np.isinf(r_inv)] = 0.
+    r_mat_inv = scipy.sparse.diags(r_inv)
+    features = r_mat_inv.dot(features)
     return features
+
+
 
 
 def load_feature_dataset(dataset: str,
@@ -93,22 +117,20 @@ def load_feature_dataset(dataset: str,
     return graph, features, labels
 
 
-def load_datasets_multiple_communities(datasets: Iterable[str], path='data'):
-    if not os.path.isdir(path):   # pragma: no cover
-        path = "../"+path
+def load_datasets_multiple_communities(datasets: Iterable[str], **kwargs):
     for dataset in datasets:
-        graph, groups = import_snap_format_dataset(dataset, path=path)
+        graph, groups = import_snap_format_dataset(dataset, **kwargs)
         if len(groups) != 0:
             yield dataset, graph, groups
 
 
-def load_datasets_all_communities(datasets: Iterable[str], path='data'):
-    for dataset, graph, groups in load_datasets_multiple_communities(datasets, path):
-            for group_id, group in groups.items():
-                yield dataset+str(group_id), graph, group
+def load_datasets_all_communities(datasets: Iterable[str], **kwargs):
+    for dataset, graph, groups in load_datasets_multiple_communities(datasets, **kwargs):
+        for group_id, group in groups.items():
+            yield dataset+str(group_id), graph, group
 
 
-def load_datasets_graph(datasets: Iterable[str], path='data'):
+def load_datasets_graph(datasets: Iterable[str], **kwargs):
     """
     Iterates through all available datasets that exhibit structural communities and loads them with
     *import_snap_format_dataset* for experiments.
@@ -126,17 +148,15 @@ def load_datasets_graph(datasets: Iterable[str], path='data'):
         >>> for graph, group in pg.load_datasets_one_community(pg.downloadable_datasets()):
         >>>     ...
     """
-    if not os.path.isdir(path):   # pragma: no cover
-        path = "../"+path
     datasets = [(dataset, 0) if len(dataset) != 2 else dataset for dataset in datasets]
     for dataset, group_id in datasets:
         graph, _ = import_snap_format_dataset(dataset,
-                                              path=path,
-                                              max_group_number=0)
+                                              max_group_number=0,
+                                              **kwargs)
         yield graph
 
 
-def load_datasets_one_community(datasets: Iterable[str], path='data'):
+def load_datasets_one_community(datasets: Iterable[str], **kwargs):
     """
     Iterates through all available datasets that exhibit structural communities and loads them with
     *import_snap_format_dataset* for experiments.
@@ -155,16 +175,14 @@ def load_datasets_one_community(datasets: Iterable[str], path='data'):
         >>> for graph, group in pg.load_datasets_one_community(pg.downloadable_datasets()):
         >>>     ...
     """
-    if not os.path.isdir(path):   # pragma: no cover
-        path = "../"+path
     datasets = [(dataset, 0) if len(dataset) != 2 else dataset for dataset in datasets]
     last_loaded_dataset = None
     for dataset, group_id in datasets:
         if last_loaded_dataset != dataset:
             max_group_number = 1 + max(group_id for dat, group_id in datasets if dat == dataset)
             graph, groups = import_snap_format_dataset(dataset,
-                                                       path=path,
-                                                       max_group_number=max_group_number)
+                                                       max_group_number=max_group_number,
+                                                       **kwargs)
             last_loaded_dataset = dataset
         if len(groups) > group_id:
             group = set(groups[group_id])
