@@ -3,9 +3,6 @@ import pytest
 from .test_core import supported_backends
 
 
-eps = 1.E-15
-
-
 def test_abstract_postprocessor():
     graph = next(pg.load_datasets_graph(["graph5"]))
     with pytest.raises(Exception):
@@ -58,7 +55,7 @@ def test_norm_maintain():
     for _ in supported_backends():
         prior = pg.to_signal(graph, {"A": 2})
         posterior = pg.MabsMaintain(pg.Normalize(pg.PageRank(), "range")).rank(prior)
-    assert abs(pg.sum(pg.abs(posterior.np)) - 2) < eps
+        assert abs(pg.sum(pg.abs(posterior.np)) - 2) < 2*pg.epsilon()
 
 
 def test_normalize():
@@ -70,7 +67,7 @@ def test_normalize():
         assert pg.min(r.np) == 0
         assert pg.max(r.np) == 1
         r = pg.Normalize(pg.PageRank(), "sum").rank(graph)
-        assert abs(pg.sum(r.np) - 1) < eps
+        assert abs(pg.sum(r.np) - 1) < pg.epsilon()
         with pytest.raises(Exception):
             pg.Normalize(pg.PageRank(), "unknown").rank(graph)
 
@@ -81,10 +78,10 @@ def test_transform():
     for _ in supported_backends():
         r1 = pg.Normalize(pg.PageRank(), "sum").rank(graph)
         r2 = pg.Transformer(pg.PageRank(), lambda x: x/pg.sum(x)).rank(graph)
-        assert pg.Mabs(r1)(r2) < eps
+        assert pg.Mabs(r1)(r2) < pg.epsilon()
         r1 = pg.Transformer(math.exp).transform(pg.PageRank()(graph))
         r2 = pg.Transformer(pg.PageRank(), pg.exp).rank(graph)
-        assert pg.Mabs(r1)(r2) < eps
+        assert pg.Mabs(r1)(r2) < pg.epsilon()
 
 
 def test_ordinals():

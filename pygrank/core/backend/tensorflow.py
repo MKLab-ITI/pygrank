@@ -74,3 +74,7 @@ def length(x):
 
 def degrees(M):
     return tf.reshape(tf.sparse.reduce_sum(M, axis=0), (-1,1))
+
+
+def epsilon():
+    return tf.keras.backend.epsilon()

@@ -23,8 +23,9 @@ class ConvergenceManager:
 
         Args:
             tol: Numerical tolerance to determine the stopping point (algorithms stop if the "error" between
-                consecutive iterations becomes less than this numer). Default is 1.E-6 but for large graphs
-                1.E-9 often yields more robust convergence points.
+                consecutive iterations becomes less than this number). Default is 1.E-6 but for large graphs
+                1.E-9 often yields more robust convergence points. If the provided value is less than the
+                numerical precision of the backend `pygrank.epsilon()` then it is snapped to that value.
             error_type: Optional. How to calculate the "error" between consecutive iterations of graph signals.
                 If "iters", convergence is reached at iteration *max_iters*-1 without throwing an exception.
                 Default is `pygrank.Mabs`.
@@ -33,7 +34,7 @@ class ConvergenceManager:
                 and exceeding this value with graph filters often indicates that either graphs have large diameters
                 or that algorithms of choice converge particularly slowly.
         """
-        self.tol = tol
+        self.tol = max(tol, backend.epsilon())
         self.error_type = error_type
         self.max_iters = max_iters
         self.iteration = 0
@@ -77,7 +78,7 @@ class ConvergenceManager:
     def _has_converged(self, prev_ranks, ranks):
         if self.error_type == "iters":
             return False
-        return self.error_type(prev_ranks)(ranks) < self.tol
+        return self.error_type(prev_ranks)(ranks) <= self.tol
 
     def __str__(self):
         return str(self.iteration)+" iterations ("+str(self.elapsed_time)+" sec)"

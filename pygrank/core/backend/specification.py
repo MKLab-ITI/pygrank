@@ -84,3 +84,7 @@ def degrees(M):  # pragma: no cover
 
 def dot(x, y):   # pragma: no cover
     pass
+
+
+def epsilon():   # pragma: no cover
+    pass

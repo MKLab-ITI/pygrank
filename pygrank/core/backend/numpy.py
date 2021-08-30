@@ -31,7 +31,9 @@ def to_array(obj, copy_array=False):
     if isinstance(obj, np.ndarray):
         if copy_array:
             return np.copy(obj).ravel()
-        return obj.ravel()
+        if len(obj.shape) > 1:
+            return obj.ravel()
+        return obj
     return np.array(obj)
 
 
@@ -58,3 +60,8 @@ def length(x):
 
 def degrees(M):
     return np.asarray(sum(M, axis=1)).ravel()
+
+
+def epsilon():
+    return np.finfo(np.float32).eps
+    #return np.finfo(float).eps
