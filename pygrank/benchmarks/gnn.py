@@ -25,11 +25,12 @@ def gnn_train(model, graph, features, labels, training, validation,
     if test is None:
         test = validation
     remaining_patience = patience
+    regularized_variable = model.regularization if hasattr(model, "regularization") else model.trainable_variables
     for epoch in range(epochs):
         with tf.GradientTape() as tape:
             predictions = model(graph, features, training=True)
             loss = gnn_cross_entropy(labels, predictions, training)
-            for param in model.regularization:
+            for param in regularized_variable:
                 loss = loss + regularization(param)
         gradients = tape.gradient(loss, model.trainable_variables)
         optimizer.apply_gradients(zip(gradients, model.trainable_variables))
