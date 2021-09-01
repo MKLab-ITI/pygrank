@@ -66,16 +66,19 @@ class HopTuner(Tuner):
         rand_test = backend.to_array([int(random.random()+0.5) for _ in range(1000)])
         measure_worst = self.measure(rand_test)(1-rand_test)
         measure_best = self.measure(rand_test)(rand_test)
-        training, validation = backend_personalization, backend_personalization#split(backend_personalization, self.fraction_of_training)
-        measure = self.measure(validation)#, training if training != validation else None)
+        training, validation = split(backend_personalization, self.fraction_of_training)
+        measure = self.measure(validation, training if training != validation else None)
+        measure2 = self.measure(training, training if validation != validation else None)
 
         measure_values = [1]*(self.num_parameters+self.autoregression)
         M = self.ranker_generator(measure_values).preprocessor(graph)
         propagated = training.np
+        propagated2 = validation.np
         for i in range(len(measure_values)):
-            measure_values[i] = ((measure(propagated)-(measure_best+measure_worst)/2))*2/(measure_best-measure_worst)#*0.5
-            #measure_values[i] += ((measure2(propagated)-(measure_best+measure_worst)/2))*2/(measure_best-measure_worst)*0.5
+            measure_values[i] = ((measure(propagated)-(measure_best+measure_worst)/2))*2/(measure_best-measure_worst)
+            measure_values[i] = max(measure_values[i], ((measure2(propagated2) - (measure_best + measure_worst) / 2)) * 2 / (measure_best - measure_worst))
             propagated = backend.conv(propagated, M)
+            propagated2 = backend.conv(propagated2, M)
         measure_values[0] = 1
 
         if self.autoregression == 0:

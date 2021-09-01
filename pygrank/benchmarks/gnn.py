@@ -19,7 +19,7 @@ def gnn_train(model, graph, features, labels, training, validation,
     if optimizer is None:
         optimizer = tf.optimizers.Adam(learning_rate=0.01)
     if regularization is None:
-        regularization = tf.keras.regularizers.L2(5.E-4)
+        regularization = tf.keras.regularizers.L2(0.005)
     best_loss = float('inf')
     best_params = None
     if test is None:

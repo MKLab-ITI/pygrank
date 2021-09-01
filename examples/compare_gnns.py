@@ -12,12 +12,13 @@ class APPNP:
             tf.keras.layers.Dense(num_outputs, activation=tf.nn.relu),
         ])
         self.trainable_variables = self.mlp.trainable_variables
-        self.regularization = self.trainable_variables[:len(self.trainable_variables)//2]
+        self.regularization = [self.mlp.layers[0].weights]
 
         if isinstance(alpha, str) and alpha == "estimated":
             self.ranker = pg.HopTuner(renormalize=True, assume_immutability=True, tuning_backend="numpy",
-                                      measure=lambda y: lambda x: math.exp(pg.KLDivergence(y)(x)),
-                                      fraction_of_training=1, autoregression=0, tol=1.E-12)
+                                      measure=lambda *args: lambda x: math.exp(pg.KLDivergence(*args)(x)),
+                                      fraction_of_training=0.8, autoregression=5, error_type="iters", max_iters=10, num_parameters=10
+                                      )
         else:
             if isinstance(alpha, tf.Variable):
                 self.trainable_variables = self.trainable_variables + [alpha]
@@ -34,12 +35,12 @@ class APPNP:
 
 
 pg.load_backend('numpy')
-graph, features, labels = pg.load_feature_dataset('citeseer')
+graph, features, labels = pg.load_feature_dataset('cora')
 for seed in range(10):
     training, test = pg.split(list(range(len(graph))), 0.8, seed=seed)
     training, validation = pg.split(training, 1-0.2/0.8, seed=seed)
     architectures = {"APPNP": APPNP(features.shape[1], labels.shape[1], alpha=0.9),
-                     #"LAPPNP": APPNP(features.shape[1], labels.shape[1], alpha=tf.Variable([0.85])),
+                     "LAPPNP": APPNP(features.shape[1], labels.shape[1], alpha=tf.Variable([0.85])),
                      "APFNP": APPNP(features.shape[1], labels.shape[1], alpha="estimated")
                      }
 
@@ -48,6 +49,6 @@ for seed in range(10):
     for architecture, model in architectures.items():
         #model.ranker.preprocessor.clear()
         pg.gnn_train(model, graph, features, labels, training, validation,
-                     test=test, verbose=False, patience=200, epochs=2000)
+                     test=test, verbose=False, patience=100, epochs=2000)
         accs[architecture] = float(pg.gnn_accuracy(labels, model(graph, features), test))
         print(accs)
