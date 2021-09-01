@@ -16,7 +16,7 @@ class APPNP:
 
         if isinstance(alpha, str) and alpha == "estimated":
             self.ranker = pg.HopTuner(renormalize=True, assume_immutability=True, tuning_backend="numpy",
-                                      measure=lambda *args: lambda x: math.exp(pg.KLDivergence(*args)(x)),
+                                      measure=lambda *args: lambda x: 1-1./(1+math.exp(-pg.KLDivergence(*args)(x))),
                                       fraction_of_training=0.8, autoregression=5, error_type="iters", max_iters=10, num_parameters=10
                                       )
         else:
@@ -39,8 +39,8 @@ graph, features, labels = pg.load_feature_dataset('cora')
 for seed in range(10):
     training, test = pg.split(list(range(len(graph))), 0.8, seed=seed)
     training, validation = pg.split(training, 1-0.2/0.8, seed=seed)
-    architectures = {"APPNP": APPNP(features.shape[1], labels.shape[1], alpha=0.9),
-                     "LAPPNP": APPNP(features.shape[1], labels.shape[1], alpha=tf.Variable([0.85])),
+    architectures = {#"APPNP": APPNP(features.shape[1], labels.shape[1], alpha=0.9),
+                     #"LAPPNP": APPNP(features.shape[1], labels.shape[1], alpha=tf.Variable([0.85])),
                      "APFNP": APPNP(features.shape[1], labels.shape[1], alpha="estimated")
                      }
 

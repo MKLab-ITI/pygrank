@@ -1,4 +1,5 @@
 import pygrank as pg
+import math
 
 datasets = ["blockmodel", "citeseer", "eucore", "dblp", "amazon"]
 pre = pg.preprocessor(assume_immutability=True, normalization="symmetric")
@@ -12,8 +13,12 @@ algorithms = {
 }
 tuned = {
     "selected": pg.AlgorithmSelection(algorithms.values(), fraction_of_training=0.8),
-    "tuned": pg.ParameterTuner(preprocessor=pre, max_iters=10000, tol=1.E-9, fraction_of_training=0.8),
-    "estimated": pg.HopTuner(preprocessor=pre, max_iters=10000, tol=1.E-9, measure=pg.AUC, fraction_of_training=0.8)
+    "tuned": pg.ParameterTuner(preprocessor=pre, fraction_of_training=0.8, error_type="iters", max_iters=10),
+    "estimated": pg.HopTuner(preprocessor=pre, error_type="iters", max_iters=10,
+                             measure=pg.AUC,
+                             autoregression=5,
+                             num_parameters=10
+                             )
 }
 #algorithms = pg.create_variations(algorithms, {"": pg.Normalize})
 

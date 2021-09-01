@@ -50,7 +50,6 @@ Instantiates the tuning mechanism.
 Args: 
  * *ranker_generator:* A callable that constructs a ranker based on a list of parameters. If None (default) then a pygrank.algorithms.learnable.GenericGraphFilter is constructed with automatic normalization and assuming immutability (this is the most common setting). These parameters can be overriden and other ones can be passed to the algorithm'personalization constructor simply by including them in kwargs. 
  * *measure:* Callable to constuct a supervised measure with given known node scores. 
- * *fraction_of_training:* A number in (0,1) indicating how to split provided graph signals into training and validaton ones by randomly sampling training nodes to meet the required fraction of all graph nodes. Numbers outside this range can also be used (not recommended without specific reason) per the conventions of `pygrank.split(...)`. Default is 0.8. 
  * *tuning_backend:* Specifically switches to a designted backend for the tuning process before restoring the previous one to perform the actual ranking. If None (default), this functionality is ignored. 
  * *kwargs:* Additional arguments are passed to the automatically instantiated GenericGraphFilter. 
 

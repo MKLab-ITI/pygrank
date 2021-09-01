@@ -2,6 +2,7 @@ import networkx as nx
 import numpy as np
 import scipy
 from pygrank import backend
+import uuid
 
 
 def to_sparse_matrix(G, normalization="auto", weight="weight", renormalize=False):
@@ -50,11 +51,19 @@ def assert_binary(ranks):
             raise Exception('Binary ranks required', v)
 
 
+def _obj2id(obj):
+    if isinstance(obj, object):
+        if not hasattr(obj, "uuid"):
+            obj.uuid = uuid.uuid1()
+        return str(obj.uuid)
+    return str(hash(obj))
+
+
 def _idfier(*args, **kwargs):
     """
     Converts args and kwargs into a hashable array of object ids.
     """
-    return "["+",".join(str(hash(arg)) for arg in args)+"]"+"{"+",".join(v+":"+str(hash(kwargs[v])) for v in kwargs)+"}"+backend.backend_name()
+    return "["+",".join(_obj2id(arg) for arg in args)+"]"+"{"+",".join(v+":"+_obj2id(kwarg) for v, kwarg in kwargs.items())+"}"+backend.backend_name()
 
 
 class MethodHasher:
