@@ -51,7 +51,7 @@ def assert_binary(ranks):
             raise Exception('Binary ranks required', v)
 
 
-def _obj2id(obj):
+def obj2id(obj):
     if isinstance(obj, object):
         if not hasattr(obj, "uuid"):
             obj.uuid = uuid.uuid1()
@@ -63,7 +63,7 @@ def _idfier(*args, **kwargs):
     """
     Converts args and kwargs into a hashable array of object ids.
     """
-    return "["+",".join(_obj2id(arg) for arg in args)+"]"+"{"+",".join(v+":"+_obj2id(kwarg) for v, kwarg in kwargs.items())+"}"+backend.backend_name()
+    return "[" +",".join(obj2id(arg) for arg in args) + "]" + "{" + ",".join(v + ":" + obj2id(kwarg) for v, kwarg in kwargs.items()) + "}" + backend.backend_name()
 
 
 class MethodHasher:

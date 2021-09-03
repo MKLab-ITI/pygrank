@@ -85,6 +85,7 @@ def optimize(loss,
         print("first loss", loss(weights))
     iter = 0
     range_deviations = [float('inf')]*len(max_vals)
+    checkpoint_weights = weights
     while True:
         assert max(range_search) != 0, "Something went wrong and took too many iterations for optimizer to run (check for nans)"
         if range_search[curr_variable] == 0:
@@ -113,6 +114,9 @@ def optimize(loss,
         curr_variable += 1
         if curr_variable >= len(max_vals):
             curr_variable -= len(max_vals)
+            if sum(abs(w1-w2) for w1, w2 in zip(weights, checkpoint_weights)) == 0:
+                break
+            checkpoint_weights = weights
     #print("trained weights in", iter, "iterations", weights, "final loss", loss(weights))
     if depth > 1:
         return optimize(loss, max_vals, min_vals, deviation_tol, divide_range, partitions, parameter_tol, depth - 1, weights, verbose)

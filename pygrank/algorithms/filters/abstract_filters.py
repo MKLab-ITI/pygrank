@@ -1,6 +1,6 @@
 from pygrank.core.signals import to_signal, NodeRanking
 from pygrank.algorithms.utils import call, ensure_used_args
-from pygrank.algorithms.utils import preprocessor as default_preprocessor, ConvergenceManager
+from pygrank.algorithms.utils import preprocessor as default_preprocessor, ConvergenceManager, obj2id
 from pygrank.algorithms.utils import krylov_base, krylov2original, krylov_error_bound
 from pygrank.core import backend
 from pygrank.algorithms.postprocess import Postprocessor, Tautology
@@ -166,7 +166,7 @@ class ClosedFormGraphFilter(GraphFilter):
     def _retrieve_power(self, ranks_power, M, personalization):
         if self.optimization_dict is not None:
             # TODO investigate why this does not speed up as much as expected
-            personalization_id = hash(personalization)
+            personalization_id = obj2id(personalization)
             if personalization_id not in self.optimization_dict:
                 self.optimization_dict.clear()  # this ensures that the dict is cleared when new tuning starts
                 self.optimization_dict[personalization_id] = dict()

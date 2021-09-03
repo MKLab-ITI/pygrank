@@ -63,10 +63,9 @@ class HopTuner(Tuner):
         #measure_weights = [1, 1, 1, 1, 1]
         #propagated = [training.np, validation.np, backend_personalization.np, training2.np, validation2.np]
 
-        training, validation = split(backend_personalization, 0.75)
-        propagated = [training.np, validation.np, backend_personalization.np]
-        measures = [self.measure(backend_personalization, None)]*3
-        measure_weights = [1, 1, 1]
+        training, validation = split(backend_personalization, 0.8)
+        propagated = [training.np, validation.np]
+        measures = [self.measure(backend_personalization, None)]*len(propagated)
 
         measure_values = [None] * (self.num_parameters+self.autoregression)
         M = self.ranker_generator(measure_values).preprocessor(graph)
@@ -76,10 +75,13 @@ class HopTuner(Tuner):
             propagated = [backend.conv(p, M) for p in propagated]
 
         measure_values = np.array(measure_values)
-        mean_value = np.mean(measure_values, axis=0)
+        mean_value = np.mean(measure_values, axis=0)*0
         measure_values -= mean_value
         best_parameters = measure_values
+        measure_weights = [1] * measure_values.shape[1]
         if self.autoregression != 0:
+            #vals2 = -measure_values-mean_value
+            #measure_values = np.concatenate([measure_values, vals2-np.mean(vals2, axis=0)], axis=1)
             window = np.repeat(1./self.autoregression, self.autoregression)
             beta1 = 0.9
             beta2 = 0.999
@@ -93,23 +95,27 @@ class HopTuner(Tuner):
                 beta2t *= beta2
                 prev_error = error
                 parameters = np.copy(measure_values)
-                for i in range(len(measure_values) - len(window)-1, -1, -1):
-                    parameters[i, :] = np.dot(np.abs(window), parameters[i:(i+len(window)), :])
+                for i in range(len(measure_values) - len(window)-2, -1, -1):
+                    parameters[i, :] = np.dot((window), measure_values[(i+1):(i+len(window)+1), :])
                 errors = (parameters - measure_values) * measure_weights / np.sum(measure_weights)
                 for j in range(len(window)):
                     gradient = 0
                     for i in range(len(measure_values) - len(window)-1):
-                        gradient += np.dot(parameters[i+j, :], errors[i, :])
-                    momentum[j] = beta1*momentum[j] + (1-beta1)*gradient*np.sign(window[j])
+                        gradient += np.dot(measure_values[i+j+1, :], errors[i, :])
+                    momentum[j] = beta1*momentum[j] + (1-beta1)*gradient#*np.sign(window[j])
                     rms[j] = beta2*rms[j] + (1-beta2)*gradient*gradient
                     window[j] -= 0.01*momentum[j] / (1-beta1t) / ((rms[j]/(1-beta2t))**0.5 + 1.E-8)
                     #window[j] -= 0.01*gradient*np.sign(window[j])
                 error = np.mean(np.abs(errors))
-                if abs(error-prev_error) < 1.E-6:
+                if abs(error-prev_error)/error < 1.E-6:
+                    #parameters = np.copy(measure_values)
+                    #for i in range(len(measure_values) - len(window)-1, -1, -1):
+                    #    parameters[i, :] = np.dot(np.abs(window[1:]), parameters[i+1:(i+len(window)), :])
                     best_parameters = parameters
                     break
         best_parameters = (np.mean(best_parameters[:self.num_parameters, :] * measure_weights, axis=1) + np.mean(mean_value))
-        best_parameters = best_parameters-np.min(best_parameters)
+        #best_parameters -= np.min(best_parameters)
+        #print(best_parameters)
         """
         training, validation = split(backend_personalization, 0.8, seed=1)
         offset_fitness = lambda params: -self.measure(validation, training)(self.ranker_generator((best_parameters-params[0])*len(best_parameters)/np.sum(np.abs(best_parameters-params[0])))(training))
@@ -122,4 +128,14 @@ class HopTuner(Tuner):
         if self.tuning_backend is not None and self.tuning_backend != previous_backend:
             backend.load_backend(previous_backend)
         """
+
+        measure = self.measure(validation, training)
+        best_parameters = optimize(
+            lambda params: -measure.best_direction() * measure.evaluate(self._run(training, params, *args, **kwargs)),
+            weights = best_parameters,
+            max_vals=[1]*len(best_parameters), min_vals=[0]*len(best_parameters), deviation_tol=0.005, divide_range="shrinking")
+
         return self.ranker_generator(best_parameters), personalization
+
+    def _run(self, personalization: GraphSignal, params: list, *args, **kwargs):
+        return self.ranker_generator(params).rank(personalization, *args, **kwargs)
