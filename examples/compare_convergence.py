@@ -9,7 +9,15 @@ import numpy as np
 import networkx as nx
 
 
-def import_SNAP_data(dataset, path='data/', pair_file='pairs.txt', group_file='groups.txt', directed=False, min_group_size=10, max_group_number=10, import_label_file=False, specific_ids=None):
+def import_SNAP_data(dataset,
+                     path='data/',
+                     pair_file='pairs.txt',
+                     group_file='groups.txt',
+                     directed=False,
+                     min_group_size=10,
+                     max_group_number=10,
+                     import_label_file=False,
+                     specific_ids=None):
     if specific_ids is not None:
         min_group_size = 100000000
         max_group_number = len(specific_ids)
@@ -61,8 +69,8 @@ def show_correlations(ranks, ground_truth):
 
 
 # CHANGE THE FOLLOWING BLOCK TO SELECT DATASET
-specific_ids = [1723] # community ids
-dataset = 'snap_amazon' # dataset
+specific_ids = [1723]  # community ids
+dataset = 'snap_amazon'  # dataset
 dataset_name = dataset
 
 

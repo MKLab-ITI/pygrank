@@ -26,11 +26,11 @@ class MeasureCombination(Measure):
         """
         self.measures = list() if measures is None else measures
         self.weights = [1 for _ in self.measures] if weights is None else weights
-        self.thresholds = [(0,1) for _ in self.measures] if thresholds is None else thresholds
+        self.thresholds = [(0, 1) for _ in self.measures] if thresholds is None else thresholds
 
     def add(self,
             measure: Measure,
-            weight: float = 1,
+            weight: float = 1.,
             min_val: float = -float('inf'),
             max_val: float = float('inf')):
         self.measures.append(measure)
@@ -47,7 +47,6 @@ class AM(MeasureCombination):
         for i in range(len(self.measures)):
             if self.weights[i] != 0:
                 eval = self.measures[i].evaluate(ranks)
-                #print("metric", i, ":", eval, "->", min(max(eval, self.thresholds[i][0]), self.thresholds[i][1]))
                 result += self.weights[i]*min(max(eval, self.thresholds[i][0]), self.thresholds[i][1])
         return result/sum(self.weights)
 
@@ -60,6 +59,6 @@ class GM(MeasureCombination):
         for i in range(len(self.measures)):
             if self.weights[i] != 0:
                 eval = self.measures[i].evaluate(ranks)
-                #print("metric", i, ":", eval, "->", min(max(eval, self.thresholds[i][0]), self.thresholds[i][1]))
-                result += self.weights[i]*backend.log(min(max(eval, self.thresholds[i][0]), max(1.E-12, self.thresholds[i][1])))
+                result += self.weights[i]*backend.log(min(max(eval, self.thresholds[i][0]),
+                                                          max(backend.epsilon(), self.thresholds[i][1])))
         return backend.exp(result/sum(self.weights))

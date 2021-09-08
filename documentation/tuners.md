@@ -13,7 +13,7 @@ All of them can be used through the code patterns presented at the library'perso
 Instantiates the tuning mechanism. 
 
 Args: 
- * *rankers:* A list of node ranking algorithms to chose from. Try to make them share a preprocessor for more efficient computations. If None (default), the filters obtained from pygrank.benchmark.create_demo_filters().values() are used instead. 
+ * *rankers:* An iterable of node ranking algorithms to chose from. Try to make them share a preprocessor for more efficient computations. If None (default), the filters obtained from pygrank.benchmark.create_demo_filters().values() are used instead. 
  * *measure:* Callable to constuct a supervised measure with given known node scores and an iterable of excluded scores. 
  * *fraction_of_training:* A number in (0,1) indicating how to split provided graph signals into training and validaton ones by randomly sampling training nodes to meet the required fraction of all graph nodes. Numbers outside this range can also be used (not recommended without specific reason) per the conventions of `pygrank.split(...)`. Default is 0.8. 
  * *combined_prediction:* If True (default), after the best version of algorithms is determined, the whole personalization is used to produce the end-result. Otherwise, only the training portion of the training-validation split is used. 
@@ -51,6 +51,7 @@ Args:
  * *ranker_generator:* A callable that constructs a ranker based on a list of parameters. If None (default) then a pygrank.algorithms.learnable.GenericGraphFilter is constructed with automatic normalization and assuming immutability (this is the most common setting). These parameters can be overriden and other ones can be passed to the algorithm'personalization constructor simply by including them in kwargs. 
  * *measure:* Callable to constuct a supervised measure with given known node scores. 
  * *tuning_backend:* Specifically switches to a designted backend for the tuning process before restoring the previous one to perform the actual ranking. If None (default), this functionality is ignored. 
+ * *tunable_offset:* If None, no offset is added to estimated parameters. Otherwise, a supervised measure generator (e.g. a supervised measure class) can be passed. Default is `pygrank.AUC`. 
  * *kwargs:* Additional arguments are passed to the automatically instantiated GenericGraphFilter. 
 
 Example:
@@ -70,7 +71,7 @@ in training and test sets.
 Instantiates the tuning mechanism. 
 
 Args: 
- * *ranker_generator:* A callable that constructs a ranker based on a list of parameters. If None (default) then a pygrank.algorithms.learnable.GenericGraphFilter is constructed with automatic normalization and assuming immutability (this is the most common setting). These parameters can be overriden and other ones can be passed to the algorithm'personalization constructor simply by including them in kwargs. 
+ * *ranker_generator:* A callable that constructs a ranker based on a list of parameters. If None (default) then a pygrank.algorithms.learnable.GenericGraphFilter is constructed with automatic normalization and assuming immutability (this is the most common setting). These parameters can be overriden and other ones can be passed to the algorithm'personalization constructor by including them in kwargs. 
  * *measure:* Callable to constuct a supervised measure with given known node scores and an iterable of excluded scores. 
  * *fraction_of_training:* A number in (0,1) indicating how to split provided graph signals into training and validaton ones by randomly sampling training nodes to meet the required fraction of all graph nodes. Numbers outside this range can also be used (not recommended without specific reason) per the conventions of `pygrank.split(...)`. Default is 0.8. 
  * *combined_prediction:* If True (default), after the best version of algorithms is determined, the whole personalization is used to produce the end-result. Otherwise, only the training portion of the training-validation split is used. 
@@ -92,7 +93,8 @@ Example to tune pagerank'personalization float parameter alpha in the range [0.5
 ```python 
 >>> import pygrank as pg 
 >>> graph, personalization = ... 
->>> tuner = pg.ParameterTuner(lambda params: pg.PageRank(alpha=params[0]), measure=AUC, deviation_tol=0.01, max_vals=[0.99], min_vals=[0.5]) 
->>> ranks = algorithm.rank(graph, personalization) 
+>>> tuner = pg.ParameterTuner(lambda params: pg.PageRank(alpha=params[0]), 
+>>>                           measure=AUC, deviation_tol=0.01, max_vals=[0.99], min_vals=[0.5]) 
+>>> ranks = tuner.rank(graph, personalization) 
 ```
 

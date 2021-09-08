@@ -7,9 +7,9 @@ import time
 
 
 def perc(num):
-    if num<0.005:
+    if num < 0.005:
         return "0"
-    ret = str(int(num*100+.5)/100.) # helper method to pretty print percentages
+    ret = str(int(num*100+.5)/100.)  # helper method to pretty print percentages
     if len(ret) < 4:
         ret += "0"
     if ret[0] == "0":

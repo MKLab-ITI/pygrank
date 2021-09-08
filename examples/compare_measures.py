@@ -2,7 +2,7 @@ import pygrank as pg
 
 loader = list(pg.load_datasets_multiple_communities(["graph9", "bigraph", "citeseer"]))
 algorithms = pg.create_variations(pg.create_many_filters(), pg.create_many_variation_types())
-algorithms = pg.create_variations(algorithms, {"": pg.Normalize}) # add normalization to all algorithms
+algorithms = pg.create_variations(algorithms, {"": pg.Normalize})  # add normalization to all algorithms
 
 measures = {"AUC": lambda ground_truth, exlude: pg.MultiSupervised(pg.AUC, ground_truth, exlude),
             "NDCG": lambda ground_truth, exlude: pg.MultiSupervised(pg.NDCG, ground_truth, exlude),
@@ -23,4 +23,5 @@ for measure in measures:
     evaluations_vs_auc[measure] = abs(pg.SpearmanCorrelation(scores["AUC"])(scores[measure]))
     evaluations_vs_ndcg[measure] = abs(pg.SpearmanCorrelation(scores["NDCG"])(scores[measure]))
 
-pg.benchmark_print([("Measure", "AUC corr", "NDCG corr")]+[(measure, evaluations_vs_auc[measure], evaluations_vs_ndcg[measure])for measure in measures])
+pg.benchmark_print([("Measure", "AUC corr", "NDCG corr")]
+                   + [(measure, evaluations_vs_auc[measure], evaluations_vs_ndcg[measure]) for measure in measures])

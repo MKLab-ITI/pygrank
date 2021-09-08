@@ -1,7 +1,6 @@
 import io
 import math
 import sys
-import scipy.stats
 
 
 def _fraction2str(num, decimals=2):
@@ -36,21 +35,25 @@ def _fill(text="", tab=14):
     return text+(" "*(tab-len(text)))
 
 
-def benchmark_print(benchmark, delimiter: str = " \t ", end_line: str = "", out: object = sys.stdout, err=sys.stderr, decimals=2):
+def benchmark_print(benchmark,
+                    delimiter: str = " \t ",
+                    end_line: str = "",
+                    out: io.TextIOWrapper = sys.stdout,
+                    err: io.TextIOWrapper = sys.stderr,
+                    decimals: int = 2):
     """
     Print outcomes provided by a given benchmark as a table in the console. To ensure that `sys.stderr`
     does not interrupt printing, this method buffers it and prints all error messages at once in the end.
     (This is made so exception can be traced normally.)
 
     Args:
-        benchmark: A map from names to node ranking algorithms to compare.
-        datasets: A list of datasets to compare the algorithms on. List elements should either be strings or (string, num) tuples
-            indicating the dataset name and number of community of interest respectively.
+        benchmark: A mapping from names to node ranking algorithm outcomes to compare.
+            Typically this is yielded by benchmarking experiments.
         delimiter: How to separate columns. Use " & " when exporting to latex format.
         end_line: What to print before the end of line. Use "\\\\" when exporting to latex format.
         out: The stream in which to print behchmark results. Default is sys.stdout .
         err: The stream in which to print errors. Default is sys.stderr .
-
+        decimals: How many decimal places to print.
     Example:
         >>> benchmark_print(..., delimiter=" & ", end_line="\\\\") #  latex output
     """

@@ -137,11 +137,13 @@ class ClosedFormGraphFilter(GraphFilter):
             self.krylov_base = V
             self.krylov_H = H
             self.zero_coefficient = self.coefficient
-            self.krylov_result = 0
+            self.krylov_result = H*0
             self.Mpower = backend.eye(int(self.krylov_dims))
             error_bound = krylov_error_bound(V, H, M, personalization.np)
             if error_bound > 0.01:
-                warnings.warn("Krylov approximation with estimated relative error "+str(error_bound)+" > 0.01 is too rough to be meaningful (try on lager graphs)", stacklevel=2)
+                warnings.warn("Krylov approximation with estimated relative error "+str(error_bound)
+                              + " > 0.01 is too rough to be meaningful (try on lager graphs)",
+                              stacklevel=2)
         else:
             self.ranks_power = personalization.np
             ranks.np = backend.repeat(0.0, backend.length(ranks.np))

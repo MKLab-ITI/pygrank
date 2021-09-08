@@ -32,26 +32,28 @@ def benchmark(algorithms: Mapping[str, NodeRanking],
         >>> pg.benchmark_print(pg.benchmark(algorithms, datasets))
     """
     yield [""] + [algorithm for algorithm in algorithms]
+    seeds = [seed] if isinstance(seed, int) else seed
     for name, graph, group in datasets:
-        multigroup = isinstance(group, collections.abc.Mapping) and not isinstance(group, GraphSignal)
-        training, evaluation = split(group, training_samples=fraction_of_training, seed=seed)
-        if multigroup:
-            training = {group_id: to_signal(graph,{v: 1 for v in group}) for group_id, group in training.items()}
-            evaluation = {group_id: to_signal(graph,{v: 1 for v in group}) for group_id, group in evaluation.items()}
-            rank = lambda algorithm, graph, training: {group_id: algorithm.rank(graph, group) for group_id, group in training.items()}
-        else:
-            training, evaluation = to_signal(graph, {v: 1 for v in training}), to_signal(graph, {v: 1 for v in evaluation})
-            rank = lambda algorithm, graph, training: algorithm.rank(graph, training)
-        dataset_results = [name]
-        for algorithm in algorithms.values():
-            if metric == "time":
-                tic = time()
-                rank(algorithm, graph, training)
-                dataset_results.append(time()-tic)
+        for seed in seeds:
+            multigroup = isinstance(group, collections.abc.Mapping) and not isinstance(group, GraphSignal)
+            training, evaluation = split(group, training_samples=fraction_of_training, seed=seed)
+            if multigroup:
+                training = {group_id: to_signal(graph,{v: 1 for v in group}) for group_id, group in training.items()}
+                evaluation = {group_id: to_signal(graph,{v: 1 for v in group}) for group_id, group in evaluation.items()}
+                rank = lambda algorithm, graph, training: {group_id: algorithm.rank(graph, group) for group_id, group in training.items()}
             else:
-                predictions = rank(algorithm, graph, training)
-                try:
-                    dataset_results.append(metric(graph)(predictions))
-                except:
-                    dataset_results.append(metric(evaluation, training)(predictions))
-        yield dataset_results
+                training, evaluation = to_signal(graph, {v: 1 for v in training}), to_signal(graph, {v: 1 for v in evaluation})
+                rank = lambda algorithm, graph, training: algorithm.rank(graph, training)
+            dataset_results = [name]
+            for algorithm in algorithms.values():
+                if metric == "time":
+                    tic = time()
+                    rank(algorithm, graph, training)
+                    dataset_results.append(time()-tic)
+                else:
+                    predictions = rank(algorithm, graph, training)
+                    try:
+                        dataset_results.append(metric(graph)(predictions))
+                    except:
+                        dataset_results.append(metric(evaluation, training)(predictions))
+            yield dataset_results

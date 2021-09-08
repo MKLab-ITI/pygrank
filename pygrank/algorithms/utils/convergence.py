@@ -4,6 +4,7 @@ from timeit import default_timer as time
 from pygrank.measures import Supervised, Mabs
 from pygrank.core import backend
 
+
 class ConvergenceManager:
     """ Used to keep previous iteration and generally manage convergence of variables. Graph filters
     automatically create instances of this class by passing on appropriate parameters.
@@ -59,10 +60,11 @@ class ConvergenceManager:
 
     def has_converged(self, new_ranks):
         """
-        Checks whether convergence has been achieved by comparing this iteration'personalization numpy array with the previous iteration'personalization.
+        Checks whether convergence has been achieved by comparing this iteration's backend array with the
+        previous iteration's.
 
         Args:
-            new_ranks: The iteration'personalization numpy array.
+            new_ranks: The iteration's backend array.
         """
         self.iteration += 1
         if self.iteration >= self.max_iters:
@@ -90,7 +92,6 @@ class RankOrderConvergenceManager:
         self._start_time = None
         self.elapsed_time = None
         self.accumulated_ranks = None
-        #self.accumulated_rank_squares = None
         self.pagerank_alpha = pagerank_alpha
         self.confidence = confidence
         self.criterion = criterion
@@ -100,16 +101,13 @@ class RankOrderConvergenceManager:
             self._start_time = time()
             self.elapsed_time = None
             self.iteration = 0
-            #self.accumulated_rank_squares = 0
             self.accumulated_ranks = 0
 
     def has_converged(self, new_ranks):
         new_ranks = np.array(new_ranks).squeeze()
         self.accumulated_ranks = (self.accumulated_ranks*self.iteration + new_ranks) / (self.iteration+1)
-        #self.accumulated_rank_squares += (self.accumulated_rank_squares*self.iteration + new_ranks * new_ranks) / (self.iteration+1)
         self.iteration += 1
         converged = self.current_fraction_of_random_walks() >= self.needed_fraction_of_random_walks(new_ranks)
-        #print(self.current_fraction_of_random_walks(), self.needed_fraction_of_random_walks(new_ranks))
         self.elapsed_time = time()-self._start_time
         return converged
 

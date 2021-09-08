@@ -51,6 +51,7 @@ def optimize(loss,
             which guarantees convergence even for difficult-to-optimize functions, but values such as 1.1, 1.2 or 2 may
             also be used for much faster, albeit a little coarser, convergence. Can use "shrinking" to perform personalization
             hrinking block coordinate descent, but this does not guarantee convergence for some node ranking settings.
+        partitions: Optional. In how many pieces to break the search space on each iteration. Default is 5.
         parameter_tol: Optional. The numerical tolerance of parameter values to optimize to. **Both** this and
             deviation_tol need to be met. Default is infinity.
         depth: Optional. Declares the number of times to re-perform the optimization given the previous found solution.
@@ -85,7 +86,7 @@ def optimize(loss,
         print("first loss", loss(weights))
     iter = 0
     range_deviations = [float('inf')]*len(max_vals)
-    checkpoint_weights = weights
+    #checkpoint_weights = weights
     while True:
         assert max(range_search) != 0, "Something went wrong and took too many iterations for optimizer to run (check for nans)"
         if range_search[curr_variable] == 0:
@@ -107,16 +108,16 @@ def optimize(loss,
         range_deviations[curr_variable] = max([loss for _, loss in loss_pairs])-min([loss for _, loss in loss_pairs])
         if verbose:
             print('Params', weights, '\t Loss', loss(weights), '+-', max(range_deviations), '\t Var',curr_variable, '\t Parameter max range', max(range_search))
-        if max(range_deviations) < deviation_tol and max(range_search) < parameter_tol:
+        if max(range_deviations) <= deviation_tol and max(range_search) <= parameter_tol:
             break
         # move to next var
         iter += 1
         curr_variable += 1
         if curr_variable >= len(max_vals):
             curr_variable -= len(max_vals)
-            if sum(abs(w1-w2) for w1, w2 in zip(weights, checkpoint_weights)) == 0:
-                break
-            checkpoint_weights = weights
+            #if sum(abs(w1-w2) for w1, w2 in zip(weights, checkpoint_weights)) == 0:
+            #    break
+            #checkpoint_weights = weights
     #print("trained weights in", iter, "iterations", weights, "final loss", loss(weights))
     if depth > 1:
         return optimize(loss, max_vals, min_vals, deviation_tol, divide_range, partitions, parameter_tol, depth - 1, weights, verbose)

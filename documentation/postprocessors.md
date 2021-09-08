@@ -229,7 +229,7 @@ re-ordered if at least one is provided.
 
 Args: 
  * *ranker:* Optional. The base ranker instance. A Tautology() ranker is created if None (default) was specified. 
- * *expr:* Optional. A lambda expression to apply on each element. The transformer will automatically try to apply it on the backend array representation of the graph signal first, so prefer use of pygrank'personalization backend functions for faster computations. For example, backend.exp (default) should be preferred instead of math.exp, because the former can directly parse numpy arrays, tensors, etc. 
+ * *expr:* Optional. A lambda expression to apply on each element. The transformer will automatically try to apply it on the backend array representation of the graph signal first, so prefer pygrank's backend functions for faster computations. For example, backend.exp (default) should be preferred instead of math.exp, because the former can directly parse numpy arrays, tensors, etc. 
 
 Example:
 

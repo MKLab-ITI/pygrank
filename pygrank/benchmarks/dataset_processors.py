@@ -7,17 +7,17 @@ def amazon_processor(path: str = "data"):   # pragma: no cover
         product = ""
         for line in file:
             line = line.strip()
-            if(line.startswith('ASIN:')):
+            if line.startswith('ASIN:'):
                 product = line[5:].strip()
-            if(line.startswith('title:')):
+            if line.startswith('title:'):
                 id2title[product] = line[6:].strip()
-            if(line.startswith('group:')):
+            if line.startswith('group:'):
                 group = line[6:].strip()
                 id2group[product] = group
                 group2ids[group] = group2ids.get(group, list())
                 group2ids[group].append(product)
-            if(line.startswith('similar:')):
-                for similar in [other for other in line[8:].strip().split(' ') if len(other)>0][1:]:
+            if line.startswith('similar:'):
+                for similar in [other for other in line[8:].strip().split(' ') if len(other) > 0][1:]:
                     pairs.append((product, similar))
 
     with open(path+'/amazon/pairs.txt', 'w') as file:

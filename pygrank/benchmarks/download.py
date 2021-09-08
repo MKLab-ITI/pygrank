@@ -1,4 +1,5 @@
-import gzip, tarfile
+import gzip
+import tarfile
 import wget
 import shutil
 import sys
@@ -28,25 +29,25 @@ datasets = {
                "groups": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/graph9/groups.txt",
                },
     "bigraph": {"url": "https://github.com/maniospas/pygrank-datasets",
-               "pairs": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/biblock/pairs.txt",
-               "groups": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/biblock/groups.txt",
-               },
+                "pairs": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/biblock/pairs.txt",
+                "groups": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/biblock/groups.txt",
+                },
     "blockmodel": {"url": "https://github.com/maniospas/pygrank-datasets",
                    "pairs": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/blockmodel/pairs.txt",
                    "groups": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/blockmodel/groups.txt",
                    },
     "synthfeats": {"url": "https://github.com/maniospas/pygrank-datasets",
-               "pairs": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/synthfeats/pairs.txt",
-               "groups": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/synthfeats/groups.txt",
-               "features": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/synthfeats/features.txt",
-               },
+                   "pairs": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/synthfeats/pairs.txt",
+                   "groups": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/synthfeats/groups.txt",
+                   "features": "https://raw.githubusercontent.com/maniospas/pygrank-datasets/main/synthfeats/features.txt",
+                   },
     "pubmed": {"url": "https://linqs.soe.ucsc.edu/data",
                "all": "https://linqs-data.soe.ucsc.edu/public/Pubmed-Diabetes.tgz",
                "pairs": "Pubmed-Diabetes/data/Pubmed-Diabetes.DIRECTED.cites.tab",
                "pair_process": lambda row: None if len(row)<4 else [row[0].split(":")[-1], row[3].split(":")[-1]],
                "features": "Pubmed-Diabetes/data/Pubmed-Diabetes.NODE.paper.tab",
                "feature_process": lambda row: None if len(row)<3 or "cat=" in row[0] else [row[0]]+[val for val in row[2:] if "summary=" not in val]+[row[1].split("=")[-1]]
-              },
+               },
     "cora": {"url": "https://www.dgl.ai/",
              "all": "https://data.dgl.ai/dataset/cora_v2.zip"
              }
@@ -66,7 +67,8 @@ def download_dataset(dataset, path: str = "data"):   # pragma: no cover
     if dataset not in datasets:
         return
     source = datasets[dataset] if isinstance(dataset, str) else dataset
-    credentials = "REQUIRED CITATION: Please visit the url "+source["url"]+" for instructions on how to cite the dataset "+dataset+" in your research"
+    credentials = "REQUIRED CITATION: Please visit the url "+source["url"]\
+                  + " for instructions on how to cite the dataset "+dataset+" in your research"
     print(credentials, file=sys.stderr)
     if not os.path.isdir(path):
         os.mkdir(path)
@@ -82,7 +84,7 @@ def download_dataset(dataset, path: str = "data"):   # pragma: no cover
                 with gzip.open(all_path, 'rb') as f_in:
                     with open(download_path+"/all.txt", 'wb') as f_out:
                         shutil.copyfileobj(f_in, f_out)
-            #os.remove(all_path)
+            os.remove(all_path)
         if "script" in source:
             source["script"](path)
 

@@ -122,9 +122,10 @@ def preprocessor(normalization="auto", assume_immutability=False, renormalize=Fa
     """ Wrapper function that generates lambda expressions for the method to_sparse_matrix.
 
     Args:
-        normalization: Normalization parameter for to_sparse_matrix (default is "auto").
+        normalization: Normalization parameter for `to_sparse_matrix` (default is "auto").
         assume_immutability: If True, then the output is further wrapped through a MethodHasher to avoid redundant
             calls. Default is False, as graph immutability needs be explicitly assumed but cannot be guaranteed.
+        renormalize: Graph renormalization parameter for `to_sparse_matrix` (default is False).
     """
     if assume_immutability:
         return MethodHasher(preprocessor(normalization, False, renormalize))

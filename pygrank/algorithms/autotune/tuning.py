@@ -3,7 +3,7 @@ from pygrank.algorithms.utils import preprocessor, ensure_used_args, remove_used
 from pygrank.algorithms.autotune.optimization import optimize
 from pygrank.measures import Supervised, AUC
 from pygrank.measures.utils import split
-from typing import Callable
+from typing import Callable, Iterable
 from pygrank.core import backend
 
 
@@ -48,8 +48,8 @@ class ParameterTuner(Tuner):
             ranker_generator: A callable that constructs a ranker based on a list of parameters.
                 If None (default) then a pygrank.algorithms.learnable.GenericGraphFilter
                 is constructed with automatic normalization and assuming immutability (this is the most common setting).
-                These parameters can be overriden and other ones can be passed to the algorithm'personalization constructor simply
-                by including them in kwargs.
+                These parameters can be overriden and other ones can be passed to the algorithm'personalization
+                constructor by including them in kwargs.
             measure: Callable to constuct a supervised measure with given known node scores and an iterable of excluded
                 scores.
             fraction_of_training: A number in (0,1) indicating how to split provided graph signals into training and
@@ -76,8 +76,9 @@ class ParameterTuner(Tuner):
         Example to tune pagerank'personalization float parameter alpha in the range [0.5, 0.99]:
             >>> import pygrank as pg
             >>> graph, personalization = ...
-            >>> tuner = pg.ParameterTuner(lambda params: pg.PageRank(alpha=params[0]), measure=AUC, deviation_tol=0.01, max_vals=[0.99], min_vals=[0.5])
-            >>> ranks = algorithm.rank(graph, personalization)
+            >>> tuner = pg.ParameterTuner(lambda params: pg.PageRank(alpha=params[0]),
+            >>>                           measure=AUC, deviation_tol=0.01, max_vals=[0.99], min_vals=[0.5])
+            >>> ranks = tuner.rank(graph, personalization)
         """
         if ranker_generator is None:
             from pygrank.algorithms import GenericGraphFilter
@@ -104,17 +105,17 @@ class ParameterTuner(Tuner):
         backend_personalization = to_signal(graph, backend.to_array(personalization.np))
         training, validation = split(backend_personalization, self.fraction_of_training)
         measure = self.measure(validation, training)
-        params = optimize(
+        best_params = optimize(
             lambda params: -measure.best_direction()*measure.evaluate(self._run(training, params, *args, **kwargs)),
             **self.optimize_args)
         if self.tuning_backend is not None and self.tuning_backend != previous_backend:
             backend.load_backend(previous_backend)
-            # TODO: make training backpropagate through tensorflow for combined_prediction==False
-        return self.ranker_generator(params), personalization if self.combined_prediction else training
+            # TODO: make training back-propagate through tensorflow for combined_prediction==False
+        return self.ranker_generator(best_params), personalization if self.combined_prediction else training
 
 
 class AlgorithmSelection(Tuner):
-    def __init__(self, rankers: list = None,
+    def __init__(self, rankers: Iterable[NodeRanking] = None,
                  measure: Callable[[GraphSignal, GraphSignal], Supervised] = AUC,
                  fraction_of_training: float = 0.8,
                  combined_prediction: bool = True,
@@ -122,7 +123,7 @@ class AlgorithmSelection(Tuner):
         """
         Instantiates the tuning mechanism.
         Args:
-            rankers: A list of node ranking algorithms to chose from. Try to make them share a preprocessor
+            rankers: An iterable of node ranking algorithms to chose from. Try to make them share a preprocessor
                 for more efficient computations. If None (default), the filters obtained from
                 pygrank.benchmark.create_demo_filters().values() are used instead.
             measure: Callable to constuct a supervised measure with given known node scores and an iterable of excluded
@@ -176,5 +177,5 @@ class AlgorithmSelection(Tuner):
                 best_ranker = ranker
         if self.tuning_backend is not None and self.tuning_backend != previous_backend:
             backend.load_backend(previous_backend)
-            # TODO: make training backpropagate through tensorflow for combined_prediction==False
+            # TODO: make training back-propagate through tensorflow for combined_prediction==False
         return best_ranker, personalization if self.combined_prediction else training
