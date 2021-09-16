@@ -1,6 +1,7 @@
 from pygrank import backend
 from pygrank.measures.utils import Measure
 from typing import Iterable, Tuple
+from math import log, exp
 
 
 class MeasureCombination(Measure):
@@ -59,6 +60,5 @@ class GM(MeasureCombination):
         for i in range(len(self.measures)):
             if self.weights[i] != 0:
                 eval = self.measures[i].evaluate(ranks)
-                result += self.weights[i]*backend.log(min(max(eval, self.thresholds[i][0]),
-                                                          max(backend.epsilon(), self.thresholds[i][1])))
-        return backend.exp(result/sum(self.weights))
+                result += self.weights[i]*log(min(max(eval, self.thresholds[i][0]), max(backend.epsilon(), self.thresholds[i][1])))
+        return exp(result/sum(self.weights))

@@ -16,9 +16,17 @@ class APPNP:
 
         if isinstance(alpha, str) and alpha == "estimated":
             self.ranker = pg.HopTuner(renormalize=True, assume_immutability=True, tuning_backend="numpy",
-                                      measure=lambda *args: lambda x: math.exp(-pg.KLDivergence(*args)(x)),
+                                      measure=pg.Cos,#lambda *args: lambda x: pg.Cos(*args)(x),#math.exp(-pg.KLDivergence(*args)(x)),
                                       autoregression=0, error_type="iters",
-                                      max_iters=10, num_parameters=10
+                                      max_iters=20, num_parameters=20,
+                                      tunable_offset=pg.Cos
+                                      )
+        elif isinstance(alpha, str) and alpha == "estimated_kl":
+            self.ranker = pg.HopTuner(renormalize=True, assume_immutability=True, tuning_backend="numpy",
+                                      measure=lambda *args: lambda x: (-pg.KLDivergence(*args)(x)),
+                                      autoregression=0, error_type="iters",
+                                      max_iters=10, num_parameters=10,
+                                      tunable_offset=lambda *args: lambda x: (-pg.KLDivergence(*args)(x))
                                       )
         else:
             if isinstance(alpha, tf.Variable):
@@ -41,7 +49,7 @@ for seed in range(10):
     training, test = pg.split(list(range(len(graph))), 0.8, seed=seed)
     training, validation = pg.split(training, 1-0.2/0.8, seed=seed)
     architectures = {"APPNP": APPNP(features.shape[1], labels.shape[1], alpha=0.9),
-                     "LAPPNP": APPNP(features.shape[1], labels.shape[1], alpha=tf.Variable([0.85])),
+                     #"LAPPNP": APPNP(features.shape[1], labels.shape[1], alpha=tf.Variable([0.85])),
                      "APFNP": APPNP(features.shape[1], labels.shape[1], alpha="estimated")
                      }
 

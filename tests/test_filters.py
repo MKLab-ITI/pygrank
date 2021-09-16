@@ -38,6 +38,7 @@ def test_convergence_string_conversion():
 
 def test_pagerank_vs_networkx():
     graph = next(pg.load_datasets_graph(["graph9"]))
+    #print(pg.preprocessor(normalization='col')(graph).todense())
     for _ in supported_backends():
         ranker = pg.Normalize("sum", pg.PageRank(normalization='col', tol=1.E-9))
         test_result = ranker(graph)

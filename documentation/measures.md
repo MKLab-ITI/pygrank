@@ -12,15 +12,17 @@ All of them can be used through the code patterns presented at the library'perso
 6. [CrossEntropy](#supervised-crossentropy)
 7. [Dot](#supervised-dot)
 8. [KLDivergence](#supervised-kldivergence)
-9. [Mabs](#supervised-mabs)
-10. [MaxDifference](#supervised-maxdifference)
-11. [NDCG](#supervised-ndcg)
-12. [PearsonCorrelation](#supervised-pearsoncorrelation)
-13. [SpearmanCorrelation](#supervised-spearmancorrelation)
-14. [pRule](#supervised-prule)
-15. [Conductance](#unsupervised-conductance)
-16. [Density](#unsupervised-density)
-17. [Modularity](#unsupervised-modularity)
+9. [MKLDivergence](#supervised-mkldivergence)
+10. [Mabs](#supervised-mabs)
+11. [MannWhitneyParity](#supervised-mannwhitneyparity)
+12. [MaxDifference](#supervised-maxdifference)
+13. [NDCG](#supervised-ndcg)
+14. [PearsonCorrelation](#supervised-pearsoncorrelation)
+15. [SpearmanCorrelation](#supervised-spearmancorrelation)
+16. [pRule](#supervised-prule)
+17. [Conductance](#unsupervised-conductance)
+18. [Density](#unsupervised-density)
+19. [Modularity](#unsupervised-modularity)
 
 ### <kbd>MeasureCombination</kbd> AM
 
@@ -98,9 +100,26 @@ Args:
  * *known_ranks:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
 
+### <kbd>Supervised</kbd> MKLDivergence
+
+Computes the KL-divergence of given vs known ranks. 
+Initializes the supervised measure with desired graph signal outcomes. 
+
+Args: 
+ * *known_ranks:* The desired graph signal outcomes. 
+ * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
+
 ### <kbd>Supervised</kbd> Mabs
 
 Computes the mean absolute error between ranks and known ranks. 
+Initializes the supervised measure with desired graph signal outcomes. 
+
+Args: 
+ * *known_ranks:* The desired graph signal outcomes. 
+ * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
+
+### <kbd>Supervised</kbd> MannWhitneyParity
+ 
 Initializes the supervised measure with desired graph signal outcomes. 
 
 Args: 
@@ -146,7 +165,7 @@ Args:
 
 ### <kbd>Supervised</kbd> pRule
 
-Computes an assessment of stochastic ranking fairness. 
+Computes an assessment of stochastic ranking fairness.z 
 Values near 1 indicate full fairness, whereas lower values indicate disparate impact. 
 Known ranks correspond to whether nodes are sensitive. 
 Usually, pRule > 80% is considered fair. 

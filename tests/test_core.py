@@ -3,7 +3,7 @@ import pytest
 
 
 def supported_backends():
-    for backend in ["tensorflow", "numpy"]:
+    for backend in ["pytorch", "tensorflow", "numpy"]:
         pg.load_backend(backend)
         yield backend
 

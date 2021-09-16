@@ -42,7 +42,7 @@ class Supervised(Measure):
         """
         Automatically determines if higher or lower values of the measure are better.
         Design measures so that outcomes of this method depends **only** on their class,
-        as it follows a class-based hashing to guarantee speed.
+        as it follows a class-based hashing to guarantee speed. Otherwise override th
 
         Returns:
             1 if higher values of the measure are better, -1 otherwise.
@@ -112,12 +112,19 @@ class KLDivergence(Supervised):
 
     def evaluate(self, ranks):
         known_ranks, ranks = self.to_numpy(ranks, normalization=True)
-        ratio = (ranks+1.E-12)/(known_ranks+1.E-12)
-        if backend.min(ratio) <= 0:
-            raise Exception("Invalid KLDivergence calculations (negative ranks or known ranks)")
-        ret = -backend.sum(ranks*backend.log((known_ranks+1.E-12)/(ranks+1.E-12)))
-        #backend.dot(ranks[original_ranks != 0],-backend.log(original_ranks[original_ranks != 0] / ranks[original_ranks != 0]))
+        ratio = (ranks-backend.min(ranks)+1.E-12)/(known_ranks-backend.min(known_ranks)+1.E-12)
+        ret = -backend.sum(ranks*backend.log(ratio))
         return ret
+
+
+class MKLDivergence(Supervised):
+    """Computes the KL-divergence of given vs known ranks."""
+
+    def evaluate(self, ranks):
+        known_ranks, ranks = self.to_numpy(ranks, normalization=True)
+        ratio = (ranks-backend.min(ranks)+1.E-12)/(known_ranks-backend.min(known_ranks)+1.E-12)
+        ret = -backend.sum(ranks*backend.log(ratio))
+        return ret/backend.length(ranks)
 
 
 class Cos(Supervised):
@@ -175,7 +182,7 @@ class PearsonCorrelation(Supervised):
 
 
 class pRule(Supervised):
-    """Computes an assessment of stochastic ranking fairness.
+    """Computes an assessment of stochastic ranking fairness.z
     Values near 1 indicate full fairness, whereas lower values indicate disparate impact.
     Known ranks correspond to whether nodes are sensitive.
     Usually, pRule > 80% is considered fair.
@@ -191,3 +198,11 @@ class pRule(Supervised):
         p1 /= s
         p2 /= backend.length(sensitive)-s
         return min(p1,p2)/max(p1,p2)
+
+
+class MannWhitneyParity(Supervised):
+    def evaluate(self, ranks):
+        sensitive, ranks = self.to_numpy(ranks)
+        ranks1 = ranks[sensitive == 0]
+        ranks2 = ranks[sensitive != 0]
+        return 1-2*abs(0.5-scipy.stats.mannwhitneyu(ranks1, ranks2)[0]/len(ranks1)/len(ranks2))

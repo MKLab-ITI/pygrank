@@ -22,7 +22,7 @@ class HopTuner(Tuner):
                  measure: Callable[[GraphSignal, GraphSignal], Supervised] = AUC,
                  basis: str = "krylov",
                  tuning_backend: str = None,
-                 autoregression: int = 5,
+                 autoregression: int = 0,
                  num_parameters: int = 10,
                  tunable_offset: Callable[[GraphSignal, GraphSignal], Supervised] = AUC,
                  **kwargs):
@@ -66,7 +66,7 @@ class HopTuner(Tuner):
         graph = personalization.graph
         if self.tuning_backend is not None and self.tuning_backend != previous_backend:
             backend.load_backend(self.tuning_backend)
-        backend_personalization = to_signal(graph, backend.to_array(personalization.np))
+        backend_personalization = to_signal(personalization, backend.to_array(personalization.np))
         #training, validation = split(backend_personalization, 0.8)
         #training2, validation2 = split(backend_personalization, 0.6)
         #measure_weights = [1, 1, 1, 1, 1]
@@ -93,7 +93,7 @@ class HopTuner(Tuner):
         else:
             raise Exception("Invalid basis in hop tuner. Should be either 'krylov' or 'arnoldi'")
 
-        measure_values = np.array(measure_values)
+        measure_values = backend.to_array(measure_values)
         mean_value = np.mean(measure_values, axis=0)
         measure_values = measure_values-mean_value
         best_parameters = measure_values
@@ -101,7 +101,7 @@ class HopTuner(Tuner):
         if self.autoregression != 0:
             #vals2 = -measure_values-mean_value
             #measure_values = np.concatenate([measure_values, vals2-np.mean(vals2, axis=0)], axis=1)
-            window = np.repeat(1./self.autoregression, self.autoregression)
+            window = backend.repeat(1./self.autoregression, self.autoregression)
             beta1 = 0.9
             beta2 = 0.999
             beta1t = 1
@@ -129,15 +129,18 @@ class HopTuner(Tuner):
                 if abs(error-prev_error)/error < 1.E-6:
                     best_parameters = parameters
                     break
-        best_parameters = np.max(best_parameters[:self.num_parameters, :] * measure_weights, axis=1) + np.mean(mean_value)
-        best_parameters /= np.max(best_parameters)
+        best_parameters = np.mean(best_parameters[:self.num_parameters, :] * measure_weights, axis=1) + np.mean(mean_value)
+        #best_parameters /= np.max(best_parameters)
 
         if self.tunable_offset is not None:
-            best_parameters /= np.max(best_parameters)
+            div = np.max(best_parameters)
+            if div != 0:
+                best_parameters /= div
             measure = self.tunable_offset(validation, training)
             best_offset = optimize(
-                lambda params: - measure.evaluate(self._run(training, [best_parameters[i]*params[0]**i for i in range(len(best_parameters))], *args, **kwargs)),
-                max_vals=[1], min_vals=[0], deviation_tol=1, parameter_tol=0.001, partitions=5, divide_range=2)#"shrinking")
+                lambda params: - measure(self._run(training, [best_parameters[i]*params[0]**i for i in range(len(best_parameters))], *args, **kwargs)),
+                #lambda params: - measure.evaluate(self._run(training, best_parameters + params[0], *args, **kwargs)),
+                max_vals=[1], min_vals=[0], deviation_tol=0.005, parameter_tol=1, partitions=5, divide_range=2)#"shrinking")
             #best_parameters += best_offset[0]
             best_parameters = [best_parameters[i]*best_offset[0]**i for i in range(len(best_parameters))]
 

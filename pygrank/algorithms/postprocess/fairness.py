@@ -1,7 +1,7 @@
 from pygrank.algorithms.autotune import optimize
 from pygrank.algorithms.postprocess.postprocess import Tautology, Normalize, Postprocessor
 from pygrank.core.signals import GraphSignal, to_signal
-from pygrank.measures import pRule, KLDivergence
+from pygrank.measures import pRule, Mabs
 from pygrank import backend
 
 
@@ -16,9 +16,10 @@ class FairPersonalizer(Postprocessor):
                  target_pRule=1,
                  retain_rank_weight=1,
                  pRule_weight=1,
-                 error_type=KLDivergence,
+                 error_type=Mabs,
                  parameter_buckets=1,
-                 max_residual=1):
+                 max_residual=1,
+                 error_skewing=False):
         """
         Instantiates a personalization editing scheme that trains towards optimizing
         retain_rank_weight*error_type(original scores, editing-induced scores)
@@ -51,42 +52,54 @@ class FairPersonalizer(Postprocessor):
         self.error_type = error_type
         self.parameter_buckets = parameter_buckets
         self.max_residual = max_residual
+        self.error_skewing = error_skewing
 
     def __culep(self, personalization, sensitive, ranks, params):
-        res = personalization*params[-1]
         ranks = ranks.np / backend.max(ranks.np)
         personalization = personalization / backend.max(personalization)
+        res = 1.0-params[-1] if self.parameter_buckets == 0 else 0
         for i in range(self.parameter_buckets):
             a = sensitive*(params[0+4*i]-params[1+4*i]) + params[1+4*i]
             b = sensitive*(params[2+4*i]-params[3+4*i]) + params[3+4*i]
-            if self.error_type != KLDivergence:
-                res += (1-a)*backend.exp(b*(ranks-personalization)) + a*backend.exp(-b*(ranks-personalization))
+            if self.error_skewing:
+                res = res + (1-a)*backend.exp(b*(ranks-personalization)) + a*backend.exp(-b*(ranks-personalization))
             else:
                 res += (1-a)*backend.exp(b*backend.abs(ranks-personalization)) + a*backend.exp(-b*backend.abs(ranks-personalization))
+            #if self.error_skewing:
+            #    res += (1-a) * backend.exp(b * (ranks - personalization)) + a * backend.exp(-b * (ranks - personalization))
+            #else:
+            #    res += (1-a)*backend.exp(b*ranks) + a*backend.exp(-b*ranks)
+        res = res + personalization*params[-1]
         return res
 
     def __prule_loss(self, ranks: GraphSignal, original_ranks: GraphSignal, sensitive: object, personalization: object) -> object:
         prule = self.pRule(ranks)
-        ranks = ranks.np / backend.sum(ranks.np)
+        ranks = ranks.np-backend.min(ranks.np)
+        ranks = ranks / backend.sum(ranks)
         original_ranks = original_ranks.np / backend.sum(original_ranks.np)
-        error = self.error_type(original_ranks)(ranks)
-        return self.retain_rank_weight * error - self.pRule_weight * min(self.target_pRule, prule)
+        try:
+            error = self.error_type(original_ranks)
+            error_value = error(ranks)
+        except:
+            error = self.error_type(personalization)
+            error_value = error(ranks)
+        return -self.retain_rank_weight * error_value * error.best_direction() - self.pRule_weight * min(self.target_pRule, prule)
 
     def rank(self, G, personalization, sensitive, *args, **kwargs):
         personalization = to_signal(G, personalization)
         G = personalization.graph
         self.pRule = pRule(sensitive)
         sensitive, personalization = self.pRule.to_numpy(personalization)
-        ranks = self.ranker.rank(G, personalization, *args, as_dict=False, **kwargs)
+        ranks = self.ranker.rank(G, personalization, *args, **kwargs)
 
         def loss(params):
             fair_pers = self.__culep(personalization, sensitive, ranks, params)
-            fair_ranks = self.ranker.rank(G, personalization=fair_pers, *args, as_dict=False, **kwargs)
+            fair_ranks = self.ranker.rank(G, personalization=fair_pers, *args, **kwargs)
             return self.__prule_loss(fair_ranks, ranks, sensitive, personalization)
 
         optimal_params = optimize(loss,
-                                  max_vals=[1, 1, 10, 10] * self.parameter_buckets + [self.max_residual],
-                                  min_vals=[0, 0, -10, -10]*self.parameter_buckets+[0],
+                                  max_vals=[1, 1, 1, 1] * self.parameter_buckets + [self.max_residual],
+                                  min_vals=[0, 0, -1, -1]*self.parameter_buckets+[0],
                                   deviation_tol=1.E-2,
                                   divide_range=2,
                                   partitions=5)

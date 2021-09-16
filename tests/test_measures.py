@@ -32,8 +32,8 @@ def test_auc_ndcg_compliance():
         scores2 = pg.HeatKernel()(graph, training)
         AUC1 = pg.AUC(test, exclude=training)(scores1)
         AUC2 = pg.AUC(test, exclude=training)(scores2)
-        NDCG1 = pg.NDCG(test, exclude=training)(scores1)
-        NDCG2 = pg.NDCG(test, exclude=training)(scores2)
+        NDCG1 = float(pg.NDCG(test, exclude=training)(scores1))
+        NDCG2 = float(pg.NDCG(test, exclude=training)(scores2))
         assert (AUC1 < AUC2) == (NDCG1 < NDCG2)
         with pytest.raises(Exception):
             pg.AUC(test, exclude=test, k=len(graph)+1)(scores2)
@@ -51,14 +51,14 @@ def test_edge_cases():
     with pytest.raises(Exception):
         pg.AUC([1, 1, 1])([0, 1, 0])
     with pytest.raises(Exception):
-        pg.KLDivergence([0])([-1])
-    with pytest.raises(Exception):
         pg.KLDivergence([0], exclude={"A": 1})([1])
     import networkx as nx
     for _ in supported_backends():
         assert pg.Density(nx.Graph())([]) == 0
         assert pg.Modularity(nx.Graph())([]) == 0
         assert pg.KLDivergence([0,1,0])([0,1,0]) == 0
+        assert pg.MKLDivergence([0,1,0])([0,1,0]) == 0
+        assert pg.KLDivergence([0])([-1]) == 0
 
 
 def test_strange_input_types():

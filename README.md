@@ -6,7 +6,7 @@ Fast recommendation algorithms for large graphs based on link analysis.
 
 **License:** Apache Software License
 <br>**Author:** Emmanouil (Manios) Krasanakis
-<br>**Dependencies:** `networkx, numpy, scipy, sklearn, wget` (required) `tensorflow` (optional)
+<br>**Dependencies:** `networkx, numpy, scipy, sklearn, wget` (required) `tensorflow`, `torch` (optional)
 
 ![build](https://github.com/MKLab-ITI/pygrank/actions/workflows/tests.yml/badge.svg)
 [![codecov](https://codecov.io/gh/MKLab-ITI/pygrank/branch/master/graph/badge.svg?token=OWGHRGDYOP)](https://codecov.io/gh/maniospas/pygrank)
@@ -17,7 +17,9 @@ The following roadmap overviews short-term development goals and will be updated
 
 :heavy_check_mark: Reach a stable architecture with comprehensive development management (achieved as of 0.2.3, no longer backwards compatible with 0.1.17, most important change `to_scipy` >> `preprocessor`.) <br>
 :heavy_check_mark: Graph neural network support with dropout, renormalization and tensorflow backend<br>
-:x: 100% code coverage (mandatory continuous integration for future master commits)<br>
+:heavy_check_mark: Pytorch backend
+:x: Pytorch gnns
+:x: 100% code coverage<br>
 :x: Complete documentation<br>
 :x: Automatic download of all datasets in related publications<br>
 :x: Updated reference docs and automated citation discovery for algorithms<br>
@@ -28,17 +30,17 @@ The following roadmap overviews short-term development goals and will be updated
 pip install pygrank
 ```
 
-To use machine learning backends (e.g. to integrate the package
-in machine learning projects), such as *tensorflow*,
+To automatically use the machine learning backends (e.g. to integrate the package
+in machine learning projects) *tensorflow* and *pytorch*,
  manually change the automatically created
 configuration file whose path is displayed in the error console.
 If you want others to run your code that depends on `pygrank`
-with a specific backend, add the following recipe at your code's
+with specific backends, add the following recipe at your code's
 entry point to override other configurations:
 
 ```python
 import pygrank as pg
-pg.load_backend(`tensorflow`)
+pg.load_backend(`pytorch`)
 ```
 
 
@@ -61,6 +63,7 @@ As a quick start, let us construct a networkx graph `G` and a set of nodes `seed
 We now run a personalized PageRank [graph filter](documentation/documentation.md#graph-filters)
 to score the structural relatedness of graph nodes to the ones of the given set.
  We start by importing the library, 
+
 ```python
 >>> import pygrank as pg
 ```
@@ -75,6 +78,7 @@ convergence point and a graph preprocessing strategy *"auto"* normalization
 of the garph adjacency matrix to determine between column-based and symmetric
 normalization depending on whether the graph is undirected (as in this example)
 or not respectively.
+
 ```python
 >>> ranker = pg.PageRank(alpha=0.85, tol=1.E-6, normalization="auto")
 >>> ranks = ranker(graph, {v: 1 for v in seeds})
@@ -84,6 +88,7 @@ Node ranking output is always organized into
 [graph signals](documentation/documentation.md#graph-signals)
 which can be used like dictionaries. For example, we can
 print the scores of some nodes per:
+
 ```python
 >>> print(ranks["B"], ranks["D"], ranks["E"])
 0.25865456609095644 0.12484722044728883 0.17079023174039495
@@ -147,7 +152,7 @@ ready-to-use tools that simplify deployment of theoretical advancements
 and testing of new algorithms.
 
 Some of the library's advantages are:
-1. **Compatibility** with [networkx](https://github.com/networkx/networkx) and [tensorflow](https://www.tensorflow.org/).
+1. **Compatibility** with [networkx](https://github.com/networkx/networkx), [tensorflow](https://www.tensorflow.org/) and [pytorch](https://pytorch.org/).
 2. **Datacentric** interfaces that do not require transformations to identifiers.
 3. **Large** graph support with sparse representations and fast algorithms.
 4. **Seamless** pipelines, from graph preprocessing up to benchmarking and evaluation.
