@@ -2,7 +2,7 @@
 
 
 Feel free to provide any kind of code base contribution. This could include
-implementing new publications, fixing, writting unit tests,
+implementing new publications, fixing, writing unit tests,
 improving algorithms and extending the documentation.
 
 You can also contribute through the [issue tracker](https://github.com/MKLab-ITI/pygrank/issues).
@@ -21,8 +21,8 @@ You can use any (virtual) environment to edit the local clone,
 such as conda or the one provided by PyCharm.
 The environment should come with Python 3.6 or later installed.
 Make sure that both base library dependencies 
-`networkx, numpy, scipy, sklearn, wget`, as well as`tensorflow` (to support
-unit testing for the respective pipeline)
+`networkx, numpy, scipy, sklearn, wget`, as well as`tensorflow` and `torch` (to support
+unit testing for the respective pipelines)
 and `coverage` (to support code coverage measurements)
 are installed and upgraded to their latest versions.
 
@@ -61,15 +61,14 @@ can be accessed from the top level.
 (e.g. polylog-linear) running times and memory allocation with respect to
 the number of edges, to scale well to large graphs.
 7. **[pre-commit]** Run `python docgenerator.py` to add new classes to the documentation.
-8. **[pre-commit]** Pass all unit tests with no errors, unless your purpose
-is to introduce new unit tests that reveal existing bugs.
+This can be automated for commits to the master branch
+by copying the `pre-commit` script file to the local folder `.git/hooks`.
+8. **[github actions]** Pass all unit tests with no errors, unless your purpose
+is to introduce new unit tests that reveal existing bugs in the code base.
 Refrain from remodularizing the code unless absolutely necessary
 (creating new packages is fine, but backwards compatibility of import statements
 is mandatory).
-9. **[pre-commit]** Unit tests should provide 100% code coverage.
-
-**Steps 7-9 can be automated for commits to the master branch
-by copying the `pre-commit` script file to the local folder `.git/hooks`**.
+9. **[github actions]** Unit tests should provide 100% code coverage.
 
 
 # :pencil2: Implementing New Node Ranking Algorithms

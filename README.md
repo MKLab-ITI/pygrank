@@ -17,8 +17,8 @@ The following roadmap overviews short-term development goals and will be updated
 
 :heavy_check_mark: Reach a stable architecture with comprehensive development management (achieved as of 0.2.3, no longer backwards compatible with 0.1.17, most important change `to_scipy` >> `preprocessor`.) <br>
 :heavy_check_mark: Graph neural network support with dropout, renormalization and tensorflow backend<br>
-:heavy_check_mark: Pytorch backend
-:x: Pytorch gnns
+:heavy_check_mark: Pytorch backend<br>
+:x: Pytorch gnns<br>
 :x: 100% code coverage<br>
 :x: Complete documentation<br>
 :x: Automatic download of all datasets in related publications<br>

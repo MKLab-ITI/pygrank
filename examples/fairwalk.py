@@ -23,4 +23,7 @@ for name, filter in filters.items():
                   "FE-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=1, error_type=pg.Mabs)
                  }
     algorithms = pg.create_variations(algorithms, {"": pg.Normalize})
-    pg.benchmark_print(pg.benchmark(algorithms, pg.load_datasets_all_communities(datasets, max_group_number=2), sensitive=pg.pRule, fraction_of_training=seed_fractions))
+    print(algorithms.keys())
+    pg.benchmark_print(pg.benchmark(algorithms, pg.load_datasets_all_communities(datasets, max_group_number=2),
+                                    sensitive=pg.pRule, fraction_of_training=seed_fractions),
+                       delimiter=" & ", end_line="\\\\")

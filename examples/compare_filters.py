@@ -32,6 +32,9 @@ tuned = {
                              ),
 }
 
+#algorithms = pg.create_variations(algorithms, {"": pg.Tautology, "+Sweep": pg.Sweep})
+#print(algorithms.keys())
+
 #for name, graph, group in pg.load_datasets_all_communities(datasets, min_group_size=50):
 #    print(" & ".join([str(val) for val in [name, len(graph), graph.number_of_edges(), len(group)]])+" \\\\")
 loader = pg.load_datasets_all_communities(datasets, min_group_size=50)
