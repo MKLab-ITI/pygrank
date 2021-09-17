@@ -1,7 +1,7 @@
 from typing import Callable, Mapping, Any
 from pygrank.core import to_signal, GraphSignal, NodeRanking
 from pygrank.measures.utils import split
-from pygrank.measures import AUC, Measure
+from pygrank.measures import AUC, Measure, Time
 from timeit import default_timer as time
 from typing import Union, Iterable
 import networkx as nx
@@ -64,16 +64,16 @@ def benchmark(algorithms: Mapping[str, NodeRanking],
                         rank = lambda algorithm: algorithm(graph, training)
                 dataset_results = [name]
                 for algorithm in algorithms.values():
-                    if metric == "time":
+                    if metric == Time:
                         tic = time()
-                        rank(algorithm)
+                        predictions = rank(algorithm)
                         dataset_results.append(time()-tic)
                     else:
                         predictions = rank(algorithm)
                         try:
                             dataset_results.append(metric(graph)(predictions))
                         except:
-                            dataset_results.append(metric(evaluation)(predictions))
-                        if sensitive is not None:
-                            dataset_results.append(sensitive(sensitive_signal, training)(predictions))
+                            dataset_results.append(metric(evaluation, training)(predictions))
+                    if sensitive is not None:
+                        dataset_results.append(sensitive(sensitive_signal, training)(predictions))
                 yield dataset_results

@@ -24,6 +24,14 @@ for name, filter in filters.items():
                  }
     algorithms = pg.create_variations(algorithms, {"": pg.Normalize})
     print(algorithms.keys())
-    pg.benchmark_print(pg.benchmark(algorithms, pg.load_datasets_all_communities(datasets, max_group_number=2),
+
+    #import cProfile as profile
+    #pr = profile.Profile()
+    #pr.enable()
+    pg.benchmark_print(pg.benchmark(algorithms, pg.load_datasets_multiple_communities(datasets, max_group_number=2),
+                                    metric=pg.Time,
                                     sensitive=pg.pRule, fraction_of_training=seed_fractions),
                        delimiter=" & ", end_line="\\\\")
+
+    #pr.disable()
+    #pr.dump_stats('profile.pstat')

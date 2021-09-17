@@ -7,6 +7,15 @@ from pygrank.core.signals import GraphSignal, to_signal
 import numbers
 
 
+class Time(Measure):
+    """
+    An abstract class that can be passed to benchmark experiments to indicate that they should report running time
+    of algorithms. Instances of this class have no functionality.
+    """
+    def __init__(self):
+        pass
+
+
 class Supervised(Measure):
     """Provides a base class with the ability to simultaneously convert ranks and known ranks to numpy arrays.
     This class is used as a base for other supervised evaluation measures."""
@@ -182,9 +191,10 @@ class PearsonCorrelation(Supervised):
 
 
 class pRule(Supervised):
-    """Computes an assessment of stochastic ranking fairness.z
-    Values near 1 indicate full fairness, whereas lower values indicate disparate impact.
-    Known ranks correspond to whether nodes are sensitive.
+    """Computes an assessment of stochastic ranking fairness by obtaining the fractional comparison of average scores
+    between sensitive-attributed nodes and the rest the rest.
+    Values near 1 indicate full fairness (statistical parity), whereas lower values indicate disparate impact.
+    Known ranks correspond to the binary sensitive attribute checking whether nodes are sensitive.
     Usually, pRule > 80% is considered fair.
     """
 
@@ -201,6 +211,14 @@ class pRule(Supervised):
 
 
 class MannWhitneyParity(Supervised):
+    """
+    Performs two-tailed Mann-Whitney U-test to check that the scores of sensitive-attributed nodes do not exhibit
+    higher or lower values compared to the rest. To do this, the test's U statistic is transformed so that value
+    1 indicate that the probability of sensitive-attributed nodes exhibiting higher values is the same as
+    for lower values (50%). Value 0 indicates that either the probability of exhibiting only higher or only lower
+    values is 100%.
+    Known ranks correspond to the binary sensitive attribute checking whether nodes are sensitive.
+    """
     def evaluate(self, ranks):
         sensitive, ranks = self.to_numpy(ranks)
         ranks1 = ranks[sensitive == 0]

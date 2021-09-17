@@ -4,25 +4,31 @@
 The following measures can be imported from the package `pygrank.measures`.
 Constructor details are provided, including arguments inherited from and passed to parent classes.
 All of them can be used through the code patterns presented at the library'personalization [documentation](documentation.md#evaluation).  
-1. [AM](#measurecombination-am)
-2. [GM](#measurecombination-gm)
-3. [AUC](#supervised-auc)
-4. [Accuracy](#supervised-accuracy)
-5. [Cos](#supervised-cos)
-6. [CrossEntropy](#supervised-crossentropy)
-7. [Dot](#supervised-dot)
-8. [KLDivergence](#supervised-kldivergence)
-9. [MKLDivergence](#supervised-mkldivergence)
-10. [Mabs](#supervised-mabs)
-11. [MannWhitneyParity](#supervised-mannwhitneyparity)
-12. [MaxDifference](#supervised-maxdifference)
-13. [NDCG](#supervised-ndcg)
-14. [PearsonCorrelation](#supervised-pearsoncorrelation)
-15. [SpearmanCorrelation](#supervised-spearmancorrelation)
-16. [pRule](#supervised-prule)
-17. [Conductance](#unsupervised-conductance)
-18. [Density](#unsupervised-density)
-19. [Modularity](#unsupervised-modularity)
+1. [Time](#measure-time)
+2. [AM](#measurecombination-am)
+3. [GM](#measurecombination-gm)
+4. [AUC](#supervised-auc)
+5. [Accuracy](#supervised-accuracy)
+6. [Cos](#supervised-cos)
+7. [CrossEntropy](#supervised-crossentropy)
+8. [Dot](#supervised-dot)
+9. [KLDivergence](#supervised-kldivergence)
+10. [MKLDivergence](#supervised-mkldivergence)
+11. [Mabs](#supervised-mabs)
+12. [MannWhitneyParity](#supervised-mannwhitneyparity)
+13. [MaxDifference](#supervised-maxdifference)
+14. [NDCG](#supervised-ndcg)
+15. [PearsonCorrelation](#supervised-pearsoncorrelation)
+16. [SpearmanCorrelation](#supervised-spearmancorrelation)
+17. [pRule](#supervised-prule)
+18. [Conductance](#unsupervised-conductance)
+19. [Density](#unsupervised-density)
+20. [Modularity](#unsupervised-modularity)
+
+### <kbd>Measure</kbd> Time
+
+An abstract class that can be passed to benchmark experiments to indicate that they should report running time 
+of algorithms. Instances of this class have no functionality. 
 
 ### <kbd>MeasureCombination</kbd> AM
 
@@ -119,7 +125,13 @@ Args:
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments. 
 
 ### <kbd>Supervised</kbd> MannWhitneyParity
- 
+
+Performs two-tailed Mann-Whitney U-test to check that the scores of sensitive-attributed nodes do not exhibit 
+higher or lower values compared to the rest. To do this, the test's U statistic is transformed so that value 
+1 indicate that the probability of sensitive-attributed nodes exhibiting higher values is the same as 
+for lower values (50%). Value 0 indicates that either the probability of exhibiting only higher or only lower 
+values is 100%. 
+Known ranks correspond to the binary sensitive attribute checking whether nodes are sensitive. 
 Initializes the supervised measure with desired graph signal outcomes. 
 
 Args: 
@@ -165,9 +177,10 @@ Args:
 
 ### <kbd>Supervised</kbd> pRule
 
-Computes an assessment of stochastic ranking fairness.z 
-Values near 1 indicate full fairness, whereas lower values indicate disparate impact. 
-Known ranks correspond to whether nodes are sensitive. 
+Computes an assessment of stochastic ranking fairness by obtaining the fractional comparison of average scores 
+between sensitive-attributed nodes and the rest the rest. 
+Values near 1 indicate full fairness (statistical parity), whereas lower values indicate disparate impact. 
+Known ranks correspond to the binary sensitive attribute checking whether nodes are sensitive. 
 Usually, pRule > 80% is considered fair. 
 Initializes the supervised measure with desired graph signal outcomes. 
 

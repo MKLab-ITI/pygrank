@@ -14,7 +14,7 @@ def test_benchmark_print():
     assert isinstance(ret, dict)
     assert len(ret) == 2
     assert isinstance(ret["graph9"], dict)
-    assert (len(str(ret)) - len(console)) < (len(str(ret)) + len(console))/5
+    assert (len(str(ret)) - len(console)) < (len(str(ret)) + len(console))/2
 
 
 def test_unsupervised_vs_auc():
@@ -22,7 +22,7 @@ def test_unsupervised_vs_auc():
     def loader():
         return pg.load_datasets_multiple_communities(["graph9"])
     algorithms = pg.create_variations(pg.create_many_filters(), pg.create_many_variation_types())
-    time_scores = pg.benchmark_scores(pg.benchmark(algorithms, loader(), "time"))
+    time_scores = pg.benchmark_scores(pg.benchmark(algorithms, loader(), pg.Time))
     assert sum(time_scores) > 0
 
     measures = {"AUC": lambda ground_truth, exlude: pg.MultiSupervised(pg.AUC, ground_truth, exlude),

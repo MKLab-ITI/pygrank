@@ -10,7 +10,8 @@ def backend_init():
 def graph_dropout(M, dropout):
     if dropout == 0:
         return M
-    return torch.sparse_coo_tensor(M.indices, torch.dropout(M.values, dropout), M.shape)
+    # TODO: change based on future sparse matrix support: https://github.com/pytorch/pytorch/projects/24#card-59611437
+    return torch.sparse_coo_tensor(M.indices, torch.dropout(M.values, dropout), M.shape).to_sparse_csr()
 
 
 def separate_cols(x):
@@ -68,7 +69,8 @@ def length(x):
 
 
 def degrees(M):
-    return torch.sparse.sum(M, dim=1)
+    # this sparse sum creates sparse matrices that need to be converted to dense to use in Hadamard products
+    return torch.sparse.sum(M, dim=0).to_dense()
 
 
 def epsilon():
