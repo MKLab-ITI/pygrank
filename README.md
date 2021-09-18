@@ -23,7 +23,7 @@ The following roadmap overviews short-term development goals and will be updated
 :x: 100% documentation completeness<br>
 :x: Automatic download for all related publication datasets<br>
 :x: Updated reference docs and automated citation discovery for algorithms<br>
-:x: Enable Arnoldi and Lanczos optimizations in non-numpy backends
+:x: Enable Arnoldi and Lanczos optimizations in non-numpy backends<br>
 :x: Transparent handling of float and double precisions (as of 0.2.4 everything is in float32, but this will change)
 
 # :hammer_and_wrench: Installation
