@@ -16,13 +16,15 @@ Fast recommendation algorithms for large graphs based on link analysis.
 The following roadmap overviews short-term development goals and will be updated appropriately.
 
 :heavy_check_mark: Reach a stable architecture with comprehensive development management (achieved as of 0.2.3, no longer backwards compatible with 0.1.17, most important change `to_scipy` >> `preprocessor`.) <br>
-:heavy_check_mark: Graph neural network support with dropout, renormalization and tensorflow backend<br>
-:heavy_check_mark: Pytorch backend<br>
+:heavy_check_mark: Graph neural network support with dropout, renormalization and tensorflow backend (achieved as of 0.2.3)<br>
+:heavy_check_mark: Pytorch backend (achieved as of 0.2.4)<br>
 :x: Pytorch gnns<br>
 :x: 100% code coverage<br>
-:x: Complete documentation<br>
-:x: Automatic download of all datasets in related publications<br>
+:x: 100% documentation completeness<br>
+:x: Automatic download for all related publication datasets<br>
 :x: Updated reference docs and automated citation discovery for algorithms<br>
+:x: Enable Arnoldi and Lanczos optimizations in non-numpy backends
+:x: Transparent handling of float and double precisions (as of 0.2.4 everything is in float32, but this will change)
 
 # :hammer_and_wrench: Installation
 `pygrank` is meant to work with Python 3.9 or later. It can be installed with pip per:

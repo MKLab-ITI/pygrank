@@ -33,8 +33,8 @@ Instantiation or Usage | Method Name | Citation
 `AdHocFairness(ranker,'O')` | LFPRO | tsioutsiouliklis2020fairness
 `FairPersonalizer(ranker, error_type=Mabs, max_residual=0)` | FP | krasanakis2020fairconstr
 `FairPersonalizer(ranker, 0.8, 10, error_type=Mabs, max_residual=0)` | CFP | krasanakis2020fairconstr
-`FairPersonalizer(ranker)` | FairEdit | krasanakis2020prioredit
-`fairness.FairPersonalizer(ranker, 0.8, 10)` | FairEditC | krasanakis2020prioredit
+`FairPersonalizer(ranker, error_type=KLDivergence)` | FairEdit | krasanakis2020prioredit
+`fairness.FairPersonalizer(ranker, error_type=KLDivergence, 0.8, 10)` | FairEditC | krasanakis2020prioredit
 `LinkAssessment(graph, hops=1)` | LinkAUC | krasanakis2019linkauc
 `LinkAssessment(graph, hops=2)` | HopAUC | krasanakis2020unsupervised
 `ClusteringCoefficient(graph)` | LinkCC | krasanakis2020unsupervised

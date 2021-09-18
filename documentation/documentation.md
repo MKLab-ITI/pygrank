@@ -56,18 +56,15 @@ various node ranking algorithms.
 ![architecture](architecture.png)
 
 # Graph Signals
-Graph signals are a way to organize numerical values corresponding to respective
-nodes. They are returned by ranking algorithms, but for ease of use,
-you can also pass to ranking algorithms maps of node values
-(e.g.  `{'A': 3, 'C': 2}`) or numpy arrays (e.g. `np.array([3, 0, 2, 0])`
-where positions correspond to the order networkx traverse graph nodes) to them.
-If so, these representations are converted internally to graph signals based on
-whatever graph information is available. In fact, we encourage using these
-representations to avoid
-
-**If** *tensorflow* or *pytorch* are set as the backends of choice,
-you can also construct graph signals by passing tensors of those
-libraries instead of numpy arrays.
+Graph signals are ways to organize numerical values corresponding to respective
+nodes. They are inputted in and returned by ranking algorithms. For ease of use,
+ranking algorithms can also use maps of node values (e.g.  `{'A': 3, 'C': 2}`),
+numpy arrays (e.g. `np.array([3, 0, 2, 0])` or primitives of the currently enabled 
+backend. In this case, the graph also needs to be the passed to the inputs and
+algorithms perform signal conversions internally.
+In case of list, array or tensor inputs, their element order corresponds to
+the order in which networkx traverses graph nodes. 
+Then, these representations are converted internally to graph signals.
 
 ### Defining and Manipulating Graph Signals
 As an example, let us create a simple graph
@@ -90,7 +87,9 @@ To create a graph signal holding this information we can write:
 
 If is possible to directly access graph signal values as objects of the
 respective backend through a `signal.np` attribute. For example, if the
-default *numpy* backend is used, this attribute holds a numpy array. 
+default *numpy* backend is used, this attribute holds a numpy array
+(although it may hold other primitives, depending on the loaded backend).
+
 Continuing from the previous example,
 in the following code we divide a graph signal's elements with their sum.
 For this, we use of the package's backend.
