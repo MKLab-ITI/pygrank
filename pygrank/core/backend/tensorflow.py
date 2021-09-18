@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tensorflow import abs, reduce_sum as sum, exp, eye, identity as copy, reduce_min as min, reduce_max as max
+from tensorflow import abs, reduce_sum as sum, exp, eye, identity as copy, reduce_min as min, reduce_max as max, reduce_mean as mean
 
 
 def backend_init():
@@ -48,6 +48,10 @@ def to_array(obj, copy_array=False):
             return tf.identity(obj)
         return obj
     return tf.convert_to_tensor([[v] for v in obj], dtype=tf.float32)
+
+
+def to_primitive(obj):
+    return tf.convert_to_tensor(obj, dtype=tf.float32)
 
 
 def is_array(obj):

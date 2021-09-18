@@ -22,15 +22,19 @@ def abs(x):  # pragma: no cover
     pass
 
 
-def sum(x):  # pragma: no cover
+def sum(x, axis=None):  # pragma: no cover
     pass
 
 
-def min(x):  # pragma: no cover
+def mean(x, axis=None):  #pragma: no cover
     pass
 
 
-def max(x):  # pragma: no cover
+def min(x, axis=None):  # pragma: no cover
+    pass
+
+
+def max(x, axis=None):  # pragma: no cover
     pass
 
 
@@ -55,6 +59,10 @@ def scipy_sparse_to_backend(M):  # pragma: no cover
 
 
 def to_array(obj, copy_array=False):  # pragma: no cover
+    pass
+
+
+def to_primitive(obj):  # pragma: no cover
     pass
 
 

@@ -1,6 +1,30 @@
 import torch
 import numpy as np
-from torch import abs, sum, exp, eye, clone as copy, min, max, log
+from torch import abs, exp, eye, clone as copy, log
+
+
+def sum(x, axis=None):
+    if axis is None:
+        return torch.sum(x)
+    return torch.sum(x, dim=axis)
+
+
+def max(x, axis=None):
+    if axis is None:
+        return torch.max(x)
+    return torch.max(x, dim=axis)
+
+
+def min(x, axis=None):
+    if axis is None:
+        return torch.min(x)
+    return torch.min(x, dim=axis)
+
+
+def mean(x, axis=None):
+    if axis is None:
+        return torch.mean(x)
+    return torch.mean(x, dim=axis)
 
 
 def backend_init():
@@ -45,6 +69,10 @@ def to_array(obj, copy_array=False):
             return torch.clone(obj)
         return obj
     return torch.ravel(torch.FloatTensor(np.array([[v] for v in obj])))
+
+
+def to_primitive(obj):
+    return torch.FloatTensor(obj)
 
 
 def is_array(obj):

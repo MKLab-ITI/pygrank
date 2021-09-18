@@ -8,7 +8,6 @@ from pygrank.algorithms.autotune.tuning import Tuner
 from pygrank.algorithms.autotune.optimization import optimize
 from pygrank.measures.utils import split
 from pygrank.algorithms.postprocess.postprocess import Tautology
-import numpy as np
 
 
 class HopTuner(Tuner):
@@ -89,12 +88,11 @@ class HopTuner(Tuner):
         elif self.basis == "arnoldi":
             basis = [arnoldi_iteration(M, p, len(measure_values))[0] for p in propagated]
             for i in range(len(measure_values)):
-                measure_values[i] = [measure(base[:,i]) for base, measure in zip(basis, measures)]
+                measure_values[i] = [float(measure(base[:,i])) for base, measure in zip(basis, measures)]
         else:
             raise Exception("Invalid basis in hop tuner. Should be either 'krylov' or 'arnoldi'")
-
-        measure_values = backend.to_array(measure_values)
-        mean_value = np.mean(measure_values, axis=0)
+        measure_values = backend.to_primitive(measure_values)
+        mean_value = backend.mean(measure_values, axis=0)
         measure_values = measure_values-mean_value
         best_parameters = measure_values
         measure_weights = [1] * measure_values.shape[1]
@@ -113,54 +111,56 @@ class HopTuner(Tuner):
                 beta1t *= beta1
                 beta2t *= beta2
                 prev_error = error
-                parameters = np.copy(measure_values)
+                parameters = backend.copy(measure_values)
                 for i in range(len(measure_values) - len(window)-2, -1, -1):
-                    parameters[i, :] = np.dot((window), measure_values[(i+1):(i+len(window)+1), :])
-                errors = (parameters - measure_values) * measure_weights / np.sum(measure_weights)
+                    parameters[i, :] = backend.dot((window), measure_values[(i+1):(i+len(window)+1), :])
+                errors = (parameters - measure_values) * measure_weights / backend.sum(measure_weights)
                 for j in range(len(window)):
                     gradient = 0
                     for i in range(len(measure_values) - len(window)-1):
-                        gradient += np.dot(measure_values[i+j+1, :], errors[i, :])
+                        gradient += backend.dot(measure_values[i+j+1, :], errors[i, :])
                     momentum[j] = beta1*momentum[j] + (1-beta1)*gradient#*np.sign(window[j])
                     rms[j] = beta2*rms[j] + (1-beta2)*gradient*gradient
                     window[j] -= 0.01*momentum[j] / (1-beta1t) / ((rms[j]/(1-beta2t))**0.5 + 1.E-8)
                     #window[j] -= 0.01*gradient*np.sign(window[j])
-                error = np.mean(np.abs(errors))
+                error = backend.mean(backend.abs(errors))
                 if abs(error-prev_error)/error < 1.E-6:
                     best_parameters = parameters
                     break
-        best_parameters = np.mean(best_parameters[:self.num_parameters, :] * measure_weights, axis=1) + np.mean(mean_value)
-        #best_parameters /= np.max(best_parameters)
+        best_parameters = backend.mean(best_parameters[:self.num_parameters, :] * backend.to_primitive(measure_weights), axis=1) + backend.mean(mean_value)
 
         if self.tunable_offset is not None:
-            div = np.max(best_parameters)
+            div = backend.max(best_parameters)
             if div != 0:
                 best_parameters /= div
             measure = self.tunable_offset(validation, training)
             best_offset = optimize(
                 lambda params: - measure(self._run(training, [best_parameters[i]*params[0]**i for i in range(len(best_parameters))], *args, **kwargs)),
                 #lambda params: - measure.evaluate(self._run(training, best_parameters + params[0], *args, **kwargs)),
-                max_vals=[1], min_vals=[0], deviation_tol=0.005, parameter_tol=1, partitions=5, divide_range=2)#"shrinking")
+                max_vals=[1], min_vals=[0], deviation_tol=0.005, parameter_tol=1, partitions=5, divide_range=2)
             #best_parameters += best_offset[0]
             best_parameters = [best_parameters[i]*best_offset[0]**i for i in range(len(best_parameters))]
 
-        if np.sum(np.abs(best_parameters)) != 0:
-            best_parameters /= np.sum(np.abs(best_parameters))/len(best_parameters)
+        best_parameters = backend.to_primitive(best_parameters)
+        if backend.sum(backend.abs(best_parameters)) != 0:
+            best_parameters /= backend.mean(backend.abs(best_parameters))
         if self.tuning_backend is not None and self.tuning_backend != previous_backend:
+            best_parameters = [float(param) for param in best_parameters]  # convert parameters to backend-independent list
             backend.load_backend(previous_backend)
         if self.basis == "arnoldi":
             return Tautology(), self._run(personalization, best_parameters, *args, **kwargs)
         return self.ranker_generator(best_parameters), personalization
 
-    def _run(self, personalization: GraphSignal, params: list, *args, **kwargs):
-        div = np.sum(np.abs(params)) / backend.length(params)
+    def _run(self, personalization: GraphSignal, params: object, *args, **kwargs):
+        params = backend.to_primitive(params)
+        div = backend.sum(backend.abs(params))
         if div != 0:
             params = params / div
         if self.basis == "arnoldi":
             M = self.ranker_generator(params).preprocessor(personalization.graph)
             base = arnoldi_iteration(M, personalization.np, len(params))[0]
             ret = 0
-            for i in range(len(params)):
+            for i in range(backend.length(params)):
                 ret = ret + params[i]*base[:,i]
             return to_signal(personalization, ret)
         return self.ranker_generator(params).rank(personalization, *args, **kwargs)

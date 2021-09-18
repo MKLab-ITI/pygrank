@@ -1,5 +1,5 @@
 import numpy as np
-from numpy import abs, sum, exp, log, copy, repeat, min, max, dot
+from numpy import abs, sum, exp, log, copy, repeat, min, max, dot, mean
 from scipy.sparse import eye
 
 
@@ -34,6 +34,10 @@ def to_array(obj, copy_array=False):
         if len(obj.shape) > 1:
             return obj.ravel()
         return obj
+    return np.array(obj)
+
+
+def to_primitive(obj):
     return np.array(obj)
 
 

@@ -29,8 +29,7 @@ for name, filter in filters.items():
     #pr = profile.Profile()
     #pr.enable()
     pg.benchmark_print(pg.benchmark(algorithms, pg.load_datasets_multiple_communities(datasets, max_group_number=2),
-                                    metric=pg.Time,
-                                    sensitive=pg.pRule, fraction_of_training=seed_fractions),
+                                    metric=pg.AUC, sensitive=pg.pRule, fraction_of_training=seed_fractions),
                        delimiter=" & ", end_line="\\\\")
 
     #pr.disable()
