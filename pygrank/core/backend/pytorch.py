@@ -43,6 +43,8 @@ def separate_cols(x):
 
 
 def combine_cols(cols):
+    if len(cols[0].shape) < 2:
+        cols = [torch.reshape(col, (-1,1)) for col in cols]
     return torch.cat(cols, dim=1)
 
 

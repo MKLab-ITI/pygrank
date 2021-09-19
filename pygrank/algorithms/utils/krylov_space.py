@@ -69,19 +69,17 @@ def arnoldi_iteration(A, b, n: int):
         Krylov subspace.
       h: (n + 1) x n array, A on basis Q. It is upper Hessenberg.
     """
-    eps = 1e-12
-    h = np.zeros((n + 1, n))
-    Q = np.zeros((A.shape[0], n + 1))
-    # Normalize the input vector
-    Q[:, 0] = b / np.linalg.norm(b, 2)  # Use it as the first Krylov vector
+    h = [[0 for _ in range(n)] for _ in range(n+1)]
+    Q = [b/backend.dot(b, b)**0.5]
     for k in range(1, n):
-        v = backend.conv(A, Q[:, k - 1])  # Generate a new candidate vector
-        for j in range(k):  # Subtract the projections on previous vectors
-            h[j, k - 1] = np.dot(Q[:, j].T, v)
-            v = v - h[j, k - 1] * Q[:, j]
-        h[k, k - 1] = np.linalg.norm(v, 2)
-        if h[k, k - 1] > eps:  # Add the produced vector to the list, unless
-            Q[:, k] = v / h[k, k - 1]
-        else:  # If that happens, stop iterating.
-            return Q, h
-    return Q, h
+        v = backend.conv(Q[k-1], A)
+        for j in range(k):
+            h[j][k - 1] = backend.dot(Q[j], v)
+            v = v - h[j][k-1] * Q[j]
+        h[k][k-1] = backend.dot(v, v)**0.5
+        if h[k][k-1] == 0:
+            Q.append(v*0)
+        else:
+            Q.append(v / h[k][k-1])
+
+    return backend.combine_cols(Q), h

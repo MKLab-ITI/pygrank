@@ -91,6 +91,17 @@ def test_hoptuner_arnoldi():
     assert abs(auc1-auc2) < 0.005
 
 
+def test_hoptuner_arnoldi_backends():
+    _, G, groups = next(pg.load_datasets_multiple_communities(["bigraph"]))
+    group = groups[0]
+    training, evaluation = pg.split(pg.to_signal(G, {v: 1 for v in group}), training_samples=0.5)
+    auc1 = pg.AUC(evaluation, exclude=training)(pg.HopTuner(krylov_dims=10, measure=pg.AUC).rank(training))
+    auc2 = pg.AUC(evaluation, exclude=training)(pg.HopTuner(krylov_dims=10, measure=pg.AUC, tuning_backend="pytorch").rank(training))
+    auc3 = pg.AUC(evaluation, exclude=training)(pg.HopTuner(krylov_dims=10, measure=pg.AUC, tuning_backend="tensorflow").rank(training))
+    assert auc1==auc2
+    assert auc1==auc3
+
+
 def test_autotune_backends():
     _, G, groups = next(pg.load_datasets_multiple_communities(["bigraph"]))
     group = groups[0]
