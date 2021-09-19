@@ -2,7 +2,7 @@ import pygrank.algorithms.postprocess.postprocess
 from pygrank.core.signals import GraphSignal, to_signal, NodeRanking
 from pygrank.algorithms.utils import ensure_used_args, arnoldi_iteration
 from pygrank.measures import Supervised, AUC
-from typing import Callable
+from typing import Callable, Optional
 from pygrank.core import backend
 from pygrank.algorithms.autotune.tuning import Tuner
 from pygrank.algorithms.autotune.optimization import optimize
@@ -19,8 +19,8 @@ class HopTuner(Tuner):
     """
     def __init__(self, ranker_generator: Callable[[list], NodeRanking] = None,
                  measure: Callable[[GraphSignal, GraphSignal], Supervised] = AUC,
-                 basis: str = "krylov",
-                 tuning_backend: str = None,
+                 krylov_dims: Optional[int] = None,
+                 tuning_backend: Optional[str] = None,
                  autoregression: int = 0,
                  num_parameters: int = 10,
                  tunable_offset: Callable[[GraphSignal, GraphSignal], Supervised] = AUC,
@@ -34,6 +34,8 @@ class HopTuner(Tuner):
                 These parameters can be overriden and other ones can be passed to the algorithm'personalization constructor simply
                 by including them in kwargs.
             measure: Callable to constuct a supervised measure with given known node scores.
+            krylov_dims: Can use an Arnoldi basis of the Krylov space of the desired number of dimensions to perform
+                propagations. If None (default) vertex-domain graph convolutions are performed instead.
             tuning_backend: Specifically switches to a designted backend for the tuning process before restoring
                 the previous one to perform the actual ranking. If None (default), this functionality is ignored.
             tunable_offset: If None, no offset is added to estimated parameters. Otherwise, a supervised measure
@@ -57,7 +59,7 @@ class HopTuner(Tuner):
         self.autoregression = autoregression
         self.num_parameters = num_parameters
         self.tunable_offset = tunable_offset
-        self.basis = basis
+        self.krylov_dims = krylov_dims
 
     def _tune(self, graph=None, personalization=None, *args, **kwargs):
         previous_backend = backend.backend_name()
@@ -81,16 +83,14 @@ class HopTuner(Tuner):
         #measures = [self.measure(backend_personalization, training), self.measure(backend_personalization, validation)]
         measures = [self.measure(backend_personalization)]*len(propagated)
 
-        if self.basis == "krylov":
+        if self.krylov_dims is None:
             for i in range(len(measure_values)):
                 measure_values[i] = [measure(p) for p, measure in zip(propagated, measures)]
                 propagated = [backend.conv(p, M) for p in propagated]
-        elif self.basis == "arnoldi":
-            basis = [arnoldi_iteration(M, p, len(measure_values))[0] for p in propagated]
+        else:
+            basis = [arnoldi_iteration(M, p, self.krylov_dims)[0] for p in propagated]
             for i in range(len(measure_values)):
                 measure_values[i] = [float(measure(base[:,i])) for base, measure in zip(basis, measures)]
-        else:
-            raise Exception("Invalid basis in hop tuner. Should be either 'krylov' or 'arnoldi'")
         measure_values = backend.to_primitive(measure_values)
         mean_value = backend.mean(measure_values, axis=0)
         measure_values = measure_values-mean_value
@@ -147,8 +147,8 @@ class HopTuner(Tuner):
         if self.tuning_backend is not None and self.tuning_backend != previous_backend:
             best_parameters = [float(param) for param in best_parameters]  # convert parameters to backend-independent list
             backend.load_backend(previous_backend)
-        if self.basis == "arnoldi":
-            return Tautology(), self._run(personalization, best_parameters, *args, **kwargs)
+        if self.krylov_dims is not None:
+            return Tautology(), self._run(personalization, best_parameters, *args, **kwargs)  # TODO: make this unecessary
         return self.ranker_generator(best_parameters), personalization
 
     def _run(self, personalization: GraphSignal, params: object, *args, **kwargs):
@@ -156,7 +156,7 @@ class HopTuner(Tuner):
         div = backend.sum(backend.abs(params))
         if div != 0:
             params = params / div
-        if self.basis == "arnoldi":
+        if self.krylov_dims is not None:
             M = self.ranker_generator(params).preprocessor(personalization.graph)
             base = arnoldi_iteration(M, personalization.np, len(params))[0]
             ret = 0
