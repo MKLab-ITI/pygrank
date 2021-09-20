@@ -1,9 +1,8 @@
 from pygrank.algorithms.autotune import optimize
 from pygrank.algorithms.postprocess.postprocess import Tautology, Normalize, Postprocessor
-from pygrank.core.signals import GraphSignal, to_signal
-from pygrank.measures import pRule, Mabs
-from pygrank import backend
-
+from pygrank.measures import pRule, Mabs, Supervised
+from pygrank.core import GraphSignal, to_signal, backend, BackendPrimitive, NodeRanking, GraphSignalGraph, GraphSignalData
+from typing import List
 
 class FairPersonalizer(Postprocessor):
     """
@@ -12,14 +11,14 @@ class FairPersonalizer(Postprocessor):
     """
 
     def __init__(self,
-                 ranker,
-                 target_pRule=1,
-                 retain_rank_weight=1,
-                 pRule_weight=1,
-                 error_type=Mabs,
-                 parameter_buckets=1,
-                 max_residual=1,
-                 error_skewing=False):
+                 ranker: NodeRanking,
+                 target_pRule: float = 1,
+                 retain_rank_weight: float = 1,
+                 pRule_weight: float = 1,
+                 error_type: Supervised = Mabs,
+                 parameter_buckets: int = 1,
+                 max_residual: float = 1,
+                 error_skewing: bool = False):
         """
         Instantiates a personalization editing scheme that trains towards optimizing
         retain_rank_weight*error_type(original scores, editing-induced scores)
@@ -54,7 +53,11 @@ class FairPersonalizer(Postprocessor):
         self.max_residual = max_residual
         self.error_skewing = error_skewing
 
-    def __culep(self, personalization, sensitive, ranks, params):
+    def __culep(self,
+                personalization: BackendPrimitive,
+                sensitive: BackendPrimitive,
+                ranks: BackendPrimitive,
+                params: List[float]):
         ranks = ranks.np / backend.max(ranks.np)
         personalization = personalization / backend.max(personalization)
         res = 1.0-params[-1] if self.parameter_buckets == 0 else 0
@@ -72,7 +75,11 @@ class FairPersonalizer(Postprocessor):
         res = res + personalization*params[-1]
         return res
 
-    def __prule_loss(self, ranks: GraphSignal, original_ranks: GraphSignal, sensitive: object, personalization: object) -> object:
+    def __prule_loss(self,
+                     ranks: GraphSignal,
+                     original_ranks: GraphSignal,
+                     sensitive: GraphSignal,
+                     personalization: GraphSignal) -> object:
         prule = self.pRule(ranks)
         ranks = ranks.np-backend.min(ranks.np)
         ranks = ranks / backend.sum(ranks)
@@ -85,7 +92,10 @@ class FairPersonalizer(Postprocessor):
             error_value = error(ranks)
         return -self.retain_rank_weight * error_value * error.best_direction() - self.pRule_weight * min(self.target_pRule, prule)
 
-    def rank(self, G, personalization, sensitive, *args, **kwargs):
+    def rank(self,
+             G: GraphSignalGraph,
+             personalization: GraphSignalData,
+             sensitive: GraphSignalData, *args, **kwargs):
         personalization = to_signal(G, personalization)
         G = personalization.graph
         self.pRule = pRule(sensitive)
@@ -113,7 +123,10 @@ class AdHocFairness(Postprocessor):
     ad hoc literature assumptions about how unfairness is propagated in graphs.
     """
 
-    def __init__(self, ranker=None, method="O", eps=1.E-12):
+    def __init__(self,
+                 ranker: NodeRanking = None,
+                 method: str = "O",
+                 eps: float = 1.E-12):
         """
         Initializes the fairness-aware postprocessor.
 

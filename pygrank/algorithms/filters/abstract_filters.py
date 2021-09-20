@@ -1,4 +1,4 @@
-from pygrank.core.signals import to_signal, NodeRanking
+from pygrank.core import to_signal, NodeRanking, GraphSignalGraph, GraphSignalData, BackendGraph, BackendPrimitive
 from pygrank.algorithms.utils import call, ensure_used_args
 from pygrank.algorithms.utils import preprocessor as default_preprocessor, ConvergenceManager, obj2id
 from pygrank.algorithms.utils import krylov_base, krylov2original, krylov_error_bound
@@ -33,7 +33,11 @@ class GraphFilter(NodeRanking):
         self.personalization_transform = Tautology() if personalization_transform is None else personalization_transform
         ensure_used_args(kwargs, [default_preprocessor, ConvergenceManager])
 
-    def rank(self, graph=None, personalization=None, warm_start=None, graph_dropout: float = 0, *args, **kwargs):
+    def rank(self,
+             graph: GraphSignalGraph = None,
+             personalization: GraphSignalData = None,
+             warm_start: GraphSignalData = None,
+             graph_dropout: float = 0, *args, **kwargs):
         personalization = to_signal(graph, personalization)
         personalization = self.personalization_transform(personalization)
         personalization_norm = backend.sum(backend.abs(personalization.np))
@@ -73,7 +77,7 @@ class RecursiveGraphFilter(GraphFilter):
                 This significantly speeds up the convergence speed of symmetric normalization (col normalization
                 preserves the L1 norm during computations on its own). Can also pass Postprocessor instances
                 to adjust node scores after each iteration with the Postprocessor.transform(ranks) method.
-                Can pass False or None to ignore this parameter'personalization functionality.
+                Can pass False or None to ignore this functionality.
         """
         super().__init__(*args, **kwargs)
         self.use_quotient = use_quotient
@@ -90,7 +94,11 @@ class RecursiveGraphFilter(GraphFilter):
         if self.converge_to_eigenvectors:
             personalization.np = ranks.np
 
-    def _formula(self, M, personalization, ranks, *args, **kwargs):
+    def _formula(self,
+                 M: BackendGraph,
+                 personalization: BackendPrimitive,
+                 ranks: BackendPrimitive,
+                 *args, **kwargs):
         raise Exception("Use a derived class of RecursiveGraphFilter that implements the _formula method")
 
 
@@ -198,5 +206,5 @@ class ClosedFormGraphFilter(GraphFilter):
             del self.prev_term
         del self.coefficient
 
-    def _coefficient(self, previous_coefficient):
+    def _coefficient(self, previous_coefficient: float) -> float:
         raise Exception("Use a derived class of ClosedFormGraphFilter that implements the _coefficient method")

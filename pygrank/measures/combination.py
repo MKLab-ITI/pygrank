@@ -1,6 +1,6 @@
-from pygrank import backend
+from pygrank.core import backend, GraphSignalData, BackendPrimitive
 from pygrank.measures.utils import Measure
-from typing import Iterable, Tuple
+from typing import Iterable, Tuple, Optional
 from math import log, exp
 
 
@@ -9,9 +9,9 @@ class MeasureCombination(Measure):
     `add(measure, weight=1, min_val=-infinity, max_val=infinity)` method."""
     
     def __init__(self,
-                 measures: Iterable[Measure] = None,
-                 weights: Iterable[float] = None,
-                 thresholds: Iterable[Tuple[float]] = None):
+                 measures: Optional[Iterable[Measure]] = None,
+                 weights: Optional[Iterable[float]] = None,
+                 thresholds: Optional[Iterable[Tuple[float]]] = None):
         """
         Instantiates a combination of several measures. More measures with their own weights and threhsolded range
         can be added with the `add(measure, weight=1, min_val=-inf, max_val=inf)` method.
@@ -26,12 +26,12 @@ class MeasureCombination(Measure):
                 (default) provided measures
         """
         self.measures = list() if measures is None else measures
-        self.weights = [1 for _ in self.measures] if weights is None else weights
-        self.thresholds = [(0, 1) for _ in self.measures] if thresholds is None else thresholds
+        self.weights = [1. for _ in self.measures] if weights is None else weights
+        self.thresholds = [(0., 1.) for _ in self.measures] if thresholds is None else thresholds
 
     def add(self,
             measure: Measure,
-            weight: float = 1.,
+            weight: float = 1,
             min_val: float = -float('inf'),
             max_val: float = float('inf')):
         self.measures.append(measure)
@@ -43,22 +43,24 @@ class MeasureCombination(Measure):
 class AM(MeasureCombination):
     """Combines several measures through their arithmetic mean."""
 
-    def evaluate(self, ranks):
+    def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
         result = 0
         for i in range(len(self.measures)):
             if self.weights[i] != 0:
-                eval = self.measures[i].evaluate(ranks)
-                result += self.weights[i]*min(max(eval, self.thresholds[i][0]), self.thresholds[i][1])
+                evaluation = self.measures[i].evaluate(scores)
+                evaluation = min(max(evaluation, self.thresholds[i][0]), self.thresholds[i][1])
+                result += self.weights[i]*evaluation
         return result/sum(self.weights)
 
 
 class GM(MeasureCombination):
     """Combines several measures through their geometric mean."""
     
-    def evaluate(self, ranks):
+    def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
         result = 0
         for i in range(len(self.measures)):
             if self.weights[i] != 0:
-                eval = self.measures[i].evaluate(ranks)
-                result += self.weights[i]*log(min(max(eval, self.thresholds[i][0]), max(backend.epsilon(), self.thresholds[i][1])))
+                evaluation = self.measures[i].evaluate(scores)
+                evaluation = min(max(evaluation, self.thresholds[i][0]), self.thresholds[i][1])
+                result += self.weights[i]*log(max(backend.epsilon(), evaluation))
         return exp(result/sum(self.weights))

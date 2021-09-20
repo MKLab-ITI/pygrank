@@ -1,4 +1,4 @@
-from pygrank.core import backend
+from pygrank.core import backend, BackendPrimitive, BackendGraph
 from pygrank import measures
 from numpy.linalg import norm
 import numpy as np
@@ -53,7 +53,7 @@ def krylov_error_bound(V, H, M, personalization, measure=measures.Mabs, max_powe
     return max(errors)
 
 
-def arnoldi_iteration(A, b, n: int):
+def arnoldi_iteration(A: BackendGraph, b: BackendPrimitive, n: int):
     """Computes a basis of the (n + 1)-Krylov subspace of A: the space
     spanned by {b, Ab, ..., A^n b}.
 

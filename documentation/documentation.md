@@ -131,15 +131,15 @@ often called *personalization* usually hold values proportional to the probabili
 that nodes exhibit a property of interest (e.g. are members of an attribute-based
 or structural communities) and zero when they either do not exhibit that
 property at all or it is unknown if they do so. Then, the resulting scores 
-make an improved estimatation for all nodes proportional to the probability
+provide an improved estimatation for all nodes proportional to the probability
 that they also exhibit the property of interest.
 
 Based on this understanding, the following figure demonstrates a typical
 node recommendation pipeline using `pygrank`. This starts from a known
 personalization signal,
-applies graph filters, potentially improves their outcome with
-postprocessing mechanisms and eventually arives at new node scores. 
-In this procedure, filters effectively smooth out the
+applies graph filters, potentially alters their outcome with
+postprocessing mechanisms and eventually arrives at new node scores. 
+In this pipeline, filters effectively smooth out the
 personalization through the graph's structure.
 
 ![pipeline](pipeline.png)

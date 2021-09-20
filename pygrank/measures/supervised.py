@@ -2,52 +2,51 @@ import numpy as np
 import sklearn.metrics
 import scipy
 from pygrank.measures.utils import Measure
-from pygrank import backend
-from pygrank.core.signals import GraphSignal, to_signal
+from pygrank.core import backend, GraphSignal, to_signal, GraphSignalData, BackendPrimitive
 import numbers
+from typing import Tuple, Union
 
 
 class Time(Measure):
-    """
-    An abstract class that can be passed to benchmark experiments to indicate that they should report running time
-    of algorithms. Instances of this class have no functionality.
-    """
+    """An abstract class that can be passed to benchmark experiments to indicate that they should report running time
+    of algorithms. Instances of this class have no functionality."""
+
     def __init__(self):
         pass
 
 
 class Supervised(Measure):
-    """Provides a base class with the ability to simultaneously convert ranks and known ranks to numpy arrays.
+    """Provides a base class with the ability to simultaneously convert scores and known scores to numpy arrays.
     This class is used as a base for other supervised evaluation measures."""
 
-    def __init__(self, known_ranks, exclude=None):
+    def __init__(self, known_scores: GraphSignalData, exclude: GraphSignalData = None):
         """
         Initializes the supervised measure with desired graph signal outcomes.
         Args:
-            known_ranks: The desired graph signal outcomes.
+            known_scores: The desired graph signal outcomes.
             exclude: Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed
                 to determine which nodes to ommit from the evaluation, for example because they were used for training.
                 If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude`
                 property at any time to alter this original value. Prefer using this behavior to avoid overfitting
                 measure assessments.
         """
-        self.known_ranks = known_ranks
+        self.known_scores = known_scores
         self.exclude = exclude
 
-    def to_numpy(self, ranks, normalization=False):
-        if isinstance(ranks, numbers.Number) and isinstance(self.known_ranks, numbers.Number):
-            return backend.to_array([self.known_ranks]), backend.to_array([ranks])
-        elif isinstance(ranks, GraphSignal):
-            return to_signal(ranks, self.known_ranks).filter(exclude=self.exclude), ranks.normalized(normalization).filter(exclude=self.exclude)
-        elif isinstance(self.known_ranks, GraphSignal):
-            return self.known_ranks.filter(exclude=self.exclude), to_signal(self.known_ranks, ranks).normalized(normalization).filter(exclude=self.exclude)
+    def to_numpy(self, scores: GraphSignalData, normalization: bool = False) -> Union[Tuple[GraphSignal, GraphSignal], Tuple[BackendPrimitive, BackendPrimitive]]:
+        if isinstance(scores, numbers.Number) and isinstance(self.known_scores, numbers.Number):
+            return backend.to_array([self.known_scores]), backend.to_array([scores])
+        elif isinstance(scores, GraphSignal):
+            return to_signal(scores, self.known_scores).filter(exclude=self.exclude), scores.normalized(normalization).filter(exclude=self.exclude)
+        elif isinstance(self.known_scores, GraphSignal):
+            return self.known_scores.filter(exclude=self.exclude), to_signal(self.known_scores, scores).normalized(normalization).filter(exclude=self.exclude)
         else:
             if self.exclude is not None:
-                raise Exception("Needs to parse graph signal ranks or known_ranks to be able to exclude specific nodes")
-            ranks = backend.self_normalize(backend.to_array(ranks, copy_array=True)) if normalization else backend.to_array(ranks)
-            return backend.to_array(self.known_ranks), ranks
+                raise Exception("Needs to parse graph signal scores or known_scores to be able to exclude specific nodes")
+            scores = backend.self_normalize(backend.to_array(scores, copy_array=True)) if normalization else backend.to_array(scores)
+            return backend.to_array(self.known_scores), scores
 
-    def best_direction(self):
+    def best_direction(self) -> int:
         """
         Automatically determines if higher or lower values of the measure are better.
         Design measures so that outcomes of this method depends **only** on their class,
@@ -64,144 +63,144 @@ class Supervised(Measure):
 
 
 class NDCG(Supervised):
-    """Provides evaluation of NDCG@k score between given and known ranks."""
+    """Provides evaluation of NDCG@k score between given and known scores."""
 
-    def __init__(self, known_ranks, exclude=None, k=None):
+    def __init__(self, known_scores: GraphSignalData, exclude: GraphSignalData = None, k: int =None):
         """ Initializes the PageRank scheme parameters.
 
         Args:
-            k: Optional. Calculates NDCG@k. If None (default), len(known_ranks) is used.
+            k: Optional. Calculates NDCG@k. If None (default), len(known_scores) is used.
         """
-        super().__init__(known_ranks, exclude=exclude)
-        if k is not None and k > len(known_ranks):
-            raise Exception("NDCG@k cannot be computed for k greater than the number of known ranks")
-        self.k = len(known_ranks) if k is None else k
+        super().__init__(known_scores, exclude=exclude)
+        if k is not None and k > len(known_scores):
+            raise Exception("NDCG@k cannot be computed for k greater than the number of known scores")
+        self.k = len(known_scores) if k is None else k
 
-    def evaluate(self, ranks):
-        known_ranks, ranks = self.to_numpy(ranks)
+    def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
+        known_scores, scores = self.to_numpy(scores)
         DCG = 0
         IDCG = 0
-        for i, v in enumerate(list(sorted(list(range(backend.length(ranks))), key=ranks.__getitem__, reverse=True))[:self.k]):
-            DCG += known_ranks[v] / np.log2(i + 2)
-        for i, v in enumerate(list(sorted(list(range(backend.length(known_ranks))), key=known_ranks.__getitem__, reverse=True))[:self.k]):
-            IDCG += known_ranks[v] / np.log2(i + 2)
+        for i, v in enumerate(list(sorted(list(range(backend.length(scores))), key=scores.__getitem__, reverse=True))[:self.k]):
+            DCG += known_scores[v] / np.log2(i + 2)
+        for i, v in enumerate(list(sorted(list(range(backend.length(known_scores))), key=known_scores.__getitem__, reverse=True))[:self.k]):
+            IDCG += known_scores[v] / np.log2(i + 2)
         return DCG / IDCG
 
 
 class MaxDifference(Supervised):
-    """Computes the maximum absolute error between ranks and known ranks."""
+    """Computes the maximum absolute error between scores and known scores."""
 
-    def evaluate(self, ranks):
-        known_ranks, ranks = self.to_numpy(ranks)
-        return backend.max(backend.abs(known_ranks-ranks))
+    def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
+        known_scores, scores = self.to_numpy(scores)
+        return backend.max(backend.abs(known_scores-scores))
 
 
 class Mabs(Supervised):
-    """Computes the mean absolute error between ranks and known ranks."""
+    """Computes the mean absolute error between scores and known scores."""
 
-    def evaluate(self, ranks):
-        known_ranks, ranks = self.to_numpy(ranks)
-        return backend.sum(backend.abs(known_ranks-ranks)) / backend.length(ranks)
+    def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
+        known_scores, scores = self.to_numpy(scores)
+        return backend.sum(backend.abs(known_scores-scores)) / backend.length(scores)
 
 
 class CrossEntropy(Supervised):
-    """Computes a cross-entropy loss of given vs known ranks."""
+    """Computes a cross-entropy loss of given vs known scores."""
 
-    def evaluate(self, ranks):
-        known_ranks, ranks = self.to_numpy(ranks)
-        #thresh = backend.min(ranks[known_ranks!=0])
-        #ranks = 1/(1+np.exp(-ranks/thresh+1))
+    def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
+        known_scores, scores = self.to_numpy(scores)
+        #thresh = backend.min(scores[known_scores!=0])
+        #scores = 1/(1+np.exp(-scores/thresh+1))
         eps = 1.E-14
-        ret = -backend.dot(known_ranks, backend.log(ranks+eps))-backend.dot(1-known_ranks, backend.log(1-ranks+eps))
+        ret = -backend.dot(known_scores, backend.log(scores+eps))-backend.dot(1-known_scores, backend.log(1-scores+eps))
         return ret
 
 
 class KLDivergence(Supervised):
-    """Computes the KL-divergence of given vs known ranks."""
+    """Computes the KL-divergence of given vs known scores."""
 
-    def evaluate(self, ranks):
-        known_ranks, ranks = self.to_numpy(ranks, normalization=True)
-        ratio = (ranks-backend.min(ranks)+1.E-12)/(known_ranks-backend.min(known_ranks)+1.E-12)
-        ret = -backend.sum(ranks*backend.log(ratio))
+    def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
+        known_scores, scores = self.to_numpy(scores, normalization=True)
+        ratio = (scores-backend.min(scores)+1.E-12)/(known_scores-backend.min(known_scores)+1.E-12)
+        ret = -backend.sum(scores*backend.log(ratio))
         return ret
 
 
 class MKLDivergence(Supervised):
-    """Computes the KL-divergence of given vs known ranks."""
+    """Computes the KL-divergence of given vs known scores."""
 
-    def evaluate(self, ranks):
-        known_ranks, ranks = self.to_numpy(ranks, normalization=True)
-        ratio = (ranks-backend.min(ranks)+1.E-12)/(known_ranks-backend.min(known_ranks)+1.E-12)
-        ret = -backend.sum(ranks*backend.log(ratio))
-        return ret/backend.length(ranks)
+    def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
+        known_scores, scores = self.to_numpy(scores, normalization=True)
+        ratio = (scores-backend.min(scores)+1.E-12)/(known_scores-backend.min(known_scores)+1.E-12)
+        ret = -backend.sum(scores*backend.log(ratio))
+        return ret/backend.length(scores)
 
 
 class Cos(Supervised):
-    """Computes the cosine similarity between given and known ranks"""
+    """Computes the cosine similarity between given and known scores"""
 
-    def evaluate(self, ranks):
-        known_ranks, ranks = self.to_numpy(ranks)
-        divide = backend.dot(known_ranks, known_ranks) * backend.dot(ranks, ranks)
+    def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
+        known_scores, scores = self.to_numpy(scores)
+        divide = backend.dot(known_scores, known_scores) * backend.dot(scores, scores)
         if divide == 0:
             return 0
-        return backend.dot(known_ranks, ranks) / (divide**0.5)
+        return backend.dot(known_scores, scores) / (divide**0.5)
 
 
 class Dot(Supervised):
-    """Computes the dot similarity between given and known ranks"""
+    """Computes the dot similarity between given and known scores"""
 
-    def evaluate(self, ranks):
-        known_ranks, ranks = self.to_numpy(ranks)
-        return backend.dot(known_ranks, ranks)
+    def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
+        known_scores, scores = self.to_numpy(scores)
+        return backend.dot(known_scores, scores)
 
 
 class AUC(Supervised):
     """Wrapper for sklearn.metrics.auc evaluation."""
 
-    def evaluate(self, ranks):
-        known_ranks, ranks = self.to_numpy(ranks)
-        if backend.min(known_ranks) == backend.max(known_ranks):
+    def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
+        known_scores, scores = self.to_numpy(scores)
+        if backend.min(known_scores) == backend.max(known_scores):
             raise Exception("Cannot evaluate AUC when all labels are the same")
-        fpr, tpr, _ = sklearn.metrics.roc_curve(known_ranks, ranks)
+        fpr, tpr, _ = sklearn.metrics.roc_curve(known_scores, scores)
         return sklearn.metrics.auc(fpr, tpr)
 
 
 class Accuracy(Supervised):
-    """Computes the accuracy as 1- mean absolute differences between given and known ranks."""
+    """Computes the accuracy as 1- mean absolute differences between given and known scores."""
 
-    def evaluate(self, ranks):
-        known_ranks, ranks = self.to_numpy(ranks)
-        return 1-backend.sum(backend.abs(known_ranks - ranks)) / backend.length(ranks)
+    def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
+        known_scores, scores = self.to_numpy(scores)
+        return 1-backend.sum(backend.abs(known_scores - scores)) / backend.length(scores)
 
 
 class SpearmanCorrelation(Supervised):
-    """Computes the Spearman correlation coefficient between given and known ranks."""
+    """Computes the Spearman correlation coefficient between given and known scores."""
 
-    def evaluate(self, ranks):
-        known_ranks, ranks = self.to_numpy(ranks)
-        return scipy.stats.spearmanr(known_ranks, ranks)[0]
+    def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
+        known_scores, scores = self.to_numpy(scores)
+        return scipy.stats.spearmanr(known_scores, scores)[0]
 
 
 class PearsonCorrelation(Supervised):
-    """Computes the Pearson correlation coefficient between given and known ranks."""
+    """Computes the Pearson correlation coefficient between given and known scores."""
 
-    def evaluate(self, ranks):
-        known_ranks, ranks = self.to_numpy(ranks)
-        return scipy.stats.pearsonr(known_ranks, ranks)[0]
+    def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
+        known_scores, scores = self.to_numpy(scores)
+        return scipy.stats.pearsonr(known_scores, scores)[0]
 
 
 class pRule(Supervised):
     """Computes an assessment of stochastic ranking fairness by obtaining the fractional comparison of average scores
     between sensitive-attributed nodes and the rest the rest.
     Values near 1 indicate full fairness (statistical parity), whereas lower values indicate disparate impact.
-    Known ranks correspond to the binary sensitive attribute checking whether nodes are sensitive.
+    Known scores correspond to the binary sensitive attribute checking whether nodes are sensitive.
     Usually, pRule > 80% is considered fair.
     """
 
-    def evaluate(self, ranks):
-        sensitive, ranks = self.to_numpy(ranks)
-        p1 = backend.dot(ranks, sensitive)
-        p2 = backend.sum(ranks) - p1
+    def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
+        sensitive, scores = self.to_numpy(scores)
+        p1 = backend.dot(scores, sensitive)
+        p2 = backend.sum(scores) - p1
         if p1 == 0 or p2 == 0:
             return 0
         s = backend.sum(sensitive)
@@ -212,15 +211,16 @@ class pRule(Supervised):
 
 class MannWhitneyParity(Supervised):
     """
-    Performs two-tailed Mann-Whitney U-test to check that the scores of sensitive-attributed nodes do not exhibit
+    Performs a two-tailed Mann-Whitney U-test to check that the scores of sensitive-attributed nodes do not exhibit
     higher or lower values compared to the rest. To do this, the test's U statistic is transformed so that value
     1 indicate that the probability of sensitive-attributed nodes exhibiting higher values is the same as
     for lower values (50%). Value 0 indicates that either the probability of exhibiting only higher or only lower
     values is 100%.
-    Known ranks correspond to the binary sensitive attribute checking whether nodes are sensitive.
+    Known scores correspond to the binary sensitive attribute checking whether nodes are sensitive.
     """
-    def evaluate(self, ranks):
-        sensitive, ranks = self.to_numpy(ranks)
-        ranks1 = ranks[sensitive == 0]
-        ranks2 = ranks[sensitive != 0]
-        return 1-2*abs(0.5-scipy.stats.mannwhitneyu(ranks1, ranks2)[0]/len(ranks1)/len(ranks2))
+
+    def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
+        sensitive, scores = self.to_numpy(scores)
+        scores1 = scores[sensitive == 0]
+        scores2 = scores[sensitive != 0]
+        return 1-2*abs(0.5-scipy.stats.mannwhitneyu(scores1, scores2)[0]/len(scores1)/len(scores2))

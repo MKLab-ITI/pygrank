@@ -1,18 +1,19 @@
 import random
 import collections
-from pygrank.core.signals import GraphSignal, to_signal
+from pygrank.core import GraphSignal, to_signal, GraphSignalData
 from typing import Mapping, Union, Iterable
+import networkx as nx
 
 
 class Measure(object):
-    def __call__(self, ranks):
-        return self.evaluate(ranks)
+    def __call__(self, scores: GraphSignalData):
+        return self.evaluate(scores)
 
-    def evaluate(self, ranks):
+    def evaluate(self, scores: GraphSignalData):
         raise Exception("Non-abstract subclasses of Measure should implement an evaluate method")
 
 
-def split(groups: Union[Union[GraphSignal, Iterable], Mapping[str, Union[GraphSignal, Iterable]]],
+def split(groups: Union[GraphSignalData, Mapping[str, GraphSignalData]],
           training_samples: float = 0.8,
           seed: int = 0):
     """
@@ -55,7 +56,7 @@ def split(groups: Union[Union[GraphSignal, Iterable], Mapping[str, Union[GraphSi
     return training, testing
 
 
-def remove_intra_edges(G, group):
+def remove_intra_edges(G: nx.Graph, group: Union[GraphSignalData, Mapping[str, GraphSignalData]]):
     if isinstance(group, collections.abc.Mapping):
         for actual_group in group.values():
             remove_intra_edges(G, actual_group)

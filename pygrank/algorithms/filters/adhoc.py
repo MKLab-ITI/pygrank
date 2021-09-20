@@ -7,7 +7,9 @@ from pygrank.algorithms.filters.abstract_filters import RecursiveGraphFilter, Cl
 class PageRank(RecursiveGraphFilter):
     """A Personalized PageRank power method algorithm."""
 
-    def __init__(self, alpha=0.85, *args, **kwargs):
+    def __init__(self,
+                 alpha: float = 0.85,
+                 *args, **kwargs):
         """ Initializes the PageRank scheme parameters.
         Args:
             alpha: Optional. 1-alpha is the bias towards the personalization. Default value is 0.85.
@@ -34,7 +36,9 @@ class PageRank(RecursiveGraphFilter):
 class HeatKernel(ClosedFormGraphFilter):
     """ Heat kernel filter."""
 
-    def __init__(self, t=3, *args, **kwargs):
+    def __init__(self,
+                 t: float = 3,
+                 *args, **kwargs):
         """ Initializes the HeatKernel filter parameters.
 
         Args:
@@ -56,7 +60,9 @@ class AbsorbingWalks(RecursiveGraphFilter):
     """ Implementation of partial absorbing random walks for Lambda = (1-alpha)/alpha diag(absorption vector) .
     """
 
-    def __init__(self, alpha=1-1.E-6, *args, **kwargs):
+    def __init__(self,
+                 alpha: float = 1-1.E-6,
+                 *args, **kwargs):
         """ Initializes the AbsorbingWalks filter parameters. For appropriate parameter values. This can model PageRank
         but is in principle a generalization that allows custom absorption rate per node (when not given, these are I).
 
@@ -91,7 +97,7 @@ class AbsorbingWalks(RecursiveGraphFilter):
 class BiasedKernel(RecursiveGraphFilter):
     """ Heuristic kernel-like method that places emphasis on shorter random walks."""
 
-    def __init__(self, alpha=0.85, t=1, *args, **kwargs):
+    def __init__(self, alpha: float = 0.85, t: float = 1, *args, **kwargs):
         self.alpha = alpha
         self.t = t
         super().__init__(*args, **kwargs)

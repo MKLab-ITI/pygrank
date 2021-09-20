@@ -1,5 +1,5 @@
 import numpy as np
-from pygrank.core.signals import to_signal, NodeRanking
+from pygrank.core import to_signal, NodeRanking, GraphSignalGraph, GraphSignalData
 from pygrank.algorithms.utils import ConvergenceManager, assert_binary
 from pygrank.algorithms.postprocess.postprocess import Postprocessor
 from pygrank.measures import MaxDifference
@@ -8,7 +8,9 @@ from pygrank.measures import MaxDifference
 class SeedOversampling(Postprocessor):
     """Performs seed oversampling on a base ranker to improve the quality of predicted seeds."""
 
-    def __init__(self, ranker: NodeRanking, method: str = 'safe'):
+    def __init__(self,
+                 ranker: NodeRanking,
+                 method: str = 'safe'):
         """ Initializes the class with a base ranker.
 
         Attributes:
@@ -25,7 +27,10 @@ class SeedOversampling(Postprocessor):
         super().__init__(ranker)
         self.method = method.lower()
 
-    def rank(self, graph=None, personalization=None, **kwargs):
+    def rank(self,
+             graph: GraphSignalGraph = None,
+             personalization: GraphSignalData = None,
+             **kwargs):
         personalization = to_signal(graph, personalization)
         graph = personalization.graph
         assert_binary(personalization)
@@ -90,7 +95,10 @@ class BoostedSeedOversampling(Postprocessor):
             raise Exception("Supported boosting objectives: partial, naive")
         return a_N
 
-    def rank(self, graph, personalization, **kwargs):
+    def rank(self,
+             graph: GraphSignalGraph = None,
+             personalization: GraphSignalData = None,
+             **kwargs):
         personalization = to_signal(graph, personalization)
         r0_N = personalization.normalized(False)
         RN = self.ranker.rank(graph, r0_N, **kwargs)

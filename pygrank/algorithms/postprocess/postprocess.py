@@ -1,11 +1,11 @@
 from pygrank.algorithms.utils import MethodHasher, call, ensure_used_args, remove_used_args
 from pygrank.core.signals import GraphSignal, to_signal, NodeRanking
-from pygrank.core import backend
+from pygrank.core import backend, GraphSignalGraph, GraphSignalData
 from typing import Union
 
 
 class Postprocessor(NodeRanking):
-    def __init__(self, ranker=None):
+    def __init__(self, ranker: NodeRanking = None):
         self.ranker = ranker
 
     def transform(self, ranks: GraphSignal, *args, **kwargs):
@@ -32,7 +32,10 @@ class Tautology(Postprocessor):
     def transform(self, ranks: GraphSignal, *args, **kwargs) -> GraphSignal:
         return ranks
 
-    def rank(self, graph=None, personalization=None, *args, **kwargs) -> GraphSignal:
+    def rank(self,
+             graph: GraphSignalGraph = None,
+             personalization: GraphSignalData = None,
+             *args, **kwargs) -> GraphSignal:
         if self.ranker is not None:
             return self.ranker.rank(graph, personalization, *args, **kwargs)
         return to_signal(graph, personalization)
@@ -197,7 +200,9 @@ class Threshold(Postprocessor):
         super().__init__(Tautology() if ranker is None else ranker)
         self.threshold = threshold
 
-    def _transform(self, ranks: GraphSignal, **kwargs):
+    def _transform(self,
+                   ranks: GraphSignal,
+                   **kwargs):
         ensure_used_args(kwargs)
         threshold = self.threshold
         if threshold == "gap":
@@ -219,7 +224,9 @@ class Sweep(Postprocessor):
     """
     Applies a sweep procedure that divides personalized node ranks by corresponding non-personalized ones.
     """
-    def __init__(self, ranker, uniform_ranker=None):
+    def __init__(self,
+                 ranker: NodeRanking,
+                 uniform_ranker: NodeRanking = None):
         """
         Initializes the sweep procedure.
 
@@ -249,7 +256,9 @@ class Sweep(Postprocessor):
         self.uniform_ranker = ranker if uniform_ranker is None else uniform_ranker
         self.centrality = MethodHasher(lambda graph: self.uniform_ranker.rank(graph), assume_immutability=True)
 
-    def _transform(self, ranks: GraphSignal, **kwargs):
+    def _transform(self,
+                   ranks: GraphSignal,
+                   **kwargs):
         ensure_used_args(kwargs)
         uniforms = self.centrality(ranks.graph).np
         return ranks.np/(1.E-12+uniforms)

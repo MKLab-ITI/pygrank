@@ -2,7 +2,7 @@ import numpy as np
 from scipy.stats import norm
 from timeit import default_timer as time
 from pygrank.measures import Supervised, Mabs
-from pygrank.core import backend
+from pygrank.core import backend, BackendPrimitive
 
 
 class ConvergenceManager:
@@ -18,7 +18,10 @@ class ConvergenceManager:
         >>>     var = ...
     """
 
-    def __init__(self, tol=1.E-6, error_type=Mabs, max_iters=100):
+    def __init__(self,
+                 tol: float = 1.E-6,
+                 error_type: Supervised = Mabs,
+                 max_iters: int = 100):
         """
         Initializes a convergence manager with a provided tolerance level, error type and number of iterations.
 
@@ -43,7 +46,7 @@ class ConvergenceManager:
         self._start_time = None
         self.elapsed_time = None
 
-    def start(self, restart_timer=True):
+    def start(self, restart_timer: bool = True):
         """
         Starts the convergence manager
 
@@ -58,7 +61,7 @@ class ConvergenceManager:
             self.iteration = 0
         self.last_ranks = None
 
-    def has_converged(self, new_ranks):
+    def has_converged(self, new_ranks: BackendPrimitive) -> bool:
         """
         Checks whether convergence has been achieved by comparing this iteration's backend array with the
         previous iteration's.
@@ -77,7 +80,7 @@ class ConvergenceManager:
         self.elapsed_time = time()-self._start_time
         return converged
 
-    def _has_converged(self, prev_ranks, ranks):
+    def _has_converged(self, prev_ranks: BackendPrimitive, ranks: BackendPrimitive) -> bool:
         if self.error_type == "iters":
             return False
         return self.error_type(prev_ranks)(ranks) <= self.tol
@@ -87,7 +90,11 @@ class ConvergenceManager:
 
 
 class RankOrderConvergenceManager:
-    def __init__(self, pagerank_alpha, confidence=0.98, criterion="rank_gap"):
+    def __init__(self,
+                 pagerank_alpha: float,
+                 confidence: float = 0.98,
+                 criterion: str = "rank_gap"):
+        # TODO: add documentation
         self.iteration = 0
         self._start_time = None
         self.elapsed_time = None
@@ -96,14 +103,15 @@ class RankOrderConvergenceManager:
         self.confidence = confidence
         self.criterion = criterion
 
-    def start(self, restart_timer=True):
+    def start(self, restart_timer: bool = True):
         if restart_timer or self._start_time is None:
             self._start_time = time()
             self.elapsed_time = None
             self.iteration = 0
             self.accumulated_ranks = 0
 
-    def has_converged(self, new_ranks):
+    def has_converged(self, new_ranks: BackendPrimitive) -> bool:
+        # TODO: convert to any backend
         new_ranks = np.array(new_ranks).squeeze()
         self.accumulated_ranks = (self.accumulated_ranks*self.iteration + new_ranks) / (self.iteration+1)
         self.iteration += 1
@@ -111,7 +119,7 @@ class RankOrderConvergenceManager:
         self.elapsed_time = time()-self._start_time
         return converged
 
-    def needed_fraction_of_random_walks(self, ranks):
+    def needed_fraction_of_random_walks(self, ranks: BackendPrimitive) -> float:
         if self.criterion == "rank_gap":
             a = [rank for rank in ranks]
             order = np.argsort(a, kind='quicksort')
@@ -124,7 +132,7 @@ class RankOrderConvergenceManager:
         else:
             raise Exception("criterion can only be 'rank_gap' or 'fraction_of_walks'")
 
-    def current_fraction_of_random_walks(self):
+    def current_fraction_of_random_walks(self) -> float:
         sup_of_series_sum = -np.log(1 - self.pagerank_alpha)
         series_sum = 0
         power = 1

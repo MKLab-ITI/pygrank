@@ -1,4 +1,8 @@
-def backend_name():  # pragma: no cover
+from pygrank.core.typing import BackendGraph, BackendPrimitive
+from typing import Iterable, Optional
+
+
+def backend_name() -> str:  # pragma: no cover
     return "no backend loaded"
 
 
@@ -6,93 +10,93 @@ def backend_init():  # pragma: no cover
     pass
 
 
-def graph_dropout(M, dropout):  # pragma: no cover
+def graph_dropout(M: BackendGraph, dropout: BackendPrimitive) -> BackendPrimitive:  # pragma: no cover
     pass
 
 
-def separate_cols(x):  # pragma: no cover
+def separate_cols(x: BackendPrimitive) -> BackendPrimitive:  # pragma: no cover
     pass
 
 
-def combine_cols(cols):  # pragma: no cover
+def combine_cols(cols: Iterable[BackendPrimitive]) -> BackendPrimitive:  # pragma: no cover
     pass
 
 
-def abs(x):  # pragma: no cover
+def abs(x: BackendPrimitive) -> BackendPrimitive:  # pragma: no cover
     pass
 
 
-def sum(x, axis=None):  # pragma: no cover
+def sum(x: BackendPrimitive, axis: Optional[int] = None) -> BackendPrimitive:  # pragma: no cover
     pass
 
 
-def mean(x, axis=None):  #pragma: no cover
+def mean(x: BackendPrimitive, axis: Optional[int] = None) -> BackendPrimitive:  #pragma: no cover
     pass
 
 
-def min(x, axis=None):  # pragma: no cover
+def min(x: BackendPrimitive, axis: Optional[int]=None) -> BackendPrimitive:  # pragma: no cover
     pass
 
 
-def max(x, axis=None):  # pragma: no cover
+def max(x: BackendPrimitive, axis: Optional[int]=None) -> BackendPrimitive:  # pragma: no cover
     pass
 
 
-def exp(x):  # pragma: no cover
+def exp(x: BackendPrimitive) -> BackendPrimitive:  # pragma: no cover
     pass
 
 
-def log(x): # pragma: no cover
+def log(x: BackendPrimitive) -> BackendPrimitive: # pragma: no cover
     pass
 
 
-def eye(dims):  # pragma: no cover
+def eye(dims: int) -> BackendPrimitive:  # pragma: no cover
     pass
 
 
-def copy(x):  # pragma: no cover
+def copy(x: BackendPrimitive) -> BackendPrimitive:  # pragma: no cover
     pass
 
 
-def scipy_sparse_to_backend(M):  # pragma: no cover
+def scipy_sparse_to_backend(M: BackendGraph) -> BackendGraph:  # pragma: no cover
     pass
 
 
-def to_array(obj, copy_array=False):  # pragma: no cover
+def to_array(obj: object, copy_array: bool = False) -> BackendPrimitive:  # pragma: no cover
     pass
 
 
-def to_primitive(obj):  # pragma: no cover
+def to_primitive(obj: object) -> BackendPrimitive:  # pragma: no cover
     pass
 
 
-def is_array(obj):  # pragma: no cover
+def is_array(obj: object) -> bool:  # pragma: no cover
     pass
 
 
-def repeat(value, times):  # pragma: no cover
+def repeat(value: float, times: int) -> BackendPrimitive:  # pragma: no cover
     pass
 
 
-def self_normalize(obj):  # pragma: no cover
+def self_normalize(obj: BackendPrimitive) -> BackendPrimitive:  # pragma: no cover
     pass
 
 
-def conv(signal, M):  # pragma: no cover
+def conv(signal: BackendPrimitive, M: BackendGraph) -> BackendPrimitive:  # pragma: no cover
     pass
 
 
-def length(x):  # pragma: no cover
+def length(x: BackendPrimitive) -> int:  # pragma: no cover
     pass
 
 
-def degrees(M):  # pragma: no cover
+def degrees(M: BackendGraph) -> BackendPrimitive:  # pragma: no cover
     pass
 
 
-def dot(x, y):   # pragma: no cover
+def dot(x: BackendPrimitive, y: BackendPrimitive) -> BackendPrimitive:   # pragma: no cover
     pass
 
 
-def epsilon():   # pragma: no cover
+def epsilon() -> float:   # pragma: no cover
     pass

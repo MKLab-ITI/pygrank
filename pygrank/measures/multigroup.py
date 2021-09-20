@@ -4,13 +4,13 @@ import sklearn.metrics
 from pygrank.measures import AUC
 
 
-def _cos_similarity(v, u, ranks):
+def _cos_similarity(v, u, scores):
     dot = 0
     l2v = 0
     l2u = 0
-    for group_ranks in ranks.values():
-        ui = group_ranks.get(u, 0)
-        vi = group_ranks.get(v, 0)
+    for group_scores in scores.values():
+        ui = group_scores.get(u, 0)
+        vi = group_scores.get(v, 0)
         l2u += ui * ui
         l2v += vi * vi
         dot = ui * vi
@@ -19,17 +19,17 @@ def _cos_similarity(v, u, ranks):
     return dot / np.sqrt(l2u * l2v)
 
 
-def _dot_similarity(v, u, ranks):
+def _dot_similarity(v, u, scores):
     dot = 0
-    for group_ranks in ranks.values():
-        ui = group_ranks.get(u, 0)
-        vi = group_ranks.get(v, 0)
+    for group_scores in scores.values():
+        ui = group_scores.get(u, 0)
+        vi = group_scores.get(v, 0)
         dot = ui * vi
     return dot
 
 
 class LinkAssessment:
-    """ Normalizes ranks by dividing with their maximal value.
+    """ Normalizes scores by dividing with their maximal value.
     """
     def __init__(self, graph, nodes=None, measure=AUC, similarity="cos", hops=1, max_positive_samples=2000, max_negative_samples=2000, seed=0):
         """
@@ -59,7 +59,7 @@ class LinkAssessment:
             similarity = _dot_similarity
         self._similarity = similarity
 
-    def evaluate(self, ranks):
+    def evaluate(self, scores):
         if self.seed is not None:
             np.random.seed(self.seed)
         positive_candidates = list(self.G)
@@ -83,18 +83,18 @@ class LinkAssessment:
             for positive in neighbors:
                 if positive != node:
                     real.append(1)
-                    predicted.append(self._similarity(node, positive, ranks))
+                    predicted.append(self._similarity(node, positive, scores))
                     weights.append(1)
                     #weights.append(1.-(neighbors[positive]-1)/self.hops)
             for negative in np.random.choice(negative_candidates, min(self.max_negative_samples, len(negative_candidates))):
                 if negative != node and negative not in neighbors:
                     real.append(0)
-                    predicted.append(self._similarity(node, negative, ranks))
+                    predicted.append(self._similarity(node, negative, scores))
                     weights.append(1)
         return self.measure(real)(predicted)
 
-    def __call__(self, ranks):
-        return self.evaluate(ranks)
+    def __call__(self, scores):
+        return self.evaluate(scores)
 
 
 class ClusteringCoefficient:
@@ -111,7 +111,7 @@ class ClusteringCoefficient:
             similarity = _dot_similarity
         self._similarity = similarity
 
-    def evaluate(self, ranks):
+    def evaluate(self, scores):
         np.random.seed(self.seed)
         positive_candidates = list(self.G)
         if len(positive_candidates) > self.max_positive_samples:
@@ -122,41 +122,41 @@ class ClusteringCoefficient:
             for u1 in self.G.neighbors(v):
                 for u2 in self.G.neighbors(v):
                     """
-                    value = self._similarity(u1, u2, ranks)*self._similarity(v, u2, ranks)*self._similarity(v, u2, ranks)
+                    value = self._similarity(u1, u2, scores)*self._similarity(v, u2, scores)*self._similarity(v, u2, scores)
                     if u2 in self.G.neighbors(u1):
                         existing_triplet_values += value
                     total_triplet_values += value
                     """
                     if u2 in self.G.neighbors(u1):
                         total_triplet_values += 1
-                    existing_triplet_values += self._similarity(u1, u2, ranks)
+                    existing_triplet_values += self._similarity(u1, u2, scores)
         if total_triplet_values == 0:
             return 0
         return existing_triplet_values / total_triplet_values
 
-    def __call__(self, ranks):
-        return self.evaluate(ranks)
+    def __call__(self, scores):
+        return self.evaluate(scores)
 
 
 class MultiUnsupervised:
     def __init__(self, metric_type, G, **kwargs):
         self.metric = metric_type(G, **kwargs)
 
-    def evaluate(self, ranks):
-        evaluations = [self.metric.evaluate(group_ranks) for group_ranks in ranks.values()]
+    def evaluate(self, scores):
+        evaluations = [self.metric.evaluate(group_scores) for group_scores in scores.values()]
         return sum(evaluations) / len(evaluations)
 
-    def __call__(self, ranks):
-        return self.evaluate(ranks)
+    def __call__(self, scores):
+        return self.evaluate(scores)
 
 
 class MultiSupervised:
     def __init__(self, metric_type, ground_truth, exclude=None):
         self.metrics = {group_id: metric_type(group_truth, exclude[group_id] if exclude is not None else None) for group_id, group_truth in ground_truth.items()}
 
-    def evaluate(self, ranks):
-        evaluations = [self.metrics[group_id].evaluate(group_ranks) for group_id, group_ranks in ranks.items()]
+    def evaluate(self, scores):
+        evaluations = [self.metrics[group_id].evaluate(group_scores) for group_id, group_scores in scores.items()]
         return sum(evaluations) / len(evaluations)
     
-    def __call__(self, ranks):
-        return self.evaluate(ranks)
+    def __call__(self, scores):
+        return self.evaluate(scores)

@@ -1,6 +1,8 @@
 from collections.abc import MutableMapping
 from pygrank.core import backend
 import numpy as np
+from pygrank.core.typing import GraphSignalGraph, GraphSignalData
+from typing import Optional, Mapping
 
 
 class GraphSignal(MutableMapping):
@@ -31,7 +33,7 @@ class GraphSignal(MutableMapping):
         [('A', 0.6), ('B', 0.0), ('C', 0.4)]
     """
 
-    def __init__(self, graph, obj, node2id=None):
+    def __init__(self, graph: GraphSignalGraph, obj: GraphSignalData, node2id: Optional[Mapping[object, int]] = None):
         """Should **ALWAYS** instantiate graph signals with the method to_signal,
         which handles non-instantiation semantics."""
 
@@ -98,17 +100,23 @@ class NodeRanking(object):
     are passed to their rank methods.
     """
 
-    def __call__(self, graph=None, personalization=None, *args, **kwargs) -> GraphSignal:
+    def __call__(self,
+                 graph: GraphSignalGraph = None,
+                 personalization : GraphSignalData = None,
+                 *args, **kwargs) -> GraphSignal:
         return self.rank(graph, personalization, *args, **kwargs)
 
-    def rank(self, graph=None, personalization=None, *args, **kwargs) -> GraphSignal:
+    def rank(self,
+             graph: GraphSignalGraph = None,
+             personalization: GraphSignalData = None,
+             *args, **kwargs) -> GraphSignal:
         raise Exception("NodeRanking subclasses should implement a rank method")
 
     def propagate(self, graph, features, *args, **kwargs):
         return backend.combine_cols([self.rank(graph, col, *args, **kwargs).np for col in backend.separate_cols(features)])
 
 
-def to_signal(graph, obj) -> GraphSignal:
+def to_signal(graph: GraphSignalGraph, obj: GraphSignalData) -> GraphSignal:
     """
     Converts an object to a GraphSignal tied to an explicit or implicit reference to a graph. This method helps
     convert various ways of expressing graph signals to the same format that algorithms can work with. Prefer
@@ -116,8 +124,8 @@ def to_signal(graph, obj) -> GraphSignal:
     for accessing values with the speed provided by numpy arrays.
 
     Args:
-        graph: Either a graph or a GraphSignal, where in the second case it takes the value of the latter'personalization graph.
-            Prefer using a GraphSignal as reference, as this copies the latter'personalization node2id property without additional
+        graph: Either a graph or a GraphSignal, where in the second case it takes the value of the personalization's graph.
+            Prefer using a GraphSignal as reference, as this copies the personalization's node2id property without additional
             memory or computations. If the graph is None, the second argument needs to be a GraphSignal.
         obj: Either a numpy array or a hashmap between graph nodes and their values, in which cases the appropriate
             GraphSignal contructor is called, or a GraphSignal in which case it is also returned and a check is

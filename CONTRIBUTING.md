@@ -75,7 +75,7 @@ is mandatory).
 # :pencil2: Implementing New Node Ranking Algorithms
 ##### Which classes to subclass?
 To create a new node ranking algorithm, you are required to subclass one of the
-classes found in `pygrank.algorithms.abstract_filters`:
+classes found in `pygrank.algorithms.filters.abstract_filters`:
 * `GraphFilter` identifies generic graph filters (is subclassed by the next two)
 * `RecursiveGraphFilter` identifies graph filters that can be described with a recursive formula
 * `ClosedFormGraphFilter` identifies graph filers that can be described in closed form
@@ -83,12 +83,14 @@ classes found in `pygrank.algorithms.abstract_filters`:
 Please extend this documentation if a new family of node ranking algorithms is implemented.
 
 ##### Where to write code?
-New abstract classes (e.g. that define families of new algorithms) should be placed
-in the same module as the above ones. New algorithms should be placed in modules
-`pygrank.algorithms.[family]`, where *family* is either an existing
-submodule or a new one. For new submodules, make sure to provide access to
-their classes through `pygrank.algorithms.__init__.py`
-(this is **important**, as it helps `docgenerator.py` to  automatically create
+* New abstract graph filter classes (e.g. that define families of new algorithms) should be placed
+in the module `pygrank.algorithms.filters.abstract_filters`.
+* New graph filters should be placed in modules
+`pygrank.algorithms.filters.[family]`, where *family* is either an existing
+submodule or a new one.
+* For new filter families, make sure to provide access to
+their classes through `pygrank.algorithms.filters.__init__.py`
+(this is **important**, as it helps `docgenerator.py` automatically create
 documentation for new algorithms).
 
 ##### Which method(s) to override?
@@ -204,6 +206,6 @@ thus, tuners should construct optimal node ranking algorithms, which are backpro
 Tuners should support as many types of algorithms as possible and thus parameterize-able 
 generic methods to construct such algorithms could be added to the tuner constructors.
 
-Finally, if Krylov space methods are employed (e.g. Arnoldi decomposition) add an argument
-`krylov_dims=None` to indicate that either those methods are not employed (None) or the 
+Finally, if Krylov space alternative are possible (e.g. Arnoldi decomposition), add an argument
+`krylov_dims=None` that indicates either that those methods are not employed (None) or the 
 number of krylov space dimensions.
