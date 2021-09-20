@@ -24,7 +24,7 @@ def load_backend(mod_name):
         if mod_name in sys.modules:
             thismod = sys.modules[mod_name]
             for api in specification.__dict__.keys():
-                if api.startswith('__'):
+                if api.startswith('__') or api in ["Iterable", "Optional", "BackendGraph", "BackendPrimitive"]:
                     continue
                 if api in mod.__dict__:
                     setattr(thismod, api, mod.__dict__[api])
