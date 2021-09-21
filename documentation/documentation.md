@@ -16,12 +16,12 @@
     + [Wrapping Postprocessors around Graph Filters](#wrapping-postprocessors-around-graph-filters)
     + [Types of Postprocessors](#types-of-postprocessors)
 6. [Evaluation](#evaluation)
-    + [Evaluation Examples](#evaluation-examples)
     + [List of Measures](#list-of-measures)
     + [Datasets](#datasets)
     + [Benchmarks](#benchmarks)
 7. [Autotune](#autotune)
     + [List of Tuners](#list-of-tuners)
+    + [Tuning Speedup with Optimization Dictionaries](#tuning-speedup-with-optimization-dictionaries)
 8. [Applications](#applications)
     + [Node Classification with Label Propagation](#node-classification-with-label-propagations)
     + [Node Classification with Graph Neural Networks](#node-classification-with-graph-neural-networks)
@@ -117,7 +117,7 @@ is the networkx graph passed to node ranking algorithms.
 When either of these two conventions is used,
 node ranking algorithms automatically convert them to graph signals.
 
-At the same time, the outputs of `rank(...)` methods are always graph signals.
+At the same time, the outputs of node ranking algorithms are always graph signals.
 This datatype implements the same methods as a dictionary and can
 be used interchangeably, whereas access to a numpy array storing
 corresponding node values can be obtained through the object attribute
@@ -175,7 +175,7 @@ Having defined this algorithm, we will now use the graph `G` and graph signal
 while ignoring any postprocessing for the time being can be done as:
 
 ```python
->>> scores = algorithm.rank(graph, signal)
+>>> scores = algorithm(graph, signal)
 Exception: ('Could not converge within 100 iterations')
 ```
 
@@ -189,7 +189,7 @@ the algorithm to run for up to 2,000 iterations:
 
 ```python
 >>> algorithm = pg.PageRank(alpha=0.99, normalization="col", tol=1.E-9, max_iters=2000)
->>> scores = algorithm.rank(graph, signal)
+>>> scores = algorithm(graph, signal)
 >>> print(list(scores.items()))
 [('A', 0.25613418536078547), ('B', 0.12678642237010243), ('C', 0.2517487443382047), ('D', 0.24436832596280528), ('E', 0.12096232196810223)]
 ```
@@ -209,7 +209,7 @@ only because the graph signal holds a reference to the graph it is tied to
 and directly inputting other kinds of primitives would throw an error message.
 
 ```python
->>> scores = algorithm.rank(signal)
+>>> scores = algorithm(signal)
 ```
 
 We now examine the structural relatedness of various nodes to the personalization:
@@ -238,8 +238,9 @@ where *H(M)* is called a *graph filter*.
 
 ### List of Filters
 The package provides several graph filters. Their usage pattern consists
-of instantiating them and then calling their `rank(graph, personalization)`
-method to obtain posterior node signals based on diffusing the provided
+of instantiating them as algorithms `alg` and then calling them with 
+`alg(graph, personalization)` or the alternative `alg(pg.to_signal(graph, personalization))`
+to obtain posterior node signals based on diffusing the provided
 personalization signal through the graph. However, the outcomes of graph
 filters often require additional processing steps, for example to perform
 normalization, improve their quality or apply fairness constraints.
@@ -273,13 +274,13 @@ as the base ranking algorithm and needs to know that algorithm's diffusion
 rate ``alpha``, which is passed as its first argument.
 
 ```python
-import pygrank as pg
-
-G, personalization = ...
-alpha = 0.85
-ordered_ranker = pg.PageRank(alpha=alpha, convergence=pg.RankOrderConvergenceManager(alpha))
-ordered_ranker = pg.Ordinals(ordered_ranker)
-ordered_ranks = ordered_ranker.rank(G, personalization)
+>>> import pygrank as pg
+>>> 
+>>> G, personalization = ...
+>>> alpha = 0.85
+>>> ordered_ranker = pg.PageRank(alpha=alpha, convergence=pg.RankOrderConvergenceManager(alpha))
+>>> ordered_ranker = pg.Ordinals(ordered_ranker)
+>>> ordered_ranks = ordered_ranker(G, personalization)
 ```
 
 :bulb: Since the node order is more important than the specific rank values,
@@ -336,11 +337,11 @@ For example, hashing the outcome of graph normalization to
 speed up multiple calls to the same graph can be achieved
 as per the following code:
 ```python
-import pygrank as pg
-graph, personalization1, personalization2 = ...
-algorithm = pg.PageRank(alpha=0.85, normalization="col", assume_immutability=True)
-ranks1 = algorithm.rank(graph, personalization1)
-ranks2 = algorithm.rank(graph, personalization2) # does not re-compute the normalization
+>>> import pygrank as pg
+>>> graph, personalization1, personalization2 = ...
+>>> algorithm = pg.PageRank(alpha=0.85, normalization="col", assume_immutability=True)
+>>> ranks1 = algorithm(graph, personalization1)
+>>> ranks2 = algorithm(graph, personalization2) # does not re-compute the normalization
 ```
 
 Sometimes, many different algorithms are applied on the
@@ -369,20 +370,19 @@ Using the same outcome of graph preprocessing
 to speed up multiple rank calls to the same graph by
 different ranking algorithms can be done as:
 ```python
-import pygrank as pg
-graph, personalization1, personalization2 = ...
-pre = pg.preprocessor(normalization="col", assume_immutability=True)
-algorithm1 = pg.PageRank(alpha=0.85, preprocessor=pre)
-algorithm2 = pg.HeatKernel(alpha=0.85, preprocessor=pre)
-ranks1 = algorithm1.rank(graph, personalization1)
-ranks2 = algorithm2.rank(graph, personalization2) # does not re-compute the normalization
+>>> import pygrank as pg
+>>> graph, personalization1, personalization2 = ...
+>>> pre = pg.preprocessor(normalization="col", assume_immutability=True)
+>>> algorithm1 = pg.PageRank(alpha=0.85, preprocessor=pre)
+>>> algorithm2 = pg.HeatKernel(alpha=0.85, preprocessor=pre)
+>>> ranks1 = algorithm1(graph, personalization1)
+>>> ranks2 = algorithm2(graph, personalization2) # does not re-compute the normalization
 ```
 
 :bulb: When benchmarking, in the above code you can call `pre(graph)`
 before the first `rank(...)` call to make sure that that call
 does not also perform the first normalization whose outcome will
 be hashed and immediately retrieved by subsequent calls.
-
 
 # Postprocessors
 Postprocessors wrap base graph filters to affect their outcome. Usage
@@ -401,7 +401,7 @@ There are two ways to apply postprocessors. The first is to simply
 we can write:
 
 ```python
->>> scores = algorithm.rank(graph, signal)
+>>> scores = algorithm(graph, signal)
 >>> normalized_scores = pg.Normalize().transform(scores)
 >>> print(list(normalized_scores.items()))
 [('A', 1.0), ('B', 0.4950000024069947), ('C', 0.9828783455187619), ('D', 0.9540636897749238), ('E', 0.472261528845582)]
@@ -421,7 +421,7 @@ postprocessors:
 
 ```python
 >>> normalized_algorithm = pg.Normalize(algorithm)
->>> normalized_scores = normalized_algorithm.rank(graph, signal)
+>>> normalized_scores = normalized_algorithm(graph, signal)
 >>> print(list(normalized_scores.items()))
 [('A', 1.0), ('B', 0.4950000024069947), ('C', 0.9828783455187619), ('D', 0.9540636897749238), ('E', 0.472261528845582)]
 ```
@@ -435,7 +435,7 @@ can be achieved as:
 
 ```python
 >>> new_algorithm = pg.Normalize(pg.Transformer(np.exp, algorithm))
->>> new_scores = new_algorithm.rank(graph, signal)
+>>> new_scores = new_algorithm(graph, signal)
 >>> print(list(new_scores.items()))
 [('A', 1.0), ('B', 0.8786683440755908), ('C', 0.9956241609824301), ('D', 0.9883030876536782), ('E', 0.8735657648099558)]
 ```
@@ -448,9 +448,9 @@ match arguments to their types, even if provided in the wrong order.
 For example all three of the following code lines do the same thing:
 
 ```python
-scores1 = pg.Normalize(algorithm, "max").rank(graph, signal)
-scores2 = pg.Normalize("max", algorithm).rank(graph, signal)
-scores3 = pg.Normalize("max").transform(algorithm.rank(graph, signal))
+scores1 = pg.Normalize(algorithm, "max")(graph, signal)
+scores2 = pg.Normalize("max", algorithm)(graph, signal)
+scores3 = pg.Normalize("max").transform(algorithm(graph, signal))
 ```
 
 
@@ -618,8 +618,8 @@ by default creates a `GenericGraphFilter` instance with ten parameters.
 >>> import pygrank as pg
 >>> graph, personalization = ...
 >>> training, evaluation = pg.split(pg.to_signal(graph, personalization, training_samples=0.5))
->>> scores_pagerank = pg.PageRank().rank(graph, training)
->>> scores_tuned = pg.ParameterTuner().rank(graph, training)
+>>> scores_pagerank = pg.PageRank()(graph, training)
+>>> scores_tuned = pg.ParameterTuner()(graph, training)
 >>> auc_pagerank = pg.AUC(evaluation, exclude=training).evaluate(scores_pagerank)
 >>> auc_tuned = pg.AUC(evaluation, exclude=training).evaluate(scores_tuned)
 >>> assert auc_pagerank <= auc_tuned
@@ -647,6 +647,52 @@ PageRank that optimizes NDCG instead of AUC that tuners use by default.
 An exhaustive list of ready-to-use tuners can be found [here](tuners.md).
 After initialization with the appropriate
 parameters, these can be used interchangeably in the above example.
+
+### Tuning Speedup with Optimization Dictionaries
+Graph convolutions are the most computationally-intensive operations the
+node ranking algorithms employ, since their running time scales linearly with the 
+number of network edges (instead of degrees). However, when tuners
+aim to optimize algorithms involving graph filters extending the
+`ClosedFormGraphFilter` class, graph filtering is decomposed into 
+weighted sums of naturally occurring
+Krylov space base elements {*M<sup>n</sup>p*, *n=0,1,...*}.
+
+To speed up computation time (by many times in some settings) `pygrank`
+provides the ability to save the generation of this Krylov space base
+so that future runs do not re-compute it, effectively removing the need
+to perform graph convolutions all but once for each personalization.
+
+:warning: When applying this speedup outside of tuners, it requires
+explicitly passing a graph signal object to graph filters
+(e.g. it does not work with hashmap inputs) since this is the only
+way to guarantee hashing both the personalization and graph information
+with one persistent object.
+
+To enable this behavior, a dictionary needs to be passed to closed form
+graph filter constructors through an `optimization_dict` argument.
+In most cases, tuners are responsible for delegating additional arguments
+to default algorithms and this can be achieved with the following code.
+
+```python
+>>> graph, personalization = ...
+>>> optimization_dict = dict()
+>>> tuner = pg.ParameterTuner(error_type="iters", 
+                              num_parameters=20,
+                              max_iters=20,
+                              optimization_dict=optimization_dict)
+>>> scores = tuner(graph, personalization)
+```
+
+:warning: Similarly to the `assume_immutability=True` option
+for preprocessors, this requires that graphs signals are not altered in
+the interim, although it is possible to clear signal values.
+
+:warning: The speedup allocates at least double the memory. To remove
+allocated memory, you can keep a reference to the dictionary and clear
+it afterwards with `optimization_dict.clear()`.
+
+:warning: Using optimization dictionaries multiplies (e.g. doubles)
+the amount of used memory, which the system may run out of for large graphs.
 
 
 # Applications
