@@ -120,4 +120,23 @@ def test_kernel_locality():
             assert pagerank_result['I'] > kernel_result['I']
 
 
+def test_optimization_dict():
+    from timeit import default_timer as time
+    graph = next(pg.load_datasets_graph(["bigraph"]))
+    personalization = {str(i): 1 for i in range(200)}
+    preprocessor = pg.preprocessor(assume_immutability=True)
+    preprocessor(graph)
+    tic = time()
+    for _ in range(1):
+        pg.ParameterTuner(preprocessor=preprocessor, tol=1.E-9).rank(graph, personalization)
+    unoptimized = time()-tic
+    optimization = dict()
+    tic = time()
+    for _ in range(1):
+        pg.ParameterTuner(optimization_dict=optimization, preprocessor=preprocessor, tol=1.E-9).rank(graph, personalization)
+    optimized = time() - tic
+    assert len(optimization) == 2
+    assert unoptimized > optimized * 2
+
+
     

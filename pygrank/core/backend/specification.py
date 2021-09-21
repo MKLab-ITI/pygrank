@@ -98,5 +98,9 @@ def dot(x: BackendPrimitive, y: BackendPrimitive) -> BackendPrimitive:   # pragm
     pass
 
 
+def filter_out(x: BackendPrimitive, exclude: BackendPrimitive) -> BackendPrimitive:   # pragma: no cover
+    pass
+
+
 def epsilon() -> float:   # pragma: no cover
     pass

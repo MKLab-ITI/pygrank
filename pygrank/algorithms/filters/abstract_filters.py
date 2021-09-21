@@ -1,4 +1,4 @@
-from pygrank.core import to_signal, NodeRanking, GraphSignalGraph, GraphSignalData, BackendGraph, BackendPrimitive
+from pygrank.core import to_signal, NodeRanking, GraphSignalGraph, GraphSignalData, BackendGraph, BackendPrimitive, GraphSignal
 from pygrank.algorithms.utils import call, ensure_used_args
 from pygrank.algorithms.utils import preprocessor as default_preprocessor, ConvergenceManager, obj2id
 from pygrank.algorithms.utils import krylov_base, krylov2original, krylov_error_bound
@@ -33,12 +33,16 @@ class GraphFilter(NodeRanking):
         self.personalization_transform = Tautology() if personalization_transform is None else personalization_transform
         ensure_used_args(kwargs, [default_preprocessor, ConvergenceManager])
 
+    def _prepare(self, personalization: GraphSignal):
+        pass
+
     def rank(self,
              graph: GraphSignalGraph = None,
              personalization: GraphSignalData = None,
              warm_start: GraphSignalData = None,
-             graph_dropout: float = 0, *args, **kwargs):
+             graph_dropout: float = 0, *args, **kwargs) -> GraphSignal:
         personalization = to_signal(graph, personalization)
+        self._prepare(personalization)
         personalization = self.personalization_transform(personalization)
         personalization_norm = backend.sum(backend.abs(personalization.np))
         if personalization_norm == 0:
@@ -128,7 +132,7 @@ class ClosedFormGraphFilter(GraphFilter):
                 avoid most (if not all) matrix multiplication if it run again for the same graph signal. Setting this
                 parameter to None (default) can save approximately **half the memory** the algorithm uses but
                 slows down tuning iteration times to O(edges) instead of O(nodes). Note that the same dict needs to
-                be potentially passed to multiple algorithms that take the same graph signal as input to see noticeable
+                be potentially passed to multiple algorithms that take the same graph signal as input to see any
                 improvement.
         """
         super().__init__(*args, **kwargs)
@@ -173,17 +177,20 @@ class ClosedFormGraphFilter(GraphFilter):
         else:
             raise Exception("Invalid coefficient type")
 
-    def _retrieve_power(self, ranks_power, M, personalization):
+    def _prepare(self, personalization: GraphSignal):
         if self.optimization_dict is not None:
-            # TODO investigate why this does not speed up as much as expected
             personalization_id = obj2id(personalization)
             if personalization_id not in self.optimization_dict:
-                self.optimization_dict.clear()  # this ensures that the dict is cleared when new tuning starts
                 self.optimization_dict[personalization_id] = dict()
-            personalization_dict = self.optimization_dict[personalization_id]
-            if self.convergence.iteration not in personalization_dict:
-                personalization_dict[self.convergence.iteration] = backend.conv(ranks_power, M)
-            return personalization_dict[self.convergence.iteration]
+            self.__active_dict = self.optimization_dict[personalization_id]
+        else:
+            self.__active_dict = None
+
+    def _retrieve_power(self, ranks_power, M):
+        if self.__active_dict is not None:
+            if self.convergence.iteration not in self.__active_dict:
+                self.__active_dict[self.convergence.iteration] = backend.conv(ranks_power, M)
+            return self.__active_dict[self.convergence.iteration]
         return backend.conv(ranks_power, M)
 
     def _step(self, M, personalization, ranks, *args, **kwargs):
@@ -194,7 +201,7 @@ class ClosedFormGraphFilter(GraphFilter):
             self.Mpower = self.Mpower @ self.krylov_H
         else:
             ranks.np, self.ranks_power = self._recursion(ranks.np, self.ranks_power, self.coefficient)
-            self.ranks_power = self._retrieve_power(self.ranks_power, M, personalization)
+            self.ranks_power = self._retrieve_power(self.ranks_power, M)
 
     def _end(self, M, personalization, ranks, *args, **kwargs):
         if self.krylov_dims is not None:
@@ -205,6 +212,7 @@ class ClosedFormGraphFilter(GraphFilter):
         if self.coefficient_type == "chebyshev":
             del self.prev_term
         del self.coefficient
+        del self.__active_dict
 
     def _coefficient(self, previous_coefficient: float) -> float:
         raise Exception("Use a derived class of ClosedFormGraphFilter that implements the _coefficient method")

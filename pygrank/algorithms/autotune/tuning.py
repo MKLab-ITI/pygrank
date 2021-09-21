@@ -1,9 +1,9 @@
-from pygrank.core.signals import GraphSignal, to_signal, NodeRanking
+from pygrank.core.signals import GraphSignal, to_signal, NodeRanking, GraphSignalGraph, GraphSignalData
 from pygrank.algorithms.utils import preprocessor, ensure_used_args, remove_used_args
 from pygrank.algorithms.autotune.optimization import optimize
 from pygrank.measures import Supervised, AUC
 from pygrank.measures.utils import split
-from typing import Callable, Iterable
+from typing import Callable, Iterable, Tuple
 from pygrank.core import backend
 
 
@@ -20,14 +20,23 @@ default_tuning_optimization = {
 
 
 class Tuner(NodeRanking):
-    def tune(self, graph=None, personalization=None, *args, **kwargs):
+    def tune(self,
+             graph: GraphSignalGraph = None,
+             personalization: GraphSignalData = None,
+             *args, **kwargs) -> NodeRanking:
         return self._tune(graph, personalization, *args, **kwargs)[0]
 
-    def rank(self, graph=None, personalization=None, *args, **kwargs):
+    def rank(self,
+             graph: GraphSignalGraph = None,
+             personalization: GraphSignalData = None,
+             *args, **kwargs) -> GraphSignal:
         ranker, personalization = self._tune(graph, personalization, *args, **kwargs)
         return ranker.rank(graph, personalization, *args, **kwargs)
 
-    def _tune(self, graph, personalization, *args, **kwargs):
+    def _tune(self,
+              graph: GraphSignalGraph = None,
+              personalization: GraphSignalData = None,
+              *args, **kwargs) -> Tuple[NodeRanking, GraphSignal]:
         raise Exception("Tuners should implement a _tune method")
 
 
@@ -84,7 +93,9 @@ class ParameterTuner(Tuner):
             from pygrank.algorithms import GenericGraphFilter
             if 'preprocessor' not in kwargs and 'assume_immutability' not in kwargs and 'normalization' not in kwargs:
                 kwargs['preprocessor'] = preprocessor(assume_immutability=True)
-            ranker_generator = lambda params: GenericGraphFilter(params, **remove_used_args(optimize, kwargs))
+
+            def ranker_generator(params):
+                return GenericGraphFilter(params, **remove_used_args(optimize, kwargs))
         else:
             ensure_used_args(kwargs, [optimize])
         self.ranker_generator = ranker_generator

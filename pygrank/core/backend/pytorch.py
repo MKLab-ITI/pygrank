@@ -103,5 +103,9 @@ def degrees(M):
     return torch.sparse.sum(M, dim=0).to_dense()
 
 
+def filter_out(x, exclude):
+    return x[exclude == 0]
+
+
 def epsilon():
     return torch.finfo(torch.float32).eps

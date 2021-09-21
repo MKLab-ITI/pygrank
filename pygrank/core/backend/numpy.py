@@ -66,6 +66,10 @@ def degrees(M):
     return np.asarray(sum(M, axis=1)).ravel()
 
 
+def filter_out(x, exclude):
+    return x[exclude == 0]
+
+
 def epsilon():
-    return np.finfo(np.float32).eps
-    #return np.finfo(float).eps
+    #return np.finfo(np.float32).eps
+    return np.finfo(float).eps

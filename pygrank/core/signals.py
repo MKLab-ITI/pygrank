@@ -56,9 +56,10 @@ class GraphSignal(MutableMapping):
 
     def filter(self, exclude=None):
         if exclude is not None:
-            exclude = set([key for key, value in to_signal(self, exclude).items() if value != 0])
-            ret = backend.to_array([self[key] for key in self.graph if key not in exclude])
-            return ret
+            #exclude = set([key for key, value in to_signal(self, exclude).items() if value != 0])
+            #ret = backend.to_array([self[key] for key in self.graph if key not in exclude])
+            exclude = to_signal(self, exclude)
+            return backend.filter_out(self.np, exclude.np)
         return self.np
 
     def __getitem__(self, key):
