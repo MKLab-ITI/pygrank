@@ -205,7 +205,3 @@ thus, tuners should construct optimal node ranking algorithms, which are backpro
 
 Tuners should support as many types of algorithms as possible and thus parameterize-able 
 generic methods to construct such algorithms could be added to the tuner constructors.
-
-Finally, if Krylov space alternative are possible (e.g. Arnoldi decomposition), add an argument
-`krylov_dims=None` that indicates either that those methods are not employed (None) or the 
-number of krylov space dimensions.

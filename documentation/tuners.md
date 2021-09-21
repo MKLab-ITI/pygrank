@@ -50,7 +50,7 @@ Instantiates the tuning mechanism.
 Args: 
  * *ranker_generator:* A callable that constructs a ranker based on a list of parameters. If None (default) then a pygrank.algorithms.learnable.GenericGraphFilter is constructed with automatic normalization and assuming immutability (this is the most common setting). These parameters can be overriden and other ones can be passed to the algorithm'personalization constructor simply by including them in kwargs. 
  * *measure:* Callable to constuct a supervised measure with given known node scores. 
- * *krylov_dims:* Can use an Arnoldi basis of the Krylov space of the desired number of dimensions to perform propagations. If None (default) vertex-domain graph convolutions are performed instead. 
+ * *basis:* Can use either the "Krylov" or the "Arnoldi" orthonormal basis of the krylov space. The latter does not produce a ranking algorithm. 
  * *tuning_backend:* Specifically switches to a designted backend for the tuning process before restoring the previous one to perform the actual ranking. If None (default), this functionality is ignored. 
  * *tunable_offset:* If None, no offset is added to estimated parameters. Otherwise, a supervised measure generator (e.g. a supervised measure class) can be passed. Default is `pygrank.AUC`. 
  * *kwargs:* Additional arguments are passed to the automatically instantiated GenericGraphFilter. 
