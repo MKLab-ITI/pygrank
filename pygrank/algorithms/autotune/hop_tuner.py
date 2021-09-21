@@ -134,8 +134,9 @@ class HopTuner(Tuner):
             if div != 0:
                 best_parameters /= div
             measure = self.tunable_offset(validation, training)
+            base = basis[0] if self.basis != "krylov" else None
             best_offset = optimize(
-                lambda params: - measure(self._run(training, [best_parameters[i]*params[0]**i for i in range(len(best_parameters))], *args, **kwargs)),
+                lambda params: - measure(self._run(training, [best_parameters[i]*params[0]**i for i in range(len(best_parameters))], base, *args, **kwargs)),
                 #lambda params: - measure.evaluate(self._run(training, best_parameters + params[0], *args, **kwargs)),
                 max_vals=[1], min_vals=[0], deviation_tol=0.005, parameter_tol=1, partitions=5, divide_range=2)
             #best_parameters += best_offset[0]
@@ -151,14 +152,15 @@ class HopTuner(Tuner):
             return Tautology(), self._run(personalization, best_parameters, *args, **kwargs)  # TODO: make this unecessary
         return self.ranker_generator(best_parameters), personalization
 
-    def _run(self, personalization: GraphSignal, params: object, *args, **kwargs):
+    def _run(self, personalization: GraphSignal, params: object, base=None, *args, **kwargs):
         params = backend.to_primitive(params)
         div = backend.sum(backend.abs(params))
         if div != 0:
             params = params / div
         if self.basis != "krylov":
-            M = self.ranker_generator(params).preprocessor(personalization.graph)
-            base = arnoldi_iteration(M, personalization.np, len(params))[0]
+            if base is None:
+                M = self.ranker_generator(params).preprocessor(personalization.graph)
+                base = arnoldi_iteration(M, personalization.np, len(params))[0]
             ret = 0
             for i in range(backend.length(params)):
                 ret = ret + params[i]*base[:,i]

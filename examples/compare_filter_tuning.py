@@ -1,8 +1,8 @@
 import pygrank as pg
 
 
-#datasets = ["amazon", "blockmodel", "citeseer", "eucore", "maven", "pubmed"]
-datasets = ["citeseer", "eucore", "maven"]
+datasets = ["amazon", "blockmodel", "citeseer", "eucore", "maven", "pubmed"]
+#datasets = ["citeseer", "eucore", "maven"]
 pre = pg.preprocessor(assume_immutability=True, normalization="symmetric")
 tol = 1.E-9
 optimization_dict = dict()
@@ -29,7 +29,7 @@ tuned = {
                              measure=pg.Cos, tunable_offset=pg.AUC,
                              autoregression=0,
                              num_parameters=20,
-                             basis="krylov", optimization_dict=optimization_dict
+                             basis="arnoldi", optimization_dict=optimization_dict
                              ),
 }
 

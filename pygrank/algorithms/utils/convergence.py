@@ -38,7 +38,7 @@ class ConvergenceManager:
                 and exceeding this value with graph filters often indicates that either graphs have large diameters
                 or that algorithms of choice converge particularly slowly.
         """
-        self.tol = max(tol, backend.epsilon())
+        self.tol = tol
         self.error_type = error_type
         self.max_iters = max_iters
         self.iteration = 0
@@ -83,7 +83,7 @@ class ConvergenceManager:
     def _has_converged(self, prev_ranks: BackendPrimitive, ranks: BackendPrimitive) -> bool:
         if self.error_type == "iters":
             return False
-        return self.error_type(prev_ranks)(ranks) <= self.tol
+        return self.error_type(prev_ranks)(ranks) <= max(self.tol, backend.epsilon())
 
     def __str__(self):
         return str(self.iteration)+" iterations ("+str(self.elapsed_time)+" sec)"
