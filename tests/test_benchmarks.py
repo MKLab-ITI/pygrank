@@ -10,9 +10,9 @@ def test_benchmark_print():
     console = pg.benchmark_print(pg.benchmark(pg.create_demo_filters(), loader),
                                  out=io.StringIO(""), err=None).getvalue()
     loader = pg.load_datasets_one_community(["graph9", "bigraph"])
-    ret = pg.benchmark_dict(pg.benchmark(pg.create_demo_filters(), loader))
+    ret = pg.benchmark_dict(pg.benchmark(pg.create_demo_filters(), loader, sensitive=pg.pRule))
     assert isinstance(ret, dict)
-    assert len(ret) == 2
+    assert len(ret) == 3
     assert isinstance(ret["graph9"], dict)
     assert (len(str(ret)) - len(console)) < (len(str(ret)) + len(console))/2
 
