@@ -16,6 +16,8 @@ class PageRank(RecursiveGraphFilter):
         Example:
             >>> import pygrank as pg
             >>> algorithm = pg.PageRank(alpha=0.99, tol=1.E-9) # tol passed to the ConvergenceManager
+            >>> graph, seed_nodes = ...
+            >>> ranks = algorithm(graph, {v: 1 for v in seed_nodes})
         """
         self.alpha = alpha
         super().__init__(*args, **kwargs)
@@ -47,6 +49,8 @@ class HeatKernel(ClosedFormGraphFilter):
         Example:
             >>> from pygrank.algorithms import HeatKernel
             >>> algorithm = HeatKernel(t=3, tol=1.E-9) # tol passed to the ConvergenceManager
+            >>> graph, seed_nodes = ...
+            >>> ranks = algorithm(graph, {v: 1 for v in seed_nodes})
         """
         self.t = t
         super().__init__(*args, **kwargs)
@@ -74,7 +78,15 @@ class AbsorbingWalks(RecursiveGraphFilter):
 
         Example:
             >>> from pygrank.algorithms import AbsorbingWalks
-            >>> algorithm = AbsorbingWalks(0.85, tol=1.E-9) # tol passed to the ConvergenceManager
+            >>> algorithm = AbsorbingWalks(1-1.E-6, tol=1.E-9) # tol passed to the ConvergenceManager
+            >>> graph, seed_nodes = ...
+            >>> ranks = algorithm(graph, {v: 1 for v in seed_nodes})
+
+        Example (same outcome, explicit absorption rate definition):
+            >>> from pygrank.algorithms import AbsorbingWalks
+            >>> algorithm = AbsorbingWalks(1-1.E-6, tol=1.E-9) # tol passed to the ConvergenceManager
+            >>> graph, seed_nodes = ...
+            >>> ranks = algorithm(graph, {v: 1 for v in seed_nodes}, absorption={v: 1 for v in graph})
         """
 
         super().__init__(*args, **kwargs)

@@ -60,6 +60,13 @@ def test_lanczos_speedup():
         assert pg.Mabs(result)(result_lanczos) < 0.01
 
 
+def test_lanczos_bad_approximation():
+    graph = next(pg.load_datasets_graph(["graph5"]))
+    for algorithm in [pg.HeatKernel]:
+        with pytest.raises(Exception):
+            pg.Normalize(algorithm(normalization='symmetric', krylov_dims=5)).rank(graph, {"0": 1})
+
+
 def test_chebyshev():
     _, graph, group = next(pg.load_datasets_one_community(["bigraph"]))
     #  do not test with tensorflow, as it can be too slow

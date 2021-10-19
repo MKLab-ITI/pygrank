@@ -130,9 +130,7 @@ class ClusteringCoefficient:
                     if u2 in self.G.neighbors(u1):
                         total_triplet_values += 1
                     existing_triplet_values += self._similarity(u1, u2, scores)
-        if total_triplet_values == 0:
-            return 0
-        return existing_triplet_values / total_triplet_values
+        return 0 if total_triplet_values == 0 else existing_triplet_values / total_triplet_values
 
     def __call__(self, scores):
         return self.evaluate(scores)
