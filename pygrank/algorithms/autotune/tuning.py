@@ -8,8 +8,8 @@ from pygrank.core import backend
 
 
 default_tuning_optimization = {
-    "max_vals": [0.95] * 10,
-    "min_vals": [0.5] * 10,
+    "max_vals": [0.95] * 20,
+    "min_vals": [0.5] * 20,
     "deviation_tol": 0.005,
     "parameter_tol": 1,
     "verbose": False,
@@ -17,6 +17,20 @@ default_tuning_optimization = {
     "partitions": 5,
     "depth": 1
 }
+
+
+class SelfClearDict(dict):
+    """
+    A dictionary that holds only one entry at all times by clearing itself before item assignment.
+    This can be passed as an `optimization_dict` argument to closed form filters to ensure that
+    back-to-back calls for the same personalization (e.g. by tuning) do not recompute graph convolutions
+    while also erasing past hashed values. To keep past convolutions even after calling algorithms with
+    different personalization signals, use a simple dictionary instead.
+    """
+
+    def __setitem__(self, key, value):
+        self.clear()
+        super().__setitem__(key, value)
 
 
 class Tuner(NodeRanking):
@@ -93,6 +107,8 @@ class ParameterTuner(Tuner):
             from pygrank.algorithms import GenericGraphFilter
             if 'preprocessor' not in kwargs and 'assume_immutability' not in kwargs and 'normalization' not in kwargs:
                 kwargs['preprocessor'] = preprocessor(assume_immutability=True)
+            if "optimization_dict" not in kwargs:
+                kwargs["optimization_dict"] = SelfClearDict()
 
             def ranker_generator(params):
                 return GenericGraphFilter(params, **remove_used_args(optimize, kwargs))

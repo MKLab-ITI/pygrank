@@ -18,6 +18,8 @@ def separate_cols(x):
 
 
 def combine_cols(cols):
+    if len(cols[0].shape) < 2:
+        cols = [tf.reshape(col, (-1,1)) for col in cols]
     return tf.concat(cols, axis=1)
 
 

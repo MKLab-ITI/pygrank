@@ -23,22 +23,22 @@ def test_tautology():
 
 
 def test_seed_oversampling():
-    _, graph, group = next(pg.load_datasets_one_community(["bigraph"]))
+    _, graph, group = next(pg.load_datasets_one_community(["graph9"]))
     for _ in supported_backends():
-        training, evaluation = pg.split(list(group), training_samples=3)
+        training, evaluation = pg.split(list(group), training_samples=2)
         training, evaluation = pg.to_signal(graph, {v: 1 for v in training}), pg.to_signal(graph, {v: 1 for v in evaluation})
         for measure in [pg.NDCG, pg.AUC]:
-            ranks = pg.PageRank(0.99).rank(graph, training)
+            ranks = pg.PageRank(0.9, max_iters=1000).rank(graph, training)
             base_result = measure(evaluation, training).evaluate(ranks)
-            ranks = pg.SeedOversampling(pg.PageRank(0.99)).rank(graph, training)
+            ranks = pg.SeedOversampling(pg.PageRank(0.9, max_iters=1000)).rank(graph, training)
             so_result = measure(evaluation, training).evaluate(ranks)
             bso_result = measure(evaluation, training).evaluate(
-                pg.BoostedSeedOversampling(pg.PageRank(0.99)).rank(graph, training))
+                pg.BoostedSeedOversampling(pg.PageRank(0.9, max_iters=1000)).rank(graph, training))
             assert float(base_result) <= float(so_result)
             assert float(so_result) <= float(bso_result)
-        pg.SeedOversampling(pg.PageRank(0.99), "top").rank(graph, training)
-        pg.SeedOversampling(pg.PageRank(0.99), "neighbors").rank(graph, training)
-        pg.BoostedSeedOversampling(pg.PageRank(), 'naive', oversample_from_iteration='original').rank(graph, {"1": 1})
+        pg.SeedOversampling(pg.PageRank(0.99, max_iters=1000), "top").rank(graph, training)
+        pg.SeedOversampling(pg.PageRank(0.99, max_iters=1000), "neighbors").rank(graph, training)
+        pg.BoostedSeedOversampling(pg.PageRank(max_iters=1000), 'naive', oversample_from_iteration='original').rank(graph, {"A": 1})
 
     with pytest.raises(Exception):
         pg.SeedOversampling(pg.PageRank(), 'unknown').rank(graph, {"0": 1})

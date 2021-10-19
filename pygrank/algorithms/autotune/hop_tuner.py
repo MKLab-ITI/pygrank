@@ -1,10 +1,9 @@
-import pygrank.algorithms.postprocess.postprocess
 from pygrank.core.signals import GraphSignal, to_signal, NodeRanking
 from pygrank.algorithms.utils import ensure_used_args, arnoldi_iteration
-from pygrank.measures import Supervised, AUC
+from pygrank.measures import Supervised, Cos, AUC
 from typing import Callable, Optional
 from pygrank.core import backend
-from pygrank.algorithms.autotune.tuning import Tuner
+from pygrank.algorithms.autotune.tuning import Tuner, SelfClearDict
 from pygrank.algorithms.autotune.optimization import optimize
 from pygrank.measures.utils import split
 from pygrank.algorithms.postprocess.postprocess import Tautology
@@ -18,12 +17,12 @@ class HopTuner(Tuner):
 
     """
     def __init__(self, ranker_generator: Callable[[list], NodeRanking] = None,
-                 measure: Callable[[GraphSignal, GraphSignal], Supervised] = AUC,
+                 measure: Callable[[GraphSignal, GraphSignal], Supervised] = Cos,
                  basis: Optional[str] = "Krylov",
                  tuning_backend: Optional[str] = None,
                  autoregression: int = 0,
-                 num_parameters: int = 10,
-                 tunable_offset: Callable[[GraphSignal, GraphSignal], Supervised] = AUC,
+                 num_parameters: int = 20,
+                 tunable_offset: Optional[Callable[[GraphSignal, GraphSignal], Supervised]] = AUC,
                  **kwargs):
         """
         Instantiates the tuning mechanism.
@@ -49,8 +48,12 @@ class HopTuner(Tuner):
             >>> ranks = tuner.rank(graph, personalization)
         """
         if ranker_generator is None:
+            if "optimization_dict" not in kwargs:
+                kwargs["optimization_dict"] = SelfClearDict()
             from pygrank.algorithms import GenericGraphFilter
-            ranker_generator = lambda params: GenericGraphFilter(params, **kwargs)
+
+            def ranker_generator(params):
+                return GenericGraphFilter(params, **kwargs)
         else:
             ensure_used_args(kwargs, [])
         self.ranker_generator = ranker_generator
@@ -62,6 +65,8 @@ class HopTuner(Tuner):
         self.basis = basis.lower()
 
     def _tune(self, graph=None, personalization=None, *args, **kwargs):
+        #graph_dropout = kwargs.get("graph_dropout", 0)
+        #kwargs["graph_dropout"] = 0
         previous_backend = backend.backend_name()
         personalization = to_signal(graph, personalization)
         graph = personalization.graph
@@ -79,9 +84,11 @@ class HopTuner(Tuner):
         #for _ in range(10):
         #    backend_personalization.np = backend.conv(backend_personalization.np, M)
         training, validation = split(backend_personalization, 0.5)
-        propagated = [training.np, validation.np]
-        #measures = [self.measure(backend_personalization, training), self.measure(backend_personalization, validation)]
-        measures = [self.measure(backend_personalization)]*len(propagated)
+        training1, training2 = split(training, 0.5)
+
+        propagated = [training1.np, training2.np, validation.np]
+        measures = [self.measure(backend_personalization, training1), self.measure(backend_personalization, training2), self.measure(backend_personalization, validation)]
+        #measures = [self.measure(validation, training), self.measure(training, validation)]
 
         if self.basis == "krylov":
             for i in range(len(measure_values)):
@@ -124,7 +131,7 @@ class HopTuner(Tuner):
                     window[j] -= 0.01*momentum[j] / (1-beta1t) / ((rms[j]/(1-beta2t))**0.5 + 1.E-8)
                     #window[j] -= 0.01*gradient*np.sign(window[j])
                 error = backend.mean(backend.abs(errors))
-                if abs(error-prev_error)/error < 1.E-6:
+                if error == 0 or abs(error-prev_error)/error < 1.E-6:
                     best_parameters = parameters
                     break
         best_parameters = backend.mean(best_parameters[:self.num_parameters, :] * backend.to_primitive(measure_weights), axis=1) + backend.mean(mean_value)
@@ -136,11 +143,11 @@ class HopTuner(Tuner):
             measure = self.tunable_offset(validation, training)
             base = basis[0] if self.basis != "krylov" else None
             best_offset = optimize(
-                lambda params: - measure(self._run(training, [best_parameters[i]*params[0]**i for i in range(len(best_parameters))], base, *args, **kwargs)),
+                lambda params: - measure.best_direction()*measure(self._run(training, [(best_parameters[i]+params[2])*params[0]**i+params[1] for i in range(len(best_parameters))], base, *args, **kwargs)),
                 #lambda params: - measure.evaluate(self._run(training, best_parameters + params[0], *args, **kwargs)),
-                max_vals=[1], min_vals=[0], deviation_tol=0.005, parameter_tol=1, partitions=5, divide_range=2)
+                max_vals=[1, 0, 0], min_vals=[0, 0, 0], deviation_tol=0.005, parameter_tol=1, partitions=5, divide_range=2)
             #best_parameters += best_offset[0]
-            best_parameters = [best_parameters[i]*best_offset[0]**i for i in range(len(best_parameters))]
+            best_parameters = [(best_parameters[i]+best_offset[2])*best_offset[0]**i+best_offset[1] for i in range(len(best_parameters))]
 
         best_parameters = backend.to_primitive(best_parameters)
         if backend.sum(backend.abs(best_parameters)) != 0:
@@ -148,6 +155,7 @@ class HopTuner(Tuner):
         if self.tuning_backend is not None and self.tuning_backend != previous_backend:
             best_parameters = [float(param) for param in best_parameters]  # convert parameters to backend-independent list
             backend.load_backend(previous_backend)
+        #kwargs["graph_dropout"] = graph_dropout
         if self.basis != "krylov":
             return Tautology(), self._run(personalization, best_parameters, *args, **kwargs)  # TODO: make this unecessary
         return self.ranker_generator(best_parameters), personalization

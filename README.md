@@ -189,6 +189,13 @@ If so, make sure to **follow the pull checklist** described in the guidelines.
 # :notebook: Citation
 If `pygrank` has been useful in your research and you would like to cite it in a scientific publication, please refer to the following paper:
 ```
-TBD
+@misc{krasanakis2021pygrank,
+      title={pygrank: A Python Package for Graph Node Ranking}, 
+      author={Emmanouil Krasanakis, Symeon Papadopoulos, Ioannis Kompatsiaris, Andreas Symeonidis},
+      year={2021},
+      eprint={2110.09274},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
+}
 ```
 To publish research that uses provided methods, please cite the [appropriate publications](documentation/citations.md).

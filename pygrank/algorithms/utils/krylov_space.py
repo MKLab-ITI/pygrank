@@ -70,7 +70,7 @@ def arnoldi_iteration(A: BackendGraph, b: BackendPrimitive, n: int):
       h: (n + 1) x n array, A on basis Q. It is upper Hessenberg.
     """
     h = [[0 for _ in range(n)] for _ in range(n+1)]
-    Q = [b/backend.dot(b, b)**0.5]
+    Q = [backend.self_normalize(b)]
     for k in range(1, n):
         v = backend.conv(Q[k-1], A)
         for j in range(k):

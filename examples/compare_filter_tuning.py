@@ -1,36 +1,24 @@
 import pygrank as pg
 
 
-datasets = ["amazon", "blockmodel", "citeseer", "eucore", "maven", "pubmed"]
+datasets = ["amazon", "blockmodel", "citeseer", "eucore", "maven"]
 #datasets = ["citeseer", "eucore", "maven"]
 pre = pg.preprocessor(assume_immutability=True, normalization="symmetric")
 tol = 1.E-9
-optimization_dict = dict()
+optimization = pg.SelfClearDict()
 algorithms = {
     "ppr0.85": pg.PageRank(alpha=0.85, preprocessor=pre, max_iters=10000, tol=tol),
     "ppr0.9": pg.PageRank(alpha=0.9, preprocessor=pre, max_iters=10000, tol=tol),
     "ppr0.99": pg.PageRank(alpha=0.99, preprocessor=pre, max_iters=10000, tol=tol),
-    "hk3": pg.HeatKernel(t=3, preprocessor=pre, max_iters=10000, tol=tol, optimization_dict=optimization_dict),
-    "hk5": pg.HeatKernel(t=5, preprocessor=pre, max_iters=10000, tol=tol, optimization_dict=optimization_dict),
-    "hk7": pg.HeatKernel(t=7, preprocessor=pre, max_iters=10000, tol=tol, optimization_dict=optimization_dict),
+    "hk3": pg.HeatKernel(t=3, preprocessor=pre, max_iters=10000, tol=tol, optimization_dict=optimization),
+    "hk5": pg.HeatKernel(t=5, preprocessor=pre, max_iters=10000, tol=tol, optimization_dict=optimization),
+    "hk7": pg.HeatKernel(t=7, preprocessor=pre, max_iters=10000, tol=tol, optimization_dict=optimization),
 }
 tuned = {
     "selected": pg.AlgorithmSelection(algorithms.values(), fraction_of_training=0.8),
-    "tuned": pg.ParameterTuner(preprocessor=pre, fraction_of_training=0.8,
-                               max_vals=[1]*20, min_vals=[0]*20,
-                               deviation_tol=0.005,divide_range=2,
-                               error_type="iters", max_iters=20, optimization_dict=optimization_dict),
-    "estimated": pg.HopTuner(preprocessor=pre, error_type="iters", max_iters=20,
-                             measure=pg.Cos, tunable_offset=pg.AUC,
-                             autoregression=0,
-                             num_parameters=20, optimization_dict=optimization_dict
-                             ),
-    "arnoldi": pg.HopTuner(preprocessor=pre, error_type="iters", max_iters=20,
-                             measure=pg.Cos, tunable_offset=pg.AUC,
-                             autoregression=0,
-                             num_parameters=20,
-                             basis="arnoldi", optimization_dict=optimization_dict
-                             ),
+    "tuned": pg.ParameterTuner(preprocessor=pre, fraction_of_training=0.8, tol=tol, optimization_dict=optimization, measure=pg.AUC),
+    #"estimated": pg.HopTuner(preprocessor=pre, num_parameters=20, tol=tol, optimization_dict=optimization),
+    "arnoldi": pg.HopTuner(preprocessor=pre, basis="arnoldi", num_parameters=20, tol=tol, optimization_dict=optimization, autoregression=5),
 }
 
 #algorithms = pg.create_variations(algorithms, {"": pg.Tautology, "+Sweep": pg.Sweep})
