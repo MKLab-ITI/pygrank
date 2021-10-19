@@ -8,8 +8,8 @@ from pygrank.core import backend
 
 
 default_tuning_optimization = {
-    "max_vals": [0.95] * 20,
-    "min_vals": [0.5] * 20,
+    "max_vals": [0.95] * 10,
+    "min_vals": [0.5] * 10,
     "deviation_tol": 0.005,
     "parameter_tol": 1,
     "verbose": False,
@@ -137,7 +137,7 @@ class ParameterTuner(Tuner):
             **self.optimize_args)
         if self.tuning_backend is not None and self.tuning_backend != previous_backend:
             backend.load_backend(previous_backend)
-            # TODO: make training back-propagate through tensorflow for combined_prediction==False
+            # TODO: make training back-propagate through tensorflow for combined_prediction==False (do this with a gather in the split method)
         return self.ranker_generator(best_params), personalization if self.combined_prediction else training
 
 

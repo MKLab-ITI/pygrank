@@ -67,4 +67,3 @@ def test_chebyshev():
     tuned_auc= pg.AUC(evaluation, training).evaluate(pg.ParameterTuner().rank(graph, training))
     tuned_chebyshev_auc= pg.AUC(evaluation, training).evaluate(pg.ParameterTuner(coefficient_type="chebyshev").rank(graph, training))
     assert (tuned_auc-tuned_chebyshev_auc) < 0.1
-

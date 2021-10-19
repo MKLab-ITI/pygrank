@@ -136,7 +136,7 @@ def test_optimization_dict():
         pg.ParameterTuner(optimization_dict=optimization, preprocessor=preprocessor, tol=1.E-9).rank(graph, personalization)
     optimized = time() - tic
     assert len(optimization) == 2
-    assert unoptimized > optimized * 2
+    assert unoptimized > optimized
 
 
     

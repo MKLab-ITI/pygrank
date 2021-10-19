@@ -58,8 +58,9 @@ def test_autotune():
     group = groups[0]
     training, evaluation = pg.split(pg.to_signal(G, {v: 1 for v in group}), training_samples=0.5)
     auc1 = pg.AUC(evaluation, exclude=training)(pg.PageRank().rank(training))
-    auc2 = pg.AUC(evaluation, exclude=training)(pg.ParameterTuner(optimization_dict=dict()).rank(training))
-    assert auc1 <= auc2
+    auc2 = pg.AUC(evaluation, exclude=training)(pg.HeatKernel().rank(training))
+    auc3 = pg.AUC(evaluation, exclude=training)(pg.ParameterTuner(optimization_dict=dict()).rank(training))
+    assert min(auc1, auc2) <= auc3 and max(auc1, auc2)*0.9 <= auc3
 
 
 def test_autotune_manual():
