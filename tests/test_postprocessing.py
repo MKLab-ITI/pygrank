@@ -25,13 +25,13 @@ def test_tautology():
 def test_seed_oversampling_arguments():
     _, graph, group = next(pg.load_datasets_one_community(["graph9"]))
     with pytest.raises(Exception):
-        pg.SeedOversampling(pg.PageRank(), 'unknown').rank(graph, {"0": 1})
+        pg.SeedOversampling(pg.PageRank(), 'unknown').rank(graph, {"A": 1})
     with pytest.raises(Exception):
-        pg.SeedOversampling(pg.PageRank()).rank(graph, {"0": 0.1, "1": 1})
+        pg.SeedOversampling(pg.PageRank()).rank(graph, {"A": 0.1, "B": 1})
     with pytest.raises(Exception):
-        pg.BoostedSeedOversampling(pg.PageRank(), 'unknown').rank(graph, {"1": 1})
+        pg.BoostedSeedOversampling(pg.PageRank(), 'unknown').rank(graph, {"A": 1})
     with pytest.raises(Exception):
-        pg.BoostedSeedOversampling(pg.PageRank(), 'naive', oversample_from_iteration='unknown').rank(graph, {"1": 1})
+        pg.BoostedSeedOversampling(pg.PageRank(), 'naive', oversample_from_iteration='unknown').rank(graph, {"B": 1})
 
 
 def test_seed_oversampling():
