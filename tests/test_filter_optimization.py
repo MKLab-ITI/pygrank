@@ -64,7 +64,7 @@ def test_lanczos_bad_approximation():
     graph = next(pg.load_datasets_graph(["graph5"]))
     for algorithm in [pg.HeatKernel]:
         with pytest.raises(Exception):
-            pg.Normalize(algorithm(normalization='symmetric', krylov_dims=5)).rank(graph, {"0": 1})
+            pg.Normalize(algorithm(normalization='symmetric', krylov_dims=5)).rank(graph, {"A": 1})
 
 
 def test_chebyshev():
