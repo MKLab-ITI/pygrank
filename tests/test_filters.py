@@ -127,15 +127,15 @@ def test_optimization_dict():
     preprocessor = pg.preprocessor(assume_immutability=True)
     preprocessor(graph)
     tic = time()
-    for _ in range(1):
+    for _ in range(10):
         pg.ParameterTuner(preprocessor=preprocessor, tol=1.E-9).rank(graph, personalization)
     unoptimized = time()-tic
     optimization = dict()
     tic = time()
-    for _ in range(1):
+    for _ in range(10):
         pg.ParameterTuner(optimization_dict=optimization, preprocessor=preprocessor, tol=1.E-9).rank(graph, personalization)
     optimized = time() - tic
-    assert len(optimization) == 2
+    assert len(optimization) == 20
     assert unoptimized > optimized
 
 
