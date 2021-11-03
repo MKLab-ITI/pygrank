@@ -19,6 +19,17 @@ class Postprocessor(NodeRanking):
     def _transform(self, ranks: GraphSignal, **kwargs):
         raise Exception("_transform method not implemented for the class "+self.__class__.__name__)
 
+    def _reference(self):
+        return "unknown"
+
+    def references(self):
+        if self.ranker is None:
+            return [self._reference()]
+        refs = self.ranker.references()
+        refs.append(self._reference()+" postprocessor")
+        return refs
+
+
 
 class Tautology(Postprocessor):
     """ Returns ranks as-are.
@@ -40,6 +51,9 @@ class Tautology(Postprocessor):
             return self.ranker.rank(graph, personalization, *args, **kwargs)
         return to_signal(graph, personalization)
 
+    def _reference(self):
+        return "tautology"
+
 
 class MabsMaintain(Postprocessor):
     """Forces node ranking posteriors to have the same mean absolute value as prior inputs."""
@@ -51,6 +65,9 @@ class MabsMaintain(Postprocessor):
         if norm != 0:
             ranks.np = ranks.np * norm / backend.sum(backend.abs(ranks.np))
         return ranks
+
+    def _reference(self):
+        return "mabs-maintaining"
 
 
 class Normalize(Postprocessor):
@@ -100,6 +117,11 @@ class Normalize(Postprocessor):
         ret = (ranks.np-min_rank) / (max_rank-min_rank)
         return ret
 
+    def _reference(self):
+        if self.method == "range":
+            return "[0,1] " + self.method + " normalization"
+        return self.method+" normalization"
+
 
 class Ordinals(Postprocessor):
     """ Converts ranking outcome to ordinal numbers.
@@ -129,6 +151,9 @@ class Ordinals(Postprocessor):
     def _transform(self, ranks: GraphSignal, **kwargs):
         ensure_used_args(kwargs)
         return {v: order+1 for order, v in enumerate(sorted(ranks, key=ranks.get, reverse=True))}
+
+    def _reference(self):
+        return "ordinal conversion"
 
 
 class Transformer(Postprocessor):
@@ -165,6 +190,9 @@ class Transformer(Postprocessor):
             return self.expr(ranks.np)
         except:
             return {v: self.expr(ranks[v]) for v in ranks}
+
+    def _reference(self):
+        return "element-by-element "+self.expr.__name__
 
 
 class Threshold(Postprocessor):
@@ -219,6 +247,9 @@ class Threshold(Postprocessor):
                 prev_rank = ranks[v]
         return {v: 1 if ranks[v] >= threshold else 0 for v in ranks.keys()}
 
+    def _reference(self):
+        return str(self.threshold)+" threshold"
+
 
 class Sweep(Postprocessor):
     """
@@ -262,3 +293,6 @@ class Sweep(Postprocessor):
         ensure_used_args(kwargs)
         uniforms = self.centrality(ranks.graph).np
         return ranks.np/(1.E-12+uniforms)
+
+    def _reference(self):
+        return "sweep ratio \\cite{andersen2007local}"  # TODO: allow references to account for custom centrality ranker

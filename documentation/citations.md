@@ -1,46 +1,28 @@
 <center><h1>:notebook: Citations</h1></center>
 Several research outcomes have been implemented and integrated in `pygrank`.
-Please cite the respective publications in addition to this packge.
-
-For example, the seed oversampling method developed in *krasanakis2019boosted*
-could be described in a LaTeX manuscript as 
-*"we employ the seed oversampling (SeedO) post-processing \cite{krasanakis2019boosted}
-implemented by the pygrank package \cite{pygrank}"*. Feel free to provide any other
-description as long as they point to the package's paper and the corresponding publication(s).
+In addition to this package, please cite related publications, for example
+by modifying automatically generated descriptions (see below). 
 
 Do not forget to also cite dataset sources! Related instructions
 can be accessed [here](datasets.md).
 
-## Method References
+## Automated Algorithm Citations
 
-We hereby present a comprehensive match of
-research outcomes to code concepts. For details on how to use respective
-methods, please refer to the project's [documentation](documentation.md).
-Reference names correspond to the list of publication bibtex entries
-presented later on.
+The `NodeRanking.cite()` method can be used obtain 
+automatically-generated descriptions of algorithms, including
+publication citations. Reference names correspond to the list of
+publication bibtex entries presented in the rest of the document.
 
-Instantiation or Usage | Method Name | Citation
---- | --- | --- 
-`PageRank` | Personalized PageRank | page1999pagerank
-`HeatKernel` | Heat Kernel | chung2007heat
-`AbsorbingWalks` | Absorbing Random Walk | wu2012learningadd
-`GeneralizedGraphFilter` | Graph Filter | ortega2018graph
-`GeneralizedGraphFilter(lanczos=dims)` (e.g. dims = 5) | Lanczos acceleration | susnjara2015accelerated
-`SeedOversampling(ranker)` | SeedO | krasanakis2019boosted
-`BoostedSeedOversampling(ranker)` | SeedBO | krasanakis2019boosted
-`PageRank(converge_to_eigenvectors=True)` | VenueRank | krasanakis2018venuerank
-`FairWalk(ranker)` | FairWalk |rahman2019fairwalk
-`AdHocFairness(ranker,'O')` | LFPRO | tsioutsiouliklis2020fairness
-`FairPersonalizer(ranker, error_type=Mabs, max_residual=0)` | FP | krasanakis2020fairconstr
-`FairPersonalizer(ranker, 0.8, 10, error_type=Mabs, max_residual=0)` | CFP | krasanakis2020fairconstr
-`FairPersonalizer(ranker, error_type=KLDivergence)` | FairEdit | krasanakis2020prioredit
-`fairness.FairPersonalizer(ranker, error_type=KLDivergence, 0.8, 10)` | FairEditC | krasanakis2020prioredit
-`LinkAssessment(graph, hops=1)` | LinkAUC | krasanakis2019linkauc
-`LinkAssessment(graph, hops=2)` | HopAUC | krasanakis2020unsupervised
-`ClusteringCoefficient(graph)` | LinkCC | krasanakis2020unsupervised
-`PageRank(alpha, convergence=RankOrderConvergenceManager(alpha, confidence=0.99, criterion="fraction_of_walks"))` | | krasanakis2020stopping
-`PageRank(alpha, RankOrderConvergenceManager(alpha))` | | krasanakis2020stopping
+For example, the following snippet defines a node ranking algorithm
+and retrieves a textual description to be pasted in LaTeX documents
+after adding respective publications to the bibliography.
 
+```python
+>>> import pygrank as pg
+>>> algorithm = pg.BoostedSeedOversampling(pg.PageRank())
+>>> print(algorithm.cite())
+personalized PageRank \cite{page1999pagerank} with restart probability 0.15 and iterative partial boosted seed oversampling of previous node scores \cite{krasanakis2019boosted} postprocessor
+```
 
 ## Publications
 Publications that have supported development of various aspects of
@@ -113,6 +95,17 @@ this library. These are presented in reverse chronological order.
 }
 ```
 
+```
+@misc{krasanakis2021pygrank,
+      title={pygrank: A Python Package for Graph Node Ranking}, 
+      author={Emmanouil Krasanakis, Symeon Papadopoulos, Ioannis Kompatsiaris, Andreas Symeonidis},
+      year={2021},
+      eprint={2110.09274},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
+}
+```
+
 ## Related
 Additional publications introducing methods implemented in this package.
 
@@ -181,5 +174,46 @@ Additional publications introducing methods implemented in this package.
   pages={808--828},
   year={2018},
   publisher={IEEE}
+}
+```
+
+```
+@inproceedings{yu2021chebyshev,
+  title={Chebyshev Accelerated Spectral Clustering},
+  author={Yu, Tianyu and Zhao, Yonghua and Huang, Rongfeng and Liu, Shifang and Zhang, Xinyin},
+  booktitle={Proceedings of the 14th ACM International Conference on Web Search and Data Mining},
+  pages={247--255},
+  year={2021}
+}
+```
+
+```
+@article{susnjara2015accelerated,
+  title={Accelerated filtering on graphs using lanczos method},
+  author={Susnjara, Ana and Perraudin, Nathanael and Kressner, Daniel and Vandergheynst, Pierre},
+  journal={arXiv preprint arXiv:1509.04537},
+  year={2015}
+}
+```
+
+```
+@inproceedings{wu2012learning,
+  title={Learning with Partially Absorbing Random Walks.},
+  author={Wu, Xiao-Ming and Li, Zhenguo and So, Anthony Man-Cho and Wright, John and Chang, Shih-Fu},
+  booktitle={NIPS},
+  volume={25},
+  pages={3077--3085},
+  year={2012}
+}
+```
+
+```
+@inproceedings{andersen2007local,
+  title={Local partitioning for directed graphs using PageRank},
+  author={Andersen, Reid and Chung, Fan and Lang, Kevin},
+  booktitle={International Workshop on Algorithms and Models for the Web-Graph},
+  pages={166--178},
+  year={2007},
+  organization={Springer}
 }
 ```

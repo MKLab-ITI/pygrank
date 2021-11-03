@@ -67,6 +67,9 @@ class GraphFilter(NodeRanking):
     def _step(self, M, personalization, ranks, *args, **kwargs):
         raise Exception("Use a derived class of GraphFilter that implements the _step method")
 
+    def references(self):
+        return ["graph filter \\cite{ortega2018graph}"]
+
 
 class RecursiveGraphFilter(GraphFilter):
     """Implements a graph filter described through a recursion ranks = formula(G, ranks)"""
@@ -105,6 +108,11 @@ class RecursiveGraphFilter(GraphFilter):
                  *args, **kwargs):
         raise Exception("Use a derived class of RecursiveGraphFilter that implements the _formula method")
 
+    def references(self):
+        refs = super().references()
+        if self.converge_to_eigenvectors:
+            refs += "unbiased eigenvector convergence \\cite{krasanakis2018venuerank}"
+        return refs
 
 class ClosedFormGraphFilter(GraphFilter):
     """Implements a graph filter described as an aggregation of graph signal diffusion certain number of hops away
@@ -139,6 +147,16 @@ class ClosedFormGraphFilter(GraphFilter):
         self.krylov_dims = krylov_dims
         self.coefficient_type = coefficient_type.lower()
         self.optimization_dict = optimization_dict
+
+    def references(self):
+        refs = super().references()
+        if self.coefficient_type == "chebyshev":
+            refs.append("Chebyshev coefficients \\cite{yu2021chebyshev}")
+        if self.krylov_dims is not None:
+            refs.append("Lanczos acceleration \\cite{susnjara2015accelerated} in the"+str(self.krylov_dims)+"-dimensional Krylov space")
+        if self.optimization_dict is not None:
+            refs.append("dictionary-based hashing \\cite{krasanakis2021pygrank}")
+        return refs
 
     def _start(self, M, personalization, ranks, *args, **kwargs):
         self.coefficient = None

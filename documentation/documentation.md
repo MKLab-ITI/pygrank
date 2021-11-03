@@ -30,25 +30,24 @@ For a brief overview of common terms found in this document
 please refer to the [glossary](glossary.md).
 
 # Architecture
-`pygrank` is designed with a hierarchical architecture in mind, where the roles
-of source code components can be clearly separated. At the core of the package
+`pygrank` is designed with a hierarchical architecture, where the roles
+of source code components are clearly separated. At the core of the package
 lie the concept of graph signals, which wrap machine learning primitives
-(e.g. numpy arrays or tensorflow tensors) to be propagated through graphs.
-Whatever these primitives may be, they can be manipulated through an 
-abstracted backend.
+(i.e. arrays, tensors) to be propagated through graphs.
+These primitives are manipulated through an abstracted backend.
 
-Then, a separate module defines measures that can be used to assess the outcome
-of prediction tasks on graphs. These include both supervised and unsupervised measures,
-as well as ways to combine multiple ones (e.g. AUC and fairness-aware pRule that
-assesses disparate impact) to quantify the efficacy of multiclass predictions.
+A separate module defines measures that can assess the outcome of prediction tasks on
+graphs. These include both supervised and unsupervised measures,
+as well as ways to combine many of them (e.g. AUC and pRule) 
+o quantify the efficacy of multiclass predictions.
 
-A module is also delegated to defining node ranking algorithms on graphs.
-These are defined graph filters, which diffuse node scores to their neighbors.
+Perhaps the most important module is the one defining node ranking algorithms on graphs.
+The base of all algorithms are graph filters, which diffuse node scores to their neighbors.
 The outcome of filtering can be postprocessed 
-towards various objectives through direct transformations or applying iterative
+towards various objectives through transformations or by applying iterative
 schemes that edit algorithm inputs. A particularly useful part of the module
-is the ability to automatically tune parameters on-the-fly, in a computationally
-efficient manner. We refer to this practice as *autotune*.
+is the ability to automatically tune parameters on-the-fly towards optimizing given measures
+in a computationally efficient manner. We refer to this practice as *autotune*.
 
 Finally, a separate module is used to support benchmarking experiments that compare
 various node ranking algorithms.
@@ -56,15 +55,14 @@ various node ranking algorithms.
 ![architecture](architecture.png)
 
 # Graph Signals
-Graph signals are ways to organize numerical values corresponding to respective
-nodes. They are inputted in and returned by ranking algorithms. For ease of use,
+Graph signals are ways to organize numerical values corresponding to  nodes. 
+Signals are inputted in and returned by ranking algorithms. For ease of use,
 ranking algorithms can also use maps of node values (e.g.  `{'A': 3, 'C': 2}`),
 numpy arrays (e.g. `np.array([3, 0, 2, 0])` or primitives of the currently enabled 
 backend. In this case, the graph also needs to be the passed to the inputs and
-algorithms perform signal conversions internally.
-In case of list, array or tensor inputs, their element order corresponds to
-the order in which networkx traverses graph nodes. 
-Then, these representations are converted internally to graph signals.
+algorithms perform internal conversions into graph signal representations.
+In case of list, array or tensor inputs, value order corresponds to
+the order in which *networkx* traverses graph nodes. 
 
 ### Defining and Manipulating Graph Signals
 As an example, let us create a simple graph
@@ -88,12 +86,12 @@ To create a graph signal holding this information we can write:
 If is possible to directly access graph signal values as objects of the
 respective backend through a `signal.np` attribute. For example, if the
 default *numpy* backend is used, this attribute holds a numpy array
-(although it may hold other primitives, depending on the loaded backend).
+(although it will hold different primitives, depending on the loaded backend, 
+these can manipulated through available backend operations).
 
 Continuing from the previous example,
 in the following code we divide a graph signal's elements with their sum.
-For this, we use of the package's backend.
-Value changes are reflected to the values being accessed.
+Value changes are reflected by signal access.
 
 ```python
 >>> print(signal.np)
@@ -109,7 +107,7 @@ Value changes are reflected to the values being accessed.
 ### Implicit Use of Signals
 For ease of use, the package can directly parse
 dictionaries that map nodes to values. For example, in the dictionary
-`{'A':0.6,'C':0.4}` omitted nodes correspond to zero scores. It can also parse
+`{'A':0.6,'C':0.4}` omitted nodes correspond to zeroes. It can also parse
 numpy arrays or tensorflow tensors with the same number of elements as graph nodes.
 For example, a parsable array would be
 `numpy.ndarray([node_scores.get(v, 0) for v in G])`, where `G`
@@ -125,7 +123,7 @@ corresponding node values can be obtained through the object attribute
 
 # Graph Filters
 Graph filters are ways to diffuse graph signals through graphs by sending
-node values to their neighbors and aggregating them there. This process
+node values to neighbors and aggregating them there. This process
 effectively ends up with new graph signals. The original graph signals,
 often called *personalization* usually hold values proportional to the probabilities
 that nodes exhibit a property of interest (e.g. are members of an attribute-based
@@ -560,7 +558,7 @@ citeseer2 : 701 community members 3327 nodes 4676 edges
 `pygrank` offers the ability to conduct benchmark experiments that compare
 node ranking algorithms and parameters on a wide range of graphs. For example,
 a simple way to obtain some fastly-running algorithms and small datasets and
-compare them under AUC would be as:
+compare them under the AUC measure would be per:
 
 ```python
 >>> import pygrank as pg
@@ -584,8 +582,9 @@ bigraph        	 .96     	 .77    	 .77     	 1.00 	 .98  	 .86
 # REQUIRED CITATION: Please visit the url https://github.com/maniospas/pygrank-datasets for instructions on how to cite the dataset bigraph in your research
 ```
 
-Of course, in the above scheme a customly-defined algorithms could also be added
-or used in place of `algorithms`. For example, we could add an automatically-tuned
+In the above scheme customly-defined algorithms could also be added
+or used in place of the `algorithms` dictionary.
+For example, we could add an automatically-tuned
 algorithm (more on these later) with default parameters per the following code and
 then re-run experiments to compare this with alternatives.
 
@@ -626,12 +625,12 @@ by default creates a `GenericGraphFilter` instance with ten parameters.
 True
 ```
 
-Specific algorithms can also be tuned given specific parameter values given that
-you can write a lambda or normal method to instantiate the algorithm from 
-a given set of parameters. For example, the following code defines and runs
-a tuner, where personalization could be the training personalization of the
+Specific algorithms can also be tuned on specific parameter values ,given
+a method to instantiate the algorithm from  a given set of parameters
+(at worst, a lambda expression). For example, the following code defines and runs
+a tuner with the same training personalization of the
 previous example. The tuner finds the optimal alpha value of personalized
-PageRank that optimizes NDCG instead of AUC that tuners use by default.
+PageRank that optimizes NDCG (tuners optimize AUC be default if no measure is provided).
 
 ```python
 >>> import pygrank as pg
@@ -649,9 +648,9 @@ After initialization with the appropriate
 parameters, these can be used interchangeably in the above example.
 
 ### Tuning Speedup with Optimization Dictionaries
-Graph convolutions are the most computationally-intensive operations the
-node ranking algorithms employ, since their running time scales linearly with the 
-number of network edges (instead of degrees). However, when tuners
+Graph convolutions are the most computationally-intensive operations
+node ranking algorithms employ, as their running time scales linearly with the 
+number of network edges (instead of nodes). However, when tuners
 aim to optimize algorithms involving graph filters extending the
 `ClosedFormGraphFilter` class, graph filtering is decomposed into 
 weighted sums of naturally occurring
@@ -659,14 +658,14 @@ Krylov space base elements {*M<sup>n</sup>p*, *n=0,1,...*}.
 
 To speed up computation time (by many times in some settings) `pygrank`
 provides the ability to save the generation of this Krylov space base
-so that future runs do not re-compute it, effectively removing the need
+so that future runs do *not* recompute it, effectively removing the need
 to perform graph convolutions all but once for each personalization.
 
 :warning: When applying this speedup outside of tuners, it requires
 explicitly passing a graph signal object to graph filters
-(e.g. it does not work with hashmap inputs) since this is the only
-way to guarantee hashing both the personalization and graph information
-with one persistent object.
+(e.g. it does not work with dictionary inputs) since this is the only
+way to hash both the personalization and the graph
+on one persistent object.
 
 To enable this behavior, a dictionary needs to be passed to closed form
 graph filter constructors through an `optimization_dict` argument.
@@ -686,13 +685,18 @@ to default algorithms and this can be achieved with the following code.
 :warning: Similarly to the `assume_immutability=True` option
 for preprocessors, this requires that graphs signals are not altered in
 the interim, although it is possible to clear signal values.
-
-:warning: The speedup allocates at least double the memory. To remove
+In particular, to remove
 allocated memory, you can keep a reference to the dictionary and clear
 it afterwards with `optimization_dict.clear()`.
 
-:warning: Using optimization dictionaries multiplies (e.g. doubles)
+:warning: Using optimization dictionaries multiplies (e.g. at least doubles)
 the amount of used memory, which the system may run out of for large graphs.
+
+:bulb: The default algorithms provided by tuners make use of the class
+*pygrank.SelfClearDict* instead of a normal dictionary, which keeps track only
+of the last personalization and only optimizes runs for the last personalization.
+This way optimization becomes fast while allocating the minimum memory required
+for tuning.
 
 
 # Applications

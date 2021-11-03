@@ -34,6 +34,12 @@ class PageRank(RecursiveGraphFilter):
         # TODO: del self.is_dangling
         super()._end(M, personalization, ranks, *args, **kwargs)
 
+    def references(self):
+        refs = super().references()
+        refs[0] = "personalized PageRank \\cite{page1999pagerank}"
+        refs.insert(1, f"restart probability {int((1-self.alpha)*1000)/1000.}")
+        return refs
+
 
 class HeatKernel(ClosedFormGraphFilter):
     """ Heat kernel filter."""
@@ -58,6 +64,12 @@ class HeatKernel(ClosedFormGraphFilter):
     def _coefficient(self, previous_coefficient):
         # backend.exp(-self.t)
         return 1. if previous_coefficient is None else (previous_coefficient * self.t / (self.convergence.iteration + 1))
+
+    def references(self):
+        refs = super().references()
+        refs[0] = "HeatKernel \\cite{chung2007heat}"
+        refs.insert(1, f"emphasis on {self.t}-hop distances")
+        return refs
 
 
 class AbsorbingWalks(RecursiveGraphFilter):
@@ -105,6 +117,11 @@ class AbsorbingWalks(RecursiveGraphFilter):
         ret = (backend.conv(ranks, M) * self.degrees + personalization * self.absorption) / (self.absorption + self.degrees)
         return ret
 
+    def references(self):
+        refs = super().references()
+        refs[0] = "partially absorbing random walks \\cite{wu2012learning}"
+        return refs
+
 
 class BiasedKernel(RecursiveGraphFilter):
     """ Heuristic kernel-like method that places emphasis on shorter random walks."""
@@ -118,3 +135,8 @@ class BiasedKernel(RecursiveGraphFilter):
     def _formula(self, M, personalization, ranks, *args, **kwargs):
         a = self.alpha * self.t / self.convergence.iteration
         return personalization + a * (backend.conv(ranks, M) * personalization) - ranks
+
+    def references(self):
+        refs = super().references()
+        refs[0] = "local ranking heuristic of low quality \\cite{krasanakis2020unsupervised}"
+        return refs
