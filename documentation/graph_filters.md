@@ -6,6 +6,8 @@ Constructor details are provided, including arguments inherited from and passed 
 All of them can be used through the code patterns presented at the library's [documentation](documentation.md#graph-filters). 
 1. [GenericGraphFilter](#closedformgraphfilter-genericgraphfilter)
 2. [HeatKernel](#closedformgraphfilter-heatkernel)
+3. [AbsorbingWalks](#recursivegraphfilter-absorbingwalks)
+4. [PageRank](#recursivegraphfilter-pagerank)
 
 ### <kbd>ClosedFormGraphFilter</kbd> GenericGraphFilter
 
@@ -48,6 +50,61 @@ Example:
 ```python 
 >>> from pygrank.algorithms import HeatKernel 
 >>> algorithm = HeatKernel(t=3, tol=1.E-9) # tol passed to the ConvergenceManager 
+>>> graph, seed_nodes = ... 
+>>> ranks = algorithm(graph, {v: 1 for v in seed_nodes}) 
+```
+
+
+### <kbd>RecursiveGraphFilter</kbd> AbsorbingWalks
+
+Implementation of partial absorbing random walks for Lambda = (1-alpha)/alpha diag(absorption vector) . 
+Initializes the AbsorbingWalks filter parameters. For appropriate parameter values. This can model PageRank 
+but is in principle a generalization that allows custom absorption rate per node (when not given, these are I). 
+
+Args: 
+ * *alpha:* Optional. (1-alpha)/alpha is the absorption rate of the random walk multiplied with individual node absorption rates. This is chosen to yield the same underlying meaning as PageRank (for which Lambda = alpha Diag(degrees) ) when the same parameter value alpha is chosen. Default is 1-1.E-6 per the respective publication. 
+ * *use_quotient:* Optional. If True (default) performs a L1 re-normalization of ranks after each iteration. This significantly speeds up the convergence speed of symmetric normalization (col normalization preserves the L1 norm during computations on its own). Can also pass Postprocessor instances to adjust node scores after each iteration with the Postprocessor.transform(ranks) method. Can pass False or None to ignore this functionality. 
+ * *preprocessor:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *personalization_transform:* Optional. A Postprocessor whose `transform` method is used to transform the personalization before applying the graph filter. If None (default) a Tautology is used. 
+
+Example:
+
+```python 
+>>> from pygrank.algorithms import AbsorbingWalks 
+>>> algorithm = AbsorbingWalks(1-1.E-6, tol=1.E-9) # tol passed to the ConvergenceManager 
+>>> graph, seed_nodes = ... 
+>>> ranks = algorithm(graph, {v: 1 for v in seed_nodes}) 
+```
+
+
+Example (same outcome, explicit absorption rate definition):
+
+```python 
+>>> from pygrank.algorithms import AbsorbingWalks 
+>>> algorithm = AbsorbingWalks(1-1.E-6, tol=1.E-9) # tol passed to the ConvergenceManager 
+>>> graph, seed_nodes = ... 
+>>> ranks = algorithm(graph, {v: 1 for v in seed_nodes}, absorption={v: 1 for v in graph}) 
+```
+
+
+### <kbd>RecursiveGraphFilter</kbd> PageRank
+
+A Personalized PageRank power method algorithm. 
+Initializes the PageRank scheme parameters. 
+
+Args: 
+ * *alpha:* Optional. 1-alpha is the bias towards the personalization. Default value is 0.85. 
+ * *use_quotient:* Optional. If True (default) performs a L1 re-normalization of ranks after each iteration. This significantly speeds up the convergence speed of symmetric normalization (col normalization preserves the L1 norm during computations on its own). Can also pass Postprocessor instances to adjust node scores after each iteration with the Postprocessor.transform(ranks) method. Can pass False or None to ignore this functionality. 
+ * *preprocessor:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *personalization_transform:* Optional. A Postprocessor whose `transform` method is used to transform the personalization before applying the graph filter. If None (default) a Tautology is used. 
+
+Example:
+
+```python 
+>>> import pygrank as pg 
+>>> algorithm = pg.PageRank(alpha=0.99, tol=1.E-9) # tol passed to the ConvergenceManager 
 >>> graph, seed_nodes = ... 
 >>> ranks = algorithm(graph, {v: 1 for v in seed_nodes}) 
 ```

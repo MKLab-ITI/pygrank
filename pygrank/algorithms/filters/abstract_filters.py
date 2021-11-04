@@ -90,9 +90,6 @@ class RecursiveGraphFilter(GraphFilter):
         self.converge_to_eigenvectors = converge_to_eigenvectors
 
     def _step(self, M, personalization, ranks, *args, **kwargs):
-        if self.predictive is not None:
-            self._prev_prev_ranks = self._prev_ranks
-            self._prev_ranks = ranks.np
         ranks.np = self._formula(M, personalization.np, ranks.np, *args, **kwargs)
 
         if isinstance(self.use_quotient, Postprocessor):
