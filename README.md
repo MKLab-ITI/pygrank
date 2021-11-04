@@ -22,9 +22,9 @@ The following roadmap overviews short-term development goals and will be updated
 :x: 100% code coverage<br>
 :x: 100% documentation completeness<br>
 :x: Automatic download for all related publication datasets<br>
-:x: Updated reference docs and automated citation discovery for algorithms<br>
-:x: Enable Arnoldi and Lanczos optimizations in non-numpy backends<br>
-:x: Transparent handling of float and double precisions (as of 0.2.4 everything is in float32, but this will change)
+:heavy_check_mark: Updated reference docs and automated citation discovery for algorithms (achieved as of 0.2.5 with algorithms.cite())<br>
+:heavy_check_mark: Enable Arnoldi and Lanczos optimizations in non-numpy backends (achieved as of 0.2.5 - tensorflow vesion may still be buggy)<br>
+:x: Transparent handling of float and double precisions (as of 0.2.5 numpy is on float64 but pytorch and tensorflow in float32)
 
 # :hammer_and_wrench: Installation
 `pygrank` is meant to work with Python 3.9 or later. It can be installed with pip per:

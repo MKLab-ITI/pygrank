@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tensorflow import abs, reduce_sum as sum, exp, eye, identity as copy, reduce_min as min, reduce_max as max, reduce_mean as mean
+from tensorflow import abs, reduce_sum as sum, exp, eye, identity as copy, reduce_min as min, reduce_max as max, reduce_mean as mean, ones
 
 
 def backend_init():
@@ -33,6 +33,10 @@ def log(x):
 
 def dot(x, y):
     return tf.reduce_sum(x*y)
+
+
+def diag(diagonal, offset=0):
+    return tf.linalg.diag(diagonal, k=offset)
 
 
 def repeat(value, times):
