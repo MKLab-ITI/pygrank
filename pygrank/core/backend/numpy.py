@@ -1,5 +1,5 @@
 import numpy as np
-from numpy import abs, sum, exp, log, copy, repeat, min, max, dot, mean
+from numpy import abs, sum, exp, log, copy, repeat, min, max, dot, mean, diag, ones
 from scipy.sparse import eye
 
 
@@ -58,6 +58,8 @@ def conv(signal, M):
 
 def length(x):
     if isinstance(x, np.ndarray):
+        if len(x.shape) > 1:
+            return x.shape[0]*x.shape[1]
         return x.shape[0]
     return len(x)
 

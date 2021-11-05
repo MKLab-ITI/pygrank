@@ -54,6 +54,9 @@ class SeedOversampling(Postprocessor):
         else:
             raise Exception("Supported oversampling methods: safe, neighbors, top")
 
+    def _reference(self):
+        return self.method+" seed oversampling \\cite{krasanakis2019boosted}"
+
 
 class BoostedSeedOversampling(Postprocessor):
     """ Iteratively performs seed oversampling and combines found ranks by weighting them with a Boosting scheme."""
@@ -118,3 +121,6 @@ class BoostedSeedOversampling(Postprocessor):
             RN = to_signal(RN, [RN.get(u, 0) + a_N*Rr0_N[u] for u in graph])
             sum_a_N += a_N
         return RN
+
+    def _reference(self):
+        return "iterative "+self._objective+" boosted seed oversampling of "+self._oversample_from_iteration+" node scores \\cite{krasanakis2019boosted}"

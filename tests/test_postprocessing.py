@@ -22,6 +22,18 @@ def test_tautology():
     assert float(sum(u.np)) == len(graph)
 
 
+def test_seed_oversampling_arguments():
+    _, graph, group = next(pg.load_datasets_one_community(["graph9"]))
+    with pytest.raises(Exception):
+        pg.SeedOversampling(pg.PageRank(), 'unknown').rank(graph, {"A": 1})
+    with pytest.raises(Exception):
+        pg.SeedOversampling(pg.PageRank()).rank(graph, {"A": 0.1, "B": 1})
+    with pytest.raises(Exception):
+        pg.BoostedSeedOversampling(pg.PageRank(), 'unknown').rank(graph, {"A": 1})
+    with pytest.raises(Exception):
+        pg.BoostedSeedOversampling(pg.PageRank(), 'naive', oversample_from_iteration='unknown').rank(graph, {"B": 1})
+
+
 def test_seed_oversampling():
     _, graph, group = next(pg.load_datasets_one_community(["graph9"]))
     for _ in supported_backends():
@@ -39,15 +51,6 @@ def test_seed_oversampling():
         pg.SeedOversampling(pg.PageRank(0.99, max_iters=1000), "top").rank(graph, training)
         pg.SeedOversampling(pg.PageRank(0.99, max_iters=1000), "neighbors").rank(graph, training)
         pg.BoostedSeedOversampling(pg.PageRank(max_iters=1000), 'naive', oversample_from_iteration='original').rank(graph, {"A": 1})
-
-    with pytest.raises(Exception):
-        pg.SeedOversampling(pg.PageRank(), 'unknown').rank(graph, {"0": 1})
-    with pytest.raises(Exception):
-        pg.SeedOversampling(pg.PageRank()).rank(graph, {"0": 0.1, "1": 1})
-    with pytest.raises(Exception):
-        pg.BoostedSeedOversampling(pg.PageRank(), 'unknown').rank(graph, {"1": 1})
-    with pytest.raises(Exception):
-        pg.BoostedSeedOversampling(pg.PageRank(), 'naive', oversample_from_iteration='unknown').rank(graph, {"1": 1})
 
 
 def test_norm_maintain():

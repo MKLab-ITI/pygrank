@@ -3,7 +3,7 @@ from pygrank.core import to_signal, GraphSignal, NodeRanking
 from pygrank.measures.utils import split
 from pygrank.measures import AUC, Measure, Time
 from timeit import default_timer as time
-from typing import Union, Iterable
+from typing import Union, Iterable, Optional
 import networkx as nx
 import collections
 
@@ -12,7 +12,7 @@ def benchmark(algorithms: Mapping[str, NodeRanking],
               datasets: Any,
               metric: Union[Callable[[nx.Graph], Measure], Callable[[GraphSignal, GraphSignal], Measure]] = AUC,
               fraction_of_training: Union[float, Iterable[float]] = 0.5,
-              sensitive: Union[Callable[[nx.Graph], Measure], Callable[[GraphSignal, GraphSignal], Measure]] = None,
+              sensitive: Optional[Union[Callable[[nx.Graph], Measure], Callable[[GraphSignal, GraphSignal], Measure]]] = None,
               seed: Union[int, Iterable[int]] = 0):
     """
     Compares the outcome of provided algorithms on given datasets using a desired metric.
@@ -24,6 +24,8 @@ def benchmark(algorithms: Mapping[str, NodeRanking],
         metric: A method to instantiate a measure type to assess the efficacy of algorithms with.
         fraction_of_training: The fraction of training samples to split on. The rest are used for testing. An
             iterable of floats can also be provided to experiment with multiple fractions.
+        sensitive: Optinal. A generator of sensitivity-aware supervised or unsupervised measures.
+            Could be None (default).
         seed: A seed to ensure reproducibility. Default is 0. An iterable of floats can also be provided to experimet
             with multiple seeds.
     Returns:

@@ -1,6 +1,7 @@
 import io
 import math
 import sys
+from typing import Optional
 
 
 def _fraction2str(num, decimals=2):
@@ -38,8 +39,8 @@ def _fill(text="", tab=14):
 def benchmark_print(benchmark,
                     delimiter: str = " \t ",
                     end_line: str = "",
-                    out: io.TextIOWrapper = sys.stdout,
-                    err: io.TextIOWrapper = sys.stderr,
+                    out: Optional[io.TextIOWrapper] = sys.stdout,
+                    err: Optional[io.TextIOWrapper] = sys.stderr,
                     decimals: int = 2):
     """
     Print outcomes provided by a given benchmark as a table in the console. To ensure that `sys.stderr`

@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from torch import abs, exp, eye, clone as copy, log
+from torch import abs, exp, eye, clone as copy, log, ones
 
 
 def sum(x, axis=None):
@@ -25,6 +25,10 @@ def mean(x, axis=None):
     if axis is None:
         return torch.mean(x)
     return torch.mean(x, dim=axis)
+
+
+def diag(x, offset=0):
+    return torch.diagflat(x, offset=offset)
 
 
 def backend_init():

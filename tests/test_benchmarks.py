@@ -19,8 +19,10 @@ def test_benchmark_print():
 
 def test_unsupervised_vs_auc():
     pg.load_backend("numpy")
+
     def loader():
         return pg.load_datasets_multiple_communities(["graph9"])
+
     algorithms = pg.create_variations(pg.create_many_filters(), pg.create_many_variation_types())
     time_scores = pg.benchmark_scores(pg.benchmark(algorithms, loader(), pg.Time))
     assert sum(time_scores) > 0
@@ -28,7 +30,7 @@ def test_unsupervised_vs_auc():
     measures = {"AUC": lambda ground_truth, exlude: pg.MultiSupervised(pg.AUC, ground_truth, exlude),
                 "NDCG": lambda ground_truth, exlude: pg.MultiSupervised(pg.NDCG, ground_truth, exlude),
                 "Density": lambda graph: pg.MultiUnsupervised(pg.Density, graph),
-                "Modularity": lambda graph: pg.MultiUnsupervised(pg.Modularity, graph),
+                "Modularity": lambda graph: pg.MultiUnsupervised(pg.Modularity, graph, max_positive_samples=8),
                 "CCcos": lambda graph: pg.ClusteringCoefficient(graph, similarity="cos"),
                 "CCdot": lambda graph: pg.ClusteringCoefficient(graph, similarity="dot"),
                 "LinkAUCcos": lambda graph: pg.LinkAssessment(graph, similarity="cos"),
@@ -37,7 +39,8 @@ def test_unsupervised_vs_auc():
                 "HopAUCdot": lambda graph: pg.LinkAssessment(graph, similarity="dot", hops=2),
                 }
 
-    scores = {measure: pg.benchmark_scores(pg.benchmark(algorithms, loader(), measures[measure])) for measure in measures}
+    scores = {measure: pg.benchmark_scores(pg.benchmark(algorithms, loader(), measures[measure]))
+              for measure in measures}
     supervised = {"AUC", "NDCG"}
     evaluations = dict()
     for measure in measures:
@@ -64,8 +67,6 @@ def test_one_community_benchmarks():
 
     loader = pg.load_datasets_one_community(datasets)
     pg.benchmark_print(pg.benchmark(algorithms, loader, pg.AUC, fraction_of_training=.8))
-    #loader = pg.load_datasets_one_community(datasets)
-    #pg.benchmark_print(pg.benchmark(algorithms, loader, pg.Conductance, fraction_of_training=.8))
 
 
 def test_load_dataset_load():

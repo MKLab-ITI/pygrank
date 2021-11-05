@@ -52,6 +52,8 @@ def test_edge_cases():
         pg.AUC([1, 1, 1])([0, 1, 0])
     with pytest.raises(Exception):
         pg.KLDivergence([0], exclude={"A": 1})([1])
+    with pytest.raises(Exception):
+        pg.Conductance(next(pg.load_datasets_graph(["graph5"])), max_rank=0.5)([1, 1, 1, 1, 1])
     import networkx as nx
     for _ in supported_backends():
         assert pg.Density(nx.Graph())([]) == 0

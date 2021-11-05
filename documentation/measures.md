@@ -29,6 +29,7 @@ All of them can be used through the code patterns presented at the library'perso
 
 An abstract class that can be passed to benchmark experiments to indicate that they should report running time 
 of algorithms. Instances of this class have no functionality. 
+Initialize self.  See help(type(self)) for accurate signature. 
 
 ### <kbd>MeasureCombination</kbd> AM
 

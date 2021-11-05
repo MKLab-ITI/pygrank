@@ -40,9 +40,8 @@ class Conductance(Unsupervised):
     def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
         scores = to_signal(self.graph, scores)
         graph = scores.graph
-        if max(scores.values()) > self.max_rank:
-            warnings.warn("Normalize scores to be <= " + str(self.max_rank)
-                          + " to guarantee correct probabilistic formulation", stacklevel=2)
+        if backend.max(scores.np) > self.max_rank:
+            raise Exception("Normalize scores to be <= " + str(self.max_rank) + " for non-negative conductance")
         external_edges = sum(scores.get(i, 0)*(self.max_rank-scores.get(j, 0)) for i, j in graph.edges())
         internal_edges = sum(scores.get(i, 0)*scores.get(j, 0) for i, j in graph.edges())
         if internal_edges > graph.number_of_edges()/2:

@@ -1,5 +1,5 @@
 from pygrank.core.typing import BackendGraph, BackendPrimitive
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Tuple
 
 
 def backend_name() -> str:  # pragma: no cover
@@ -50,7 +50,15 @@ def log(x: BackendPrimitive) -> BackendPrimitive: # pragma: no cover
     pass
 
 
+def ones(dims: Tuple[int, int]) -> BackendPrimitive:  # pragma: no cover
+    pass
+
+
 def eye(dims: int) -> BackendPrimitive:  # pragma: no cover
+    pass
+
+
+def diag(diagonal: BackendPrimitive, offset: int = 0) -> BackendPrimitive:  # pragma: no cover
     pass
 
 

@@ -4,8 +4,7 @@ from pygrank.algorithms.utils import preprocessor as default_preprocessor, Conve
 from pygrank.algorithms.utils import krylov_base, krylov2original, krylov_error_bound
 from pygrank.core import backend
 from pygrank.algorithms.postprocess import Postprocessor, Tautology
-from typing import Union
-import warnings
+from typing import Union, Optional
 
 
 class GraphFilter(NodeRanking):
@@ -67,6 +66,9 @@ class GraphFilter(NodeRanking):
     def _step(self, M, personalization, ranks, *args, **kwargs):
         raise Exception("Use a derived class of GraphFilter that implements the _step method")
 
+    def references(self):
+        return ["graph filter \\cite{ortega2018graph}"]
+
 
 class RecursiveGraphFilter(GraphFilter):
     """Implements a graph filter described through a recursion ranks = formula(G, ranks)"""
@@ -89,12 +91,14 @@ class RecursiveGraphFilter(GraphFilter):
 
     def _step(self, M, personalization, ranks, *args, **kwargs):
         ranks.np = self._formula(M, personalization.np, ranks.np, *args, **kwargs)
+
         if isinstance(self.use_quotient, Postprocessor):
             ranks.np = self.use_quotient.transform(ranks).np
         elif self.use_quotient:
             ranks_sum = backend.sum(ranks.np)
             if ranks_sum != 0:
                 ranks.np = ranks.np / ranks_sum
+
         if self.converge_to_eigenvectors:
             personalization.np = ranks.np
 
@@ -104,6 +108,12 @@ class RecursiveGraphFilter(GraphFilter):
                  ranks: BackendPrimitive,
                  *args, **kwargs):
         raise Exception("Use a derived class of RecursiveGraphFilter that implements the _formula method")
+
+    def references(self):
+        refs = super().references()
+        if self.converge_to_eigenvectors:
+            refs += "unbiased eigenvector convergence \\cite{krasanakis2018venuerank}"
+        return refs
 
 
 class ClosedFormGraphFilter(GraphFilter):
@@ -139,6 +149,16 @@ class ClosedFormGraphFilter(GraphFilter):
         self.krylov_dims = krylov_dims
         self.coefficient_type = coefficient_type.lower()
         self.optimization_dict = optimization_dict
+
+    def references(self):
+        refs = super().references()
+        if self.coefficient_type == "chebyshev":
+            refs.append("Chebyshev coefficients \\cite{yu2021chebyshev}")
+        if self.krylov_dims is not None:
+            refs.append("Lanczos acceleration \\cite{susnjara2015accelerated} in the"+str(self.krylov_dims)+"-dimensional Krylov space")
+        if self.optimization_dict is not None:
+            refs.append("dictionary-based hashing \\cite{krasanakis2021pygrank}")
+        return refs
 
     def _start(self, M, personalization, ranks, *args, **kwargs):
         self.coefficient = None
@@ -188,16 +208,16 @@ class ClosedFormGraphFilter(GraphFilter):
     def _retrieve_power(self, ranks_power, M):
         if self.__active_dict is not None:
             if self.convergence.iteration not in self.__active_dict:
-                self.__active_dict[self.convergence.iteration] = backend.conv(ranks_power, M)
+                self.__active_dict[self.convergence.iteration] = backend.conv(ranks_power, M) if self.krylov_dims is None else ranks_power @ M
             return self.__active_dict[self.convergence.iteration]
-        return backend.conv(ranks_power, M)
+        return backend.conv(ranks_power, M) if self.krylov_dims is None else ranks_power @ M
 
     def _step(self, M, personalization, ranks, *args, **kwargs):
         self.coefficient = self._coefficient(self.coefficient)
         if self.krylov_dims is not None:
             self.krylov_result, self.Mpower = self._recursion(self.krylov_result, self.Mpower, self.coefficient)
             ranks.np = krylov2original(self.krylov_base, self.krylov_result, int(self.krylov_dims))
-            self.Mpower = self.Mpower @ self.krylov_H
+            self.Mpower = self._retrieve_power(self.Mpower, self.krylov_H)
         else:
             ranks.np, self.ranks_power = self._recursion(ranks.np, self.ranks_power, self.coefficient)
             self.ranks_power = self._retrieve_power(self.ranks_power, M)

@@ -24,7 +24,7 @@ def create_demo_filters(pre=None,
         pre = preprocessor(assume_immutability=True)
     return {"PPR.85": PageRank(alpha=0.85, preprocessor=pre, max_iters=max_iters, tol=tol),
             "PPR.9": PageRank(alpha=0.95, preprocessor=pre, max_iters=max_iters, tol=tol),
-            "PPR.99": PageRank(alpha=0.95, preprocessor=pre, max_iters=max_iters, tol=tol),
+            "PPR.99": PageRank(alpha=0.99, preprocessor=pre, max_iters=max_iters, tol=tol),
             "HK3": HeatKernel(t=3, preprocessor=pre, max_iters=max_iters, tol=tol),
             "HK5": HeatKernel(t=5, preprocessor=pre, max_iters=max_iters, tol=tol),
             "HK7": HeatKernel(t=7, preprocessor=pre, max_iters=max_iters, tol=tol)
