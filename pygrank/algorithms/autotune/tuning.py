@@ -1,4 +1,4 @@
-from pygrank.core.signals import GraphSignal, to_signal, NodeRanking, GraphSignalGraph, GraphSignalData
+from pygrank.core.signals import GraphSignal, to_signal, NodeRanking, GraphSignalGraph, GraphSignalData, no_signal
 from pygrank.algorithms.utils import preprocessor, ensure_used_args, remove_used_args
 from pygrank.algorithms.autotune.optimization import optimize
 from pygrank.measures import Supervised, AUC
@@ -140,6 +140,16 @@ class ParameterTuner(Tuner):
             # TODO: make training back-propagate through tensorflow for combined_prediction==False (do this with a gather in the split method)
         return self.ranker_generator(best_params), personalization if self.combined_prediction else training
 
+    def references(self):
+        desc = "parameters tuned \\cite{krasanakis2021pygrank} to optimize "+self.measure(no_signal, no_signal).__class__.__name__\
+               +f" while withholding {1-self.fraction_of_training:.3f} of nodes for validation"
+        ret = self.ranker_generator([-42]).references()  # an invalid parameter value
+        for i in range(len(ret)):
+            if "-42" in ret[i]:
+                ret[i] = desc
+                return ret
+        return ret + [desc]
+
 
 class AlgorithmSelection(Tuner):
     def __init__(self, rankers: Iterable[NodeRanking] = None,
@@ -206,3 +216,10 @@ class AlgorithmSelection(Tuner):
             backend.load_backend(previous_backend)
             # TODO: make training back-propagate through tensorflow for combined_prediction==False
         return best_ranker, personalization if self.combined_prediction else training
+
+    def references(self):
+        desc = "selected the best among the following algorithms that optimizes "+self.measure(no_signal, no_signal).__class__.__name__ \
+               +f" while withholding {1-self.fraction_of_training:.3f} of nodes for validation: \\\\\n"
+        for ranker in self.rankers:
+            desc += "  - "+ranker.cite()+" \\\\\n"
+        return [desc]

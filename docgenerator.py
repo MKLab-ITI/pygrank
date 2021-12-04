@@ -6,7 +6,8 @@ import pygrank.measures
 import pygrank as pg
 
 """
-THIS FILE IS AUTOMATICALLY RUN BY THE pre-commit HOOK FOR git
+THIS FILE IS AUTOMATICALLY RUN BY THE pre-commit HOOK FOR git.
+Run it only if you have not created the hook in your local machine.
 """
 
 

@@ -1,4 +1,7 @@
 from collections.abc import MutableMapping
+
+import networkx as nx
+
 from pygrank.core import backend
 import numpy as np
 from pygrank.core.typing import GraphSignalGraph, GraphSignalData
@@ -167,3 +170,6 @@ def to_signal(graph: GraphSignalGraph, obj: GraphSignalData) -> GraphSignal:
             raise Exception("Graph signal tied to a different graph")
         return obj
     return GraphSignal(graph, obj, known_node2id)
+
+
+no_signal = GraphSignal(nx.Graph(), list())

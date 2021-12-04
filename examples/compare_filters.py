@@ -10,7 +10,8 @@ algs = {"ppr.85": pg.PageRank(.85, preprocessor=pre, tol=1.E-9, max_iters=1000),
 algs = algs | pg.create_variations(algs, {"+Sweep": pg.Sweep})
 loader = pg.load_datasets_one_community(datasets)
 algs["tuned"] = pg.ParameterTuner(preprocessor=pre, tol=1.E-9, max_iters=1000)
-algs["tuned+Sweep"] = pg.ParameterTuner(ranker_generator=lambda params: pg.Sweep(pg.GenericGraphFilter(params, preprocessor=pre, tol=1.E-9, max_iters=1000)))
+algs["selected"] = pg.AlgorithmSelection()
+#algs["tuned+Sweep"] = pg.ParameterTuner(ranker_generator=lambda params: pg.Sweep(pg.GenericGraphFilter(params, preprocessor=pre, tol=1.E-9, max_iters=1000)))
 
 for alg in algs.values():
    print(alg.cite())
