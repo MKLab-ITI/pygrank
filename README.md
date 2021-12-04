@@ -148,12 +148,16 @@ print(ordinals["B"], ordinals["D"], ordinals["E"])
 
 This yields the same node ordinals, which means that tuning constructed
 a graph filter similar to `PageRank`, though a more suitable one could have been found.
-Tuning may be worse than highly specialized algorithms in some settings, but it is often
+Tuning may be worse than highly specialized algorithms in some settings, but it often
+finds near-best base algorithms. To obtain a recommendation about how to cite complex
+algorithms, an automated description can be extracted by the source code per the following
+command, where bibtex entries corresponding to the citations can be found 
+[list of citations](documentation/citations.md).:
 
+```python
+print(tuned_ranker.cite())
+# graph filter \cite{ortega2018graph} with dictionary-based hashing \cite{krasanakis2021pygrank} and parameters tuned \cite{krasanakis2021pygrank} to optimize AUC while withholding 0.200 of nodes for validation
 ```
-tuned_ranker.cite()
-```
-
 
 
 # :brain: Overview
