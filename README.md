@@ -50,16 +50,16 @@ pg.load_backend(`pytorch`)
 As a quick start, let us construct a networkx graph `G` and a set of nodes `seeds`.
 
 ```python
->>> import networkx as nx
->>> graph = nx.Graph()
->>> graph.add_edge("A", "B")
->>> graph.add_edge("B", "C")
->>> graph.add_edge("C", "D")
->>> graph.add_edge("D", "E")
->>> graph.add_edge("A", "C")
->>> graph.add_edge("C", "E")
->>> graph.add_edge("B", "E")
->>> seeds = {"A", "B"}
+import networkx as nx
+graph = nx.Graph()
+graph.add_edge("A", "B")
+graph.add_edge("B", "C")
+graph.add_edge("C", "D")
+graph.add_edge("D", "E")
+graph.add_edge("A", "C")
+graph.add_edge("C", "E")
+graph.add_edge("B", "E")
+seeds = {"A", "B"}
 ```
 
 We now run a personalized PageRank [graph filter](documentation/documentation.md#graph-filters)
@@ -67,7 +67,7 @@ to score the structural relatedness of graph nodes to the ones of the given set.
  We start by importing the library, 
 
 ```python
->>> import pygrank as pg
+import pygrank as pg
 ```
 
 For instructional purposes,
@@ -82,18 +82,18 @@ normalization depending on whether the graph is undirected (as in this example)
 or not respectively.
 
 ```python
->>> ranker = pg.PageRank(alpha=0.85, tol=1.E-6, normalization="auto")
->>> ranks = ranker(graph, {v: 1 for v in seeds})
+ranker = pg.PageRank(alpha=0.85, tol=1.E-6, normalization="auto")
+ranks = ranker(graph, {v: 1 for v in seeds})
 ```
 
-Node ranking output is always organized into
+Node ranking outputs are always organized into
 [graph signals](documentation/documentation.md#graph-signals)
 which can be used like dictionaries. For example, we can
 print the scores of some nodes per:
 
 ```python
->>> print(ranks["B"], ranks["D"], ranks["E"])
-0.25865456609095644 0.12484722044728883 0.17079023174039495
+print(ranks["B"], ranks["D"], ranks["E"])
+# 0.25865456609095644 0.12484722044728883 0.17079023174039495
 ```
 
 We alter this outcome so that it outputs node order, 
@@ -104,35 +104,56 @@ postprocessors can be found in `pygrank.algorithms.postprocess`,
 but for shortcut purposes  can be used from the top-level package import.
 
 ```python
->>> ordinals = pg.Ordinals(ranker).rank(graph, {v: 1 for v in seeds})
->>> print(ordinals["B"], ordinals["D"], ordinals["E"])
-1 5 4
+ordinals = pg.Ordinals(ranker).rank(graph, {v: 1 for v in seeds})
+print(ordinals["B"], ordinals["D"], ordinals["E"])
+# 1.0 5.0 4.0
 ```
 
 How much time did it take for the base ranker to converge?
 (Depends on backend and device characteristics.)
 
 ```python
->>> print(ranker.convergence)
-19 iterations (0.001831000000009908 sec)
+print(ranker.convergence)
+19 iterations (0.0020614000000023225 sec)
 ```
 
 Since only the node order is important,
 we can use a different way to specify convergence:
 
 ```python
->>> convergence = pg.RankOrderConvergenceManager(pagerank_alpha=0.85, confidence=0.98) 
->>> early_stop_ranker = pg.PageRank(alpha=0.85, convergence=convergence)
->>> ordinals = pg.Ordinals(early_stop_ranker).rank(graph, {v: 1 for v in seeds})
->>> print(early_stop_ranker.convergence)
-2 iterations (0.0006313000000091051 sec)
->>> print(ordinals["B"], ordinals["D"], ordinals["E"])
-1 5 4
+convergence = pg.RankOrderConvergenceManager(pagerank_alpha=0.85, confidence=0.98) 
+early_stop_ranker = pg.PageRank(alpha=0.85, convergence=convergence)
+ordinals = pg.Ordinals(early_stop_ranker).rank(graph, {v: 1 for v in seeds})
+print(early_stop_ranker.convergence)
+# 2 iterations (0.0006666000000450367 sec)
+print(ordinals["B"], ordinals["D"], ordinals["E"])
+# 3.0 5.0 4.0
 ```
 
-Close to the previous results at a fraction of the time!!
-Note that convergence time measurements do not take into account
-the time needed to preprocess graphs.
+Close to the previous results at a fraction of the time!! For large graphs,
+most ordinals would be near the ideal ones. Note that convergence time 
+does not take into account the time needed to preprocess graphs.
+
+Till now we used `PageRank`, but what would happen if we don't know which base
+algorithm? For these cases `pygrank` provides online algorithms for tuning
+graph signal processing filters on the personalization. Thus, we can replace the ranker
+in the ranking algorithm construction code:
+
+```python
+tuned_ranker = pg.ParameterTuner()
+ordinals = pg.Ordinals(tuned_ranker).rank(graph, {v: 1 for v in seeds})
+print(ordinals["B"], ordinals["D"], ordinals["E"])
+# 1.0 5.0 4.0
+```
+
+This yields the same node ordinals, which means that tuning constructed
+a graph filter similar to `PageRank`, though a more suitable one could have been found.
+Tuning may be worse than highly specialized algorithms in some settings, but it is often
+
+```
+tuned_ranker.cite()
+```
+
 
 
 # :brain: Overview
