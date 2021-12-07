@@ -56,12 +56,12 @@ def benchmark(algorithms: Mapping[str, NodeRanking],
                     if multigroup:
                         training = training[0]
                         evaluation = evaluation[0]
-                        sensitive_signal = to_signal(graph, {v: 1 for v in group[0]})
+                        sensitive_signal = to_signal(graph, {v: 1 for v in group[max(group.keys())]})
                     training, evaluation = to_signal(graph, {v: 1 for v in training}), to_signal(graph, {v: 1 for v in evaluation})
                     if sensitive is not None:
                         if not multigroup:
                             sensitive_signal = to_signal(training, 1-evaluation.np)
-                        rank = lambda algorithm: algorithm(graph, training, sensitive=1-training.np)
+                        rank = lambda algorithm: algorithm(graph, training, sensitive=sensitive_signal)
                     else:
                         rank = lambda algorithm: algorithm(graph, training)
                 dataset_results = [name]

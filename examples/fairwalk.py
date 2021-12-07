@@ -1,7 +1,7 @@
 import pygrank as pg
 
 #datasets = ["acm", "amazon", "ant", "citeseer","dblp","facebook0","facebook686","log4j","maven","pubmed","squirel", "twitter"]
-datasets = ["ant", "citeseer", "dblp", "log4j"]
+datasets = ["eucore", "citeseer", "dblp"]
 seed_fractions = [0.1, 0.2, 0.3]
 pre = pg.preprocessor(assume_immutability=True, normalization="symmetric")
 

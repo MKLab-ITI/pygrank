@@ -27,9 +27,9 @@ The following roadmap overviews short-term development goals and will be updated
 :x: Transparent handling of float and double precisions (as of 0.2.5 numpy is on float64 but pytorch and tensorflow in float32)
 
 # :hammer_and_wrench: Installation
-`pygrank` is meant to work with Python 3.9 or later. It can be installed with pip per:
+`pygrank` is meant to work with Python 3.9 or later. The latest version can be installed with pip per:
 ```
-pip install pygrank
+pip install --upgrade pygrank
 ```
 
 To automatically use the machine learning backends (e.g. to integrate the package
