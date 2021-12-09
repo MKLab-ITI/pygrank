@@ -3,7 +3,7 @@
 
 The following postprocessors can be imported from the package `pygrank.algorithms.postprocess`.
 Constructor details are provided, including arguments inherited from and passed to parent classes.
-All of them can be used through the code patterns presented at the library'personalization [documentation](documentation.md#postprocessors).  
+All of them can be used through the code patterns presented at the library's [documentation](documentation.md#postprocessors).  
 1. [AdHocFairness](#postprocessor-adhocfairness)
 2. [BoostedSeedOversampling](#postprocessor-boostedseedoversampling)
 3. [FairPersonalizer](#postprocessor-fairpersonalizer)
