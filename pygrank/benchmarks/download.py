@@ -18,6 +18,14 @@ datasets = {
                  "pairs": "citeseer/citeseer.cites",
                  "features": "citeseer/citeseer.content",
                  "remove": "citeseer/"},
+    "maven": {"url": "https://zenodo.org/record/1489120",
+              "all": "https://zenodo.org/record/1489120/files/maven-data.csv.tar.xz",
+              "pairs": "maven-data.csv/links_all.csv",
+              "remove": "maven-data.csv/",
+              "pair_process": lambda row: None if len(row)>1 else [row[0].split(",")[0], row[0].split(",")[1]],
+              "node2group": lambda node: node.split(":")[0],
+              #"script": dataset_processors.maven_communities
+              },
     "amazon": {"url": "https://snap.stanford.edu/data/amazon-meta.html",
                "all": "https://snap.stanford.edu/data/bigdata/amazon/amazon-meta.txt.gz",
                "script": dataset_processors.amazon_processor},
@@ -110,6 +118,22 @@ def download_dataset(dataset, path: str = "data"):   # pragma: no cover
             with open(download_path+"/pairs.txt", "w") as file:
                 for pair in pairs:
                     file.write(pair[0]+"\t"+pair[1]+"\n")
+
+        if "node2group" in source:
+            groups = dict()
+            with open(download_path+"/pairs.txt", "r") as file:
+                for line in file:
+                    pair = line[:-1].split()
+                    for node in pair[0:1]:
+                        group = source["node2group"](node)
+                        if group is not None:
+                            if group not in groups:
+                                groups[group] = list()
+                            groups[group].append(node)
+            with open(download_path+"/groups.txt", "w") as file:
+                for group in groups.values():
+                    if len(group) > 1:
+                        file.write(" ".join(group)+"\n")
 
         if "features" in source and "groups" not in source:
             features_path = download_path+"/"+source["features"]

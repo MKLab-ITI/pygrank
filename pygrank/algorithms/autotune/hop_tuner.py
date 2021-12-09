@@ -82,11 +82,11 @@ class HopTuner(Tuner):
 
         #for _ in range(10):
         #    backend_personalization.np = backend.conv(backend_personalization.np, M)
-        training, validation = split(backend_personalization, 0.5)
+        training, validation = split(backend_personalization, 0.8)
         training1, training2 = split(training, 0.5)
 
-        propagated = [training1.np, training2.np, validation.np]
-        measures = [self.measure(backend_personalization, training1), self.measure(backend_personalization, training2), self.measure(backend_personalization, validation)]
+        propagated = [training1.np, training2.np]
+        measures = [self.measure(backend_personalization, training1), self.measure(backend_personalization, training2)]
         #measures = [self.measure(validation, training), self.measure(training, validation)]
 
         if self.basis == "krylov":

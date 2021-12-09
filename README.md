@@ -21,15 +21,15 @@ The following roadmap overviews short-term development goals and will be updated
 :x: Pytorch gnns<br>
 :x: 100% code coverage<br>
 :x: 100% documentation completeness<br>
-:x: Automatic download for all related publication datasets<br>
-:heavy_check_mark: Updated reference docs and automated citation discovery for algorithms (achieved as of 0.2.5 with algorithms.cite())<br>
-:heavy_check_mark: Enable Arnoldi and Lanczos optimizations in non-numpy backends (achieved as of 0.2.5 - tensorflow vesion may still be buggy)<br>
+:x: Automatic download for all related publication datasets ([downloadable datasets](documentation/datasets.md))<br>
+:heavy_check_mark: Automated citation discovery for algorithms (achieved as of 0.2.5 with `NodeRanking.cite()`)<br>
+:heavy_check_mark: Enable Arnoldi and Lanczos optimizations in non-numpy backends (achieved as of 0.2.5)<br>
 :x: Transparent handling of float and double precisions (as of 0.2.5 numpy is on float64 but pytorch and tensorflow in float32)
 
 # :hammer_and_wrench: Installation
-`pygrank` is meant to work with Python 3.9 or later. It can be installed with pip per:
+`pygrank` is meant to work with Python 3.9 or later. The latest version can be installed with pip per:
 ```
-pip install pygrank
+pip install --upgrade pygrank
 ```
 
 To automatically use the machine learning backends (e.g. to integrate the package

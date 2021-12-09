@@ -1,8 +1,8 @@
 import pygrank as pg
 
 
-datasets = ["amazon", "blockmodel", "citeseer", "eucore", "maven"]
-#datasets = ["citeseer", "eucore", "maven"]
+datasets = [ "eucore", "citeseer", "blockmodel"]
+#datasets = ["maven"]
 pre = pg.preprocessor(assume_immutability=True, normalization="symmetric")
 tol = 1.E-9
 optimization = pg.SelfClearDict()
@@ -14,11 +14,16 @@ algorithms = {
     "hk5": pg.HeatKernel(t=5, preprocessor=pre, max_iters=10000, tol=tol, optimization_dict=optimization),
     "hk7": pg.HeatKernel(t=7, preprocessor=pre, max_iters=10000, tol=tol, optimization_dict=optimization),
 }
+algorithms = algorithms# | pg.benchmarks.create_variations(algorithms, {"+sweep": pg.Sweep})
+
 tuned = {
     "selected": pg.AlgorithmSelection(algorithms.values(), fraction_of_training=0.8),
-    "tuned": pg.ParameterTuner(preprocessor=pre, fraction_of_training=0.8, tol=tol, optimization_dict=optimization, measure=pg.AUC),
-    #"estimated": pg.HopTuner(preprocessor=pre, num_parameters=20, tol=tol, optimization_dict=optimization),
-    "arnoldi": pg.HopTuner(preprocessor=pre, basis="arnoldi", num_parameters=20, tol=tol, optimization_dict=optimization, autoregression=5),
+    #"tuned": pg.ParameterTuner(preprocessor=pre, fraction_of_training=0.8, tol=tol, optimization_dict=optimization, measure=pg.AUC),
+    "arnoldi": pg.HopTuner(preprocessor=pre, basis="arnoldi", measure=pg.Cos, tol=tol, optimization_dict=optimization),
+    #"arnoldi2": pg.ParameterTuner(lambda params: pg.HopTuner(preprocessor=pre, basis="arnoldi", num_parameters=int(params[0]),
+    #                                                         measure=pg.Cos,
+    #                                                         tol=tol, optimization_dict=optimization, tunable_offset=None),
+    #                              max_vals=[40], min_vals=[5], divide_range=2, fraction_of_training=0.1),
 }
 
 #algorithms = pg.create_variations(algorithms, {"": pg.Tautology, "+Sweep": pg.Sweep})

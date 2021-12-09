@@ -23,7 +23,7 @@ def import_snap_format_dataset(dataset: str,
         for line in file:
             if len(line) != 0 and line[0] != '#':
                 splt = line[:-1].split()
-                if len(splt) != 0:
+                if len(splt) > 1:
                     G.add_edge(splt[0], splt[1])
     if min_group_size < 1:
         min_group_size *= len(G)
