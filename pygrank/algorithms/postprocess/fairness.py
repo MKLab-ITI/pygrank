@@ -60,7 +60,7 @@ class FairPersonalizer(Postprocessor):
                 params: List[float]):
         ranks = ranks.np / backend.max(ranks.np)
         personalization = personalization / backend.max(personalization)
-        res = 1.0-params[-1] if self.parameter_buckets == 0 else 0
+        res = (1.0-params[-1])*2*ranks if self.parameter_buckets == 0 else 0
         for i in range(self.parameter_buckets):
             a = sensitive*(params[0+4*i]-params[1+4*i]) + params[1+4*i]
             b = sensitive*(params[2+4*i]-params[3+4*i]) + params[3+4*i]
@@ -112,9 +112,9 @@ class FairPersonalizer(Postprocessor):
                                   min_vals=[0, 0, -1, -1]*self.parameter_buckets+[0],
                                   deviation_tol=1.E-2,
                                   divide_range=2,
-                                  partitions=5)
+                                  partitions=10,
+                                  depth=1)
         optimal_personalization = personalization=self.__culep(personalization, sensitive, ranks, optimal_params)
-        del self.pRule
         return self.ranker.rank(G, optimal_personalization, *args, **kwargs)
 
 

@@ -8,8 +8,8 @@ can be accessed [here](datasets.md).
 
 ## Automated Algorithm Citations
 
-The `NodeRanking.cite()` method can be used obtain 
-automatically-generated descriptions of algorithms, including
+The `NodeRanking.cite()` method can be used to 
+automatically generate descriptions of algorithms, including
 publication citations. Reference names correspond to the list of
 publication bibtex entries presented in the rest of the document.
 

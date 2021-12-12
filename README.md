@@ -64,21 +64,21 @@ seeds = {"A", "B"}
 
 We now run a personalized PageRank [graph filter](documentation/documentation.md#graph-filters)
 to score the structural relatedness of graph nodes to the ones of the given set.
- We start by importing the library, 
+ We start by importing the library:
 
 ```python
 import pygrank as pg
 ```
 
 For instructional purposes,
-we select the *PageRank* filter. This and more filters can be found in the module
+we experiment with (personalized) *PageRank*. This and more filters can be found in the module
 `pygrank.algorithms.filters`, but for ease-of-use can
 be accessed from the top-level import.
 We also set the default values of some parameters: the graph diffusion
-rate *alpha* required by the algorithm, a numerical tolerance *tol* at the
-convergence point and a graph preprocessing strategy *"auto"* normalization
-of the garph adjacency matrix to determine between column-based and symmetric
-normalization depending on whether the graph is undirected (as in this example)
+rate *alpha* required by the filter, a numerical tolerance *tol* at the
+convergence point and a graph preprocessing strategy *"auto"* that normalizes
+the graph adjacency matrix in either a column-based or symmetric
+way, depending on whether the graph is undirected (as in this example)
 or not respectively.
 
 ```python
@@ -87,9 +87,9 @@ ranks = ranker(graph, {v: 1 for v in seeds})
 ```
 
 Node ranking outputs are always organized into
-[graph signals](documentation/documentation.md#graph-signals)
-which can be used like dictionaries. For example, we can
-print the scores of some nodes per:
+[graph signals](documentation/documentation.md#graph-signals).
+These can be used like dictionaries for easy access.
+For example, printing the scores of some nodes can be done per:
 
 ```python
 print(ranks["B"], ranks["D"], ranks["E"])
@@ -97,11 +97,11 @@ print(ranks["B"], ranks["D"], ranks["E"])
 ```
 
 We alter this outcome so that it outputs node order, 
-where higher node scores are assigned lower order. This is achieved
-by wrapping a postprocessor around the algorithm. There are various
+where higher node scores are assigned lower order,
+by wrapping a postprocessor around the base algorithm. There are various
 postprocessors, including ones to make scores fairness-aware. Again,
 postprocessors can be found in `pygrank.algorithms.postprocess`,
-but for shortcut purposes  can be used from the top-level package import.
+but can be accessed from the top-level package import.
 
 ```python
 ordinals = pg.Ordinals(ranker).rank(graph, {v: 1 for v in seeds})
@@ -134,10 +134,11 @@ Close to the previous results at a fraction of the time!! For large graphs,
 most ordinals would be near the ideal ones. Note that convergence time 
 does not take into account the time needed to preprocess graphs.
 
-Till now we used `PageRank`, but what would happen if we don't know which base
-algorithm? For these cases `pygrank` provides online algorithms for tuning
-graph signal processing filters on the personalization. Thus, we can replace the ranker
-in the ranking algorithm construction code:
+Till now, we used `PageRank`, but what would happen if we do not know which base
+algorithm to use? In these cases `pygrank` provides online tuning of generalized
+graph signal processing filters on the personalization. The ranker
+in the ranking algorithm construction code can be replaced with an automatically tuned
+equivalent per:
 
 ```python
 tuned_ranker = pg.ParameterTuner()
@@ -147,9 +148,11 @@ print(ordinals["B"], ordinals["D"], ordinals["E"])
 ```
 
 This yields the same node ordinals, which means that tuning constructed
-a graph filter similar to `PageRank`, though a more suitable one could have been found.
-Tuning may be worse than highly specialized algorithms in some settings, but it often
-finds near-best base algorithms. To obtain a recommendation about how to cite complex
+a graph filter similar to `PageRank`.
+Tuning may be worse than highly specialized algorithms in some settings, but often
+finds near-best base algorithms.
+
+To obtain a recommendation about how to cite complex
 algorithms, an automated description can be extracted by the source code per the following
 command, where bibtex entries corresponding to the citations can be found 
 [list of citations](documentation/citations.md).:
@@ -161,16 +164,15 @@ print(tuned_ranker.cite())
 
 
 # :brain: Overview
-Analyzing graph edges (links) between nodes can help rank/score
-graph nodes based on their structural proximity to structural
-or attribute-based communities of nodes.
+Analyzing graph edges (links) between graph nodes can help rank/score
+them based on proximity to structural or attribute-based communities of known example members.
 With the introduction of graph signal processing and
-[decoupled graph neural networks]() the importance of node ranking has drastically 
+[decoupled graph neural networks](https://dl.acm.org/doi/abs/10.1145/3442381.3449927) 
+the importance of node ranking has drastically 
 increased, as its ability to perform inductive learning by quickly
 spreading node information through edges has been theoretically and experimentally
 corroborated. For example, it can be used to make predictions based on few known
-node attributes or base predictions outputted by low-quality feature-based machine
-learning models.
+node attributes or the outputs by feature-based machine learning models.
 
 `pygrank` is a collection of node ranking algorithms and practices that 
 support real-world conditions, such as large graphs and heterogeneous
@@ -223,4 +225,5 @@ If `pygrank` has been useful in your research and you would like to cite it in a
       primaryClass={cs.LG}
 }
 ```
-To publish research that uses provided methods, please cite the [appropriate publications](documentation/citations.md).
+To publish research that makes use provided methods,
+please cite all [relevant publications](documentation/citations.md).

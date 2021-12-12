@@ -1,15 +1,15 @@
 import pygrank as pg
 
 #datasets = ["acm", "amazon", "ant", "citeseer","dblp","facebook0","facebook686","log4j","maven","pubmed","squirel", "twitter"]
-datasets = ["eucore", "citeseer", "dblp"]
-seed_fractions = [0.1, 0.2, 0.3]
+datasets = ["facebook0","facebook686", "log4j", "ant", "eucore", "citeseer", "dblp"]
+seed_fractions = [0.3]
 pre = pg.preprocessor(assume_immutability=True, normalization="symmetric")
 
 filters = {
-    "ppr0.85": pg.PageRank(alpha=0.85, preprocessor=pre, max_iters=1000, tol=1.E-9),
-    "ppr0.99": pg.PageRank(alpha=0.99, preprocessor=pre, max_iters=1000, tol=1.E-9),
-    "hk3": pg.HeatKernel(t=3, preprocessor=pre, max_iters=1000, tol=1.E-9),
-    "hk7": pg.HeatKernel(t=7, preprocessor=pre, max_iters=1000, tol=1.E-9),
+    "ppr0.85": pg.PageRank(alpha=0.85, preprocessor=pre, max_iters=10000, tol=1.E-9),
+    "ppr0.99": pg.PageRank(alpha=0.99, preprocessor=pre, max_iters=10000, tol=1.E-9),
+    "hk3": pg.HeatKernel(t=3, preprocessor=pre, max_iters=10000, tol=1.E-9),
+    "hk7": pg.HeatKernel(t=7, preprocessor=pre, max_iters=10000, tol=1.E-9),
 }
 filters = pg.create_variations(filters, {"": pg.Tautology, "+Sweep": pg.Sweep})
 
@@ -18,9 +18,9 @@ for name, filter in filters.items():
     algorithms = {"None": pg.Normalize(filter),
                   "Mult": pg.AdHocFairness(filter, "B"),
                   "LFPRO": pg.AdHocFairness(filter, "O"),
-                  "FB-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=1, error_type=pg.Mabs, parameter_buckets=0),
-                  "FP-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=0, error_type=pg.Mabs, error_skewing=True),
-                  "FE-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=1, error_type=pg.Mabs)
+                  "FBuck-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=1, error_type=pg.Mabs, parameter_buckets=0),
+                  "FPers-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=0, error_type=pg.Mabs, error_skewing=True),
+                  "Fest-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=1, error_type=pg.Mabs)
                  }
     algorithms = pg.create_variations(algorithms, {"": pg.Normalize})
     print(algorithms.keys())

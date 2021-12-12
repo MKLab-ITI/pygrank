@@ -32,7 +32,7 @@ please refer to the [glossary](glossary.md).
 # Architecture
 `pygrank` is designed with a hierarchical architecture, where the roles
 of source code components are clearly separated. At the core of the package
-lie the concept of graph signals, which wrap machine learning primitives
+lies the concept of graph signals, which wrap machine learning primitives
 (i.e. arrays, tensors) to be propagated through graphs.
 These primitives are manipulated through an abstracted backend.
 
@@ -61,7 +61,7 @@ ranking algorithms can also use maps of node values (e.g.  `{'A': 3, 'C': 2}`),
 numpy arrays (e.g. `np.array([3, 0, 2, 0])` or primitives of the currently enabled 
 backend. In this case, the graph also needs to be the passed to the inputs and
 algorithms perform internal conversions into graph signal representations.
-In case of list, array or tensor inputs, value order corresponds to
+If inputs are lists, arrays or tensors, value order corresponds to
 the order in which *networkx* traverses graph nodes. 
 
 ### Defining and Manipulating Graph Signals
@@ -71,16 +71,16 @@ where all other nodes are assigned zeroes.
 To create a graph signal holding this information we can write:
 
 ```python
->>> import pygrank as pg
->>> import networkx as nx
->>> graph = nx.Graph()
->>> graph.add_edge('A', 'B')
->>> graph.add_edge('A', 'C')
->>> graph.add_edge('C', 'D')
->>> graph.add_edge('D', 'E')
->>> signal = pg.to_signal(graph, {'A': 3, 'C': 2})
->>> print(signal['A'], signal['B'])
-3.0 0.0
+import pygrank as pg
+import networkx as nx
+graph = nx.Graph()
+graph.add_edge('A', 'B')
+graph.add_edge('A', 'C')
+graph.add_edge('C', 'D')
+graph.add_edge('D', 'E')
+signal = pg.to_signal(graph, {'A': 3, 'C': 2})
+print(signal['A'], signal['B'])
+# 3.0 0.0
 ```
 
 If is possible to directly access graph signal values as objects of the
@@ -94,11 +94,11 @@ in the following code we divide a graph signal's elements with their sum.
 Value changes are reflected by signal access.
 
 ```python
->>> print(signal.np)
-[3. 0. 2. 0. 0.]
->>> signal.np = signal.np / pg.sum(signal.np)
->>> print([(k,v) for k,v in signal.items()])
-[('A', 0.6), ('B', 0.0), ('C', 0.4), ('D', 0.0), ('E', 0.0)]
+print(signal.np)
+# [3. 0. 2. 0. 0.]
+signal.np = signal.np / pg.sum(signal.np)
+print([(k,v) for k,v in signal.items()])
+# [('A', 0.6), ('B', 0.0), ('C', 0.4), ('D', 0.0), ('E', 0.0)]
 ```
 
 ![graph signal](graph_signal.png)
@@ -164,8 +164,8 @@ tolerance 1.E-9. Smaller tolerances are more accurate in exactly solving
 each algorithm's exact outputs but take longer to converge.
 
 ```python
->>> import pygrank as pg
->>> algorithm = pg.PageRank(alpha=0.99, normalization="col", tol=1.E-9)
+import pygrank as pg
+algorithm = pg.PageRank(alpha=0.99, normalization="col", tol=1.E-9)
 ```
 
 Having defined this algorithm, we will now use the graph `G` and graph signal
@@ -173,8 +173,8 @@ Having defined this algorithm, we will now use the graph `G` and graph signal
 while ignoring any postprocessing for the time being can be done as:
 
 ```python
->>> scores = algorithm(graph, signal)
-Exception: ('Could not converge within 100 iterations')
+scores = algorithm(graph, signal)
+# Exception: ('Could not converge within 100 iterations')
 ```
 
 The code threw an exception, because for alpha values near 1 and high tolerance
@@ -186,10 +186,10 @@ to run for. For the sake of demonstration, we chose the second solution and allo
 the algorithm to run for up to 2,000 iterations:
 
 ```python
->>> algorithm = pg.PageRank(alpha=0.99, normalization="col", tol=1.E-9, max_iters=2000)
->>> scores = algorithm(graph, signal)
->>> print(list(scores.items()))
-[('A', 0.25613418536078547), ('B', 0.12678642237010243), ('C', 0.2517487443382047), ('D', 0.24436832596280528), ('E', 0.12096232196810223)]
+algorithm = pg.PageRank(alpha=0.99, normalization="col", tol=1.E-9, max_iters=2000)
+scores = algorithm(graph, signal)
+print(list(scores.items()))
+# [('A', 0.25613418536078547), ('B', 0.12678642237010243), ('C', 0.2517487443382047), ('D', 0.24436832596280528), ('E', 0.12096232196810223)]
 ```
 
 We can see that both 'A' and 'C' end up with the higher scores,
@@ -207,13 +207,13 @@ only because the graph signal holds a reference to the graph it is tied to
 and directly inputting other kinds of primitives would throw an error message.
 
 ```python
->>> scores = algorithm(signal)
+scores = algorithm(signal)
 ```
 
 We now examine the structural relatedness of various nodes to the personalization:
 ```python
->>> print(list(scores.items()))
-[('A', 0.25613418536078547), ('B', 0.12678642237010243), ('C', 0.2517487443382047), ('D', 0.24436832596280528), ('E', 0.12096232196810223)]
+print(list(scores.items()))
+# [('A', 0.25613418536078547), ('B', 0.12678642237010243), ('C', 0.2517487443382047), ('D', 0.24436832596280528), ('E', 0.12096232196810223)]
 ```
 
 
@@ -235,7 +235,7 @@ yields the following graph signal processing operation:
 where *H(M)* is called a *graph filter*.
 
 ### List of Filters
-The package provides several graph filters. Their usage pattern consists
+`pygrank` provides several graph filters. Their usage pattern consists
 of instantiating them as algorithms `alg` and then calling them with 
 `alg(graph, personalization)` or the alternative `alg(pg.to_signal(graph, personalization))`
 to obtain posterior node signals based on diffusing the provided
@@ -259,9 +259,9 @@ indicates an object to help determine their convergence criteria, such as type o
 error and tolerance for numerical convergence. If no such argument is passed
 to the constructor, a `pygrank.ConvergenceManager` object
 is automatically instantiated by borrowing whichever extra arguments it can
-from those passed to the constructors. These arguments can be:
+from those passed to algorithm constructors. These arguments can be:
 - `tol` to indicate the numerical tolerance level required for convergence (default is 1.E-6).
-- `error_type` to indicate how differences between two graph signals are computed. The default value is `pygrank.Mabs` but any other supervised [measure](#evaluation) that computes the differences.
+- `error_type` to indicate how differences between two graph signals are computed. The default value is `pygrank.Mabs` but any other supervised [measure](#evaluation) that computes the differences between consecutive iterations can be used. The string "iters" can also be used to make the algorithm stop only when max_iters are reached (see below).
 - `max_iters` to indicate the maximum number of iterations the algorithm can run for (default is 100). This quantity works as a safety net to guarantee algorithm termination. 
 
 Sometimes, it suffices to reach a robust node rank order instead of precise 
@@ -272,13 +272,13 @@ as the base ranking algorithm and needs to know that algorithm's diffusion
 rate ``alpha``, which is passed as its first argument.
 
 ```python
->>> import pygrank as pg
->>> 
->>> G, personalization = ...
->>> alpha = 0.85
->>> ordered_ranker = pg.PageRank(alpha=alpha, convergence=pg.RankOrderConvergenceManager(alpha))
->>> ordered_ranker = pg.Ordinals(ordered_ranker)
->>> ordered_ranks = ordered_ranker(G, personalization)
+import pygrank as pg
+
+G, personalization = ...
+alpha = 0.85
+ordered_ranker = pg.PageRank(alpha=alpha, convergence=pg.RankOrderConvergenceManager(alpha))
+ordered_ranker = pg.Ordinals(ordered_ranker)
+ordered_ranks = ordered_ranker(G, personalization)
 ```
 
 :bulb: Since the node order is more important than the specific rank values,
@@ -292,7 +292,7 @@ that performs symmetric (i.e. Laplacian-like) normalization
 for undirected graphs and column-wise normalization that
 follows a true probabilistic formulation of transition probabilities
 for directed graphs, such as `DiGraph` instances. The type of
-normalization can be manually edited by passing a `normalization`
+normalization can be specified by passing a `normalization`
 argument to constructors of ranking algorithms. This parameter can 
 assume values of:
 * *"auto"* for the above-described default behavior
@@ -335,11 +335,11 @@ For example, hashing the outcome of graph normalization to
 speed up multiple calls to the same graph can be achieved
 as per the following code:
 ```python
->>> import pygrank as pg
->>> graph, personalization1, personalization2 = ...
->>> algorithm = pg.PageRank(alpha=0.85, normalization="col", assume_immutability=True)
->>> ranks1 = algorithm(graph, personalization1)
->>> ranks2 = algorithm(graph, personalization2) # does not re-compute the normalization
+import pygrank as pg
+graph, personalization1, personalization2 = ...
+algorithm = pg.PageRank(alpha=0.85, normalization="col", assume_immutability=True)
+ranks1 = algorithm(graph, personalization1)
+ranks2 = algorithm(graph, personalization2) # does not re-compute the normalization
 ```
 
 Sometimes, many different algorithms are applied on the
@@ -368,13 +368,13 @@ Using the same outcome of graph preprocessing
 to speed up multiple rank calls to the same graph by
 different ranking algorithms can be done as:
 ```python
->>> import pygrank as pg
->>> graph, personalization1, personalization2 = ...
->>> pre = pg.preprocessor(normalization="col", assume_immutability=True)
->>> algorithm1 = pg.PageRank(alpha=0.85, preprocessor=pre)
->>> algorithm2 = pg.HeatKernel(alpha=0.85, preprocessor=pre)
->>> ranks1 = algorithm1(graph, personalization1)
->>> ranks2 = algorithm2(graph, personalization2) # does not re-compute the normalization
+import pygrank as pg
+graph, personalization1, personalization2 = ...
+pre = pg.preprocessor(normalization="col", assume_immutability=True)
+algorithm1 = pg.PageRank(alpha=0.85, preprocessor=pre)
+algorithm2 = pg.HeatKernel(alpha=0.85, preprocessor=pre)
+ranks1 = algorithm1(graph, personalization1)
+ranks2 = algorithm2(graph, personalization2) # does not re-compute the normalization
 ```
 
 :bulb: When benchmarking, in the above code you can call `pre(graph)`
@@ -399,10 +399,10 @@ There are two ways to apply postprocessors. The first is to simply
 we can write:
 
 ```python
->>> scores = algorithm(graph, signal)
->>> normalized_scores = pg.Normalize().transform(scores)
->>> print(list(normalized_scores.items()))
-[('A', 1.0), ('B', 0.4950000024069947), ('C', 0.9828783455187619), ('D', 0.9540636897749238), ('E', 0.472261528845582)]
+scores = algorithm(graph, signal)
+normalized_scores = pg.Normalize().transform(scores)
+print(list(normalized_scores.items()))
+# [('A', 1.0), ('B', 0.4950000024069947), ('C', 0.9828783455187619), ('D', 0.9540636897749238), ('E', 0.472261528845582)]
 ```
 
 This way is supported by postprocessors that perform simple data
@@ -418,10 +418,10 @@ postprocessors:
 
 
 ```python
->>> normalized_algorithm = pg.Normalize(algorithm)
->>> normalized_scores = normalized_algorithm(graph, signal)
->>> print(list(normalized_scores.items()))
-[('A', 1.0), ('B', 0.4950000024069947), ('C', 0.9828783455187619), ('D', 0.9540636897749238), ('E', 0.472261528845582)]
+normalized_algorithm = pg.Normalize(algorithm)
+normalized_scores = normalized_algorithm(graph, signal)
+print(list(normalized_scores.items()))
+# [('A', 1.0), ('B', 0.4950000024069947), ('C', 0.9828783455187619), ('D', 0.9540636897749238), ('E', 0.472261528845582)]
 ```
 
 The `rank` method is used the same way as before, but the graph
@@ -432,10 +432,10 @@ with the postprocessor `Transformer` *before* normalization
 can be achieved as:
 
 ```python
->>> new_algorithm = pg.Normalize(pg.Transformer(np.exp, algorithm))
->>> new_scores = new_algorithm(graph, signal)
->>> print(list(new_scores.items()))
-[('A', 1.0), ('B', 0.8786683440755908), ('C', 0.9956241609824301), ('D', 0.9883030876536782), ('E', 0.8735657648099558)]
+new_algorithm = pg.Normalize(pg.Transformer(np.exp, algorithm))
+new_scores = new_algorithm(graph, signal)
+print(list(new_scores.items()))
+# [('A', 1.0), ('B', 0.8786683440755908), ('C', 0.9956241609824301), ('D', 0.9883030876536782), ('E', 0.8735657648099558)]
 ```
 
 :warning: Iterative postprocessors do not support the `transform`
@@ -540,16 +540,16 @@ through datasets again. For example, the following code can be used to load data
 given that each node community should be experimented on separately.
 
 ```python
->>> import pygrank as pg
->>> datasets = pg.downloadable_small_datasets()
->>> print(datasets)
+import pygrank as pg
+datasets = pg.downloadable_small_datasets()
+print(datasets)
 ['citeseer', 'eucore', 'graph5', 'graph9', 'bigraph']
->>> for dataset, graph, group in pg.load_datasets_all_communities(datasets):
->>>     print(dataset, ":", len(group), "community members", len(graph), "nodes",  graph.number_of_edges(), "edges")
+for dataset, graph, group in pg.load_datasets_all_communities(datasets):
+    print(dataset, ":", len(group), "community members", len(graph), "nodes",  graph.number_of_edges(), "edges")
 # REQUIRED CITATION: Please visit the url https://linqs.soe.ucsc.edu/data for instructions on how to cite the dataset citeseer in your research
-citeseer0 : 596 community members 3327 nodes 4676 edges
-citeseer1 : 668 community members 3327 nodes 4676 edges
-citeseer2 : 701 community members 3327 nodes 4676 edges
+# citeseer0 : 596 community members 3327 nodes 4676 edges
+# citeseer1 : 668 community members 3327 nodes 4676 edges
+# citeseer2 : 701 community members 3327 nodes 4676 edges
 ...
 ```
 
@@ -561,20 +561,20 @@ a simple way to obtain some fastly-running algorithms and small datasets and
 compare them under the AUC measure would be per:
 
 ```python
->>> import pygrank as pg
->>> dataset_names = pg.downloadable_small_datasets()
->>> print(dataset_names)
+import pygrank as pg
+dataset_names = pg.downloadable_small_datasets()
+print(dataset_names)
 ['citeseer', 'eucore']
->>> algorithms = pg.create_demo_filters()
->>> print(algorithms.keys())
-dict_keys(['PPR.85', 'PPR.9', 'PPR.99', 'HK3', 'HK5', 'HK7'])
->>> loader = pg.load_datasets_one_community(dataset_names)
->>> pg.benchmark_print(pg.benchmark(algorithms, loader, pg.AUC))
-               	 PPR.85  	 PPR.9  	 PPR.99  	 HK3  	 HK5  	 HK7 
-citeseer       	 .89     	 .89    	 .89     	 .89  	 .89  	 .89 
-eucore         	 .85     	 .71    	 .71     	 .91  	 .89  	 .83 
-graph9         	 1.00    	 1.00   	 1.00    	 1.00 	 1.00 	 1.00
-bigraph        	 .96     	 .77    	 .77     	 1.00 	 .98  	 .86 
+algorithms = pg.create_demo_filters()
+print(algorithms.keys())
+# dict_keys(['PPR.85', 'PPR.9', 'PPR.99', 'HK3', 'HK5', 'HK7'])
+loader = pg.load_datasets_one_community(dataset_names)
+pg.benchmark_print(pg.benchmark(algorithms, loader, pg.AUC))
+#                	 PPR.85  	 PPR.9  	 PPR.99  	 HK3  	 HK5  	 HK7 
+# citeseer       	 .89     	 .89    	 .89     	 .89  	 .89  	 .89 
+# eucore         	 .85     	 .71    	 .71     	 .91  	 .89  	 .83 
+# graph9         	 1.00    	 1.00   	 1.00    	 1.00 	 1.00 	 1.00
+# bigraph        	 .96     	 .77    	 .77     	 1.00 	 .98  	 .86 
 # REQUIRED CITATION: Please visit the url https://linqs.soe.ucsc.edu/data for instructions on how to cite the dataset citeseer in your research
 # REQUIRED CITATION: Please visit the url https://snap.stanford.edu/data/email-Eu-core.html for instructions on how to cite the dataset eucore in your research
 # REQUIRED CITATION: Please visit the url https://github.com/maniospas/pygrank-datasets for instructions on how to cite the dataset graph5 in your research
@@ -589,7 +589,7 @@ algorithm (more on these later) with default parameters per the following code a
 then re-run experiments to compare this with alternatives.
 
 ```python
->>> algorithms["Tuned"] = pg.ParameterTuner()
+algorithms["Tuned"] = pg.ParameterTuner()
 ```
 
 :warning: To run a new series of benchmark experiments, a new loader needs to be created.
@@ -614,29 +614,29 @@ data of a provided personalization signal and then uses a tuner that
 by default creates a `GenericGraphFilter` instance with ten parameters.
 
 ```python
->>> import pygrank as pg
->>> graph, personalization = ...
->>> training, evaluation = pg.split(pg.to_signal(graph, personalization, training_samples=0.5))
->>> scores_pagerank = pg.PageRank()(graph, training)
->>> scores_tuned = pg.ParameterTuner()(graph, training)
->>> auc_pagerank = pg.AUC(evaluation, exclude=training).evaluate(scores_pagerank)
->>> auc_tuned = pg.AUC(evaluation, exclude=training).evaluate(scores_tuned)
->>> assert auc_pagerank <= auc_tuned
-True
+import pygrank as pg
+graph, personalization = ...
+training, evaluation = pg.split(pg.to_signal(graph, personalization, training_samples=0.5))
+scores_pagerank = pg.PageRank()(graph, training)
+scores_tuned = pg.ParameterTuner()(graph, training)
+auc_pagerank = pg.AUC(evaluation, exclude=training).evaluate(scores_pagerank)
+auc_tuned = pg.AUC(evaluation, exclude=training).evaluate(scores_tuned)
+assert auc_pagerank <= auc_tuned
+# True
 ```
 
-Specific algorithms can also be tuned on specific parameter values ,given
-a method to instantiate the algorithm from  a given set of parameters
+Specific algorithms can also be tuned on specific parameter values, given
+a method to instantiate the algorithm from a given set of parameters
 (at worst, a lambda expression). For example, the following code defines and runs
 a tuner with the same training personalization of the
 previous example. The tuner finds the optimal alpha value of personalized
 PageRank that optimizes NDCG (tuners optimize AUC be default if no measure is provided).
 
 ```python
->>> import pygrank as pg
->>> graph, personalization = ...
->>> algorithm_from_params = lambda params: pg.PageRank(alpha=params[0])
->>> scores_tuned = pg.ParameterTuner(algorithm_from_params, 
+import pygrank as pg
+graph, personalization = ...
+algorithm_from_params = lambda params: pg.PageRank(alpha=params[0])
+scores_tuned = pg.ParameterTuner(algorithm_from_params, 
                                      max_vals=[0.99], 
                                      min_vals=[0.5],
                                      measure=pg.NDCG).tune(personalization)
@@ -673,13 +673,13 @@ In most cases, tuners are responsible for delegating additional arguments
 to default algorithms and this can be achieved with the following code.
 
 ```python
->>> graph, personalization = ...
->>> optimization_dict = dict()
->>> tuner = pg.ParameterTuner(error_type="iters", 
+graph, personalization = ...
+optimization_dict = dict()
+tuner = pg.ParameterTuner(error_type="iters", 
                               num_parameters=20,
                               max_iters=20,
                               optimization_dict=optimization_dict)
->>> scores = tuner(graph, personalization)
+scores = tuner(graph, personalization)
 ```
 
 :warning: Similarly to the `assume_immutability=True` option
