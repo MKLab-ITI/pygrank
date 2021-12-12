@@ -40,7 +40,7 @@ def format(doc):
         if line == "Attributes:" or line == "Args:" or line == "Returns:":
             prefix = " * "
             line_break = "\n\n"
-        ret += line_break+line+" "
+        ret += line_break+line.replace(">>>", "").strip()+" "
     if open_example:
         ret += "\n```\n"
     return ret
@@ -99,7 +99,9 @@ def base_description(obj, abstract):
         "\n *Abstract class*\n\n" if abstract else "") + "\n" + format(obj.__doc__)[:-1]
     for name, method in inspect.getmembers(obj):
         if name == "__init__":
-            class_text += " " + format(method.__doc__)
+            desc = format(method.__doc__).strip()
+            if len(desc) != 0:
+                class_text += " The constructor " + desc[0:1].lower()+desc[1:]
     return class_text
 
 

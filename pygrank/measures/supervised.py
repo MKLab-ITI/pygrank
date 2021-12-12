@@ -135,7 +135,7 @@ class MKLDivergence(Supervised):
 
 
 class Cos(Supervised):
-    """Computes the cosine similarity between given and known scores"""
+    """Computes the cosine similarity between given and known scores."""
 
     def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
         known_scores, scores = self.to_numpy(scores)
@@ -146,7 +146,7 @@ class Cos(Supervised):
 
 
 class Dot(Supervised):
-    """Computes the dot similarity between given and known scores"""
+    """Computes the dot similarity between given and known scores."""
 
     def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
         known_scores, scores = self.to_numpy(scores)
@@ -212,7 +212,7 @@ class MannWhitneyParity(Supervised):
     """
     Performs a two-tailed Mann-Whitney U-test to check that the scores of sensitive-attributed nodes do not exhibit
     higher or lower values compared to the rest. To do this, the test's U statistic is transformed so that value
-    1 indicate that the probability of sensitive-attributed nodes exhibiting higher values is the same as
+    1 indicates that the probability of sensitive-attributed nodes exhibiting higher values is the same as
     for lower values (50%). Value 0 indicates that either the probability of exhibiting only higher or only lower
     values is 100%.
     Known scores correspond to the binary sensitive attribute checking whether nodes are sensitive.

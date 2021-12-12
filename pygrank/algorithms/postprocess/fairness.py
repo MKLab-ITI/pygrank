@@ -4,6 +4,7 @@ from pygrank.measures import pRule, Mabs, Supervised
 from pygrank.core import GraphSignal, to_signal, backend, BackendPrimitive, NodeRanking, GraphSignalGraph, GraphSignalData
 from typing import List
 
+
 class FairPersonalizer(Postprocessor):
     """
     A personalization editing scheme that aims to edit graph signal priors (i.e. personalization) to produce
@@ -43,6 +44,19 @@ class FairPersonalizer(Postprocessor):
             max_residual: An upper limit on how much the original personalization is preserved, i.e. a fraction of
                 it in the range [0, max_residual] is preserved. Default is 1 and is introduced by [krasanakis2020prioredit],
                 but 0 can be used for exact replication of [krasanakis2020fairconstr].
+
+
+        Example:
+            >>> import pygrank as pg
+            >>> graph, personalization, sensitive, algorithm = ... # sensitive is a second graph signal
+            >>> algorithm = pg.FairPersonalizer(algorithm, .8, pRule_weight=10) # tries to force (weight 10) pRule to be at least 80%
+            >>> ranks = algorithm.rank(graph, personalization, sensitive=sensitive)
+
+        Example (treats class imbalanace):
+            >>> import pygrank as pg
+            >>> graph, personalization, algorithm = ...
+            >>> algorithm = pg.FairPersonalizer(algorithm, .8, pRule_weight=10)
+            >>> ranks = algorithm.rank(graph, personalization, sensitive=personalization)
         """
         super().__init__(ranker)
         self.target_pRule = target_pRule
@@ -117,6 +131,9 @@ class FairPersonalizer(Postprocessor):
         optimal_personalization = personalization=self.__culep(personalization, sensitive, ranks, optimal_params)
         return self.ranker.rank(G, optimal_personalization, *args, **kwargs)
 
+    def _reference(self):
+        return "fair prior editing \\cite{krasanakis2020prioredit}"
+
 
 class AdHocFairness(Postprocessor):
     """Adjusts node scores so that the sum of sensitive nodes is moved closer to the sum of non-sensitive ones based on
@@ -136,9 +153,7 @@ class AdHocFairness(Postprocessor):
                 [tsioutsiouliklis2020fairness].
                 If "B" node scores are weighted according to whether the nodes are sensitive, so that
                 the sum of sensitive node scores becomes equal to the sum of non-sensitive node scores
-                [tsioutsiouliklis2020fairness].  If "fairwalk" the graph is pre-processed so that, when possible,
-                walks are equally probable to visit sensitive or non-sensitive nodes at non-restarting iterations
-                [rahman2019fairwalk].
+                [tsioutsiouliklis2020fairness].
             eps: A small value to consider rank redistribution to have converged. Default is 1.E-12.
         """
         if ranker is not None and not callable(getattr(ranker, "rank", None)):
@@ -187,9 +202,20 @@ class AdHocFairness(Postprocessor):
             raise Exception("Invalid fairness postprocessing method "+self.method)
         return ranks
 
+    def _reference(self):
+        return "LFPRO fairness \\cite{tsioutsiouliklis2020fairness}"  if self.method == "O" else "multiplicative fairness \\cite{tsioutsiouliklis2020fairness}"
+
 
 class FairWalk(Postprocessor):
+    """Adjusting graph convolutions to perform fair random walking [rahman2019fairwalk].."""
+
     def __init__(self, ranker):
+        """ Initializes Fairwalk given a base ranker. **This explicitly assumes immutability** of graphs. If you edit
+         graphs also clear the dictionary where preprocessed graphs are inputted by calling *fairwalk.reweights.clear().*
+
+        Args:
+            ranker: Optional. The base ranker instance. If None (default), a Tautology() ranker is created.
+        """
         super().__init__(ranker)
 
     def _reweigh(self, graph, sensitive):
@@ -215,3 +241,6 @@ class FairWalk(Postprocessor):
 
     def transform(self, *args, **kwargs):
         raise Exception("FairWalk can not transform graph signals")
+
+    def _reference(self):
+        return "fair random walks \\cite{rahman2019fairwalk}"

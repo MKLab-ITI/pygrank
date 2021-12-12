@@ -76,7 +76,19 @@ def test_completion():
         pg.PageRank().rank(graph)
         pg.HeatKernel().rank(graph)
         pg.AbsorbingWalks().rank(graph)
+        pg.HeatKernel().rank(graph)
         assert True
+
+
+def test_filter_citations():
+    assert pg.PageRank().cite() != pg.GraphFilter().cite()
+    assert pg.HeatKernel().cite() != pg.GraphFilter().cite()
+    assert pg.AbsorbingWalks().cite() != pg.GraphFilter().cite()
+    assert pg.HeatKernel().cite() != pg.GraphFilter().cite()
+    assert pg.PageRank(alpha=0.85).cite() != pg.PageRank(alpha=0.99).cite()
+    assert pg.HeatKernel(krylov_dims=0).cite() != pg.HeatKernel(krylov_dims=5).cite()
+    assert pg.HeatKernel(coefficient_type="taylor").cite() != pg.HeatKernel(coefficient_type="chebyshev").cite()
+    assert pg.HeatKernel(optimization_dict=dict()).cite() != pg.HeatKernel(optimization_dict=None).cite()
 
 
 def test_quotient():

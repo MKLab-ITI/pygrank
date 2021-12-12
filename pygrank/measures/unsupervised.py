@@ -22,8 +22,8 @@ class Conductance(Unsupervised):
         """ Initializes the Conductance measure.
 
         Args:
-            graph: Optional. The graph on which to calculate the measure. If None (default) it is automatically extracted
-             from graph signals passed for evaluation.
+            graph: Optional. The graph on which to calculate the measure. If None (default) it is automatically
+             extracted from graph signals passed for evaluation.
             max_rank: Optional. The maximum value scores can assume. To maintain a probabilistic formulation of
              conductance, this can be greater but not less than the maximum rank during evaluation. Default is 1.
 
@@ -65,8 +65,8 @@ class Density(Unsupervised):
         """ Initializes the Density measure.
 
         Args:
-            graph: Optional. The graph on which to calculate the measure. If None (default) it is automatically extracted
-             from graph signals passed for evaluation.
+            graph: Optional. The graph on which to calculate the measure. If None (default) it is automatically
+             extracted from graph signals passed for evaluation.
 
         Example:
             >>> import pygrank as pg
@@ -96,6 +96,26 @@ class Modularity(Unsupervised):
                  max_rank: float = 1,
                  max_positive_samples: int = 2000,
                  seed: int = 0):
+        """ Initializes the Modularity measure.
+
+        Args:
+            graph: Optional. The graph on which to calculate the measure. If None (default) it is automatically
+             extracted from graph signals passed for evaluation.
+            max_rank: Optional. Default is 1.
+            max_positive_samples: Optional. The number of nodes with which to compute modularity. These are
+             sampled uniformly from all graph nodes. If this is greater than the number of graph nodes,
+             all nodes are used and the measure is deterministic. However,
+             calculation time is O(max_positive_samples<sup>2</sup>) and thus a trade-off needs to be determined of time
+             vs approximation quality. Effectively, the value should be high enough for max_positive_samples<sup>2</sup>
+             to be comparable to the number of graph edges. Default is 2000.
+            seed: Optional. Makes the evaluation seeded, for example to use in tuning. Default is 0.
+
+        Example:
+            >>> import pygrank as pg
+            >>> graph, seed_nodes, algorithm = ...
+            >>> scores = algorithm.rank(graph, seed_nodes)
+            >>> modularity = pg.Modularity(max_positive_samples=int(graph.number_of_edges()**0.5)).evaluate(scores)
+        """
         self.graph = graph
         self.max_positive_samples = max_positive_samples
         self.max_rank = max_rank

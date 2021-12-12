@@ -20,24 +20,31 @@ class Postprocessor(NodeRanking):
         raise Exception("_transform method not implemented for the class "+self.__class__.__name__)
 
     def _reference(self):
-        return "unknown"
+        return self.__class__.__name__
 
     def references(self):
         if self.ranker is None:
             return [self._reference()]
         refs = self.ranker.references()
-        refs.append(self._reference()+" postprocessor")
+        ref = self._reference()
+        if ref is not None and len(ref) > 0:
+            refs.append(ref)
         return refs
-
 
 
 class Tautology(Postprocessor):
     """ Returns ranks as-are.
 
-    Can be used as a baseline against which to compare other postprocessors.
+    Can be used as a baseline against which to compare other postprocessors or graph filters.
     """
 
-    def __init__(self, ranker=None):
+    def __init__(self, ranker: NodeRanking = None):
+        """Initializes the Tautology postprocessor with a base ranker.
+
+        Args:
+            ranker: The base ranker instance. If None (default), this works as a base ranker that returns
+             a copy of personalization signals as-are or a conversion of backend primitives into signals.
+        """
         super().__init__(ranker)
 
     def transform(self, ranks: GraphSignal, *args, **kwargs) -> GraphSignal:
@@ -52,11 +59,19 @@ class Tautology(Postprocessor):
         return to_signal(graph, personalization)
 
     def _reference(self):
-        return "tautology"
+        return "tautology" if self.ranker is None else ""
 
 
 class MabsMaintain(Postprocessor):
     """Forces node ranking posteriors to have the same mean absolute value as prior inputs."""
+
+    def __init__(self, ranker):
+        """ Initializes the postprocessor with a base ranker instance.
+
+        Args:
+            ranker: Optional. The base ranker instance. If None (default), a Tautology() ranker is created.
+        """
+        super().__init__(Tautology() if ranker is None else ranker)
 
     def rank(self, graph=None, personalization=None, *args, **kwargs):
         personalization = to_signal(graph, personalization)
@@ -67,7 +82,7 @@ class MabsMaintain(Postprocessor):
         return ranks
 
     def _reference(self):
-        return "mabs-maintaining"
+        return "mabs preservation"
 
 
 class Normalize(Postprocessor):
@@ -295,4 +310,4 @@ class Sweep(Postprocessor):
         return ranks.np/(1.E-12+uniforms)
 
     def _reference(self):
-        return "sweep ratio \\cite{andersen2007local}"  # TODO: allow references to account for custom centrality ranker
+        return "sweep ratio postprocessing \\cite{andersen2007local}"  # TODO: allow references to account for custom centrality ranker

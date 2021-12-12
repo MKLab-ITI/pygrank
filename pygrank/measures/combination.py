@@ -24,6 +24,22 @@ class MeasureCombination(Measure):
                 weighted by 1.
             thresholds: Optional. A tuple of [min_val, max_val] with which to bound measure outcomes. If None
                 (default) provided measures
+
+        Example:
+            >>> import pygrank as pg
+            >>> known_scores, algorithm, personalization, sensitivity_scores = ...
+            >>> auc = pg.AUC(known_scores, exclude=personalization)
+            >>> prule = pg.pRule(sensitivity_scores, exclude=personalization)
+            >>> measure = pg.AM([auc, prule], weights=[1, 10], thresholds=[(0,1), (0, 0.8)])
+            >>> print(measure(algorithm(personalization)))
+
+        Example (same result):
+            >>> import pygrank as pg
+            >>> known_scores, algorithm, personalization, sensitivity_scores = ...
+            >>> auc = pg.AUC(known_scores, exclude=personalization)
+            >>> prule = pg.pRule(sensitivity_scores, exclude=personalization)
+            >>> measure = pg.AM().add(auc, weight=1, max_val=1).add(prule, weight=1, max_val=0.8)
+            >>> print(measure(algorithm(personalization)))
         """
         self.measures = list() if measures is None else measures
         self.weights = [1. for _ in self.measures] if weights is None else weights

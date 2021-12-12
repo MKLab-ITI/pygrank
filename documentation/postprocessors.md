@@ -20,18 +20,16 @@ All of them can be used through the code patterns presented at the library's [do
 ### <kbd>Postprocessor</kbd> AdHocFairness
 
 Adjusts node scores so that the sum of sensitive nodes is moved closer to the sum of non-sensitive ones based on 
-ad hoc literature assumptions about how unfairness is propagated in graphs. 
-Initializes the fairness-aware postprocessor. 
+ad hoc literature assumptions about how unfairness is propagated in graphs. The constructor initializes the fairness-aware postprocessor. 
 
 Args: 
  * *ranker:* The base ranking algorithm. 
- * *method:* The method with which to adjust weights. If "O" (default) an optimal gradual adjustment is performed [tsioutsiouliklis2020fairness]. If "B" node scores are weighted according to whether the nodes are sensitive, so that the sum of sensitive node scores becomes equal to the sum of non-sensitive node scores [tsioutsiouliklis2020fairness].  If "fairwalk" the graph is pre-processed so that, when possible, walks are equally probable to visit sensitive or non-sensitive nodes at non-restarting iterations [rahman2019fairwalk]. 
- * *eps:* A small value to consider rank redistribution to have converged. Default is 1.E-12. 
+ * *method:* The method with which to adjust weights. If "O" (default) an optimal gradual adjustment is performed [tsioutsiouliklis2020fairness]. If "B" node scores are weighted according to whether the nodes are sensitive, so that the sum of sensitive node scores becomes equal to the sum of non-sensitive node scores [tsioutsiouliklis2020fairness]. 
+ * *eps:* A small value to consider rank redistribution to have converged. Default is 1.E-12.
 
 ### <kbd>Postprocessor</kbd> BoostedSeedOversampling
 
-Iteratively performs seed oversampling and combines found ranks by weighting them with a Boosting scheme. 
-Initializes the class with a base ranker and the boosting scheme'personalization parameters. 
+Iteratively performs seed oversampling and combines found ranks by weighting them with a Boosting scheme. The constructor initializes the class with a base ranker and the boosting scheme'personalization parameters. 
 
 Attributes: 
  * *ranker:* The base ranker instance. 
@@ -42,18 +40,16 @@ Attributes:
 Example:
 
 ```python 
->>> import pygrank as pg 
->>> graph, seed_nodes = ... 
->>> algorithm = pg.BoostedSeedOversampling(pg.PageRank(alpha=0.99)) 
->>> ranks = algorithm.rank(graph, personalization={1 for v in seed_nodes}) 
+import pygrank as pg 
+graph, seed_nodes = ... 
+algorithm = pg.BoostedSeedOversampling(pg.PageRank(alpha=0.99)) 
+ranks = algorithm.rank(graph, personalization={1 for v in seed_nodes}) 
 ```
-
 
 ### <kbd>Postprocessor</kbd> FairPersonalizer
 
 A personalization editing scheme that aims to edit graph signal priors (i.e. personalization) to produce 
-disparate 
-Instantiates a personalization editing scheme that trains towards optimizing 
+disparate The constructor instantiates a personalization editing scheme that trains towards optimizing 
 retain_rank_weight*error_type(original scores, editing-induced scores) 
 + pRule_weight*min(induced score pRule, target_pRule) 
 
@@ -66,17 +62,43 @@ Args:
  * *parameter_buckets:* How many sets of parameters to be used to . Default is 1. More parameters could be needed to to track, but running time scales **exponentially** to these (with base 4). 
  * *max_residual:* An upper limit on how much the original personalization is preserved, i.e. a fraction of it in the range [0, max_residual] is preserved. Default is 1 and is introduced by [krasanakis2020prioredit], but 0 can be used for exact replication of [krasanakis2020fairconstr]. 
 
+Example:
+
+```python 
+import pygrank as pg 
+graph, personalization, sensitive, algorithm = ... # sensitive is a second graph signal 
+algorithm = pg.FairPersonalizer(algorithm, .8, pRule_weight=10) # tries to force (weight 10) pRule to be at least 80% 
+ranks = algorithm.rank(graph, personalization, sensitive=sensitive) 
+```
+
+
+Example (treats class imbalanace):
+
+```python 
+import pygrank as pg 
+graph, personalization, algorithm = ... 
+algorithm = pg.FairPersonalizer(algorithm, .8, pRule_weight=10) 
+ranks = algorithm.rank(graph, personalization, sensitive=personalization) 
+```
+
 ### <kbd>Postprocessor</kbd> FairWalk
- 
+
+Adjusting graph convolutions to perform fair random walking [rahman2019fairwalk].. The constructor initializes Fairwalk given a base ranker. **This explicitly assumes immutability** of graphs. If you edit 
+graphs also clear the dictionary where preprocessed graphs are inputted by calling *fairwalk.reweights.clear().* 
+
+Args: 
+ * *ranker:* Optional. The base ranker instance. If None (default), a Tautology() ranker is created.
 
 ### <kbd>Postprocessor</kbd> MabsMaintain
 
-Forces node ranking posteriors to have the same mean absolute value as prior inputs. 
+Forces node ranking posteriors to have the same mean absolute value as prior inputs. The constructor initializes the postprocessor with a base ranker instance. 
+
+Args: 
+ * *ranker:* Optional. The base ranker instance. If None (default), a Tautology() ranker is created.
 
 ### <kbd>Postprocessor</kbd> Normalize
 
-Normalizes ranks by dividing with their maximal value. 
-Initializes the class with a base ranker instance. Args are automatically filled in and 
+Normalizes ranks by dividing with their maximal value. The constructor initializes the class with a base ranker instance. Args are automatically filled in and 
 re-ordered if at least one is provided. 
 
 Args: 
@@ -86,27 +108,25 @@ Args:
 Example:
 
 ```python 
->>> import pygrank as pg 
->>> graph, personalization, algorithm = ... 
->>> algorithm = pg.Normalize(0.5, algorithm) # sets ranks >= 0.5 to 1 and lower ones to 0 
->>> ranks = algorithm.rank(graph, personalization) 
+import pygrank as pg 
+graph, personalization, algorithm = ... 
+algorithm = pg.Normalize(0.5, algorithm) # sets ranks >= 0.5 to 1 and lower ones to 0 
+ranks = algorithm.rank(graph, personalization) 
 ```
 
 
 Example (same outcome, simpler one-liner):
 
 ```python 
->>> import pygrank as pg 
->>> graph, personalization, algorithm = ... 
->>> ranks = pg.Normalize(0.5).transform(algorithm.rank(graph, personalization)) 
+import pygrank as pg 
+graph, personalization, algorithm = ... 
+ranks = pg.Normalize(0.5).transform(algorithm.rank(graph, personalization)) 
 ```
-
 
 ### <kbd>Postprocessor</kbd> Ordinals
 
 Converts ranking outcome to ordinal numbers. 
-The highest rank is set to 1, the second highest to 2, etc. 
-Initializes the class with a base ranker instance. 
+The highest rank is set to 1, the second highest to 2, etc. The constructor initializes the class with a base ranker instance. 
 
 Args: 
  * *ranker:* Optional. The base ranker instance. A Tautology() ranker is created if None (default) was specified. 
@@ -114,26 +134,24 @@ Args:
 Example:
 
 ```python 
->>> import pygrank as pg 
->>> graph, personalization, algorithm = ... 
->>> algorithm = pg.Ordinals(algorithm) 
->>> ranks = algorithm.rank(graph, personalization) 
+import pygrank as pg 
+graph, personalization, algorithm = ... 
+algorithm = pg.Ordinals(algorithm) 
+ranks = algorithm.rank(graph, personalization) 
 ```
 
 
 Example (same outcome, simpler one-liner):
 
 ```python 
->>> import pygrank as pg 
->>> graph, personalization, algorithm = ... 
->>> ranks = pg.Ordinals().transform(algorithm.rank(graph, personalization)) 
+import pygrank as pg 
+graph, personalization, algorithm = ... 
+ranks = pg.Ordinals().transform(algorithm.rank(graph, personalization)) 
 ```
-
 
 ### <kbd>Postprocessor</kbd> SeedOversampling
 
-Performs seed oversampling on a base ranker to improve the quality of predicted seeds. 
-Initializes the class with a base ranker. 
+Performs seed oversampling on a base ranker to improve the quality of predicted seeds. The constructor initializes the class with a base ranker. 
 
 Attributes: 
  * *ranker:* The base ranker instance. 
@@ -142,17 +160,15 @@ Attributes:
 Example:
 
 ```python 
->>> import pygrank as pg 
->>> graph, seed_nodes = ... 
->>> algorithm = pg.SeedOversampling(pg.PageRank(alpha=0.99)) 
->>> ranks = algorithm.rank(graph, personalization={1 for v in seed_nodes}) 
+import pygrank as pg 
+graph, seed_nodes = ... 
+algorithm = pg.SeedOversampling(pg.PageRank(alpha=0.99)) 
+ranks = algorithm.rank(graph, personalization={1 for v in seed_nodes}) 
 ```
-
 
 ### <kbd>Postprocessor</kbd> Sweep
 
-Applies a sweep procedure that divides personalized node ranks by corresponding non-personalized ones. 
-Initializes the sweep procedure. 
+Applies a sweep procedure that divides personalized node ranks by corresponding non-personalized ones. The constructor initializes the sweep procedure. 
 
 Args: 
  * *ranker:* The base ranker instance. 
@@ -161,41 +177,42 @@ Args:
 Example:
 
 ```python 
->>> import pygrank as pg 
->>> graph, personalization, algorithm = ... 
->>> algorithm = pg.Sweep(algorithm) # divides node scores by uniform ranker'personalization non-personalized outcome 
->>> ranks = algorithm.rank(graph, personalization 
+import pygrank as pg 
+graph, personalization, algorithm = ... 
+algorithm = pg.Sweep(algorithm) # divides node scores by uniform ranker'personalization non-personalized outcome 
+ranks = algorithm.rank(graph, personalization 
 ```
 
 
 Example with different rankers:
 
 ```python 
->>> import pygrank as pg 
->>> graph, personalization, algorithm, uniform_ranker = ... 
->>> algorithm = pg.Sweep(algorithm, uniform_ranker=uniform_ranker) 
->>> ranks = algorithm.rank(graph, personalization) 
+import pygrank as pg 
+graph, personalization, algorithm, uniform_ranker = ... 
+algorithm = pg.Sweep(algorithm, uniform_ranker=uniform_ranker) 
+ranks = algorithm.rank(graph, personalization) 
 ```
 
 
 Example (same outcome):
 
 ```python 
->>> import pygrank as pg 
->>> graph, personalization, uniform_ranker, algorithm = ... 
->>> ranks = pg.Threshold(uniform_ranker).transform(algorithm.rank(graph, personalization)) 
+import pygrank as pg 
+graph, personalization, uniform_ranker, algorithm = ... 
+ranks = pg.Threshold(uniform_ranker).transform(algorithm.rank(graph, personalization)) 
 ```
-
 
 ### <kbd>Postprocessor</kbd> Tautology
 
 Returns ranks as-are. 
-Can be used as a baseline against which to compare other postprocessors. 
+Can be used as a baseline against which to compare other postprocessors or graph filters. The constructor initializes the Tautology postprocessor with a base ranker. 
+
+Args: 
+ * *ranker:* The base ranker instance. If None (default), this works as a base ranker that returns a copy of personalization signals as-are or a conversion of backend primitives into signals.
 
 ### <kbd>Postprocessor</kbd> Threshold
 
-Converts ranking outcome to binary values based on a threshold value. 
-Initializes the Threshold postprocessing scheme. Args are automatically filled in and 
+Converts ranking outcome to binary values based on a threshold value. The constructor initializes the Threshold postprocessing scheme. Args are automatically filled in and 
 re-ordered if at least one is provided. 
 
 Args: 
@@ -205,26 +222,24 @@ Args:
 Example:
 
 ```python 
->>> import pygrank as pg 
->>> graph, personalization, algorithm = ... 
->>> algorithm = pg.Threshold(algorithm, 0.5) # sets ranks >= 0.5 to 1 and lower ones to 0 
->>> ranks = algorithm.rank(graph, personalization) 
+import pygrank as pg 
+graph, personalization, algorithm = ... 
+algorithm = pg.Threshold(algorithm, 0.5) # sets ranks >= 0.5 to 1 and lower ones to 0 
+ranks = algorithm.rank(graph, personalization) 
 ```
 
 
 Example (same outcome):
 
 ```python 
->>> import pygrank as pg 
->>> graph, personalization, algorithm = ... 
->>> ranks = pg.Threshold(0.5).transform(algorithm.rank(graph, personalization)) 
+import pygrank as pg 
+graph, personalization, algorithm = ... 
+ranks = pg.Threshold(0.5).transform(algorithm.rank(graph, personalization)) 
 ```
-
 
 ### <kbd>Postprocessor</kbd> Transformer
 
-Applies an element-by-element transformation on a graph signal based on a given expression. 
-Initializes the class with a base ranker instance. Args are automatically filled in and 
+Applies an element-by-element transformation on a graph signal based on a given expression. The constructor initializes the class with a base ranker instance. Args are automatically filled in and 
 re-ordered if at least one is provided. 
 
 Args: 
@@ -234,10 +249,9 @@ Args:
 Example:
 
 ```python 
->>> import pygrank as pg 
->>> graph, personalization, algorithm = ... 
->>> r1 = pg.Normalize(algorithm, "sum").rank(graph, personalization) 
->>> r2 = pg.Transformer(algorithm, lambda x: x/pg.sum(x)).rank(graph, personalization) 
->>> print(pg.Mabs(r1)(r2)) 
+import pygrank as pg 
+graph, personalization, algorithm = ... 
+r1 = pg.Normalize(algorithm, "sum").rank(graph, personalization) 
+r2 = pg.Transformer(algorithm, lambda x: x/pg.sum(x)).rank(graph, personalization) 
+print(pg.Mabs(r1)(r2)) 
 ```
-

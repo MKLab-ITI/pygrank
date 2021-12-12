@@ -15,7 +15,7 @@ filters = pg.create_variations(filters, {"": pg.Tautology, "+Sweep": pg.Sweep})
 
 for name, filter in filters.items():
     print("=====", name, "=====")
-    algorithms = {"None": pg.Normalize(filter),
+    algorithms = {"None": filter,
                   "Mult": pg.AdHocFairness(filter, "B"),
                   "LFPRO": pg.AdHocFairness(filter, "O"),
                   "FBuck-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=1, error_type=pg.Mabs, parameter_buckets=0),
@@ -23,7 +23,6 @@ for name, filter in filters.items():
                   "Fest-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=1, error_type=pg.Mabs)
                  }
     algorithms = pg.create_variations(algorithms, {"": pg.Normalize})
-    print(algorithms.keys())
 
     #import cProfile as profile
     #pr = profile.Profile()
