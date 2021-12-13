@@ -96,7 +96,7 @@ class Modularity(Unsupervised):
                  max_rank: float = 1,
                  max_positive_samples: int = 2000,
                  seed: int = 0):
-        """ Initializes the Modularity measure.
+        """ Initializes the Modularity measure with a sampling strategy that speeds up normal computations.
 
         Args:
             graph: Optional. The graph on which to calculate the measure. If None (default) it is automatically

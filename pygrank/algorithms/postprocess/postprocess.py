@@ -1,7 +1,7 @@
 from pygrank.algorithms.utils import MethodHasher, call, ensure_used_args, remove_used_args
 from pygrank.core.signals import GraphSignal, to_signal, NodeRanking
 from pygrank.core import backend, GraphSignalGraph, GraphSignalData
-from typing import Union
+from typing import Union, Optional
 
 
 class Postprocessor(NodeRanking):
@@ -88,14 +88,16 @@ class MabsMaintain(Postprocessor):
 class Normalize(Postprocessor):
     """ Normalizes ranks by dividing with their maximal value."""
 
-    def __init__(self, ranker=None, method="max"):
+    def __init__(self,
+                 ranker: Optional[Union[NodeRanking,str]] = None,
+                 method: Optional[Union[NodeRanking,str]] = "max"):
         """ Initializes the class with a base ranker instance. Args are automatically filled in and
         re-ordered if at least one is provided.
 
         Args:
-            ranker: The base ranker instance. A Tautology() ranker is created if None (default) was specified.
-            method: Divide ranks either by their "max" (default) or by their "sum" or make the lie in the "range" [0,1]
-                by subtracting their mean before diving by their max.
+            ranker: Optional. The base ranker instance. A Tautology() ranker is created if None (default) was specified.
+            method: Optional. Divide ranks either by their "max" (default) or by their "sum" or make the lie in the
+             "range" [0,1] by subtracting their mean before diving by their max.
 
         Example:
             >>> import pygrank as pg
@@ -310,4 +312,6 @@ class Sweep(Postprocessor):
         return ranks.np/(1.E-12+uniforms)
 
     def _reference(self):
-        return "sweep ratio postprocessing \\cite{andersen2007local}"  # TODO: allow references to account for custom centrality ranker
+        if self.uniform_ranker != self.ranker:
+            return "sweep ratio postprocessing \\cite{andersen2007local} where non-personalized ranking is performed with a "+self.uniform_ranker.cite()
+        return "sweep ratio postprocessing \\cite{andersen2007local}"

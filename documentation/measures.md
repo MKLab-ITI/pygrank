@@ -262,7 +262,7 @@ conductance = pg.Density().evaluate(scores)
 
 ### <kbd>Unsupervised</kbd> Modularity
 
-Extension of modularity that accounts for node scores. The constructor initializes the Modularity measure. 
+Extension of modularity that accounts for node scores. The constructor initializes the Modularity measure with a sampling strategy that speeds up normal computations. 
 
 Args: 
  * *graph:* Optional. The graph on which to calculate the measure. If None (default) it is automatically extracted from graph signals passed for evaluation. 

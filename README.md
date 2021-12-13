@@ -114,7 +114,7 @@ How much time did it take for the base ranker to converge?
 
 ```python
 print(ranker.convergence)
-19 iterations (0.0020614000000023225 sec)
+# 19 iterations (0.0020614000000023225 sec)
 ```
 
 Since only the node order is important,

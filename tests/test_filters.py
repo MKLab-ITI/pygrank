@@ -5,7 +5,7 @@ from .test_core import supported_backends
 
 
 def test_zero_personalization():
-    assert pg.sum(pg.PageRank()(next(pg.load_datasets_graph(["graph9"])),{}).np) == 0
+    assert pg.sum(pg.PageRank()(next(pg.load_datasets_graph(["graph9"])), {}).np) == 0
 
 
 def test_abstract_filter_types():
@@ -38,7 +38,6 @@ def test_convergence_string_conversion():
 
 def test_pagerank_vs_networkx():
     graph = next(pg.load_datasets_graph(["graph9"]))
-    #print(pg.preprocessor(normalization='col')(graph).todense())
     for _ in supported_backends():
         ranker = pg.Normalize("sum", pg.PageRank(normalization='col', tol=1.E-9))
         test_result = ranker(graph)
@@ -62,12 +61,9 @@ def test_non_convergence():
 def test_custom_runs():
     graph = next(pg.load_datasets_graph(["graph9"]))
     for _ in supported_backends():
-        ranks1 = pg.Normalize(pg.PageRank(0.85, tol=pg.epsilon(), max_iters=1000)).rank(graph, {"A": 1})
-        # TODO find why the following is not exactly the same
-        ranks2 = pg.Normalize(pg.GenericGraphFilter([0.85**i for i in range(20)], tol=pg.epsilon())).rank(graph, {"A": 1})
-        #print(ranks1.np-ranks2.np)
-        #self.assertAlmostEqual(pg.Mabs(ranks1)(ranks2), 0, places=11)
-        assert True
+        ranks1 = pg.Normalize(pg.PageRank(0.85, tol=pg.epsilon(), max_iters=1000, use_quotient=False)).rank(graph, {"A": 1})
+        ranks2 = pg.Normalize(pg.GenericGraphFilter([0.85**i*len(graph) for i in range(80)], tol=pg.epsilon())).rank(graph, {"A": 1})
+        assert pg.Mabs(ranks1)(ranks2) < 1.E-6
 
 
 def test_completion():
@@ -78,17 +74,6 @@ def test_completion():
         pg.AbsorbingWalks().rank(graph)
         pg.HeatKernel().rank(graph)
         assert True
-
-
-def test_filter_citations():
-    assert pg.PageRank().cite() != pg.GraphFilter().cite()
-    assert pg.HeatKernel().cite() != pg.GraphFilter().cite()
-    assert pg.AbsorbingWalks().cite() != pg.GraphFilter().cite()
-    assert pg.HeatKernel().cite() != pg.GraphFilter().cite()
-    assert pg.PageRank(alpha=0.85).cite() != pg.PageRank(alpha=0.99).cite()
-    assert pg.HeatKernel(krylov_dims=0).cite() != pg.HeatKernel(krylov_dims=5).cite()
-    assert pg.HeatKernel(coefficient_type="taylor").cite() != pg.HeatKernel(coefficient_type="chebyshev").cite()
-    assert pg.HeatKernel(optimization_dict=dict()).cite() != pg.HeatKernel(optimization_dict=None).cite()
 
 
 def test_quotient():
@@ -149,6 +134,4 @@ def test_optimization_dict():
     optimized = time() - tic
     assert len(optimization) == 20
     assert unoptimized > optimized
-
-
     

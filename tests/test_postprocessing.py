@@ -3,25 +3,6 @@ import pytest
 from .test_core import supported_backends
 
 
-def test_postprocessor_citations():
-    assert pg.Tautology(pg.PageRank()).cite() == pg.PageRank().cite()
-    assert pg.Normalize(pg.PageRank()).cite() != pg.PageRank().cite()
-    assert pg.Normalize(pg.PageRank(), "sum").cite() != pg.Normalize(pg.PageRank(), "range").cite()
-    assert pg.Ordinals(pg.PageRank()).cite() != pg.Normalize(pg.PageRank(), "sum").cite()
-    assert pg.Transformer(pg.PageRank()).cite() != pg.PageRank().cite()
-    assert pg.Threshold(pg.PageRank()).cite() != pg.PageRank().cite()
-    assert pg.Sweep(pg.PageRank()).cite() != pg.PageRank().cite()
-    assert pg.BoostedSeedOversampling(pg.PageRank()).cite() != pg.PageRank().cite()
-    assert pg.SeedOversampling(pg.PageRank()).cite() != pg.PageRank().cite()
-    assert pg.SeedOversampling(pg.PageRank(), method="safe").cite() \
-           != pg.SeedOversampling(pg.PageRank(), method="top").cite()
-    assert pg.BoostedSeedOversampling(pg.PageRank(), objective="partial").cite() \
-           != pg.BoostedSeedOversampling(pg.PageRank(), objective="naive").cite()
-    assert pg.BoostedSeedOversampling(pg.PageRank(), oversample_from_iteration="previous").cite() \
-           != pg.BoostedSeedOversampling(pg.PageRank(), oversample_from_iteration="original").cite()
-    # TODO: add fairness citation tests
-
-
 def test_abstract_postprocessor():
     graph = next(pg.load_datasets_graph(["graph5"]))
     with pytest.raises(Exception):
