@@ -34,6 +34,8 @@ def to_array(obj, copy_array=False):
         if len(obj.shape) > 1:
             return obj.ravel()
         return obj
+    if obj.__class__.__module__ == "torch":
+        return obj.detach().numpy()
     return np.array(obj)
 
 

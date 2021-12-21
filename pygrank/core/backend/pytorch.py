@@ -39,11 +39,11 @@ def graph_dropout(M, dropout):
     if dropout == 0:
         return M
     # TODO: change based on future sparse matrix support: https://github.com/pytorch/pytorch/projects/24#card-59611437
-    return torch.sparse_coo_tensor(M.indices, torch.dropout(M.values, dropout), M.shape).to_sparse_csr()
+    return torch.sparse_coo_tensor(M.indices(), torch.nn.functional.dropout(M.values(), dropout), M.shape).coalesce()
 
 
 def separate_cols(x):
-    return torch.split(x, dim=1)
+    return torch.unbind(x, dim=1)
 
 
 def combine_cols(cols):
@@ -53,7 +53,7 @@ def combine_cols(cols):
 
 
 def backend_name():
-    return "tensorflow"
+    return "pytorch"
 
 
 def dot(x, y):
@@ -66,7 +66,7 @@ def repeat(value, times):
 
 def scipy_sparse_to_backend(M):
     coo = M.tocoo()
-    return torch.sparse_coo_tensor(torch.LongTensor(np.vstack((coo.col, coo.row))), torch.FloatTensor(coo.data), coo.shape)
+    return torch.sparse_coo_tensor(torch.LongTensor(np.vstack((coo.col, coo.row))), torch.FloatTensor(coo.data), coo.shape).coalesce()
 
 
 def to_array(obj, copy_array=False):

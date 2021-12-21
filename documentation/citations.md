@@ -110,6 +110,15 @@ this library. These are presented in reverse chronological order.
 Additional publications introducing methods implemented in this package.
 
 ```
+@inproceedings{yu2021chebyshev,
+  title={Chebyshev Accelerated Spectral Clustering},
+  author={Yu, Tianyu and Zhao, Yonghua and Huang, Rongfeng and Liu, Shifang and Zhang, Xinyin},
+  booktitle={Proceedings of the 14th ACM International Conference on Web Search and Data Mining},
+  pages={247--255},
+  year={2021}
+}
+```
+```
 @article{tsioutsiouliklis2020fairness,
   title={Fairness-Aware Link Analysis},
   author={Tsioutsiouliklis, Sotiris and Pitoura, Evaggelia and Tsaparas, Panayiotis and Kleftakis, Ilias and Mamoulis, Nikos},
@@ -127,13 +136,23 @@ Additional publications introducing methods implemented in this package.
 }
 ```
 ```
-@inproceedings{wu2012learning,
-  title={Learning with Partially Absorbing Random Walks.},
-  author={Wu, Xiao-Ming and Li, Zhenguo and So, Anthony Man-Cho and Wright, John and Chang, Shih-Fu},
-  booktitle={NIPS},
-  volume={25},
-  pages={3077--3085},
-  year={2012}
+@article{ortega2018graph,
+  title={Graph signal processing: Overview, challenges, and applications},
+  author={Ortega, Antonio and Frossard, Pascal and Kova{\v{c}}evi{\'c}, Jelena and Moura, Jos{\'e} MF and Vandergheynst, Pierre},
+  journal={Proceedings of the IEEE},
+  volume={106},
+  number={5},
+  pages={808--828},
+  year={2018},
+  publisher={IEEE}
+}
+```
+```
+@article{klicpera2018predict,
+  title={Predict then propagate: Graph neural networks meet personalized pagerank},
+  author={Klicpera, Johannes and Bojchevski, Aleksandar and G{\"u}nnemann, Stephan},
+  journal={arXiv preprint arXiv:1810.05997},
+  year={2018}
 }
 ```
 ```
@@ -145,11 +164,21 @@ Additional publications introducing methods implemented in this package.
 }
 ```
 ```
-@techreport{page1999pagerank,
-  title={The PageRank citation ranking: Bringing order to the web.},
-  author={Page, Lawrence and Brin, Sergey and Motwani, Rajeev and Winograd, Terry},
-  year={1999},
-  institution={Stanford InfoLab}
+@article{susnjara2015accelerated,
+  title={Accelerated filtering on graphs using lanczos method},
+  author={Susnjara, Ana and Perraudin, Nathanael and Kressner, Daniel and Vandergheynst, Pierre},
+  journal={arXiv preprint arXiv:1509.04537},
+  year={2015}
+}
+```
+```
+@inproceedings{wu2012learning,
+  title={Learning with Partially Absorbing Random Walks.},
+  author={Wu, Xiao-Ming and Li, Zhenguo and So, Anthony Man-Cho and Wright, John and Chang, Shih-Fu},
+  booktitle={NIPS},
+  volume={25},
+  pages={3077--3085},
+  year={2012}
 }
 ```
 ```
@@ -165,49 +194,6 @@ Additional publications introducing methods implemented in this package.
 }
 ```
 ```
-@article{ortega2018graph,
-  title={Graph signal processing: Overview, challenges, and applications},
-  author={Ortega, Antonio and Frossard, Pascal and Kova{\v{c}}evi{\'c}, Jelena and Moura, Jos{\'e} MF and Vandergheynst, Pierre},
-  journal={Proceedings of the IEEE},
-  volume={106},
-  number={5},
-  pages={808--828},
-  year={2018},
-  publisher={IEEE}
-}
-```
-
-```
-@inproceedings{yu2021chebyshev,
-  title={Chebyshev Accelerated Spectral Clustering},
-  author={Yu, Tianyu and Zhao, Yonghua and Huang, Rongfeng and Liu, Shifang and Zhang, Xinyin},
-  booktitle={Proceedings of the 14th ACM International Conference on Web Search and Data Mining},
-  pages={247--255},
-  year={2021}
-}
-```
-
-```
-@article{susnjara2015accelerated,
-  title={Accelerated filtering on graphs using lanczos method},
-  author={Susnjara, Ana and Perraudin, Nathanael and Kressner, Daniel and Vandergheynst, Pierre},
-  journal={arXiv preprint arXiv:1509.04537},
-  year={2015}
-}
-```
-
-```
-@inproceedings{wu2012learning,
-  title={Learning with Partially Absorbing Random Walks.},
-  author={Wu, Xiao-Ming and Li, Zhenguo and So, Anthony Man-Cho and Wright, John and Chang, Shih-Fu},
-  booktitle={NIPS},
-  volume={25},
-  pages={3077--3085},
-  year={2012}
-}
-```
-
-```
 @inproceedings{andersen2007local,
   title={Local partitioning for directed graphs using PageRank},
   author={Andersen, Reid and Chung, Fan and Lang, Kevin},
@@ -215,5 +201,13 @@ Additional publications introducing methods implemented in this package.
   pages={166--178},
   year={2007},
   organization={Springer}
+}
+```
+```
+@techreport{page1999pagerank,
+  title={The PageRank citation ranking: Bringing order to the web.},
+  author={Page, Lawrence and Brin, Sergey and Motwani, Rajeev and Winograd, Terry},
+  year={1999},
+  institution={Stanford InfoLab}
 }
 ```

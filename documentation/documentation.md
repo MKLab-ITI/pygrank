@@ -543,7 +543,7 @@ given that each node community should be experimented on separately.
 import pygrank as pg
 datasets = pg.downloadable_small_datasets()
 print(datasets)
-['citeseer', 'eucore', 'graph5', 'graph9', 'bigraph']
+# ['citeseer', 'eucore', 'graph5', 'graph9', 'bigraph']
 for dataset, graph, group in pg.load_datasets_all_communities(datasets):
     print(dataset, ":", len(group), "community members", len(graph), "nodes",  graph.number_of_edges(), "edges")
 # REQUIRED CITATION: Please visit the url https://linqs.soe.ucsc.edu/data for instructions on how to cite the dataset citeseer in your research
@@ -564,7 +564,7 @@ compare them under the AUC measure would be per:
 import pygrank as pg
 dataset_names = pg.downloadable_small_datasets()
 print(dataset_names)
-['citeseer', 'eucore']
+# ['citeseer', 'eucore']
 algorithms = pg.create_demo_filters()
 print(algorithms.keys())
 # dict_keys(['PPR.85', 'PPR.9', 'PPR.99', 'HK3', 'HK5', 'HK7'])
@@ -693,7 +693,7 @@ it afterwards with `optimization_dict.clear()`.
 the amount of used memory, which the system may run out of for large graphs.
 
 :bulb: The default algorithms provided by tuners make use of the class
-*pygrank.SelfClearDict* instead of a normal dictionary, which keeps track only
+*pygrank.SelfClearDict* instead of a normal dictionary. This keeps track only
 of the last personalization and only optimizes runs for the last personalization.
 This way optimization becomes fast while allocating the minimum memory required
 for tuning.
@@ -705,5 +705,62 @@ for tuning.
 TODO
 
 ### Node Classification with Graph Neural Networks
-TODO
+To support Graph Neural Network architectures, `pygrank` provides a mechanism
+for propagating latent representations through graph filters. This takes as
+input backend primitives organized into matrices, applies the graph filter on
+each of their columns and merges the results into matrices of the same 
+directions.
+
+For example, a predict-then-propagate architecture [klicpera2018predict]
+can be implemented in tensorflow with the following code:
+
+```python
+import tensorflow as tf
+import pygrank as pg
+
+
+pg.load_backend('tensorflow')  # forces propagation through the tensorflow pipeline
+
+class APPNP(tf.keras.Sequential):
+  def __init__(self, num_inputs, num_outputs, hidden=64):
+      super().__init__([
+          tf.keras.layers.Dropout(0.5, input_shape=(num_inputs,)),
+          tf.keras.layers.Dense(hidden, activation=tf.nn.relu, kernel_regularizer=tf.keras.regularizers.L2(1.E-5)),
+          tf.keras.layers.Dropout(0.5),
+          tf.keras.layers.Dense(num_outputs, activation=tf.nn.relu),
+      ])
+      self.ranker = pg.PageRank(0.9, renormalize=True, assume_immutability=True, error_type="iters", max_iters=10)
+
+  def call(self, inputs, training=False):
+      graph, features = inputs
+      predict = super().call(features, training=training)
+      predict = self.ranker.propagate(graph, predict, graph_dropout=0.5 if training else 0)
+      return tf.nn.softmax(predict, axis=1)
+```
+
+In the above code, the `propagate` method of the graph filter is used to perform the propagation.
+Additionally, we make use of the package's ability to perform renormalization of the
+adjacency matrix and graph dropout in forward computations.
+
+Since organizing GNN training can prove cumbersome for non-experts,
+`pygrank` integrates helper methods to train GNNs for node classification.
+These are abstracted, so that calls are the same, regardless of the employed
+backend. Given the above, in the next snippet we load a dataset with node
+features and labels, separate nodes into a 60-20-20 training-validation-test
+split and train the APPNP architecture with the helper methods:
+
+```python
+graph, features, labels = pg.load_feature_dataset('synthfeats')
+training, test = pg.split(list(range(len(graph))), 0.8)
+training, validation = pg.split(training, 1 - 0.2 / 0.8)
+model = APPNP(features.shape[1], labels.shape[1])
+pg.gnn_train(model, graph, features, labels, training, validation, epochs=50)
+```
+
+Predictions are easy to make per:
+
+```python
+predictions = model([graph, features])
+print(pg.gnn_accuracy(labels, predictions, test))
+```
 

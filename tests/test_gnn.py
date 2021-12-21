@@ -1,50 +1,65 @@
 import pygrank as pg
 import tensorflow as tf
+import torch
 
 
-def test_appnp():
+def test_appnp_tf():
     graph, features, labels = pg.load_feature_dataset('synthfeats')
     training, test = pg.split(list(range(len(graph))), 0.8)
     training, validation = pg.split(training, 1 - 0.2 / 0.8)
 
-    class AutotuneAPPNP:
-        def __init__(self, num_inputs, num_outputs, hidden=64, dropout=0.5, decoupled=False):
-            self.mlp = tf.keras.Sequential([
-                tf.keras.layers.Dropout(dropout, input_shape=(num_inputs,)),
-                tf.keras.layers.Dense(hidden, activation=tf.nn.relu),
-                tf.keras.layers.Dropout(dropout),
+    class APPNP(tf.keras.Sequential):
+        def __init__(self, num_inputs, num_outputs, hidden=64):
+            super().__init__([
+                tf.keras.layers.Dropout(0.5, input_shape=(num_inputs,)),
+                tf.keras.layers.Dense(hidden, activation=tf.nn.relu, kernel_regularizer=tf.keras.regularizers.L2(1.E-5)),
+                tf.keras.layers.Dropout(0.5),
                 tf.keras.layers.Dense(num_outputs, activation=tf.nn.relu),
             ])
-            self.num_outputs = num_outputs
-            self.trainable_variables = self.mlp.trainable_variables
-            self.decoupled = decoupled
-            pre = pg.preprocessor(renormalize=True, assume_immutability=True)
-            self.ranker = pg.ParameterTuner(
-                lambda params: pg.GenericGraphFilter([params[0]] * 10, preprocessor=pre, max_iters=10, error_type="iters"),
-                max_vals=[0.95], min_vals=[0.5],
-                measure=pg.KLDivergence, deviation_tol=0.1, tuning_backend="numpy", divide_range=2)
+            self.ranker = pg.PageRank(0.9, renormalize=True, assume_immutability=True, error_type="iters", max_iters=10)
 
-        def __call__(self, graph, features, training=False):
-            predict = self.mlp(features, training=training)
-            if not training or not self.decoupled:
-                if not training:
-                    predict = predict.numpy()
-                    pg.load_backend('numpy')
-                predict = self.ranker.propagate(graph, predict, graph_dropout=0.5 if training else 0)
-                if not training:
-                    pg.load_backend('tensorflow')
+        def call(self, inputs, training=False):
+            graph, features = inputs
+            predict = super().call(features, training=training)
+            predict = self.ranker.propagate(graph, predict, graph_dropout=0.5 if training else 0)
             return tf.nn.softmax(predict, axis=1)
 
     pg.load_backend('tensorflow')
+    model = APPNP(features.shape[1], labels.shape[1])
+    pg.gnn_train(model, graph, features, labels, training, validation, test=test, epochs=50)
+    assert float(pg.gnn_accuracy(labels, model([graph, features]), test)) >= 0.5
+
+
+def test_appnp_torch():
+    graph, features, labels = pg.load_feature_dataset('synthfeats')
+    training, test = pg.split(list(range(len(graph))), 0.8)
+    training, validation = pg.split(training, 1 - 0.2 / 0.8)
+
+    class AutotuneAPPNP(torch.nn.Module):
+        def __init__(self, num_inputs, num_outputs, hidden=64):
+            super().__init__()
+            self.layer1 = torch.nn.Linear(num_inputs, hidden)
+            self.layer2 = torch.nn.Linear(hidden, num_outputs)
+            self.activation = torch.nn.ReLU()
+            self.dropout = torch.nn.Dropout(0.5)
+            self.num_outputs = num_outputs
+            self.ranker = pg.PageRank(0.9, renormalize=True, assume_immutability=True, error_type="iters", max_iters=10)
+
+        def forward(self, inputs, training=False):
+            graph, features = inputs
+            #training = self.training
+            predict = torch.FloatTensor(features)
+            predict = self.dropout(self.activation(self.layer1(predict)))
+            predict = self.activation(self.layer2(predict))
+            predict = self.ranker.propagate(graph, predict, graph_dropout=0.5 if training else 0)
+            ret = torch.nn.functional.softmax(predict, dim=1)
+            self.loss = 0
+            for param in self.layer1.parameters():
+                self.loss = self.loss + 0.5E-4*torch.norm(param)
+            return ret
+
+    pg.load_backend('pytorch')
     model = AutotuneAPPNP(features.shape[1], labels.shape[1])
-    pg.gnn_train(model, graph, features, labels, training, validation,
-                 epochs=50)
-    assert float(pg.gnn_accuracy(labels, model(graph, features), test)) >= 0.5
-
-    pg.load_backend('tensorflow')
-    model = AutotuneAPPNP(features.shape[1], labels.shape[1], decoupled=True)
-    pg.gnn_train(model, graph, features, labels, training, validation,
-                 epochs=50)
-    assert float(pg.gnn_accuracy(labels, model(graph, features), test)) >= 0.5
-
+    pg.gnn_train(model, graph, features, labels, training, validation, epochs=50)
+    assert float(pg.gnn_accuracy(labels, model([graph, features]), test)) >= 0.5
     pg.load_backend('numpy')

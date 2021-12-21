@@ -53,7 +53,7 @@ class GraphSignal(MutableMapping):
             self.np = np.repeat(0.0, len(graph)) # tensorflow does not initialize editing of eager tensors
             for key, value in obj.items():
                 self[key] = value
-            self.np = backend.to_array(self.np) # make all operations with numpy and then potentially switch to tensorflow
+            self.np = backend.to_array(self.np)  # make all operations with numpy and then potentially switch to tensorflow
         #if len(self.graph) != backend.length(self.np) or len(self.graph) != len(self.node2id):
         #    raise Exception("Graph signal arrays should have the same dimensions as graphs")
 

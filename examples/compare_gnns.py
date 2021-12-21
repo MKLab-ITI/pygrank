@@ -1,22 +1,19 @@
 import pygrank as pg
 import tensorflow as tf
-import math
 
 
-class APPNP:
-    def __init__(self, num_inputs, num_outputs, hidden=64, alpha=0.9, propagate_on_training=True, graph_dropout=0.5):
-        self.mlp = tf.keras.Sequential([
+class APPNP(tf.keras.Sequential):
+    def __init__(self, num_inputs, num_outputs, hidden=64, alpha=0.9, propagate_on_training=True, graph_dropout=0):
+        super().__init__([
             tf.keras.layers.Dropout(0.5, input_shape=(num_inputs,)),
-            tf.keras.layers.Dense(hidden, activation=tf.nn.relu),
+            tf.keras.layers.Dense(hidden, activation=tf.nn.relu, kernel_regularizer=tf.keras.regularizers.L2(1.E-5)),
             tf.keras.layers.Dropout(0.5),
             tf.keras.layers.Dense(num_outputs, activation=tf.nn.relu),
         ])
-        self.trainable_variables = self.mlp.trainable_variables
-        self.regularization = [self.mlp.layers[0].weights]
 
         if isinstance(alpha, str) and alpha == "estimated":
             self.ranker = pg.HopTuner(renormalize=True, assume_immutability=True, measure=pg.Cos,
-                                      tuning_backend="numpy", tunable_offset=None, num_parameters=10, tol=0, autoregression=5)
+                                      tuning_backend="numpy", tunable_offset=None, num_parameters=10, tol=0, autoregression=5, error_type="iters", max_iters=10)
         else:
             if isinstance(alpha, tf.Variable):
                 self.trainable_variables = self.trainable_variables + [alpha]
@@ -26,8 +23,9 @@ class APPNP:
         self.num_outputs = num_outputs
         self.propagate_on_training = propagate_on_training
 
-    def __call__(self, graph, features, training=False):
-        predict = self.mlp(features, training=training)
+    def call(self, inputs, training=False):
+        graph, features = inputs
+        predict = super().call(features, training=training)
         if not training or self.propagate_on_training:
             predict = self.ranker.propagate(graph, predict, graph_dropout=self.graph_dropout if training else 0)
 
@@ -48,5 +46,5 @@ for seed in range(10):
     accs = dict()
     for architecture, model in architectures.items():
         pg.gnn_train(model, graph, features, labels, training, validation, test=test)
-        accs[architecture] = float(pg.gnn_accuracy(labels, model(graph, features), test))
+        accs[architecture] = float(pg.gnn_accuracy(labels, model([graph, features]), test))
         print("seed"+str(seed)+" & "+" & ".join(str(acc) for acc in accs.values()))
