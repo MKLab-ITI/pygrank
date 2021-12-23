@@ -1,15 +1,15 @@
 import pygrank as pg
 
-#datasets = ["acm", "amazon", "ant", "citeseer","dblp","facebook0","facebook686","log4j","maven","pubmed","squirel", "twitter"]
+datasets = ["acm", "amazon", "ant", "citeseer","dblp","facebook0","facebook686","log4j","maven","pubmed","squirel", "twitter"]
 datasets = ["facebook0","facebook686", "log4j", "ant", "eucore", "citeseer", "dblp"]
-seed_fractions = [0.3]
+seed_fractions = [0.1, 0.2, 0.3]
 pre = pg.preprocessor(assume_immutability=True, normalization="symmetric")
 
 filters = {
-    "ppr0.85": pg.PageRank(alpha=0.85, preprocessor=pre, max_iters=10000, tol=1.E-9),
-    "ppr0.99": pg.PageRank(alpha=0.99, preprocessor=pre, max_iters=10000, tol=1.E-9),
-    "hk3": pg.HeatKernel(t=3, preprocessor=pre, max_iters=10000, tol=1.E-9),
-    "hk7": pg.HeatKernel(t=7, preprocessor=pre, max_iters=10000, tol=1.E-9),
+    "ppr0.85": pg.PageRank(alpha=0.85, preprocessor=pre, max_iters=10000, tol=1.E-6),
+    "ppr0.99": pg.PageRank(alpha=0.99, preprocessor=pre, max_iters=10000, tol=1.E-6),
+    "hk3": pg.HeatKernel(t=3, preprocessor=pre, max_iters=10000, tol=1.E-6),
+    "hk7": pg.HeatKernel(t=7, preprocessor=pre, max_iters=10000, tol=1.E-6),
 }
 filters = pg.create_variations(filters, {"": pg.Tautology, "+Sweep": pg.Sweep})
 
@@ -18,9 +18,10 @@ for name, filter in filters.items():
     algorithms = {"None": filter,
                   "Mult": pg.AdHocFairness(filter, "B"),
                   "LFPRO": pg.AdHocFairness(filter, "O"),
-                  "FBuck-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=1, error_type=pg.Mabs, parameter_buckets=0),
+                  #"FBuck-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=1, error_type=pg.Mabs, parameter_buckets=0),
                   "FPers-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=0, error_type=pg.Mabs, error_skewing=True),
-                  "Fest-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=1, error_type=pg.Mabs)
+                  #"Fest-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=1, error_type=pg.Mabs)
+                  "FairTf": pg.FairnessTf(filter)
                  }
     algorithms = pg.create_variations(algorithms, {"": pg.Normalize})
 

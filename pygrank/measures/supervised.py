@@ -203,9 +203,11 @@ class pRule(Supervised):
         if p1 == 0 or p2 == 0:
             return 0
         s = backend.sum(sensitive)
-        p1 /= s
-        p2 /= backend.length(sensitive)-s
-        return min(p1,p2)/max(p1,p2)
+        p1 = p1 / s
+        p2 = p2 / ( backend.length(sensitive)-s )
+        if p1 <= p2:  # this implementation is derivable
+            return p1 / p2
+        return p2 / p1
 
 
 class MannWhitneyParity(Supervised):

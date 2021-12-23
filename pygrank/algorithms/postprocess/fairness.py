@@ -1,9 +1,63 @@
 from pygrank.algorithms.autotune import optimize
 from pygrank.algorithms.postprocess.postprocess import Tautology, Normalize, Postprocessor
-from pygrank.measures import pRule, Mabs, Supervised
+from pygrank.measures import pRule, Mabs, Supervised, AM, KLDivergence
 from pygrank.core import GraphSignal, to_signal, backend, BackendPrimitive, NodeRanking, GraphSignalGraph, GraphSignalData
 from typing import List
 
+
+class FairnessTf(Postprocessor):
+    def __init__(self, ranker: NodeRanking, objective: Supervised = None):
+        self.ranker = ranker
+        self.objective = objective
+
+    def rank(self,
+             graph: GraphSignalGraph,
+             personalization: GraphSignalData,
+             sensitive: GraphSignalData, *args, **kwargs):
+        personalization = to_signal(graph, personalization)
+        graph = personalization.graph
+        ranks = self.ranker(graph, personalization, *args, **kwargs)
+        prev_backend = backend.backend_name()
+        backend.load_backend("tensorflow")
+        import tensorflow as tf
+        ranks = to_signal(ranks, backend.to_array(ranks.np))
+        sensitive = to_signal(sensitive, backend.to_array(sensitive.np))
+        personalization = to_signal(personalization, backend.to_array(personalization.np))
+        optimizer = tf.optimizers.Adam(learning_rate=0.01)
+        model = tf.keras.Sequential([
+            tf.keras.layers.Dropout(0, input_shape=(3,)),
+            tf.keras.layers.Dense(2, activation=tf.nn.sigmoid, kernel_regularizer=tf.keras.regularizers.L2(1.E-5)),
+            tf.keras.layers.Dropout(0),
+            tf.keras.layers.Dense(1, activation=tf.nn.sigmoid, kernel_regularizer=tf.keras.regularizers.L2(1.E-5)),
+        ])
+        ranks.np = ranks.np / backend.max(ranks.np)
+        node_features = backend.combine_cols([ranks.np, personalization.np, sensitive.np])
+        best_loss = float('inf')
+        patience = 10
+        remaining_patience = patience
+        for _ in range(300):
+            with tf.GradientTape() as tape:
+                new_ranks = self.ranker(graph, model(node_features, training=True), *args, **kwargs)
+                new_ranks.np = new_ranks.np / backend.max(new_ranks.np)
+                loss = KLDivergence(personalization)(new_ranks) - 10*tf.math.minimum(0.8, pRule(sensitive)(new_ranks))
+                for l in model.losses:
+                    loss = loss + l
+            if loss < best_loss:
+                remaining_patience = patience
+                best_loss = loss
+                best_params = [tf.identity(param) for param in model.trainable_variables]
+            remaining_patience -= 1
+            if remaining_patience < 0:
+                break
+            gradients = tape.gradient(loss, model.trainable_variables)
+            optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+
+        for variable, best_value in zip(model.trainable_variables, best_params):
+            variable.assign(best_value)
+        personalization = model(node_features, training=False)
+        backend.load_backend(prev_backend)
+        ret = self.ranker(graph, backend.to_array(personalization), *args, **kwargs)
+        return ret
 
 class FairPersonalizer(Postprocessor):
     """
@@ -74,19 +128,15 @@ class FairPersonalizer(Postprocessor):
                 params: List[float]):
         ranks = ranks.np / backend.max(ranks.np)
         personalization = personalization / backend.max(personalization)
-        res = (1.0-params[-1])*2*ranks if self.parameter_buckets == 0 else 0
+        res = (1.0-params[-1])*ranks if self.parameter_buckets == 0 else 0
+        res = res + personalization*params[-1]
         for i in range(self.parameter_buckets):
             a = sensitive*(params[0+4*i]-params[1+4*i]) + params[1+4*i]
             b = sensitive*(params[2+4*i]-params[3+4*i]) + params[3+4*i]
             if self.error_skewing:
                 res = res + (1-a)*backend.exp(b*(ranks-personalization)) + a*backend.exp(-b*(ranks-personalization))
             else:
-                res += (1-a)*backend.exp(b*backend.abs(ranks-personalization)) + a*backend.exp(-b*backend.abs(ranks-personalization))
-            #if self.error_skewing:
-            #    res += (1-a) * backend.exp(b * (ranks - personalization)) + a * backend.exp(-b * (ranks - personalization))
-            #else:
-            #    res += (1-a)*backend.exp(b*ranks) + a*backend.exp(-b*ranks)
-        res = res + personalization*params[-1]
+                res = res + (1-a)*backend.exp(b*backend.abs(ranks-personalization)) + a*backend.exp(-b*backend.abs(ranks-personalization))
         return res
 
     def __prule_loss(self,
@@ -95,15 +145,15 @@ class FairPersonalizer(Postprocessor):
                      sensitive: GraphSignal,
                      personalization: GraphSignal) -> object:
         prule = self.pRule(ranks)
-        ranks = ranks.np-backend.min(ranks.np)
-        ranks = ranks / backend.sum(ranks)
-        original_ranks = original_ranks.np / backend.sum(original_ranks.np)
-        try:
-            error = self.error_type(original_ranks)
-            error_value = error(ranks)
-        except:
-            error = self.error_type(personalization)
-            error_value = error(ranks)
+        #ranks = ranks.np-backend.min(ranks.np)
+        ranks = ranks.np / backend.max(ranks.np)
+        original_ranks = original_ranks.np / backend.max(original_ranks.np)
+        #try:
+        error = self.error_type(original_ranks)
+        error_value = error(ranks)
+        #except:
+        #    error = self.error_type(personalization)
+        #    error_value = error(ranks)
         return -self.retain_rank_weight * error_value * error.best_direction() - self.pRule_weight * min(self.target_pRule, prule)
 
     def rank(self,
@@ -122,11 +172,11 @@ class FairPersonalizer(Postprocessor):
             return self.__prule_loss(fair_ranks, ranks, sensitive, personalization)
 
         optimal_params = optimize(loss,
-                                  max_vals=[1, 1, 1, 1] * self.parameter_buckets + [self.max_residual],
-                                  min_vals=[0, 0, -1, -1]*self.parameter_buckets+[0],
+                                  max_vals=[1, 1, 10, 10] * self.parameter_buckets + [self.max_residual],
+                                  min_vals=[0, 0, -10, -10]*self.parameter_buckets+[0],
                                   deviation_tol=1.E-2,
                                   divide_range=2,
-                                  partitions=10,
+                                  partitions=5,
                                   depth=1)
         optimal_personalization = personalization=self.__culep(personalization, sensitive, ranks, optimal_params)
         return self.ranker.rank(G, optimal_personalization, *args, **kwargs)

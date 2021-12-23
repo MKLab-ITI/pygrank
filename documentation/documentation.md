@@ -11,7 +11,7 @@
     + [Graph Difusion Principles](#graph-diffusion-principles)
     + [List of Filters](#list-of-filters)
     + [Convergence Criteria](#convergence-criteria)
-    + [Graph Preprocessing](#graph-preprocessing)
+    + [Graph Preprocessing and Normalization](#graph-preprocessing-and-normalization)
 5. [Postprocessors](#postprocessors)
     + [Wrapping Postprocessors around Graph Filters](#wrapping-postprocessors-around-graph-filters)
     + [Types of Postprocessors](#types-of-postprocessors)
@@ -286,7 +286,7 @@ a post-processing step has been added throught the wrapping expression
 ``ordered_ranker = pg.Ordinals(ordered_ranker)`` to output rank order. 
 
 
-### Graph Preprocessing
+### Graph Preprocessing and Normalization
 Graph filters all use the same default graph normalization scheme
 that performs symmetric (i.e. Laplacian-like) normalization 
 for undirected graphs and column-wise normalization that
@@ -306,7 +306,7 @@ often employed by graph neural networks,
 which shrinks their spectrum by adding self-loops to nodes
 before extracting the adjacency matrix and its normalization.
 To enable this behavior, you can use `renormalization=True`
-alongside any `normalization` argument.
+alongside any other `normalization` argument.
 
 In all cases, adjacency matrix normalization involves the
 computationally intensive operation of converting the graph 

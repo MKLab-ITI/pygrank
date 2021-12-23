@@ -18,7 +18,7 @@ The following roadmap overviews short-term development goals and will be updated
 :heavy_check_mark: Reach a stable architecture with comprehensive development management (achieved as of 0.2.3, no longer backwards compatible with 0.1.17, most important change `to_scipy` >> `preprocessor`.) <br>
 :heavy_check_mark: Graph neural network support with dropout, renormalization and tensorflow backend (achieved as of 0.2.3)<br>
 :heavy_check_mark: Pytorch backend (achieved as of 0.2.4)<br>
-:x: Pytorch gnns<br>
+:heavy_check_mark: Pytorch gnns (achieved as of 0.2.7)<br>
 :x: 100% code coverage<br>
 :x: 100% documentation completeness<br>
 :x: Automatic download for all related publication datasets ([downloadable datasets](documentation/datasets.md))<br>
@@ -207,6 +207,7 @@ Some of the library's advantages are:
 * Evaluation measures
 * Benchmarks
 * Autotuning
+* Graph Neural Network (GNN) support
 
 # :thumbsup: Contributing
 Feel free to contribute in any way, for example through the [issue tracker](https://github.com/MKLab-ITI/pygrank/issues) or by participating in [discussions]().

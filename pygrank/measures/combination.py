@@ -66,7 +66,7 @@ class AM(MeasureCombination):
                 evaluation = self.measures[i].evaluate(scores)
                 evaluation = min(max(evaluation, self.thresholds[i][0]), self.thresholds[i][1])
                 result += self.weights[i]*evaluation
-        return result/sum(self.weights)
+        return result
 
 
 class GM(MeasureCombination):
@@ -79,4 +79,4 @@ class GM(MeasureCombination):
                 evaluation = self.measures[i].evaluate(scores)
                 evaluation = min(max(evaluation, self.thresholds[i][0]), self.thresholds[i][1])
                 result += self.weights[i]*log(max(backend.epsilon(), evaluation))
-        return exp(result/sum(self.weights))
+        return exp(result)
