@@ -24,7 +24,6 @@ datasets = {
               "remove": "maven-data.csv/",
               "pair_process": lambda row: None if len(row)>1 else [row[0].split(",")[0], row[0].split(",")[1]],
               "node2group": lambda node: node.split(":")[0],
-              #"script": dataset_processors.maven_communities
               },
     "amazon": {"url": "https://snap.stanford.edu/data/amazon-meta.html",
                "all": "https://snap.stanford.edu/data/bigdata/amazon/amazon-meta.txt.gz",
@@ -58,7 +57,7 @@ datasets = {
                },
     "cora": {"url": "https://www.dgl.ai/",
              "all": "https://data.dgl.ai/dataset/cora_v2.zip"
-             }
+             },
 }
 
 

@@ -7,16 +7,17 @@ All of them can be used through the code patterns presented at the library's [do
 1. [AdHocFairness](#postprocessor-adhocfairness)
 2. [BoostedSeedOversampling](#postprocessor-boostedseedoversampling)
 3. [FairPersonalizer](#postprocessor-fairpersonalizer)
-4. [FairWalk](#postprocessor-fairwalk)
-5. [FairnessTf](#postprocessor-fairnesstf)
-6. [MabsMaintain](#postprocessor-mabsmaintain)
-7. [Normalize](#postprocessor-normalize)
-8. [Ordinals](#postprocessor-ordinals)
-9. [SeedOversampling](#postprocessor-seedoversampling)
-10. [Sweep](#postprocessor-sweep)
-11. [Tautology](#postprocessor-tautology)
-12. [Threshold](#postprocessor-threshold)
-13. [Transformer](#postprocessor-transformer)
+4. [FairTradeoff](#postprocessor-fairtradeoff)
+5. [FairWalk](#postprocessor-fairwalk)
+6. [FairnessTf](#postprocessor-fairnesstf)
+7. [MabsMaintain](#postprocessor-mabsmaintain)
+8. [Normalize](#postprocessor-normalize)
+9. [Ordinals](#postprocessor-ordinals)
+10. [SeedOversampling](#postprocessor-seedoversampling)
+11. [Sweep](#postprocessor-sweep)
+12. [Tautology](#postprocessor-tautology)
+13. [Threshold](#postprocessor-threshold)
+14. [Transformer](#postprocessor-transformer)
 
 ### <kbd>Postprocessor</kbd> AdHocFairness
 
@@ -50,7 +51,7 @@ ranks = algorithm.rank(graph, personalization={1 for v in seed_nodes})
 ### <kbd>Postprocessor</kbd> FairPersonalizer
 
 A personalization editing scheme that aims to edit graph signal priors (i.e. personalization) to produce 
-disparate The constructor instantiates a personalization editing scheme that trains towards optimizing 
+fairness-aware posteriors satisfying disparate impact constraints in terms of pRule. The constructor instantiates a personalization editing scheme that trains towards optimizing 
 retain_rank_weight*error_type(original scores, editing-induced scores) 
 + pRule_weight*min(induced score pRule, target_pRule) 
 
@@ -62,6 +63,7 @@ Args:
  * *error_type:* The supervised measure used to penalize deviations from original posterior scores. pygrank.KLDivergence (default) uses is used in [krasanakis2020prioredit]. pygrank.Error is used by the earlier [krasanakis2020fairconstr]. The latter does not induce fairness as well on average, but is sometimes better for specific graphs. 
  * *parameter_buckets:* How many sets of parameters to be used to . Default is 1. More parameters could be needed to to track, but running time scales **exponentially** to these (with base 4). 
  * *max_residual:* An upper limit on how much the original personalization is preserved, i.e. a fraction of it in the range [0, max_residual] is preserved. Default is 1 and is introduced by [krasanakis2020prioredit], but 0 can be used for exact replication of [krasanakis2020fairconstr]. 
+ * *parity_type:* The type of fairness measure to be optimized. If "impact" (default) the pRule is optimized, if "TPR" or "FNR" the TPR and FNR parity between sensitive and non-sensitive nodes is optimized respectively, if "mistreatment" the AM of TPR and FNR parity is optimized. 
 
 Example:
 
@@ -81,6 +83,20 @@ graph, personalization, algorithm = ...
 algorithm = pg.FairPersonalizer(algorithm, .8, pRule_weight=10) 
 ranks = algorithm.rank(graph, personalization, sensitive=personalization) 
 ```
+
+### <kbd>Postprocessor</kbd> FairTradeoff
+
+A personalization editing scheme that aims to edit graph signal priors (i.e. personalization) to produce 
+disparate The constructor instantiates a personalization editing scheme that trains towards optimizing 
+retain_rank_weight*error_type(original scores, editing-induced scores) 
++ pRule_weight*min(induced score pRule, target_pRule) 
+
+Args: 
+ * *ranker:* The base ranking algorithm. 
+ * *target_pRule:* Up to which value should pRule be improved. pRule values greater than this are not penalized further. 
+ * *retain_rank_weight:* Can be used to penalize deviations from original posteriors due to editing. Use the default value 1 unless there is a specific reason to scale the error. Higher values correspond to tighter maintenance of original posteriors, but may not improve fairness as much. 
+ * *pRule_weight:* Can be used to penalize low pRule values. Either use the default value 1 or, if you want to place most emphasis on pRule maximization (instead of trading-off between fairness and posterior preservation) 10 is a good empirical starting point. 
+ * *error_type:* The supervised measure used to penalize deviations from original posterior scores. pygrank.KLDivergence (default) uses is used in [krasanakis2020prioredit]. pygrank.Error is used by the earlier [krasanakis2020fairconstr]. The latter does not induce fairness as well on average, but is sometimes better for specific graphs.
 
 ### <kbd>Postprocessor</kbd> FairWalk
 

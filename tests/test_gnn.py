@@ -48,11 +48,10 @@ def test_appnp_torch():
 
         def forward(self, inputs, training=False):
             graph, features = inputs
-            #training = self.training
-            predict = torch.FloatTensor(features)
+            predict = self.dropout(torch.FloatTensor(features))
             predict = self.dropout(self.activation(self.layer1(predict)))
             predict = self.activation(self.layer2(predict))
-            predict = self.ranker.propagate(graph, predict, graph_dropout=0.5 if training else 0)
+            predict = self.ranker.propagate(graph, predict, graph_dropout=0 if training else 0)
             ret = torch.nn.functional.softmax(predict, dim=1)
             self.loss = 0
             for param in self.layer1.parameters():

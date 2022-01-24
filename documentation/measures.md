@@ -6,24 +6,28 @@ Constructor details are provided, including arguments inherited from and passed 
 All of them can be used through the code patterns presented at the library's [documentation](documentation.md#evaluation).  
 1. [Time](#measure-time)
 2. [AM](#measurecombination-am)
-3. [GM](#measurecombination-gm)
-4. [AUC](#supervised-auc)
-5. [Accuracy](#supervised-accuracy)
-6. [Cos](#supervised-cos)
-7. [CrossEntropy](#supervised-crossentropy)
-8. [Dot](#supervised-dot)
-9. [KLDivergence](#supervised-kldivergence)
-10. [MKLDivergence](#supervised-mkldivergence)
-11. [Mabs](#supervised-mabs)
-12. [MannWhitneyParity](#supervised-mannwhitneyparity)
-13. [MaxDifference](#supervised-maxdifference)
-14. [NDCG](#supervised-ndcg)
-15. [PearsonCorrelation](#supervised-pearsoncorrelation)
-16. [SpearmanCorrelation](#supervised-spearmancorrelation)
-17. [pRule](#supervised-prule)
-18. [Conductance](#unsupervised-conductance)
-19. [Density](#unsupervised-density)
-20. [Modularity](#unsupervised-modularity)
+3. [Disparity](#measurecombination-disparity)
+4. [GM](#measurecombination-gm)
+5. [Parity](#measurecombination-parity)
+6. [AUC](#supervised-auc)
+7. [Accuracy](#supervised-accuracy)
+8. [Cos](#supervised-cos)
+9. [CrossEntropy](#supervised-crossentropy)
+10. [Dot](#supervised-dot)
+11. [FNR](#supervised-fnr)
+12. [KLDivergence](#supervised-kldivergence)
+13. [MKLDivergence](#supervised-mkldivergence)
+14. [Mabs](#supervised-mabs)
+15. [MannWhitneyParity](#supervised-mannwhitneyparity)
+16. [MaxDifference](#supervised-maxdifference)
+17. [NDCG](#supervised-ndcg)
+18. [PearsonCorrelation](#supervised-pearsoncorrelation)
+19. [SpearmanCorrelation](#supervised-spearmancorrelation)
+20. [TPR](#supervised-tpr)
+21. [pRule](#supervised-prule)
+22. [Conductance](#unsupervised-conductance)
+23. [Density](#unsupervised-density)
+24. [Modularity](#unsupervised-modularity)
 
 ### <kbd>Measure</kbd> Time
 
@@ -63,9 +67,77 @@ measure = pg.AM().add(auc, weight=1, max_val=1).add(prule, weight=1, max_val=0.8
 print(measure(algorithm(personalization))) 
 ```
 
+### <kbd>MeasureCombination</kbd> Disparity
+
+Combines measures by calculating the absolute value of their weighted differences. 
+If more than two measures *measures=[M1,M2,M3,M4,...]* are provided this calculates *abs(M1-M2+M3-M4+...)* The constructor instantiates a combination of several measures. More measures with their own weights and threhsolded range 
+can be added with the `add(measure, weight=1, min_val=-inf, max_val=inf)` method. 
+
+Args: 
+ * *measures:* Optional. An iterable of measures to combine. If None (default) no new measure is added. 
+ * *weights:* Optional. A iterable of floats with which to weight the measures provided by the previous argument. The concept of weighting depends on how measures are aggregated, but it corresponds to an importance value placed on each measure. If None (default), provided measures are all weighted by 1. 
+ * *thresholds:* Optional. A tuple of [min_val, max_val] with which to bound measure outcomes. If None (default) provided measures 
+
+Example:
+
+```python 
+import pygrank as pg 
+known_scores, algorithm, personalization, sensitivity_scores = ... 
+auc = pg.AUC(known_scores, exclude=personalization) 
+prule = pg.pRule(sensitivity_scores, exclude=personalization) 
+measure = pg.AM([auc, prule], weights=[1, 10], thresholds=[(0,1), (0, 0.8)]) 
+print(measure(algorithm(personalization))) 
+```
+
+
+Example (same result):
+
+```python 
+import pygrank as pg 
+known_scores, algorithm, personalization, sensitivity_scores = ... 
+auc = pg.AUC(known_scores, exclude=personalization) 
+prule = pg.pRule(sensitivity_scores, exclude=personalization) 
+measure = pg.AM().add(auc, weight=1, max_val=1).add(prule, weight=1, max_val=0.8) 
+print(measure(algorithm(personalization))) 
+```
+
 ### <kbd>MeasureCombination</kbd> GM
 
 Combines several measures through their geometric mean. The constructor instantiates a combination of several measures. More measures with their own weights and threhsolded range 
+can be added with the `add(measure, weight=1, min_val=-inf, max_val=inf)` method. 
+
+Args: 
+ * *measures:* Optional. An iterable of measures to combine. If None (default) no new measure is added. 
+ * *weights:* Optional. A iterable of floats with which to weight the measures provided by the previous argument. The concept of weighting depends on how measures are aggregated, but it corresponds to an importance value placed on each measure. If None (default), provided measures are all weighted by 1. 
+ * *thresholds:* Optional. A tuple of [min_val, max_val] with which to bound measure outcomes. If None (default) provided measures 
+
+Example:
+
+```python 
+import pygrank as pg 
+known_scores, algorithm, personalization, sensitivity_scores = ... 
+auc = pg.AUC(known_scores, exclude=personalization) 
+prule = pg.pRule(sensitivity_scores, exclude=personalization) 
+measure = pg.AM([auc, prule], weights=[1, 10], thresholds=[(0,1), (0, 0.8)]) 
+print(measure(algorithm(personalization))) 
+```
+
+
+Example (same result):
+
+```python 
+import pygrank as pg 
+known_scores, algorithm, personalization, sensitivity_scores = ... 
+auc = pg.AUC(known_scores, exclude=personalization) 
+prule = pg.pRule(sensitivity_scores, exclude=personalization) 
+measure = pg.AM().add(auc, weight=1, max_val=1).add(prule, weight=1, max_val=0.8) 
+print(measure(algorithm(personalization))) 
+```
+
+### <kbd>MeasureCombination</kbd> Parity
+
+Combines measures by calculating the absolute value of their weighted differences subtracted from 1. 
+If more than two measures *measures=[M1,M2,M3,M4,...]* are provided this calculates *1-abs(M1-M2+M3-M4+...)* The constructor instantiates a combination of several measures. More measures with their own weights and threhsolded range 
 can be added with the `add(measure, weight=1, min_val=-inf, max_val=inf)` method. 
 
 Args: 
@@ -136,6 +208,14 @@ Args:
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 
+### <kbd>Supervised</kbd> FNR
+
+Wrapper for sklearn.metrics.auc evaluation. The constructor initializes the supervised measure with desired graph signal outcomes. 
+
+Args: 
+ * *known_scores:* The desired graph signal outcomes. 
+ * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
+
 ### <kbd>Supervised</kbd> KLDivergence
 
 Computes the KL-divergence of given vs known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
@@ -201,6 +281,14 @@ Args:
 ### <kbd>Supervised</kbd> SpearmanCorrelation
 
 Computes the Spearman correlation coefficient between given and known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
+
+Args: 
+ * *known_scores:* The desired graph signal outcomes. 
+ * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
+
+### <kbd>Supervised</kbd> TPR
+
+Wrapper for sklearn.metrics.auc evaluation. The constructor initializes the supervised measure with desired graph signal outcomes. 
 
 Args: 
  * *known_scores:* The desired graph signal outcomes. 

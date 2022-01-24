@@ -63,6 +63,7 @@ def benchmark(algorithms: Mapping[str, NodeRanking],
                     if sensitive is not None:
                         if not multigroup:
                             sensitive_signal = to_signal(training, 1-evaluation.np)
+                        #training.np = training.np*(1-sensitive_signal.np)
                         rank = lambda algorithm: algorithm(graph, training, sensitive=sensitive_signal)
                     else:
                         rank = lambda algorithm: algorithm(graph, training)
@@ -79,5 +80,8 @@ def benchmark(algorithms: Mapping[str, NodeRanking],
                         except:
                             dataset_results.append(metric(evaluation, training)(predictions))
                     if sensitive is not None:
-                        dataset_results.append(sensitive(sensitive_signal, training)(predictions))
+                        try:
+                            dataset_results.append(sensitive(sensitive_signal, training)(predictions))
+                        except:
+                            dataset_results.append(sensitive(evaluation, sensitive_signal, training)(predictions))
                 yield dataset_results

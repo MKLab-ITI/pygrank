@@ -109,7 +109,7 @@ class CrossEntropy(Supervised):
         known_scores, scores = self.to_numpy(scores)
         #thresh = backend.min(scores[known_scores!=0])
         #scores = 1/(1+np.exp(-scores/thresh+1))
-        eps = 1.E-14
+        eps = backend.epsilon()
         ret = -backend.dot(known_scores, backend.log(scores+eps))-backend.dot(1-known_scores, backend.log(1-scores+eps))
         return ret
 
@@ -119,7 +119,11 @@ class KLDivergence(Supervised):
 
     def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
         known_scores, scores = self.to_numpy(scores, normalization=True)
-        ratio = (scores-backend.min(scores)+1.E-12)/(known_scores-backend.min(known_scores)+1.E-12)
+        known_scores = known_scores - backend.min(known_scores)
+        known_scores = known_scores / backend.sum(known_scores)
+        scores = scores - backend.min(scores)
+        scores = scores / backend.sum(scores)
+        ratio = (scores+1.E-12)/(known_scores+1.E-12)
         ret = -backend.sum(scores*backend.log(ratio))
         return ret
 
@@ -129,7 +133,12 @@ class MKLDivergence(Supervised):
 
     def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
         known_scores, scores = self.to_numpy(scores, normalization=True)
-        ratio = (scores-backend.min(scores)+1.E-12)/(known_scores-backend.min(known_scores)+1.E-12)
+        known_scores = known_scores - backend.min(known_scores)
+        known_scores = known_scores / backend.sum(known_scores)
+        scores = scores - backend.min(scores)
+        scores = scores / backend.sum(scores)
+        eps = backend.epsilon()
+        ratio = (scores+eps)/(known_scores+eps)
         ret = -backend.sum(scores*backend.log(ratio))
         return ret/backend.length(scores)
 
@@ -151,6 +160,28 @@ class Dot(Supervised):
     def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
         known_scores, scores = self.to_numpy(scores)
         return backend.dot(known_scores, scores)
+
+
+class TPR(Supervised):
+    """Wrapper for sklearn.metrics.auc evaluation."""
+
+    def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
+        known_scores, scores = self.to_numpy(scores)
+        eps = backend.epsilon()
+        known_scores = known_scores / (backend.max(known_scores)+eps)
+        scores = scores / (backend.max(scores)+eps)
+        return backend.sum(known_scores*scores) / backend.sum(scores)
+
+
+class FNR(Supervised):
+    """Wrapper for sklearn.metrics.auc evaluation."""
+
+    def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
+        known_scores, scores = self.to_numpy(scores)
+        eps = backend.epsilon()
+        known_scores = known_scores / (backend.max(known_scores)+eps)
+        scores = scores / (backend.max(scores)+eps)
+        return backend.sum((1-known_scores)*(1-scores)) / (backend.sum(1-scores)+eps)
 
 
 class AUC(Supervised):

@@ -43,13 +43,13 @@ class SeedOversampling(Postprocessor):
             ranks = self.ranker.rank(graph, personalization, **kwargs)
             top = int(graph.number_of_nodes() * graph.number_of_nodes() / graph.number_of_edges())
             threshold = np.sort(list(ranks.values()))[len(ranks) - top]  # get top ranks
-            personalization = {v: 1 for v in graph.nodes() if ranks[v] >= threshold or personalization.get(v, 0) == 1}
+            personalization = {v: 1. for v in graph.nodes() if ranks[v] >= threshold or personalization.get(v, 0) == 1}
             return self.ranker.rank(graph, personalization, **kwargs)
         elif self.method == 'neighbors':
             personalization = dict(personalization.items())
             for u in [u for u in personalization if personalization[u] == 1]:
                 for v in graph.neighbors(u):
-                    personalization[v] = 1
+                    personalization[v] = 1.
             return self.ranker.rank(graph, personalization, **kwargs)
         else:
             raise Exception("Supported oversampling methods: safe, neighbors, top")

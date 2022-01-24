@@ -1,8 +1,8 @@
 import pygrank as pg
 
-datasets = ["acm", "amazon", "ant", "citeseer","dblp","facebook0","facebook686","log4j","maven","pubmed","squirel", "twitter"]
+#datasets = ["acm", "amazon", "ant", "citeseer","dblp","facebook0","facebook686","log4j","maven","pubmed","squirel", "twitter"]
 datasets = ["facebook0","facebook686", "log4j", "ant", "eucore", "citeseer", "dblp"]
-seed_fractions = [0.1, 0.2, 0.3]
+seed_fractions = [0.3, 0.5]
 pre = pg.preprocessor(assume_immutability=True, normalization="symmetric")
 
 filters = {
@@ -19,15 +19,21 @@ for name, filter in filters.items():
                   "Mult": pg.AdHocFairness(filter, "B"),
                   "LFPRO": pg.AdHocFairness(filter, "O"),
                   #"FBuck-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=1, error_type=pg.Mabs, parameter_buckets=0),
-                  "FPers-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=0, error_type=pg.Mabs, error_skewing=True),
-                  #"Fest-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=1, error_type=pg.Mabs)
-                  "FairTf": pg.FairnessTf(filter)
+                  "FPers-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=0, error_type=pg.Mabs, error_skewing=True, parity_type="impact"),
+                  "Fest-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=1, error_type=pg.Mabs, error_skewing=False, parameter_buckets=1, parity_type="impact")
+                  #"FFfix-C": pg.FairTradeoff(filter, .8, pRule_weight=10, error_type=pg.Mabs)
+                  #"FairTf": pg.FairnessTf(filter)
                  }
     algorithms = pg.create_variations(algorithms, {"": pg.Normalize})
 
     #import cProfile as profile
     #pr = profile.Profile()
     #pr.enable()
+    mistreatment = lambda known_scores, sensitive_signal, exclude: \
+        pg.AM([pg.Disparity([pg.TPR(known_scores, exclude=1-(1-exclude.np)*sensitive_signal.np),
+                             pg.TPR(known_scores, exclude=1-(1-exclude.np)*(1-sensitive_signal.np))]),
+               pg.Disparity([pg.FNR(known_scores, exclude=1 - (1 - exclude.np) * sensitive_signal.np),
+                             pg.FNR(known_scores, exclude=1 - (1 - exclude.np) * (1 - sensitive_signal.np))])])
     pg.benchmark_print(pg.benchmark(algorithms, pg.load_datasets_multiple_communities(datasets, max_group_number=2),
                                     metric=pg.AUC, sensitive=pg.pRule, fraction_of_training=seed_fractions),
                        delimiter=" & ", end_line="\\\\")

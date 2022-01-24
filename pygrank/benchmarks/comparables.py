@@ -1,9 +1,9 @@
 from typing import Callable, Mapping
-from pygrank.algorithms import NodeRanking, preprocessor, PageRank, AbsorbingWalks, HeatKernel, BiasedKernel
+from pygrank.algorithms import NodeRanking, preprocessor as preprocess, PageRank, AbsorbingWalks, HeatKernel, BiasedKernel
 from pygrank.algorithms import Postprocessor, Tautology, Sweep, SeedOversampling
 
 
-def create_demo_filters(pre=None,
+def create_demo_filters(preprocessor=None,
                         tol: float = 1.E-9,
                         max_iters: int = 1000) -> Mapping[str, NodeRanking]:
     """
@@ -11,8 +11,8 @@ def create_demo_filters(pre=None,
     to a wide range of real-world scenarios. Filters share the same preprocessor to run experiments faster.
 
     Args:
-        pre: A preprocessor to use for generated methods. If None (default) a preprocessor with assumed immutability
-            and automatic normalization will be used.
+        preprocessor: A preprocessor to use for generated methods. If None (default) a preprocessor with assumed
+            immutability and automatic normalization will be used.
         tol: A tolerance parameter to control convergence points of filters. Default is 1.E-9.
         max_iters: The maximum iterations filters should run for. Should be large to accommodate slow convergence.
             Default is 1000.
@@ -20,14 +20,14 @@ def create_demo_filters(pre=None,
     Returns:
         A map from filter names to algorithms.
     """
-    if pre is None:
-        pre = preprocessor(assume_immutability=True)
-    return {"PPR.85": PageRank(alpha=0.85, preprocessor=pre, max_iters=max_iters, tol=tol),
-            "PPR.9": PageRank(alpha=0.95, preprocessor=pre, max_iters=max_iters, tol=tol),
-            "PPR.99": PageRank(alpha=0.99, preprocessor=pre, max_iters=max_iters, tol=tol),
-            "HK3": HeatKernel(t=3, preprocessor=pre, max_iters=max_iters, tol=tol),
-            "HK5": HeatKernel(t=5, preprocessor=pre, max_iters=max_iters, tol=tol),
-            "HK7": HeatKernel(t=7, preprocessor=pre, max_iters=max_iters, tol=tol)
+    if preprocessor is None:
+        preprocessor = preprocess(assume_immutability=True)
+    return {"PPR.85": PageRank(alpha=0.85, preprocessor=preprocessor, max_iters=max_iters, tol=tol),
+            "PPR.9": PageRank(alpha=0.95, preprocessor=preprocessor, max_iters=max_iters, tol=tol),
+            "PPR.99": PageRank(alpha=0.99, preprocessor=preprocessor, max_iters=max_iters, tol=tol),
+            "HK3": HeatKernel(t=3, preprocessor=preprocessor, max_iters=max_iters, tol=tol),
+            "HK5": HeatKernel(t=5, preprocessor=preprocessor, max_iters=max_iters, tol=tol),
+            "HK7": HeatKernel(t=7, preprocessor=preprocessor, max_iters=max_iters, tol=tol)
             }
 
 
@@ -40,14 +40,15 @@ def create_many_filters(tol: float = 1.E-6,
 
     Args:
         tol: A tolerance parameter to control convergence points of filters. Default is 1.E-6.
+            This is **different** than most algorithm defaults to facilitate faster experiments by default.
         max_iters: The maximum iterations filters should run for. Should be large to accommodate slow convergence.
             Default is 1000.
 
     Returns:
         A map from filter names to algorithms.
     """
-    pre = preprocessor('col', assume_immutability=True)
-    preL = preprocessor('symmetric', assume_immutability=True)
+    pre = preprocess('col', assume_immutability=True)
+    preL = preprocess('symmetric', assume_immutability=True)
     return {
         "PPRL.85": PageRank(alpha=0.85, preprocessor=preL, max_iters=max_iters, tol=tol),
         "PPRL.90": PageRank(alpha=0.9, preprocessor=preL, max_iters=max_iters, tol=tol),

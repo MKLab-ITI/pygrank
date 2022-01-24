@@ -93,7 +93,7 @@ def _gnn_train_torch(model, graph, features, labels, training, validation,
     best_loss = float('inf')
     for epoch in range(epochs):
         optimizer.zero_grad()
-        predictions = model([graph, features])
+        predictions = model([graph, features], training=True)
         loss = _gnn_cross_entropy_torch(labels, predictions, training) + model.loss
         loss.backward()
         optimizer.step()

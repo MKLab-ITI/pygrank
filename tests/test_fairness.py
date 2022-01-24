@@ -34,10 +34,10 @@ def test_fair_heuristics():
     for algorithm in algorithms.values():
         ranks = algorithm(graph, labels, sensitive)
         assert pg.pRule(sensitive)(ranks) > 0.6  #  TODO: Check why this fairwalk fails that much and increase the limit.
-    sensitive = 1- sensitive.np
+    sensitive = 1 - sensitive.np
     for algorithm in algorithms.values():
         ranks = algorithm(graph, labels, sensitive)
-        pg.pRule(sensitive)(ranks) > 0.6
+        assert pg.pRule(sensitive)(ranks) > 0.6
 
 
 def test_fairwalk_invalid():
@@ -46,6 +46,7 @@ def test_fairwalk_invalid():
     sensitive = pg.to_signal(graph, groups[1])
     H = pg.PageRank(assume_immutability=True, normalization="symmetric")
     with pytest.raises(Exception):
+        # this tests that a deprecated way of applying fairwalk actually raises an exception
         pg.AdHocFairness(H, method="FairWalk").rank(graph, labels, sensitive=sensitive)
     with pytest.raises(Exception):
         pg.FairWalk(None).transform(H.rank(graph, labels), sensitive=sensitive)

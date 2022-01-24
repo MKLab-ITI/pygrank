@@ -55,6 +55,12 @@ class MeasureCombination(Measure):
         self.thresholds.append((min_val, max_val))
         return self
 
+    def _total_weight(self):
+        ret = 0
+        for weight in self.weights:
+            ret = ret + weight
+        return ret
+
 
 class AM(MeasureCombination):
     """Combines several measures through their arithmetic mean."""
@@ -66,7 +72,37 @@ class AM(MeasureCombination):
                 evaluation = self.measures[i].evaluate(scores)
                 evaluation = min(max(evaluation, self.thresholds[i][0]), self.thresholds[i][1])
                 result += self.weights[i]*evaluation
-        return result
+        return result / self._total_weight()
+
+
+class Disparity(MeasureCombination):
+    """Combines measures by calculating the absolute value of their weighted differences.
+    If more than two measures *measures=[M1,M2,M3,M4,...]* are provided this calculates *abs(M1-M2+M3-M4+...)*"""
+    def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
+        result = 0
+        mult = 1
+        for i in range(len(self.measures)):
+            if self.weights[i] != 0:
+                evaluation = self.measures[i].evaluate(scores)
+                evaluation = min(max(evaluation, self.thresholds[i][0]), self.thresholds[i][1])
+                result += (self.weights[i]*mult)*evaluation
+            mult *= -1
+        return backend.abs(result)
+
+
+class Parity(MeasureCombination):
+    """Combines measures by calculating the absolute value of their weighted differences subtracted from 1.
+    If more than two measures *measures=[M1,M2,M3,M4,...]* are provided this calculates *1-abs(M1-M2+M3-M4+...)*"""
+    def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
+        result = 0
+        mult = 1
+        for i in range(len(self.measures)):
+            if self.weights[i] != 0:
+                evaluation = self.measures[i].evaluate(scores)
+                evaluation = min(max(evaluation, self.thresholds[i][0]), self.thresholds[i][1])
+                result += (self.weights[i]*mult)*evaluation
+            mult *= -1
+        return 1-backend.abs(result)
 
 
 class GM(MeasureCombination):
@@ -79,4 +115,4 @@ class GM(MeasureCombination):
                 evaluation = self.measures[i].evaluate(scores)
                 evaluation = min(max(evaluation, self.thresholds[i][0]), self.thresholds[i][1])
                 result += self.weights[i]*log(max(backend.epsilon(), evaluation))
-        return exp(result)
+        return exp(result / self._total_weight())
