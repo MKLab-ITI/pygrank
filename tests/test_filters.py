@@ -118,6 +118,7 @@ def test_kernel_locality():
 
 
 def test_optimization_dict():
+    pg.load_backend("numpy")
     from timeit import default_timer as time
     graph = next(pg.load_datasets_graph(["bigraph"]))
     personalization = {str(i): 1 for i in range(200)}

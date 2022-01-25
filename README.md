@@ -6,7 +6,7 @@ Fast recommendation algorithms for large graphs based on link analysis.
 
 **License:** Apache Software License
 <br>**Author:** Emmanouil (Manios) Krasanakis
-<br>**Dependencies:** `networkx, numpy, scipy, sklearn, wget` (required) `tensorflow 2.6.0`, `torch 1.9.0` (optional)
+<br>**Dependencies:** `networkx, numpy, scipy, sklearn, wget` (required) `tensorflow`, `torch` (optional)
 <br>*Externally install tensorflow and torch. Tests pass on the versions above.*
 
 ![build](https://github.com/MKLab-ITI/pygrank/actions/workflows/tests.yml/badge.svg)
@@ -25,8 +25,7 @@ The following roadmap overviews short-term development goals and will be updated
 :x: Automatic download for all related publication datasets ([downloadable datasets](documentation/datasets.md))<br>
 :heavy_check_mark: Automated citation discovery for algorithms (achieved as of 0.2.5 with `NodeRanking.cite()`)<br>
 :heavy_check_mark: Enable Arnoldi and Lanczos optimizations in non-numpy backends (achieved as of 0.2.5)<br>
-:x: Transparent handling of float and double precisions (as of 0.2.5 numpy is on float64 but pytorch and tensorflow in float32)<br>
-:x: Check compatibility with latest GPU backend versions.
+:x: Transparent handling of float and double precisions (as of 0.2.5 numpy is on float64 but pytorch and tensorflow in float32)
 
 # :hammer_and_wrench: Installation
 `pygrank` is meant to work with Python 3.9 or later. The latest version can be installed with pip per:

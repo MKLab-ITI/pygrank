@@ -40,7 +40,7 @@ def diag(diagonal, offset=0):
 
 
 def repeat(value, times):
-    return tf.ones(shape=(times, 1), dtype=tf.float32)*value # default repeat creates an 1D tensor
+    return tf.ones(shape=(times,), dtype=tf.float32)*value # default repeat creates an 1D tensor
 
 
 def scipy_sparse_to_backend(M):
@@ -49,11 +49,13 @@ def scipy_sparse_to_backend(M):
 
 
 def to_array(obj, copy_array=False):
-    if isinstance(obj, tf.Tensor) and (len(obj.shape)==1 or obj.shape[1] == 1):
+    if isinstance(obj, tf.Tensor):
+        if len(obj.shape) != 1:
+            obj = tf.reshape(obj, (-1,))
         if copy_array:
             return tf.identity(obj)
         return obj
-    return tf.convert_to_tensor([[v] for v in obj], dtype=tf.float32)
+    return tf.convert_to_tensor([v for v in obj], dtype=tf.float32)
 
 
 def to_primitive(obj):
@@ -72,7 +74,7 @@ def self_normalize(obj):
 
 
 def conv(signal, M):
-    return tf.sparse.sparse_dense_matmul(M, signal)
+    return tf.reshape(tf.sparse.sparse_dense_matmul(M, tf.reshape(signal, (-1,1))), (-1,))
 
 
 def length(x):
@@ -82,7 +84,7 @@ def length(x):
 
 
 def degrees(M):
-    return tf.reshape(tf.sparse.reduce_sum(M, axis=0), (-1,1))
+    return tf.reshape(tf.sparse.reduce_sum(M, axis=0), (-1,))
 
 
 def filter_out(x, exclude):

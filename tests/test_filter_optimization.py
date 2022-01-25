@@ -35,20 +35,35 @@ def test_rank_order_convergence():
 
 def test_krylov_space():
     graph = next(pg.load_datasets_graph(["bigraph"]))
-    M = pg.preprocessor(normalization="symmetric")(graph)
     nodes = list(graph)
-    personalization = pg.to_signal(graph, {nodes[0]: 1, nodes[1]: 1})
-    krylov_dims = 5
-    krylov_result = pg.eye(int(krylov_dims))
-    krylov_base, H = pg.krylov_base(M, personalization.np, int(krylov_dims))
-    error_bound = pg.krylov_error_bound(krylov_base, H, M, personalization.np)
-    assert error_bound < 0.01
-    for _ in range(100):
-        krylov_result = krylov_result @ H
-        personalization.np = pg.conv(M, personalization.np)
-        # print(pg.Mabs(personalization.np)(pg.krylov2original(krylov_base, krylov_result, int(krylov_dims))))
-        assert pg.Mabs(personalization.np)(pg.krylov2original(krylov_base, krylov_result, int(krylov_dims))) <= error_bound
-        assert pg.krylov2original(krylov_base, krylov_result, int(krylov_dims)).shape == personalization.np.shape
+    for _ in supported_backends():
+        personalization = pg.to_signal(graph, {nodes[0]: 1, nodes[1]: 1})
+        M = pg.preprocessor(normalization="symmetric")(graph)
+        krylov_dims = 5
+        krylov_result = pg.eye(int(krylov_dims))
+        krylov_base, H = pg.krylov_base(M, personalization.np, int(krylov_dims))
+        error_bound = pg.krylov_error_bound(krylov_base, H, M, personalization.np)
+        assert error_bound < 0.01
+        for _ in range(100):
+            krylov_result = krylov_result @ H
+            personalization.np = pg.conv(personalization.np, M)
+            # print(pg.Mabs(personalization.np)(pg.krylov2original(krylov_base, krylov_result, int(krylov_dims))))
+            assert pg.Mabs(personalization.np)(pg.krylov2original(krylov_base, krylov_result, int(krylov_dims))) <= error_bound
+            assert pg.krylov2original(krylov_base, krylov_result, int(krylov_dims)).shape == personalization.np.shape
+
+
+def test_krylov_space_oversampling():
+    # this demonstrates a highly complicated setting
+    _, graph, community = next(pg.load_datasets_one_community(["bigraph"]))
+    algorithm = pg.HeatKernel(t=5, # the number of hops away HeatKernel places maximal importance on
+                             krylov_dims=5,
+                             normalization="symmetric", renormalize=True)
+    for _ in supported_backends():
+        personalization = {node: 1. for node in list(community)[:10]}
+        oversampling = pg.SeedOversampling(algorithm)
+        measure = pg.Conductance()
+        assert measure(pg.Normalize(algorithm)(graph, personalization)) >= measure(pg.Normalize(oversampling)(graph, personalization))
+
 
 
 def test_lanczos_speedup():

@@ -29,10 +29,11 @@ def scipy_sparse_to_backend(M):
 
 def to_array(obj, copy_array=False):
     if isinstance(obj, np.ndarray):
+        obj = np.asarray(obj)
         if copy_array:
-            return np.copy(obj).ravel()
+            return np.copy(obj).squeeze()
         if len(obj.shape) > 1:
-            return obj.ravel()
+            return obj.squeeze()
         return obj
     if obj.__class__.__module__ == "torch":
         return obj.detach().numpy()

@@ -65,7 +65,7 @@ class NDCG(Supervised):
     """Provides evaluation of NDCG@k score between given and known scores."""
 
     def __init__(self, known_scores: GraphSignalData, exclude: GraphSignalData = None, k: int =None):
-        """ Initializes the PageRank scheme parameters.
+        """ Initializes the supervised measure with desired graph signal outcomes and the number of top scores.
 
         Args:
             k: Optional. Calculates NDCG@k. If None (default), len(known_scores) is used.
@@ -119,11 +119,12 @@ class KLDivergence(Supervised):
 
     def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
         known_scores, scores = self.to_numpy(scores, normalization=True)
-        known_scores = known_scores - backend.min(known_scores)
+        eps = backend.epsilon()
+        known_scores = known_scores - backend.min(known_scores) + eps
         known_scores = known_scores / backend.sum(known_scores)
-        scores = scores - backend.min(scores)
+        scores = scores - backend.min(scores) + eps
         scores = scores / backend.sum(scores)
-        ratio = (scores+1.E-12)/(known_scores+1.E-12)
+        ratio = scores/known_scores
         ret = -backend.sum(scores*backend.log(ratio))
         return ret
 
@@ -133,12 +134,12 @@ class MKLDivergence(Supervised):
 
     def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
         known_scores, scores = self.to_numpy(scores, normalization=True)
-        known_scores = known_scores - backend.min(known_scores)
-        known_scores = known_scores / backend.sum(known_scores)
-        scores = scores - backend.min(scores)
-        scores = scores / backend.sum(scores)
         eps = backend.epsilon()
-        ratio = (scores+eps)/(known_scores+eps)
+        known_scores = known_scores - backend.min(known_scores) + eps
+        known_scores = known_scores / backend.sum(known_scores)
+        scores = scores - backend.min(scores) + eps
+        scores = scores / backend.sum(scores)
+        ratio = scores/known_scores
         ret = -backend.sum(scores*backend.log(ratio))
         return ret/backend.length(scores)
 

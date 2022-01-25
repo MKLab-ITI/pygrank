@@ -70,11 +70,12 @@ def scipy_sparse_to_backend(M):
 
 
 def to_array(obj, copy_array=False):
-    if isinstance(obj, torch.Tensor) and (len(obj.shape) == 1 or obj.shape[1] == 1):
-        if copy_array:
-            return torch.clone(obj)
-        return obj
-    return torch.ravel(torch.FloatTensor(np.array([[v] for v in obj])))
+    if isinstance(obj, torch.Tensor):
+        if len(obj.shape) == 1 or obj.shape[1] == 1:
+            if copy_array:
+                return torch.clone(obj)
+            return obj
+    return torch.ravel(torch.FloatTensor(np.array([v for v in obj])))
 
 
 def to_primitive(obj):

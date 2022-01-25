@@ -263,7 +263,7 @@ Args:
 
 ### <kbd>Supervised</kbd> NDCG
 
-Provides evaluation of NDCG@k score between given and known scores. The constructor initializes the PageRank scheme parameters. 
+Provides evaluation of NDCG@k score between given and known scores. The constructor initializes the supervised measure with desired graph signal outcomes and the number of top scores. 
 
 Args: 
  * *k:* Optional. Calculates NDCG@k. If None (default), len(known_scores) is used.

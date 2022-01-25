@@ -14,7 +14,7 @@ def diags(vecs, offs):
 
 
 def krylov_base(M, personalization, krylov_space_degree):
-    warnings.warn("Krylov approximation is still under development")
+    warnings.warn("Krylov approximation is not stable yet (results may differ in future versions)")
     # TODO: throw exception for non-symmetric matrix
     personalization = backend.to_primitive(personalization)
     base = [personalization / backend.dot(personalization, personalization) ** 0.5]
