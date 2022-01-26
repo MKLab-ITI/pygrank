@@ -316,7 +316,7 @@ If scores assume binary values, E[.] becomes set size and this calculates the in
 
 Args: 
  * *graph:* Optional. The graph on which to calculate the measure. If None (default) it is automatically extracted from graph signals passed for evaluation. 
- * *max_rank:* Optional. The maximum value scores can assume. To maintain a probabilistic formulation of conductance, this can be greater but not less than the maximum rank during evaluation. Default is 1. 
+ * *max_rank:* Optional. The maximum value scores can assume. To maintain a probabilistic formulation of conductance, this can be greater but not less than the maximum rank during evaluation. Default is 1. Pass algorithms through a normalization to ensure that this limit is not violated. 
 
 Example:
 

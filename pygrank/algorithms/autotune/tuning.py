@@ -1,7 +1,7 @@
 from pygrank.core.signals import GraphSignal, to_signal, NodeRanking, GraphSignalGraph, GraphSignalData, no_signal
 from pygrank.algorithms.utils import preprocessor, ensure_used_args, remove_used_args
 from pygrank.algorithms.autotune.optimization import optimize
-from pygrank.measures import Supervised, AUC
+from pygrank.measures import Measure, AUC
 from pygrank.measures.utils import split
 from typing import Callable, Iterable, Tuple
 from pygrank.core import backend
@@ -60,7 +60,7 @@ class ParameterTuner(Tuner):
     in training and test sets.
     """
     def __init__(self, ranker_generator: Callable[[list], NodeRanking] = None,
-                 measure: Callable[[GraphSignal, GraphSignal], Supervised] = AUC,
+                 measure: Callable[[GraphSignal, GraphSignal], Measure] = AUC,
                  fraction_of_training: float = 0.8,
                  combined_prediction: bool = True,
                  tuning_backend: str = None,
@@ -153,7 +153,7 @@ class ParameterTuner(Tuner):
 
 class AlgorithmSelection(Tuner):
     def __init__(self, rankers: Iterable[NodeRanking] = None,
-                 measure: Callable[[GraphSignal, GraphSignal], Supervised] = AUC,
+                 measure: Callable[[GraphSignal, GraphSignal], Measure] = AUC,
                  fraction_of_training: float = 0.8,
                  combined_prediction: bool = True,
                  tuning_backend: str = None):

@@ -1,6 +1,7 @@
 import numpy as np
 import warnings
-import sklearn.metrics
+
+from pygrank.measures.unsupervised import Unsupervised
 from pygrank.measures import AUC
 
 
@@ -31,7 +32,7 @@ def _dot_similarity(v, u, scores):
 class LinkAssessment:
     """ Normalizes scores by dividing with their maximal value.
     """
-    def __init__(self, graph, nodes=None, measure=AUC, similarity="cos", hops=1, max_positive_samples=2000, max_negative_samples=2000, seed=0):
+    def __init__(self, graph, nodes=None, measure=AUC, similarity="cos", hops=1, max_positive_samples=2000, max_negative_samples=2000, seed=0, progress=lambda x: x):
         """
         Args:
             graph: The graph on which to perform the evaluation.
@@ -43,6 +44,7 @@ class LinkAssessment:
             max_negative_samples: A sampling strategy to reduce running time. Default is 2000.
             seed: A randomization seed to ensure reproducibility (and comparability between experiments) of sampling
                 strategies. If None, re-runing the same experiments may produce different results. Default is 0.
+            progress: A wrapper to track progress as it iterates through a list (e.g. lambda x: tqdm.tqdm(x, desc="links") )
         """
         self.G = graph
         self.nodes = list(graph) if nodes is None else list(set(list(nodes)))
@@ -58,6 +60,7 @@ class LinkAssessment:
         elif similarity == "dot":
             similarity = _dot_similarity
         self._similarity = similarity
+        self._progress = progress
 
     def evaluate(self, scores):
         if self.seed is not None:
@@ -69,7 +72,7 @@ class LinkAssessment:
         real = list()
         predicted = list()
         weights = list()
-        for node in positive_candidates:#tqdm.tqdm(positive_candidates, desc="LinkAUC"):
+        for node in self._progress(positive_candidates):
             neighbors = {node: 0.}
             pending = [node]
             while len(pending) != 0:

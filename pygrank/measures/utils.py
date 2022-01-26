@@ -12,6 +12,9 @@ class Measure(object):
     def evaluate(self, scores: GraphSignalData):
         raise Exception("Non-abstract subclasses of Measure should implement an evaluate method")
 
+    def best_direction(self):
+        return 1  # TODO: automatically detect unsupervised direction
+
 
 def split(groups: Union[GraphSignalData, Mapping[str, GraphSignalData]],
           training_samples: float = 0.8,

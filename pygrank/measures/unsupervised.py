@@ -6,7 +6,10 @@ from pygrank.core import backend, GraphSignalGraph, GraphSignalData, BackendPrim
 
 
 class Unsupervised(Measure):
-    pass
+    def as_supervised_method(self):
+        def dummy_constructor(dummy_truth, dummy_exclude=None):
+            return self
+        return dummy_constructor
 
 
 class Conductance(Unsupervised):
@@ -26,6 +29,7 @@ class Conductance(Unsupervised):
              extracted from graph signals passed for evaluation.
             max_rank: Optional. The maximum value scores can assume. To maintain a probabilistic formulation of
              conductance, this can be greater but not less than the maximum rank during evaluation. Default is 1.
+             Pass algorithms through a normalization to ensure that this limit is not violated.
 
         Example:
             >>> import pygrank as pg
@@ -95,7 +99,8 @@ class Modularity(Unsupervised):
                  graph: GraphSignalGraph = None,
                  max_rank: float = 1,
                  max_positive_samples: int = 2000,
-                 seed: int = 0):
+                 seed: int = 0,
+                 progress = lambda x: x):
         """ Initializes the Modularity measure with a sampling strategy that speeds up normal computations.
 
         Args:
@@ -120,6 +125,7 @@ class Modularity(Unsupervised):
         self.max_positive_samples = max_positive_samples
         self.max_rank = max_rank
         self.seed = seed
+        self.progress = progress
 
     def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
         scores = to_signal(self.graph, scores)
@@ -132,7 +138,7 @@ class Modularity(Unsupervised):
         if m == 0:
             return 0
         Q = 0
-        for v in positive_candidates:
+        for v in self.progress(positive_candidates):
             for u in positive_candidates:
                 Avu = 1 if graph.has_edge(v,u) else 0
                 Avu -= graph.degree[v]*graph.degree[u]/2/m

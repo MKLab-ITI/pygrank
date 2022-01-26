@@ -17,6 +17,7 @@ def test_appnp_tf():
                 tf.keras.layers.Dense(num_outputs, activation=tf.nn.relu),
             ])
             self.ranker = pg.PageRank(0.9, renormalize=True, assume_immutability=True, error_type="iters", max_iters=10)
+            self.input_spec = None  # prevents some versions of tensorflow from checking call inputs
 
         def call(self, inputs, training=False):
             graph, features = inputs

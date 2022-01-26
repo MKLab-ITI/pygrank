@@ -1,4 +1,4 @@
-from typing import Callable, Mapping
+from typing import Callable, Mapping, Union
 from pygrank.algorithms import NodeRanking, preprocessor as preprocess, PageRank, AbsorbingWalks, HeatKernel, BiasedKernel
 from pygrank.algorithms import Postprocessor, Tautology, Sweep, SeedOversampling
 
@@ -23,8 +23,8 @@ def create_demo_filters(preprocessor=None,
     if preprocessor is None:
         preprocessor = preprocess(assume_immutability=True)
     return {"PPR.85": PageRank(alpha=0.85, preprocessor=preprocessor, max_iters=max_iters, tol=tol),
-            "PPR.9": PageRank(alpha=0.95, preprocessor=preprocessor, max_iters=max_iters, tol=tol),
-            "PPR.99": PageRank(alpha=0.99, preprocessor=preprocessor, max_iters=max_iters, tol=tol),
+            "PPR.9": PageRank(alpha=0.9, preprocessor=preprocessor, max_iters=max_iters, tol=tol),
+            "PPR.95": PageRank(alpha=0.95, preprocessor=preprocessor, max_iters=max_iters, tol=tol),
             "HK3": HeatKernel(t=3, preprocessor=preprocessor, max_iters=max_iters, tol=tol),
             "HK5": HeatKernel(t=5, preprocessor=preprocessor, max_iters=max_iters, tol=tol),
             "HK7": HeatKernel(t=7, preprocessor=preprocessor, max_iters=max_iters, tol=tol)
@@ -88,18 +88,24 @@ def create_many_variation_types() -> Mapping[str, Callable[[NodeRanking], Postpr
 
 
 def create_variations(algorithms: Mapping[str, NodeRanking],
-                      variations: Mapping[str, Callable[[NodeRanking], Postprocessor]]):
+                      variations: Union[Callable[[NodeRanking], Postprocessor], Mapping[str, Callable[[NodeRanking], Postprocessor]]]):
     """
     Augments provided algorithms with all possible variations.
     Args:
         algorithms: A map from names to node ranking algorithms to compare.
         variations: A map from names to postprocessor types to wrap around node ranking algorithms.
+            Can provide a simple variation to just wrap everything with a postprocessor.
     Returns:
         A map from names to node ranking algorithms to compare. New names append the variation name.
     Example:
         >>> import pygrank as pg
         >>> algorithms = pg.create_variations(pg.create_many_filters(), pg.create_many_variation_types())
+    Example:
+        >>> import pygrank as pg
+        >>> algorithms = pg.create_variations(pg.create_many_filters(), pg.Normalize)
     """
+    if callable(variations):
+        variations = {"": variations}
     all_algorithms = dict()
     for variation in variations:
         for algorithm in algorithms:
