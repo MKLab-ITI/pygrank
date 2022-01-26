@@ -1,5 +1,5 @@
 import pygrank as pg
-_, graph, communities = next(pg.load_datasets_multiple_communities(["EUCore"], max_group_number=5))
+_, graph, communities = next(pg.load_datasets_multiple_communities(["EUCore"], max_group_number=3))
 train, test = pg.split(communities, 0.05)  # 5% of community members are known
 algorithms = pg.create_variations(pg.create_demo_filters(), pg.Normalize)
 

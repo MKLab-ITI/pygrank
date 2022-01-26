@@ -52,15 +52,20 @@ def test_appnp_torch():
             predict = self.dropout(torch.FloatTensor(features))
             predict = self.dropout(self.activation(self.layer1(predict)))
             predict = self.activation(self.layer2(predict))
-            predict = self.ranker.propagate(graph, predict, graph_dropout=0 if training else 0)
+            predict = self.ranker.propagate(graph, predict, graph_dropout=0.5 if training else 0)
             ret = torch.nn.functional.softmax(predict, dim=1)
             self.loss = 0
             for param in self.layer1.parameters():
-                self.loss = self.loss + 0.5E-4*torch.norm(param)
+                self.loss = self.loss + 1E-5*torch.norm(param)
             return ret
 
+    def init_weights(m):
+        if isinstance(m, torch.nn.Linear):
+            torch.nn.init.xavier_uniform(m.weight)
+            m.bias.data.fill_(0.01)
     pg.load_backend('pytorch')
     model = AutotuneAPPNP(features.shape[1], labels.shape[1])
+    model.apply(init_weights)
     pg.gnn_train(model, graph, features, labels, training, validation, epochs=50)
     assert float(pg.gnn_accuracy(labels, model([graph, features]), test)) >= 0.5
     pg.load_backend('numpy')
