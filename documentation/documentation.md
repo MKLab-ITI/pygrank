@@ -23,7 +23,7 @@
     + [List of Tuners](#list-of-tuners)
     + [Tuning Speedup with Optimization Dictionaries](#tuning-speedup-with-optimization-dictionaries)
 8. [Applications](#applications)
-    + [Node Classification with Label Propagation](#node-classification-with-label-propagations)
+    + [Algorithm Selection for Overlapping Community Recommendation](#algorithm-selection-for-overlapping-community-recommendation)
     + [Node Classification with Graph Neural Networks](#node-classification-with-graph-neural-networks)
 
 For a brief overview of common terms found in this document
@@ -701,8 +701,55 @@ for tuning.
 
 # Applications
 
-### Node Classification with Label Propagation
-TODO
+### Algorithm Selection for Overlapping Community Recommendation
+`pygrank` provides the capability of automatically selecting the best algorithm among a list
+of candidate ones. This can be achieved either with supervised measures (typically AUC)
+for which a validation subset of nodes is withheld to determine the best algorithm
+or with unsupervised measures. Then, algorithms can be used to automatically detect communities.
+
+First, let us load a dataset with several communities, create training-test splits of those
+and used the package to create a bunch of (normalized) graph filters.
+
+```python
+import pygrank as pg
+_, graph, communities = next(pg.load_datasets_multiple_communities(["EUCore"], max_group_number=3))
+train, test = pg.split(communities, 0.05)  # 5% of community members are known
+algorithms = pg.create_variations(pg.create_demo_filters(), pg.Normalize)
+```
+
+We can now define two graph filters that automtatically select the best method with an
+AUC-based supervised evalutation and a modularity-based unsupervised evaluation respectively.
+In the second case, we set `fraction_of_training=1` to not withhold validation data from
+the compared node ranking algorithms. It is important to note that algorithm normalization
+helps modularity create comparable assessments between different algorithms.
+
+```python
+supervised_algorithm = pg.AlgorithmSelection(algorithms.values(), measure=pg.AUC)
+modularity_algorithm = pg.AlgorithmSelection(algorithms.values(), fraction_of_training=1, measure=pg.Modularity().as_supervised_method())
+```
+
+We now run the aglorithms for all communities to report the average AUC on the test sets.
+Testing is made to exclude original seed nodes to ensure that results are not biased.
+
+```python
+supervised_aucs = list()
+modularity_aucs = list()
+for seeds, members in zip(train.values(), test.values()):
+    measure = pg.AUC(members, exclude=seeds)
+    supervised_aucs.append(measure(supervised_algorithm(graph, seeds)))
+    modularity_aucs.append(measure(modularity_algorithm(graph, seeds)))
+
+print("Supervised", sum(supervised_aucs) / len(supervised_aucs))
+print("Modularity", sum(modularity_aucs)/len(modularity_aucs))
+```
+
+For very few seed nodes (in this case, they are fewer than 5 in tested communities)
+supervised evaluation lacks robustness, especially since removing seeds shaves off
+a large portion of information from node ranking algorithms. This can be seen in 
+the above example, where modularity-based algorithm selection outperformed the
+supervised one. On the other hand, for more nodes in the training seeds (such as
+10% of total community members) supervised evaluation is the better one.
+
 
 ### Node Classification with Graph Neural Networks
 To support Graph Neural Network architectures, `pygrank` provides a mechanism
@@ -730,6 +777,7 @@ class APPNP(tf.keras.Sequential):
             Dense(num_outputs, activation="relu") ])
         self.ranker = pg.PageRank(0.9, renormalize=True, assume_immutability=True,
             error_type="iters", max_iters=10) # force 10 iterations
+        self.input_spec = None  # prevents some versions of tensorflow from checking call inputs
 
     def call(self, inputs, training=False):
         graph, features = inputs
@@ -762,7 +810,6 @@ pg.load_backend('tensorflow')  # explicitly load the appropriate backend
 model = APPNP(features.shape[1], labels.shape[1])
 pg.gnn_train(model, graph, features, labels, training, validation,
              optimizer = tf.optimizers.Adam(learning_rate=0.01))
-print("Accuracy", )
 ```
 
 Predictions are easy to make per traditional calls and `pygrank` provides
@@ -770,6 +817,6 @@ implementation of GNN accuracy, which is switched around based on the backend:
 
 ```python
 predictions = model([graph, features])
-print(pg.gnn_accuracy(labels, predictions, test))
+print("Accuracy", pg.gnn_accuracy(labels, predictions, test))
 ```
 
