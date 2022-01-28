@@ -29,26 +29,14 @@ def test_algorithm_selection():
         modularity_algorithm = pg.AlgorithmSelection(algorithms.values(), fraction_of_training=1,
                                                      measure=pg.Modularity().as_supervised_method())
 
-        linkauc_algorithm = None
-        best_evaluation = 0
-        linkAUC = pg.LinkAssessment(graph, similarity="cos", hops=1)  # LinkAUC
-        for algorithm in algorithms.values():
-            evaluation = linkAUC.evaluate({community: algorithm(graph, seeds) for community, seeds in train.items()})
-            if evaluation > best_evaluation:
-                best_evaluation = evaluation
-                linkauc_algorithm = algorithm
-
         supervised_aucs = list()
         modularity_aucs = list()
-        linkauc_aucs = list()
         for seeds, members in zip(train.values(), test.values()):
             measure = pg.AUC(members, exclude=seeds)
             supervised_aucs.append(measure(supervised_algorithm(graph, seeds)))
             modularity_aucs.append(measure(modularity_algorithm(graph, seeds)))
-            linkauc_aucs.append(measure(linkauc_algorithm(graph, seeds)))
 
         assert sum(supervised_aucs) / len(supervised_aucs) < sum(modularity_aucs) / len(modularity_aucs) + 0.05
-        assert sum(modularity_aucs) / len(modularity_aucs) <= sum(linkauc_aucs) / len(linkauc_aucs) - pg.epsilon()
 
 
 def test_unsupervised_vs_auc():

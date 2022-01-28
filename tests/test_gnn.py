@@ -61,7 +61,7 @@ def test_appnp_torch():
 
     def init_weights(m):
         if isinstance(m, torch.nn.Linear):
-            torch.nn.init.xavier_uniform(m.weight)
+            torch.nn.init.xavier_uniform_(m.weight)
             m.bias.data.fill_(0.01)
     pg.load_backend('pytorch')
     model = AutotuneAPPNP(features.shape[1], labels.shape[1])
