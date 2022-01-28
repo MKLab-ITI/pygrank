@@ -14,15 +14,15 @@ All of them can be used through the code patterns presented at the library's [do
 8. [Cos](#supervised-cos)
 9. [CrossEntropy](#supervised-crossentropy)
 10. [Dot](#supervised-dot)
-11. [FNR](#supervised-fnr)
-12. [KLDivergence](#supervised-kldivergence)
-13. [MKLDivergence](#supervised-mkldivergence)
-14. [Mabs](#supervised-mabs)
-15. [MannWhitneyParity](#supervised-mannwhitneyparity)
-16. [MaxDifference](#supervised-maxdifference)
-17. [NDCG](#supervised-ndcg)
-18. [PearsonCorrelation](#supervised-pearsoncorrelation)
-19. [SpearmanCorrelation](#supervised-spearmancorrelation)
+11. [KLDivergence](#supervised-kldivergence)
+12. [MKLDivergence](#supervised-mkldivergence)
+13. [Mabs](#supervised-mabs)
+14. [MannWhitneyParity](#supervised-mannwhitneyparity)
+15. [MaxDifference](#supervised-maxdifference)
+16. [NDCG](#supervised-ndcg)
+17. [PearsonCorrelation](#supervised-pearsoncorrelation)
+18. [SpearmanCorrelation](#supervised-spearmancorrelation)
+19. [TNR](#supervised-tnr)
 20. [TPR](#supervised-tpr)
 21. [pRule](#supervised-prule)
 22. [Conductance](#unsupervised-conductance)
@@ -208,14 +208,6 @@ Args:
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 
-### <kbd>Supervised</kbd> FNR
-
-Wrapper for sklearn.metrics.auc evaluation. The constructor initializes the supervised measure with desired graph signal outcomes. 
-
-Args: 
- * *known_scores:* The desired graph signal outcomes. 
- * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
-
 ### <kbd>Supervised</kbd> KLDivergence
 
 Computes the KL-divergence of given vs known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
@@ -286,9 +278,17 @@ Args:
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 
+### <kbd>Supervised</kbd> TNR
+
+Computes the false negative rate. The constructor initializes the supervised measure with desired graph signal outcomes. 
+
+Args: 
+ * *known_scores:* The desired graph signal outcomes. 
+ * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
+
 ### <kbd>Supervised</kbd> TPR
 
-Wrapper for sklearn.metrics.auc evaluation. The constructor initializes the supervised measure with desired graph signal outcomes. 
+Computes the true positive rate. The constructor initializes the supervised measure with desired graph signal outcomes. 
 
 Args: 
  * *known_scores:* The desired graph signal outcomes. 

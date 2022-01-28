@@ -32,8 +32,8 @@ for name, filter in filters.items():
     mistreatment = lambda known_scores, sensitive_signal, exclude: \
         pg.AM([pg.Disparity([pg.TPR(known_scores, exclude=1-(1-exclude.np)*sensitive_signal.np),
                              pg.TPR(known_scores, exclude=1-(1-exclude.np)*(1-sensitive_signal.np))]),
-               pg.Disparity([pg.FNR(known_scores, exclude=1 - (1 - exclude.np) * sensitive_signal.np),
-                             pg.FNR(known_scores, exclude=1 - (1 - exclude.np) * (1 - sensitive_signal.np))])])
+               pg.Disparity([pg.TNR(known_scores, exclude=1 - (1 - exclude.np) * sensitive_signal.np),
+                             pg.TNR(known_scores, exclude=1 - (1 - exclude.np) * (1 - sensitive_signal.np))])])
     pg.benchmark_print(pg.benchmark(algorithms, pg.load_datasets_multiple_communities(datasets, max_group_number=2),
                                     metric=pg.AUC, sensitive=pg.pRule, fraction_of_training=seed_fractions),
                        delimiter=" & ", end_line="\\\\")

@@ -90,7 +90,10 @@ def test_computations():
         assert pg.CrossEntropy([1, 1, 1])([1, 1, 1]) < 1.E-12
         assert float(pg.Cos([2, 0, 1])([2, 0, 1])) == 1
         assert float(pg.Cos([2, 0, 1])([-2, 0, -1])) == -1
+        assert float(pg.Cos([0, 0, 0])([0, 0, 0])) == 0
         assert float(pg.Dot([1, 1, 1])([1, 1, 1])) == 3
+        assert float(pg.TPR([1, 0, 0, 0])([1, 1, 0, 0])) == 0.5
+        assert float(pg.TNR([0, 0, 0, 1])([1, 1, 0, 0])) == 0.5
 
 
 def test_aggregated():
@@ -98,9 +101,13 @@ def test_aggregated():
     y2 = [1, 0, 0]
     y3 = [1, 1, 0]
     for _ in supported_backends():
-        # TODO: investiage why not exactly the same always (numerical precision should be lower)
-        assert abs(float(pg.GM().add(pg.AUC(y1), max_val=0.5).add(pg.AUC(y2), min_val=0.9).evaluate(y3)) - 0.45**0.5) < 1.E-6
-        assert abs(float(pg.AM().add(pg.AUC(y1), max_val=0.5).add(pg.AUC(y2), min_val=0.9).evaluate(y3)) - 0.7) < 1.E-6
+        # TODO: investigate why not exactly the same always (numerical precision should be lower for numpy)
+        epsilon = 1.E-6
+        assert abs(float(pg.GM().add(pg.AUC(y1), max_val=0.5).add(pg.AUC(y2), min_val=0.9).evaluate(y3)) - 0.45**0.5) < epsilon
+        assert abs(float(pg.AM().add(pg.AUC(y1), max_val=0.5).add(pg.AUC(y2), min_val=0.9).evaluate(y3)) - 0.7) < epsilon
+        assert abs(float(pg.Disparity().add(pg.AUC(y1), max_val=0.5).add(pg.AUC(y2), min_val=0.9).evaluate(y3))-0.4) < epsilon
+        assert abs(float(pg.Disparity().add(pg.AUC(y1), max_val=0.5).add(pg.AUC(y2), min_val=0.9).evaluate(y3))
+                   + float(pg.Parity().add(pg.AUC(y1), max_val=0.5).add(pg.AUC(y2), min_val=0.9).evaluate(y3)-1)) < epsilon
 
 
 def test_remove_edges():

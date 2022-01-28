@@ -1,7 +1,7 @@
 import pygrank
 from pygrank.algorithms.autotune import optimize
 from pygrank.algorithms.postprocess.postprocess import Tautology, Normalize, Postprocessor
-from pygrank.measures import pRule, Mabs, Supervised, AM, KLDivergence, TPR, FNR, Parity
+from pygrank.measures import pRule, Mabs, Supervised, AM, KLDivergence, TPR, TNR, Parity
 from pygrank.core import GraphSignal, to_signal, backend, BackendPrimitive, NodeRanking, GraphSignalGraph, GraphSignalData
 from typing import List, Optional, Union
 
@@ -103,8 +103,8 @@ class FairPersonalizer(Postprocessor):
                 it in the range [0, max_residual] is preserved. Default is 1 and is introduced by [krasanakis2020prioredit],
                 but 0 can be used for exact replication of [krasanakis2020fairconstr].
             parity_type: The type of fairness measure to be optimized. If "impact" (default) the pRule is optimized,
-               if "TPR" or "FNR" the TPR and FNR parity between sensitive and non-sensitive nodes is optimized
-               respectively, if "mistreatment" the AM of TPR and FNR parity is optimized.
+               if "TPR" or "TNR" the TPR and TNR parity between sensitive and non-sensitive nodes is optimized
+               respectively, if "mistreatment" the AM of TPR and TNR parity is optimized.
 
         Example:
             >>> import pygrank as pg
@@ -170,17 +170,17 @@ class FairPersonalizer(Postprocessor):
         elif self.parity_type == "TPR":
             self.pRule = Parity([TPR(personalization, exclude=1-sensitive.np),
                                  TPR(personalization, exclude=1-(1-sensitive.np))])
-        elif self.parity_type == "FNR":
-            self.pRule = Parity([FNR(personalization, exclude=1-sensitive.np),
-                                 FNR(personalization, exclude=1-(1-sensitive.np))])
+        elif self.parity_type == "TNR":
+            self.pRule = Parity([TNR(personalization, exclude=1 - sensitive.np),
+                                 TNR(personalization, exclude=1 - (1 - sensitive.np))])
         elif self.parity_type == "mistreatment":
             self.pRule = AM([Parity([TPR(personalization, exclude=1-sensitive.np),
                                      TPR(personalization, exclude=1-(1-sensitive.np))]),
-                             Parity([FNR(personalization, exclude=1 - sensitive.np),
-                                     FNR(personalization, exclude=1 - (1 - sensitive.np))])
+                             Parity([TNR(personalization, exclude=1 - sensitive.np),
+                                     TNR(personalization, exclude=1 - (1 - sensitive.np))])
                             ])
         else:
-            raise Exception("Invalid parity type "+self.parity_type+": expected impact, TPR, FNR or mistreatment")
+            raise Exception("Invalid parity type "+self.parity_type+": expected impact, TPR, TNR or mistreatment")
         sensitive, personalization = pRule(sensitive).to_numpy(personalization)
         ranks = self.ranker.rank(G, personalization, *args, **kwargs)
 

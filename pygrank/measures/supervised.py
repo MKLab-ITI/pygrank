@@ -150,9 +150,7 @@ class Cos(Supervised):
     def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
         known_scores, scores = self.to_numpy(scores)
         divide = backend.dot(known_scores, known_scores) * backend.dot(scores, scores)
-        if divide == 0:
-            return 0
-        return backend.dot(known_scores, scores) / (divide**0.5)
+        return backend.safe_div(backend.dot(known_scores, scores), divide**0.5)
 
 
 class Dot(Supervised):
@@ -164,25 +162,23 @@ class Dot(Supervised):
 
 
 class TPR(Supervised):
-    """Wrapper for sklearn.metrics.auc evaluation."""
+    """Computes the true positive rate."""
 
     def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
         known_scores, scores = self.to_numpy(scores)
-        eps = backend.epsilon()
-        known_scores = known_scores / (backend.max(known_scores)+eps)
-        scores = scores / (backend.max(scores)+eps)
-        return backend.sum(known_scores*scores) / backend.sum(scores)
+        known_scores = backend.safe_div(known_scores, backend.max(known_scores))
+        scores = backend.safe_div(scores, backend.max(scores))
+        return backend.safe_div(backend.sum(known_scores*scores), backend.sum(scores))
 
 
-class FNR(Supervised):
-    """Wrapper for sklearn.metrics.auc evaluation."""
+class TNR(Supervised):
+    """Computes the false negative rate."""
 
     def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
         known_scores, scores = self.to_numpy(scores)
-        eps = backend.epsilon()
-        known_scores = known_scores / (backend.max(known_scores)+eps)
-        scores = scores / (backend.max(scores)+eps)
-        return backend.sum((1-known_scores)*(1-scores)) / (backend.sum(1-scores)+eps)
+        known_scores = backend.safe_div(known_scores, backend.max(known_scores))
+        scores = backend.safe_div(scores, backend.max(scores))
+        return backend.safe_div(backend.sum((1-known_scores)*(1-scores)), backend.sum(1-scores))
 
 
 class AUC(Supervised):
@@ -235,8 +231,8 @@ class pRule(Supervised):
         if p1 == 0 or p2 == 0:
             return 0
         s = backend.sum(sensitive)
-        p1 = p1 / s
-        p2 = p2 / ( backend.length(sensitive)-s )
+        p1 = backend.safe_div(p1, s)
+        p2 = backend.safe_div(p2, backend.length(sensitive)-s)
         if p1 <= p2:  # this implementation is derivable
             return p1 / p2
         return p2 / p1

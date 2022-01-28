@@ -63,7 +63,7 @@ Args:
  * *error_type:* The supervised measure used to penalize deviations from original posterior scores. pygrank.KLDivergence (default) uses is used in [krasanakis2020prioredit]. pygrank.Error is used by the earlier [krasanakis2020fairconstr]. The latter does not induce fairness as well on average, but is sometimes better for specific graphs. 
  * *parameter_buckets:* How many sets of parameters to be used to . Default is 1. More parameters could be needed to to track, but running time scales **exponentially** to these (with base 4). 
  * *max_residual:* An upper limit on how much the original personalization is preserved, i.e. a fraction of it in the range [0, max_residual] is preserved. Default is 1 and is introduced by [krasanakis2020prioredit], but 0 can be used for exact replication of [krasanakis2020fairconstr]. 
- * *parity_type:* The type of fairness measure to be optimized. If "impact" (default) the pRule is optimized, if "TPR" or "FNR" the TPR and FNR parity between sensitive and non-sensitive nodes is optimized respectively, if "mistreatment" the AM of TPR and FNR parity is optimized. 
+ * *parity_type:* The type of fairness measure to be optimized. If "impact" (default) the pRule is optimized, if "TPR" or "TNR" the TPR and TNR parity between sensitive and non-sensitive nodes is optimized respectively, if "mistreatment" the AM of TPR and TNR parity is optimized. 
 
 Example:
 

@@ -2,7 +2,7 @@ import pygrank as pg
 
 loader = list(pg.load_datasets_multiple_communities(["bigraph", "cora", "citeseer"]))
 algorithms = pg.create_variations(pg.create_demo_filters(), pg.create_many_variation_types())
-algorithms = pg.create_variations(algorithms, {"": pg.Normalize})  # add normalization to all algorithms
+algorithms = pg.create_variations(algorithms, pg.Normalize)  # add normalization to all algorithms
 print("Algorithms", len(algorithms))
 
 measures = {"AUC": lambda ground_truth, exlude: pg.MultiSupervised(pg.AUC, ground_truth, exlude),

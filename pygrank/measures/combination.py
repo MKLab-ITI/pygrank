@@ -87,7 +87,7 @@ class Disparity(MeasureCombination):
                 evaluation = min(max(evaluation, self.thresholds[i][0]), self.thresholds[i][1])
                 result += (self.weights[i]*mult)*evaluation
             mult *= -1
-        return backend.abs(result)
+        return result if result > 0 else -result
 
 
 class Parity(MeasureCombination):
@@ -102,7 +102,7 @@ class Parity(MeasureCombination):
                 evaluation = min(max(evaluation, self.thresholds[i][0]), self.thresholds[i][1])
                 result += (self.weights[i]*mult)*evaluation
             mult *= -1
-        return 1-backend.abs(result)
+        return 1-(result if result > 0 else -result)
 
 
 class GM(MeasureCombination):

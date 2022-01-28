@@ -1,5 +1,6 @@
 import pygrank as pg
 import io
+from .test_core import supported_backends
 
 
 def test_benchmark_print():
@@ -17,9 +18,40 @@ def test_benchmark_print():
     assert (len(str(ret)) - len(console)) < (len(str(ret)) + len(console))/2
 
 
-def test_unsupervised_vs_auc():
-    pg.load_backend("numpy")
+def test_algorithm_selection():
+    for _ in supported_backends():
+        _, graph, communities = next(pg.load_datasets_multiple_communities(["bigraph"], max_group_number=3))
+        train, test = pg.split(communities, 0.05)  # 5% of community members are known
+        algorithms = pg.create_variations(pg.create_demo_filters(), pg.Normalize)
 
+        supervised_algorithm = pg.AlgorithmSelection(algorithms.values(), measure=pg.AUC)
+        print(supervised_algorithm.cite())
+        modularity_algorithm = pg.AlgorithmSelection(algorithms.values(), fraction_of_training=1,
+                                                     measure=pg.Modularity().as_supervised_method())
+
+        linkauc_algorithm = None
+        best_evaluation = 0
+        linkAUC = pg.LinkAssessment(graph, similarity="cos", hops=1)  # LinkAUC
+        for algorithm in algorithms.values():
+            evaluation = linkAUC.evaluate({community: algorithm(graph, seeds) for community, seeds in train.items()})
+            if evaluation > best_evaluation:
+                best_evaluation = evaluation
+                linkauc_algorithm = algorithm
+
+        supervised_aucs = list()
+        modularity_aucs = list()
+        linkauc_aucs = list()
+        for seeds, members in zip(train.values(), test.values()):
+            measure = pg.AUC(members, exclude=seeds)
+            supervised_aucs.append(measure(supervised_algorithm(graph, seeds)))
+            modularity_aucs.append(measure(modularity_algorithm(graph, seeds)))
+            linkauc_aucs.append(measure(linkauc_algorithm(graph, seeds)))
+
+        assert sum(supervised_aucs) / len(supervised_aucs) < sum(modularity_aucs) / len(modularity_aucs) + 0.05
+        assert sum(modularity_aucs) / len(modularity_aucs) <= sum(linkauc_aucs) / len(linkauc_aucs) - pg.epsilon()
+
+
+def test_unsupervised_vs_auc():
     def loader():
         return pg.load_datasets_multiple_communities(["graph9"])
 

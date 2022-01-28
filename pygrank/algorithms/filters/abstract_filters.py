@@ -112,7 +112,7 @@ class RecursiveGraphFilter(GraphFilter):
     def references(self):
         refs = super().references()
         if self.converge_to_eigenvectors:
-            refs += "unbiased eigenvector convergence \\cite{krasanakis2018venuerank}"
+            refs += ["unbiased eigenvector convergence \\cite{krasanakis2018venuerank}"]
         return refs
 
 

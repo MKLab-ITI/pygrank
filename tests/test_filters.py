@@ -135,4 +135,24 @@ def test_optimization_dict():
     optimized = time() - tic
     assert len(optimization) == 20
     assert unoptimized > optimized
-    
+
+
+def test_citations():
+    assert pg.PageRank().cite() in pg.AlgorithmSelection().cite()
+    assert "krasanakis2021pygrank" in pg.ParameterTuner().cite()
+    assert "ortega2018graph" in pg.ParameterTuner().cite()
+    assert pg.HeatKernel().cite() in pg.SeedOversampling(pg.HeatKernel()).cite()
+    assert pg.AbsorbingWalks().cite() in pg.BoostedSeedOversampling(pg.AbsorbingWalks()).cite()
+    assert "krasanakis2018venuerank" in pg.BiasedKernel(converge_to_eigenvectors=True).cite()
+    assert "yu2021chebyshev" in pg.HeatKernel(coefficient_type="chebyshev").cite()
+    assert "krasanakis2021pygrank" in pg.GenericGraphFilter(optimization_dict=dict()).cite()
+    assert "tautology" in pg.Tautology().cite()
+    assert pg.PageRank().cite() == pg.Tautology(pg.PageRank()).cite()
+    assert "mabs" in pg.MabsMaintain(pg.PageRank()).cite()
+    assert "max normalization" in pg.Normalize(pg.PageRank()).cite()
+    assert "[0,1] range" in pg.Normalize(pg.PageRank(), "range").cite()
+    assert "ordinal" in pg.Ordinals(pg.PageRank()).cite()
+    assert "exp" in pg.Transformer(pg.PageRank()).cite()
+    assert "0.5" in pg.Threshold(pg.PageRank(), 0.5).cite()
+    assert "andersen2007local" in pg.Sweep(pg.PageRank()).cite()
+    assert pg.HeatKernel().cite() in pg.Sweep(pg.PageRank(), pg.HeatKernel()).cite()

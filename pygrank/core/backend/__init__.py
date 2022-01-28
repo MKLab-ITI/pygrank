@@ -8,6 +8,12 @@ from pygrank.core.backend.specification import *
 _imported_mods = dict()
 
 
+def safe_div(nom, denom):
+    if denom == 0:
+        return nom
+    return nom / denom
+
+
 def load_backend(mod_name):
     if mod_name not in ['pytorch', 'numpy', 'tensorflow']:
         raise Exception("Unsupported backend "+mod_name)

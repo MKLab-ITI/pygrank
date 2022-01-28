@@ -65,15 +65,13 @@ def test_krylov_space_oversampling():
         assert measure(pg.Normalize(algorithm)(graph, personalization)) >= measure(pg.Normalize(oversampling)(graph, personalization))
 
 
-
 def test_lanczos_speedup():
     graph = next(pg.load_datasets_graph(["bigraph"]))
-    for backend in supported_backends():
-        if backend != "tensorflow":  # TODO find why Lanczos in tensorflow is buggy
-            for algorithm in [pg.HeatKernel]:
-                result = pg.Normalize(algorithm(normalization='symmetric')).rank(graph, {"0": 1})
-                result_lanczos = pg.Normalize(algorithm(normalization='symmetric', krylov_dims=5)).rank(graph, {"0": 1})
-                assert pg.Mabs(result)(result_lanczos) < 0.01
+    for _ in supported_backends():
+        for algorithm in [pg.HeatKernel]:
+            result = pg.Normalize(algorithm(normalization='symmetric')).rank(graph, {"0": 1})
+            result_lanczos = pg.Normalize(algorithm(normalization='symmetric', krylov_dims=5)).rank(graph, {"0": 1})
+            assert pg.Mabs(result)(result_lanczos) < 0.01
 
 
 def test_lanczos_bad_approximation():
