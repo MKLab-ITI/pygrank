@@ -22,6 +22,7 @@ def test_call_management():
 
 def test_primitive_conversion():
     for _ in supported_backends():
+        assert pg.obj2id("str") == str(hash("str"))
         assert pg.sum(pg.to_array([1, 2, 3])) == 6
         assert pg.sum(pg.dot(pg.exp(pg.log(pg.to_array([4, 5]))), pg.to_array([2, 2]))) == 18
         primitive = pg.to_array([1, 2, 3])

@@ -53,7 +53,7 @@ def _import_features(dataset: str,
             if "=" in line[1]:
                 found = dict()
                 for feat in line[1:]:
-                    feat = feat.split("=")
+                    feat = feat.split("=")   # pragma: no cover
                     if feat[0] not in pos_dict:
                         pos_dict[feat[0]] = len(pos_dict)
                     found[pos_dict[feat[0]]] = float(feat[1])

@@ -81,9 +81,5 @@ def arnoldi_iteration(A: BackendGraph, b: BackendPrimitive, n: int):
             h[j][k - 1] = backend.dot(Q[j], v)
             v = v - h[j][k-1] * Q[j]
         h[k][k-1] = backend.dot(v, v)**0.5
-        if h[k][k-1] == 0:
-            Q.append(v*0)
-        else:
-            Q.append(v / h[k][k-1])
-
+        Q.append(v / h[k][k-1] if h[k][k-1] != 0 else v*0)
     return backend.combine_cols(Q), h

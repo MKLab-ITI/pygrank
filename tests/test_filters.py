@@ -138,6 +138,9 @@ def test_optimization_dict():
 
 
 def test_citations():
+    assert "unknown node ranking algorithm" == pg.NodeRanking().cite()
+    assert "with parameters tuned \cite{krasanakis2021pygrank}" in pg.ParameterTuner(lambda params: pg.PageRank(params[0])).cite()
+    assert "Postprocessor" in pg.Postprocessor().cite()
     assert pg.PageRank().cite() in pg.AlgorithmSelection().cite()
     assert "krasanakis2021pygrank" in pg.ParameterTuner().cite()
     assert "ortega2018graph" in pg.ParameterTuner().cite()
@@ -145,6 +148,7 @@ def test_citations():
     assert pg.AbsorbingWalks().cite() in pg.BoostedSeedOversampling(pg.AbsorbingWalks()).cite()
     assert "krasanakis2018venuerank" in pg.BiasedKernel(converge_to_eigenvectors=True).cite()
     assert "yu2021chebyshev" in pg.HeatKernel(coefficient_type="chebyshev").cite()
+    assert "susnjara2015accelerated" in pg.HeatKernel(krylov_dims=5).cite()
     assert "krasanakis2021pygrank" in pg.GenericGraphFilter(optimization_dict=dict()).cite()
     assert "tautology" in pg.Tautology().cite()
     assert pg.PageRank().cite() == pg.Tautology(pg.PageRank()).cite()

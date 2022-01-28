@@ -52,7 +52,7 @@ def assert_binary(ranks):
 
 
 def obj2id(obj):
-    if isinstance(obj, object):
+    if isinstance(obj, object) and not isinstance(obj, str):
         if not hasattr(obj, "uuid"):
             obj.uuid = uuid.uuid1()
         return str(obj.uuid)

@@ -4,27 +4,19 @@ from torch import abs, exp, eye, clone as copy, log, ones
 
 
 def sum(x, axis=None):
-    if axis is None:
-        return torch.sum(x)
-    return torch.sum(x, dim=axis)
+    return torch.sum(x) if axis is None else torch.sum(x, dim=axis)
 
 
 def max(x, axis=None):
-    if axis is None:
-        return torch.max(x)
-    return torch.max(x, dim=axis)
+    return torch.max(x) if axis is None else torch.max(x, dim=axis)
 
 
 def min(x, axis=None):
-    if axis is None:
-        return torch.min(x)
-    return torch.min(x, dim=axis)
+    return torch.min(x) if axis is None else torch.min(x, dim=axis)
 
 
 def mean(x, axis=None):
-    if axis is None:
-        return torch.mean(x)
-    return torch.mean(x, dim=axis)
+    return torch.mean(x) if axis is None else torch.mean(x, dim=axis)
 
 
 def diag(x, offset=0):

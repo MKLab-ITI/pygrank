@@ -66,10 +66,11 @@ def _gnn_train_tf(model, graph, features, labels, training, validation,
             remaining_patience = patience
             best_loss = loss
             best_params = [tf.identity(param) for param in model.trainable_variables]
-            if verbose:
+            if verbose:   # pragma: no cover
                 print("Epoch", epoch, "loss", float(loss), "acc", _gnn_accuracy_tf(labels, predictions, test))
         if remaining_patience == 0:
-            print("Patience run out at epoch", epoch)
+            if verbose:   # pragma: no cover
+                print("Patience run out at epoch", epoch)
             break
     for variable, best_value in zip(model.trainable_variables, best_params):
         variable.assign(best_value)
@@ -103,11 +104,12 @@ def _gnn_train_torch(model, graph, features, labels, training, validation,
             remaining_patience = patience
             best_loss = loss
             torch.save(model.state_dict(), "_pygrank_torch_state.pt")
-            if verbose:
+            if verbose:   # pragma: no cover
                 print("Epoch", epoch, "loss", float(loss), "acc", _gnn_accuracy_torch(labels, predictions, test))
 
         if remaining_patience == 0:
-            print("Patience run out at epoch", epoch)
+            if verbose:   # pragma: no cover
+                print("Patience run out at epoch", epoch)
             break
 
     model.load_state_dict(torch.load("_pygrank_torch_state.pt"))

@@ -43,6 +43,7 @@ def test_krylov_space():
         krylov_result = pg.eye(int(krylov_dims))
         krylov_base, H = pg.krylov_base(M, personalization.np, int(krylov_dims))
         error_bound = pg.krylov_error_bound(krylov_base, H, M, personalization.np)
+        assert pg.sum(pg.krylov2original(0, H, krylov_dims)) == 0
         assert error_bound < 0.01
         for _ in range(100):
             krylov_result = krylov_result @ H

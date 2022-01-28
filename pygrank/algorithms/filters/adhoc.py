@@ -37,7 +37,7 @@ class PageRank(RecursiveGraphFilter):
     def references(self):
         refs = super().references()
         refs[0] = "personalized PageRank \\cite{page1999pagerank}"
-        refs.insert(1, f"restart probability {int((1-self.alpha)*1000)/1000.}")
+        refs.insert(1, f"diffusion rate {int(self.alpha*1000)/1000.}")
         return refs
 
 
