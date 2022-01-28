@@ -31,7 +31,7 @@ def test_gnn_errors():
     with pytest.raises(Exception):
         pg.gnn_train(model, graph, features, labels, training, validation, test=test, epochs=2)
     pg.load_backend('tensorflow')
-    pg.gnn_train(model, graph, features, labels, training, validation, test=test, epochs=50, patience=2)
+    pg.gnn_train(model, graph, features, labels, training, validation, test=test, epochs=300, patience=2)
     pg.load_backend('numpy')
     with pytest.raises(Exception):
         pg.gnn_accuracy(labels, model([graph, features]), test)

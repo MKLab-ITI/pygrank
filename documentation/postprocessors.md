@@ -9,15 +9,14 @@ All of them can be used through the code patterns presented at the library's [do
 3. [FairPersonalizer](#postprocessor-fairpersonalizer)
 4. [FairTradeoff](#postprocessor-fairtradeoff)
 5. [FairWalk](#postprocessor-fairwalk)
-6. [FairnessTf](#postprocessor-fairnesstf)
-7. [MabsMaintain](#postprocessor-mabsmaintain)
-8. [Normalize](#postprocessor-normalize)
-9. [Ordinals](#postprocessor-ordinals)
-10. [SeedOversampling](#postprocessor-seedoversampling)
-11. [Sweep](#postprocessor-sweep)
-12. [Tautology](#postprocessor-tautology)
-13. [Threshold](#postprocessor-threshold)
-14. [Transformer](#postprocessor-transformer)
+6. [MabsMaintain](#postprocessor-mabsmaintain)
+7. [Normalize](#postprocessor-normalize)
+8. [Ordinals](#postprocessor-ordinals)
+9. [SeedOversampling](#postprocessor-seedoversampling)
+10. [Sweep](#postprocessor-sweep)
+11. [Tautology](#postprocessor-tautology)
+12. [Threshold](#postprocessor-threshold)
+13. [Transformer](#postprocessor-transformer)
 
 ### <kbd>Postprocessor</kbd> AdHocFairness
 
@@ -105,9 +104,6 @@ graphs also clear the dictionary where preprocessed graphs are inputted by calli
 
 Args: 
  * *ranker:* Optional. The base ranker instance. If None (default), a Tautology() ranker is created.
-
-### <kbd>Postprocessor</kbd> FairnessTf
-
 
 ### <kbd>Postprocessor</kbd> MabsMaintain
 

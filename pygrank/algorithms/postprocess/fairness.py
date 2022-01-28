@@ -6,62 +6,6 @@ from pygrank.core import GraphSignal, to_signal, backend, BackendPrimitive, Node
 from typing import List, Optional, Union
 
 
-class FairnessTf(Postprocessor):
-    def __init__(self, ranker: NodeRanking, objective: Supervised = None):
-        self.ranker = ranker
-        self.objective = objective
-
-    def rank(self,
-             graph: GraphSignalGraph,
-             personalization: GraphSignalData,
-             sensitive: GraphSignalData, *args, **kwargs):
-        personalization = to_signal(graph, personalization)
-        graph = personalization.graph
-        ranks = self.ranker(graph, personalization, *args, **kwargs)
-        prev_backend = backend.backend_name()
-        backend.load_backend("tensorflow")
-        import tensorflow as tf
-        ranks = to_signal(ranks, backend.to_array(ranks.np))
-        sensitive = to_signal(sensitive, backend.to_array(sensitive.np))
-        personalization = to_signal(personalization, backend.to_array(personalization.np))
-        optimizer = tf.optimizers.Adam(learning_rate=0.001)
-        model = tf.keras.Sequential([
-            tf.keras.layers.Dropout(0, input_shape=(3,)),
-            tf.keras.layers.Dense(16, activation=tf.nn.relu, kernel_regularizer=tf.keras.regularizers.L2(1.E-5)),
-            tf.keras.layers.Dropout(0),
-            tf.keras.layers.Dense(1, activation=tf.nn.sigmoid, kernel_regularizer=tf.keras.regularizers.L2(1.E-5)),
-        ])
-        ranks.np = ranks.np / backend.max(ranks.np)
-        node_features = backend.combine_cols([ranks.np, personalization.np, sensitive.np])
-        best_loss = float('inf')
-        patience = 100
-        remaining_patience = patience
-        best_ranks = None
-        training, validation = pygrank.split(to_signal(graph,{v: 1 for v in graph}), training_samples=0.9)
-        for _ in range(3000):
-            with tf.GradientTape() as tape:
-                new_ranks = self.ranker(graph, tf.nn.relu(model(node_features, training=True)*2-1+personalization.np), *args, **kwargs)
-                new_ranks.np = new_ranks.np / backend.max(new_ranks.np)
-                loss = Mabs(ranks, exclude=validation)(new_ranks)-10*tf.math.minimum(0.8, pRule(sensitive, exclude=validation)(new_ranks)) - 0.01*pRule(sensitive, exclude=validation)(new_ranks)
-                for l in model.losses:
-                    loss = loss + l
-            gradients = tape.gradient(loss, model.trainable_variables)
-            optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-            new_ranks = self.ranker(graph, model(node_features, training=False), *args, **kwargs)
-            new_ranks.np = new_ranks.np / backend.max(new_ranks.np)
-            loss = Mabs(ranks, exclude=training)(new_ranks) - 10 * tf.math.minimum(0.8, pRule(sensitive, exclude=training)(new_ranks)) - 0.01*pRule(sensitive, exclude=training)(new_ranks)
-            if loss < best_loss:
-                print(pRule(sensitive, exclude=training)(new_ranks))
-                remaining_patience = patience
-                best_loss = loss
-                best_ranks = new_ranks
-            remaining_patience -= 1
-            if remaining_patience < 0:
-                break
-        backend.load_backend(prev_backend)
-        return to_signal(graph, backend.to_array(best_ranks.np))
-
-
 class FairPersonalizer(Postprocessor):
     """
     A personalization editing scheme that aims to edit graph signal priors (i.e. personalization) to produce

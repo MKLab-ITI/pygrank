@@ -50,10 +50,10 @@ def _import_features(dataset: str,
     with open(path+'/'+dataset+'/'+feature_file, 'r', encoding='utf-8') as file:
         for line in file:
             line = line[:-1].split()
-            if "=" in line[1]:
+            if "=" in line[1]:   # pragma: no cover
                 found = dict()
                 for feat in line[1:]:
-                    feat = feat.split("=")   # pragma: no cover
+                    feat = feat.split("=")
                     if feat[0] not in pos_dict:
                         pos_dict[feat[0]] = len(pos_dict)
                     found[pos_dict[feat[0]]] = float(feat[1])
