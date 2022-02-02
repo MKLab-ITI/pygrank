@@ -118,6 +118,6 @@ def test_multigroup_benchmarks():
     pg.benchmark_print(pg.benchmark(algorithms | tuned, loader, pg.AUC, fraction_of_training=.8, seed=list(range(1))),
                        decimals=3, delimiter=" & ", end_line="\\\\")
     loader = pg.load_datasets_all_communities(datasets, min_group_size=50)
-    pg.benchmark_print(pg.benchmark(algorithms | tuned, loader, pg.Modularity, fraction_of_training=.8, seed=list(range(1))),
+    pg.benchmark_print(pg.benchmark(algorithms | tuned, loader, pg.Modularity, sensitive=pg.pRule, fraction_of_training=.8, seed=list(range(1))),
                        decimals=3, delimiter=" & ", end_line="\\\\")
 

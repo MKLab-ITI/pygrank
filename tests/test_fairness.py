@@ -8,8 +8,8 @@ def test_fair_personalizer():
         "FairPers": lambda G, p, s: pg.Normalize(pg.FairPersonalizer(H, error_type=pg.Mabs, max_residual=0)).rank(G, p, sensitive=s),
         "FairPers-C": lambda G, p, s: pg.Normalize
             (pg.FairPersonalizer(H, .80, pRule_weight=10, error_type=pg.Mabs, max_residual=0)).rank(G, p, sensitive=s),
-        "FairPersKL": lambda G, p, s: pg.Normalize(pg.FairPersonalizer(H, max_residual=0)).rank(G, p, sensitive=s),
-        "FairPersKL-C": lambda G, p, s: pg.Normalize(pg.FairPersonalizer(H, .80, pRule_weight=10, max_residual=0)).rank
+        "FairPersSkew": lambda G, p, s: pg.Normalize(pg.FairPersonalizer(H, error_skewing=True, max_residual=0)).rank(G, p, sensitive=s),
+        "FairPersSkew-C": lambda G, p, s: pg.Normalize(pg.FairPersonalizer(H, .80, error_skewing=True, pRule_weight=10, max_residual=0)).rank
             (G, p, sensitive=s),
     }
     _, graph, groups = next(pg.load_datasets_multiple_communities(["bigraph"]))
@@ -18,6 +18,29 @@ def test_fair_personalizer():
     for algorithm in algorithms.values():
         ranks = algorithm(graph, labels, sensitive)
         assert pg.pRule(sensitive)(ranks) > 0.79  # allow a leeway for generalization capabilities compared to 80%
+
+
+def test_fair_personalizer_mistreatment():
+    H = pg.PageRank(assume_immutability=True, normalization="symmetric")
+    algorithms = {
+        "Base": lambda G, p, s: H.rank(G, p),
+        "FairPers": lambda G, p, s: pg.Normalize(pg.FairPersonalizer(H, parity_type="mistreatment",
+                                                                     pRule_weight=10)).rank(G, p, sensitive=s)
+    }
+    mistreatment = lambda known_scores, sensitive_signal, exclude: \
+        pg.AM([pg.Disparity([pg.TPR(known_scores, exclude=1 - (1 - exclude.np) * sensitive_signal.np),
+                             pg.TPR(known_scores, exclude=1 - (1 - exclude.np) * (1 - sensitive_signal.np))]),
+               pg.Disparity([pg.TNR(known_scores, exclude=1 - (1 - exclude.np) * sensitive_signal.np),
+                             pg.TNR(known_scores, exclude=1 - (1 - exclude.np) * (1 - sensitive_signal.np))])])
+    _, graph, groups = next(pg.load_datasets_multiple_communities(["synthfeats"]))
+    labels = pg.to_signal(graph, groups[0])
+    sensitive = pg.to_signal(graph, groups[1])
+    train, test = pg.split(labels)
+    # TODO: maybe try to exceed 0.8 fairness on this dataset (instead of marginal improvement to just over 0.08)
+    assert mistreatment(test, sensitive, train)(algorithms["Base"](graph, train, sensitive)) \
+            < mistreatment(test, sensitive, train)(algorithms["FairPers"](graph, train, sensitive))
+    #for algorithm in algorithms.values():
+        #print(mistreatment(test, sensitive, train)(algorithm(graph, train, sensitive)))
 
 
 def test_fair_heuristics():
@@ -33,7 +56,7 @@ def test_fair_heuristics():
     sensitive = pg.to_signal(graph, groups[1])
     for algorithm in algorithms.values():
         ranks = algorithm(graph, labels, sensitive)
-        assert pg.pRule(sensitive)(ranks) > 0.6  #  TODO: Check why this fairwalk fails that much and increase the limit.
+        assert pg.pRule(sensitive)(ranks) > 0.6  # TODO: Check why fairwalk fails by that much and increase the limit.
     sensitive = 1 - sensitive.np
     for algorithm in algorithms.values():
         ranks = algorithm(graph, labels, sensitive)

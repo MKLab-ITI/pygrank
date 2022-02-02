@@ -144,88 +144,7 @@ class FairPersonalizer(Postprocessor):
         return self.ranker.rank(G, optimal_personalization, *args, **kwargs)
 
     def _reference(self):
-        return "fair prior editing \\cite{krasanakis2020prioredit}"
-
-
-class FairTradeoff(Postprocessor):
-    """
-    A personalization editing scheme that aims to edit graph signal priors (i.e. personalization) to produce
-    disparate
-    """
-
-    def __init__(self,
-                 ranker: NodeRanking,
-                 target_pRule: float = 1,
-                 retain_rank_weight: float = 1,
-                 pRule_weight: float = 1,
-                 error_type: Supervised = Mabs):
-        """
-        Instantiates a personalization editing scheme that trains towards optimizing
-        retain_rank_weight*error_type(original scores, editing-induced scores)
-            + pRule_weight*min(induced score pRule, target_pRule)
-
-        Args:
-            ranker: The base ranking algorithm.
-            target_pRule: Up to which value should pRule be improved. pRule values greater than this are not penalized
-                further.
-            retain_rank_weight: Can be used to penalize deviations from original posteriors due to editing.
-                Use the default value 1 unless there is a specific reason to scale the error. Higher values
-                correspond to tighter maintenance of original posteriors, but may not improve fairness as much.
-            pRule_weight: Can be used to penalize low pRule values. Either use the default value 1 or, if you want to
-                place most emphasis on pRule maximization (instead of trading-off between fairness and posterior
-                preservation) 10 is a good empirical starting point.
-            error_type: The supervised measure used to penalize deviations from original posterior scores.
-                pygrank.KLDivergence (default) uses is used in [krasanakis2020prioredit]. pygrank.Error is used by
-                the earlier [krasanakis2020fairconstr]. The latter does not induce fairness as well on average,
-                but is sometimes better for specific graphs.
-        """
-        super().__init__(ranker)
-        self.target_pRule = target_pRule
-        self.retain_rank_weight = retain_rank_weight
-        self.pRule_weight = pRule_weight
-        self.error_type = error_type
-
-    def __prule_loss(self,
-                     ranks: GraphSignal,
-                     original_ranks: GraphSignal) -> object:
-        prule = self.pRule(ranks)
-        ranks = ranks.np / backend.max(ranks.np)
-        original_ranks = original_ranks.np / backend.max(original_ranks.np)
-        error = self.error_type(original_ranks)
-        return -self.retain_rank_weight * error(ranks) * error.best_direction() - self.pRule_weight * min(self.target_pRule, prule)
-
-    def rank(self,
-             G: GraphSignalGraph,
-             personalization: GraphSignalData,
-             sensitive: GraphSignalData, *args, **kwargs):
-        personalization = to_signal(G, personalization)
-        G = personalization.graph
-        self.pRule = pRule(sensitive)
-        sensitive, personalization = self.pRule.to_numpy(personalization)
-        ranks = self.ranker.rank(G, personalization, sensitive=sensitive, *args, **kwargs)
-        sensitive_ranks = self.ranker.rank(G, sensitive, sensitive=sensitive, *args, **kwargs)
-        invert_ranks = self.ranker.rank(G, backend.max(ranks.np)-ranks.np, sensitive=sensitive,  *args, **kwargs)
-        non_sensitive_ranks = self.ranker.rank(G, 1-sensitive, sensitive=sensitive,  *args, **kwargs)
-
-        def loss(params):
-            if params[0] == 0:
-                return float('inf')
-            fair_pers = personalization + params[0]*ranks.np  + params[1]*invert_ranks.np + params[2]*sensitive_ranks.np + params[3]*non_sensitive_ranks.np
-            fair_ranks = self.ranker.rank(G, personalization=fair_pers, *args, **kwargs)
-            return self.__prule_loss(to_signal(G, fair_ranks), ranks)
-
-        optimal_params = optimize(loss,
-                                  max_vals=[1, 1, 1, 1, 1],
-                                  min_vals=[0, 0, 0, 0, 0],
-                                  deviation_tol=1.E-2,
-                                  divide_range=2,
-                                  partitions=5,
-                                  depth=2)
-        optimal_personalization = personalization + optimal_params[0]*ranks.np + optimal_params[0]*invert_ranks.np + optimal_params[2]*sensitive_ranks.np + optimal_params[3]*non_sensitive_ranks.np
-        return self.ranker.rank(G, optimal_personalization, *args, **kwargs)
-
-    def _reference(self):
-        return "fair prior editing \\cite{krasanakis2020prioredit}"
+        return "fair prior editing \\cite{krasanakis2020prioredit} for disparate "+self.parity_type+" mitigation"
 
 
 class AdHocFairness(Postprocessor):
@@ -272,7 +191,7 @@ class AdHocFairness(Postprocessor):
     def _transform(self, ranks: GraphSignal, sensitive: GraphSignal):
         sensitive = to_signal(ranks, sensitive)
         phi = sum(sensitive.values())/len(ranks)
-        if self.method == "O":
+        if self.method == "O" or self.method == "LFPRO":
             ranks = Normalize("sum").transform(ranks)
             sumR = sum(ranks[v] * sensitive.get(v, 0) for v in ranks)
             sumB = sum(ranks[v] * (1 - sensitive.get(v, 0)) for v in ranks)
@@ -284,7 +203,7 @@ class AdHocFairness(Postprocessor):
             elif sumB < 1-phi:
                 red = self.__distribute(1-phi - sumB, ranks, {v: sensitive.get(v, 0) for v in ranks})
                 ranks = {v: red.get(v, ranks[v] + (1-phi - sumB) / numB) for v in ranks}
-        elif self.method == "B":
+        elif self.method == "B" or self.method == "mult":
             sumR = sum(ranks[v]*sensitive.get(v, 0) for v in ranks)
             sumB = sum(ranks[v]*(1-sensitive.get(v, 0)) for v in ranks)
             sum_total = sumR + sumB
@@ -296,7 +215,8 @@ class AdHocFairness(Postprocessor):
         return ranks
 
     def _reference(self):
-        return "LFPRO fairness \\cite{tsioutsiouliklis2020fairness}" if self.method == "O" else "multiplicative fairness \\cite{tsioutsiouliklis2020fairness}"
+        return "LFPRO fairness \\cite{tsioutsiouliklis2020fairness}" if self.method == "O" or self.method == "LFPRO"\
+            else "multiplicative fairness \\cite{tsioutsiouliklis2020fairness}"
 
 
 class FairWalk(Postprocessor):
