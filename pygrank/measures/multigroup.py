@@ -1,8 +1,8 @@
 import numpy as np
 import warnings
 
-from pygrank.measures.unsupervised import Unsupervised
 from pygrank.measures import AUC
+from pygrank.core import backend
 
 
 def _cos_similarity(v, u, scores):
@@ -15,9 +15,7 @@ def _cos_similarity(v, u, scores):
         l2u += ui * ui
         l2v += vi * vi
         dot = ui * vi
-    if l2u == 0 or l2v == 0:
-        return 0
-    return dot / np.sqrt(l2u * l2v)
+    return backend.safe_div(dot, np.sqrt(l2u * l2v))
 
 
 def _dot_similarity(v, u, scores):
@@ -53,8 +51,8 @@ class LinkAssessment:
         self.hops = hops
         self.seed = seed
         self.measure = measure
-        if self.G.is_directed():
-            warnings.warn("LinkAUC is designed for undirected graphs", stacklevel=2)
+        if self.G.is_directed():   # pragma: no cover
+            warnings.warn("LinkAssessment is designed for undirected graphs", stacklevel=2)
         if similarity == "cos":
             similarity = _cos_similarity
         elif similarity == "dot":
@@ -106,7 +104,7 @@ class ClusteringCoefficient:
         self.G = G
         self.max_positive_samples = max_positive_samples
         self.seed = seed
-        if self.G.is_directed():
+        if self.G.is_directed():   # pragma: no cover
             warnings.warn("ClusteringCoefficient is designed for undirected graphs", stacklevel=2)
         if similarity == "cos":
             similarity = _cos_similarity

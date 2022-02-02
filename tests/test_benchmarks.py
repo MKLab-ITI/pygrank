@@ -50,13 +50,13 @@ def test_unsupervised_vs_auc():
     measures = {"AUC": lambda ground_truth, exlude: pg.MultiSupervised(pg.AUC, ground_truth, exlude),
                 "NDCG": lambda ground_truth, exlude: pg.MultiSupervised(pg.NDCG, ground_truth, exlude),
                 "Density": lambda graph: pg.MultiUnsupervised(pg.Density, graph),
-                "Modularity": lambda graph: pg.MultiUnsupervised(pg.Modularity, graph, max_positive_samples=8),
-                "CCcos": lambda graph: pg.ClusteringCoefficient(graph, similarity="cos"),
-                "CCdot": lambda graph: pg.ClusteringCoefficient(graph, similarity="dot"),
-                "LinkAUCcos": lambda graph: pg.LinkAssessment(graph, similarity="cos"),
-                "LinkAUCdot": lambda graph: pg.LinkAssessment(graph, similarity="dot"),
-                "HopAUCcos": lambda graph: pg.LinkAssessment(graph, similarity="cos", hops=2),
-                "HopAUCdot": lambda graph: pg.LinkAssessment(graph, similarity="dot", hops=2),
+                "Modularity": lambda graph: pg.MultiUnsupervised(pg.Modularity, graph),
+                "CCcos": lambda graph: pg.ClusteringCoefficient(graph, similarity="cos", max_positive_samples=5),
+                "CCdot": lambda graph: pg.ClusteringCoefficient(graph, similarity="dot", max_positive_samples=5),
+                "LinkAUCcos": lambda graph: pg.LinkAssessment(graph, similarity="cos", max_positive_samples=5),
+                "LinkAUCdot": lambda graph: pg.LinkAssessment(graph, similarity="dot", max_positive_samples=5),
+                "HopAUCcos": lambda graph: pg.LinkAssessment(graph, similarity="cos", hops=2, max_positive_samples=5),
+                "HopAUCdot": lambda graph: pg.LinkAssessment(graph, similarity="dot", hops=2, max_positive_samples=5),
                 }
 
     scores = {measure: pg.benchmark_scores(pg.benchmark(algorithms, loader(), measures[measure]))
@@ -65,8 +65,8 @@ def test_unsupervised_vs_auc():
     evaluations = dict()
     for measure in measures:
         evaluations[measure] = abs(pg.SpearmanCorrelation(scores["AUC"])(scores[measure]))
-    for measure in measures:
-        print(measure, evaluations[measure])
+    #for measure in measures:
+    #    print(measure, evaluations[measure])
     assert max([evaluations[measure] for measure in measures if measure not in supervised]) == evaluations["LinkAUCdot"]
 
 

@@ -24,7 +24,11 @@ def test_fair_personalizer_mistreatment():
     H = pg.PageRank(assume_immutability=True, normalization="symmetric")
     algorithms = {
         "Base": lambda G, p, s: H.rank(G, p),
-        "FairPers": lambda G, p, s: pg.Normalize(pg.FairPersonalizer(H, parity_type="mistreatment",
+        "FairPersMistreat": lambda G, p, s: pg.Normalize(pg.FairPersonalizer(H, parity_type="mistreatment",
+                                                                     pRule_weight=10)).rank(G, p, sensitive=s),
+        "FairPersTPR": lambda G, p, s: pg.Normalize(pg.FairPersonalizer(H, parity_type="TPR",
+                                                                     pRule_weight=10)).rank(G, p, sensitive=s),
+        "FairPersTNR": lambda G, p, s: pg.Normalize(pg.FairPersonalizer(H, parity_type="TNR",
                                                                      pRule_weight=10)).rank(G, p, sensitive=s)
     }
     mistreatment = lambda known_scores, sensitive_signal, exclude: \
@@ -37,8 +41,10 @@ def test_fair_personalizer_mistreatment():
     sensitive = pg.to_signal(graph, groups[1])
     train, test = pg.split(labels)
     # TODO: maybe try to exceed 0.8 fairness on this dataset (instead of marginal improvement to just over 0.08)
-    assert mistreatment(test, sensitive, train)(algorithms["Base"](graph, train, sensitive)) \
-            < mistreatment(test, sensitive, train)(algorithms["FairPers"](graph, train, sensitive))
+    base_mistreatment = mistreatment(test, sensitive, train)(algorithms["Base"](graph, train, sensitive))
+    for algorithm in algorithms.values():
+        if algorithm != algorithms["Base"]:
+            assert base_mistreatment < mistreatment(test, sensitive, train)(algorithm(graph, train, sensitive))
     #for algorithm in algorithms.values():
         #print(mistreatment(test, sensitive, train)(algorithm(graph, train, sensitive)))
 
@@ -63,7 +69,7 @@ def test_fair_heuristics():
         assert pg.pRule(sensitive)(ranks) > 0.6
 
 
-def test_fairwalk_invalid():
+def test_invalid_fairness_arguments():
     _, graph, groups = next(pg.load_datasets_multiple_communities(["bigraph"]))
     labels = pg.to_signal(graph, groups[0])
     sensitive = pg.to_signal(graph, groups[1])
@@ -71,5 +77,7 @@ def test_fairwalk_invalid():
     with pytest.raises(Exception):
         # this tests that a deprecated way of applying fairwalk actually raises an exception
         pg.AdHocFairness(H, method="FairWalk").rank(graph, labels, sensitive=sensitive)
+    with pytest.raises(Exception):
+        pg.FairPersonalizer(H, parity_type="universal").rank(graph, labels, sensitive=sensitive)
     with pytest.raises(Exception):
         pg.FairWalk(None).transform(H.rank(graph, labels), sensitive=sensitive)

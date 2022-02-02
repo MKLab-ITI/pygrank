@@ -32,10 +32,10 @@ def test_gnn_errors():
         pg.gnn_train(model, graph, features, labels, training, validation, test=test, epochs=2)
     pg.load_backend('tensorflow')
     pg.gnn_train(model, graph, features, labels, training, validation, test=test, epochs=300, patience=2)
+    predictions = model([graph, features])
     pg.load_backend('numpy')
     with pytest.raises(Exception):
-        pg.gnn_accuracy(labels, model([graph, features]), test)
-
+        pg.gnn_accuracy(labels, predictions, test)
 
 
 def test_appnp_tf():
@@ -101,7 +101,7 @@ def test_appnp_torch():
     pg.load_backend('pytorch')
     model = AutotuneAPPNP(features.shape[1], labels.shape[1])
     model.apply(init_weights)
-    pg.gnn_train(model, graph, features, labels, training, validation, epochs=50)
+    pg.gnn_train(model, graph, features, labels, training, validation, epochs=50, patience=2)
     # TODO: higher numbers fail only on github actions - for local tests it is fine
     assert float(pg.gnn_accuracy(labels, model([graph, features]), test)) >= 0.2
     pg.load_backend('numpy')

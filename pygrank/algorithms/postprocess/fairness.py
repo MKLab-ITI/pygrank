@@ -108,7 +108,6 @@ class FairPersonalizer(Postprocessor):
              sensitive: GraphSignalData, *args, **kwargs):
         personalization = to_signal(G, personalization)
         G = personalization.graph
-        #self.pRule = pRule(sensitive)
         if self.parity_type == "impact":
             self.pRule = pRule(sensitive)
         elif self.parity_type == "TPR":
