@@ -15,6 +15,16 @@ class Measure(object):
     def best_direction(self):
         return 1  # TODO: automatically detect unsupervised direction
 
+    def as_supervised_method(self):
+        def dummy_constructor(dummy_truth, dummy_exclude=None):
+            return self
+        return dummy_constructor
+
+    def as_unsupervised_method(self):
+        def dummy_constructor(graph=None):
+            return self
+        return dummy_constructor
+
 
 def split(groups: Union[GraphSignalData, Mapping[str, GraphSignalData]],
           training_samples: float = 0.8,

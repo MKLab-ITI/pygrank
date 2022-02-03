@@ -50,7 +50,7 @@ def test_unsupervised_vs_auc():
     measures = {"AUC": lambda ground_truth, exlude: pg.MultiSupervised(pg.AUC, ground_truth, exlude),
                 "NDCG": lambda ground_truth, exlude: pg.MultiSupervised(pg.NDCG, ground_truth, exlude),
                 "Density": lambda graph: pg.MultiUnsupervised(pg.Density, graph),
-                "Modularity": lambda graph: pg.MultiUnsupervised(pg.Modularity, graph),
+                "Modularity": lambda graph: pg.MultiUnsupervised(pg.Modularity(max_positive_samples=5).as_unsupervised_method(), graph),
                 "CCcos": lambda graph: pg.ClusteringCoefficient(graph, similarity="cos", max_positive_samples=5),
                 "CCdot": lambda graph: pg.ClusteringCoefficient(graph, similarity="dot", max_positive_samples=5),
                 "LinkAUCcos": lambda graph: pg.LinkAssessment(graph, similarity="cos", max_positive_samples=5),

@@ -118,4 +118,3 @@ def test_remove_edges():
     assert graph.has_edge("B", "C")
     assert not graph.has_edge("A", "B")
     assert not graph.has_edge("C", "D")
-

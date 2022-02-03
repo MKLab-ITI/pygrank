@@ -6,10 +6,7 @@ from pygrank.core import backend, GraphSignalGraph, GraphSignalData, BackendPrim
 
 
 class Unsupervised(Measure):
-    def as_supervised_method(self):
-        def dummy_constructor(dummy_truth, dummy_exclude=None):
-            return self
-        return dummy_constructor
+    pass
 
 
 class Conductance(Unsupervised):
@@ -48,8 +45,7 @@ class Conductance(Unsupervised):
             raise Exception("Normalize scores to be <= " + str(self.max_rank) + " for non-negative conductance")
         external_edges = sum(scores.get(i, 0)*(self.max_rank-scores.get(j, 0)) for i, j in graph.edges())
         internal_edges = sum(scores.get(i, 0)*scores.get(j, 0) for i, j in graph.edges())
-        if internal_edges > graph.number_of_edges()/2:
-            internal_edges = graph.number_of_edges()-internal_edges # user the smallest partition as reference
+        internal_edges = min(internal_edges, graph.number_of_edges()-internal_edges)  # use the smallest partition as reference
         if not graph.is_directed():
             external_edges += sum(scores.get(j, 0) * (self.max_rank - scores.get(i, 0)) for i, j in graph.edges())
             internal_edges *= 2
