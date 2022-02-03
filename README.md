@@ -20,8 +20,8 @@ The following roadmap overviews short-term development goals and will be updated
 :heavy_check_mark: Graph neural network support with dropout, renormalization and tensorflow backend (achieved as of 0.2.3)<br>
 :heavy_check_mark: Pytorch backend (achieved as of 0.2.4)<br>
 :heavy_check_mark: Pytorch gnns (achieved as of 0.2.7)<br>
-:x: 100% code coverage<br>
-:x: 100% documentation completeness<br>
+:heavy_check_mark: 100% code coverage (achieved as of 0.2.7)<br>
+:x: 100% documentation completeness (partially achieved as of 0.2.7)<br>
 :x: Automatic download for all related publication datasets ([downloadable datasets](documentation/datasets.md))<br>
 :heavy_check_mark: Automated citation discovery for algorithms (achieved as of 0.2.5 with `NodeRanking.cite()`)<br>
 :heavy_check_mark: Enable Arnoldi and Lanczos optimizations in non-numpy backends (achieved as of 0.2.5)<br>
