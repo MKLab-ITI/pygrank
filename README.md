@@ -10,7 +10,7 @@ Fast recommendation algorithms for large graphs based on link analysis.
 <br>*Externally install tensorflow and torch. Tests pass on the versions above.*
 
 ![build](https://github.com/MKLab-ITI/pygrank/actions/workflows/tests.yml/badge.svg)
-[![codecov](https://codecov.io/gh/MKLab-ITI/pygrank/branch/master/graph/badge.svg?token=OWGHRGDYOP)](https://codecov.io/gh/maniospas/pygrank)
+[![codecov](https://codecov.io/gh/MKLab-ITI/pygrank/branch/master/graph/badge.svg?token=RYZOT4UY8Q)](https://codecov.io/gh/MKLab-ITI/pygrank)
 [![Downloads](https://static.pepy.tech/personalized-badge/pygrank?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads)](https://pepy.tech/project/pygrank)
 
 # :tent: Roadmap for 0.2.X
