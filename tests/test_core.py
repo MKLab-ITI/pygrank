@@ -30,6 +30,17 @@ def test_primitive_conversion():
         assert id(primitive) != id(pg.to_array(primitive, copy_array=True))
 
 
+def test_separate_and_combine():
+    for _ in supported_backends():
+        table = pg.to_primitive([[1, 2, 3], [4, 5, 6]])
+        cols = pg.separate_cols(table)
+        assert len(cols) == 3
+        for col in cols:
+            assert pg.length(col) == 2
+        new_table = pg.combine_cols(cols)
+        assert pg.sum(pg.abs(table-new_table)) == 0
+
+
 def test_signal_init():
     for backend in supported_backends():
         with pytest.raises(Exception):
