@@ -24,10 +24,10 @@ def test_algorithm_selection():
         train, test = pg.split(communities, 0.05)  # 5% of community members are known
         algorithms = pg.create_variations(pg.create_demo_filters(), pg.Normalize)
 
-        supervised_algorithm = pg.AlgorithmSelection(algorithms.values(), measure=pg.AUC)
+        supervised_algorithm = pg.AlgorithmSelection(algorithms.values(), measure=pg.AUC, tuning_backend="numpy")
         print(supervised_algorithm.cite())
         modularity_algorithm = pg.AlgorithmSelection(algorithms.values(), fraction_of_training=1,
-                                                     measure=pg.Modularity().as_supervised_method())
+                                                     measure=pg.Modularity().as_supervised_method(), tuning_backend="numpy")
 
         supervised_aucs = list()
         modularity_aucs = list()

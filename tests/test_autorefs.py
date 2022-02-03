@@ -40,6 +40,39 @@ def test_filter_citations():
     assert pg.HeatKernel(optimization_dict=dict()).cite() != pg.HeatKernel(optimization_dict=None).cite()
 
 
+def test_explicit_citations():
+    assert "unknown node ranking algorithm" == pg.NodeRanking().cite()
+    assert "with parameters tuned \cite{krasanakis2021pygrank}" in pg.ParameterTuner(
+        lambda params: pg.PageRank(params[0])).cite()
+    assert "Postprocessor" in pg.Postprocessor().cite()
+    assert pg.PageRank().cite() in pg.AlgorithmSelection().cite()
+    assert "krasanakis2021pygrank" in pg.ParameterTuner().cite()
+    assert "ortega2018graph" in pg.ParameterTuner().cite()
+    assert pg.HeatKernel().cite() in pg.SeedOversampling(pg.HeatKernel()).cite()
+    assert pg.AbsorbingWalks().cite() in pg.BoostedSeedOversampling(pg.AbsorbingWalks()).cite()
+    assert "krasanakis2018venuerank" in pg.BiasedKernel(converge_to_eigenvectors=True).cite()
+    assert "yu2021chebyshev" in pg.HeatKernel(coefficient_type="chebyshev").cite()
+    assert "susnjara2015accelerated" in pg.HeatKernel(krylov_dims=5).cite()
+    assert "krasanakis2021pygrank" in pg.GenericGraphFilter(optimization_dict=dict()).cite()
+    assert "tautology" in pg.Tautology().cite()
+    assert pg.PageRank().cite() == pg.Tautology(pg.PageRank()).cite()
+    assert "mabs" in pg.MabsMaintain(pg.PageRank()).cite()
+    assert "max normalization" in pg.Normalize(pg.PageRank()).cite()
+    assert "[0,1] range" in pg.Normalize(pg.PageRank(), "range").cite()
+    assert "ordinal" in pg.Ordinals(pg.PageRank()).cite()
+    assert "exp" in pg.Transformer(pg.PageRank()).cite()
+    assert "0.5" in pg.Threshold(pg.PageRank(), 0.5).cite()
+    assert "andersen2007local" in pg.Sweep(pg.PageRank()).cite()
+    assert pg.HeatKernel().cite() in pg.Sweep(pg.PageRank(), pg.HeatKernel()).cite()
+    assert "LFPRO" in pg.AdHocFairness("O").cite()
+    assert "LFPRO" in pg.AdHocFairness(pg.PageRank(), "LFPRO").cite()
+    assert "multiplicative" in pg.AdHocFairness(pg.PageRank(), "B").cite()
+    assert "multiplicative" in pg.AdHocFairness(pg.PageRank(), "mult").cite()
+    assert "tsioutsiouliklis2020fairness" in pg.AdHocFairness().cite()
+    assert "rahman2019fairwalk" in pg.FairWalk(pg.PageRank()).cite()
+    assert "krasanakis2020prioredit" in pg.FairPersonalizer(pg.PageRank()).cite()
+
+
 def test_postprocessor_citations():
     assert pg.Tautology(pg.PageRank()).cite() == pg.PageRank().cite()
     assert pg.Normalize(pg.PageRank()).cite() != pg.PageRank().cite()
@@ -56,4 +89,3 @@ def test_postprocessor_citations():
            != pg.BoostedSeedOversampling(pg.PageRank(), objective="naive").cite()
     assert pg.BoostedSeedOversampling(pg.PageRank(), oversample_from_iteration="previous").cite() \
            != pg.BoostedSeedOversampling(pg.PageRank(), oversample_from_iteration="original").cite()
-    # TODO: add fairness citation tests
