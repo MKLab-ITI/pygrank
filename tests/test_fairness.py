@@ -24,12 +24,9 @@ def test_fair_personalizer_mistreatment():
     H = pg.PageRank(assume_immutability=True, normalization="symmetric")
     algorithms = {
         "Base": lambda G, p, s: H.rank(G, p),
-        "FairPersMistreat": lambda G, p, s: pg.Normalize(pg.FairPersonalizer(H, parity_type="mistreatment",
-                                                                     pRule_weight=10)).rank(G, p, sensitive=s),
-        "FairPersTPR": lambda G, p, s: pg.Normalize(pg.FairPersonalizer(H, parity_type="TPR",
-                                                                     pRule_weight=10)).rank(G, p, sensitive=s),
-        "FairPersTNR": lambda G, p, s: pg.Normalize(pg.FairPersonalizer(H, parity_type="TNR",
-                                                                     pRule_weight=10)).rank(G, p, sensitive=s)
+        "FairPersMistreat": pg.Normalize(pg.FairPersonalizer(H, parity_type="mistreatment", pRule_weight=10)),
+        "FairPersTPR": pg.Normalize(pg.FairPersonalizer(H, parity_type="TPR", pRule_weight=10)),
+        "FairPersTNR": pg.Normalize(pg.FairPersonalizer(H, parity_type="TNR", pRule_weight=-1))  # TNR optimization increases mistreatment for this example
     }
     mistreatment = lambda known_scores, sensitive_signal, exclude: \
         pg.AM([pg.Disparity([pg.TPR(known_scores, exclude=1 - (1 - exclude.np) * sensitive_signal.np),
@@ -44,6 +41,7 @@ def test_fair_personalizer_mistreatment():
     base_mistreatment = mistreatment(test, sensitive, train)(algorithms["Base"](graph, train, sensitive))
     for algorithm in algorithms.values():
         if algorithm != algorithms["Base"]:
+            print(algorithm.cite())
             assert base_mistreatment < mistreatment(test, sensitive, train)(algorithm(graph, train, sensitive))
     #for algorithm in algorithms.values():
         #print(mistreatment(test, sensitive, train)(algorithm(graph, train, sensitive)))
