@@ -63,7 +63,7 @@ def test_krylov_space_oversampling():
         personalization = {node: 1. for node in list(community)[:10]}
         oversampling = pg.SeedOversampling(algorithm)
         measure = pg.Conductance()
-        assert measure(pg.Normalize(algorithm)(graph, personalization)) >= measure(pg.Normalize(oversampling)(graph, personalization))
+        assert measure(pg.Normalize(algorithm)(graph, personalization)) >= measure(pg.Normalize(oversampling)(graph, personalization)) - 5.E-6
 
 
 def test_lanczos_speedup():

@@ -120,6 +120,14 @@ def test_all_communities_benchmarks():
     loader = pg.load_datasets_all_communities(datasets, min_group_size=50)
     pg.benchmark_print(pg.benchmark(algorithms | tuned, loader, pg.Modularity, sensitive=pg.pRule, fraction_of_training=.8, seed=list(range(1))),
                        decimals=3, delimiter=" & ", end_line="\\\\")
+    mistreatment = lambda known_scores, sensitive_signal, exclude: \
+        pg.AM([pg.Disparity([pg.TPR(known_scores, exclude=1 - (1 - exclude.np) * sensitive_signal.np),
+                             pg.TPR(known_scores, exclude=1 - (1 - exclude.np) * (1 - sensitive_signal.np))]),
+               pg.Disparity([pg.TNR(known_scores, exclude=1 - (1 - exclude.np) * sensitive_signal.np),
+                             pg.TNR(known_scores, exclude=1 - (1 - exclude.np) * (1 - sensitive_signal.np))])])
+    loader = pg.load_datasets_all_communities(datasets, min_group_size=50)
+    pg.benchmark_print(pg.benchmark(algorithms | tuned, loader, pg.Modularity, sensitive=mistreatment, fraction_of_training=.8, seed=list(range(1))),
+                       decimals=3, delimiter=" & ", end_line="\\\\")
 
 
 def test_multigroup_benchmarks():
