@@ -1,7 +1,5 @@
+from pygrank.core.utils.preprocessing import *
 import inspect
-from pygrank.algorithms.utils.convergence import *
-from pygrank.algorithms.utils.preprocessing import *
-from pygrank.algorithms.utils.krylov_space import *
 
 
 def call(method, kwargs, args=None):

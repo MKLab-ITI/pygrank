@@ -36,7 +36,7 @@ def test_algorithm_selection():
             supervised_aucs.append(measure(supervised_algorithm(graph, seeds)))
             modularity_aucs.append(measure(modularity_algorithm(graph, seeds)))
 
-        assert sum(supervised_aucs) / len(supervised_aucs) < sum(modularity_aucs) / len(modularity_aucs) + 0.05
+        assert sum(supervised_aucs) / len(supervised_aucs) < sum(modularity_aucs) / len(modularity_aucs) - 0.05
 
 
 def test_unsupervised_vs_auc():
@@ -50,6 +50,7 @@ def test_unsupervised_vs_auc():
     measures = {"AUC": lambda ground_truth, exlude: pg.MultiSupervised(pg.AUC, ground_truth, exlude),
                 "NDCG": lambda ground_truth, exlude: pg.MultiSupervised(pg.NDCG, ground_truth, exlude),
                 "Density": lambda graph: pg.MultiUnsupervised(pg.Density, graph),
+                "Conductance": lambda graph: pg.MultiUnsupervised(pg.Conductance(autofix=True).as_unsupervised_method(), graph),
                 "Modularity": lambda graph: pg.MultiUnsupervised(pg.Modularity(max_positive_samples=5).as_unsupervised_method(), graph),
                 "CCcos": lambda graph: pg.ClusteringCoefficient(graph, similarity="cos", max_positive_samples=5),
                 "CCdot": lambda graph: pg.ClusteringCoefficient(graph, similarity="dot", max_positive_samples=5),
@@ -59,8 +60,9 @@ def test_unsupervised_vs_auc():
                 "HopAUCdot": lambda graph: pg.LinkAssessment(graph, similarity="dot", hops=2, max_positive_samples=5),
                 }
 
-    scores = {measure: pg.benchmark_scores(pg.benchmark(algorithms, loader(), measures[measure]))
-              for measure in measures}
+    scores = {}#measure: pg.benchmark_scores(pg.benchmark(algorithms, loader(), measures[measure])) for measure in measures}
+    for measure in measures:  # do this as a for loop, because pytest becomes a little slow above list comprehension
+        scores[measure] = pg.benchmark_scores(pg.benchmark(algorithms, loader(), measures[measure]))
     supervised = {"AUC", "NDCG"}
     evaluations = dict()
     for measure in measures:
@@ -72,7 +74,7 @@ def test_unsupervised_vs_auc():
 
 def test_one_community_benchmarks():
     pg.load_backend("numpy")
-    datasets = ["graph5", "graph9", "bigraph"]
+    datasets = ["graph9", "bigraph"]
     pre = pg.preprocessor(assume_immutability=True, normalization="symmetric")
     algorithms = {
         "ppr0.85": pg.PageRank(alpha=0.85, preprocessor=pre, max_iters=10000, tol=1.E-9),

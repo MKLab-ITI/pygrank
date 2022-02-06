@@ -311,12 +311,16 @@ Args:
 Graph conductance (information flow) of scores. 
 Assumes a fuzzy set of subgraphs whose nodes are included with probability proportional to their scores, 
 as per the formulation of [krasanakis2019linkauc] and calculates E[outgoing edges] / E[internal edges] of 
-the fuzzy rank subgraph. 
+the fuzzy rank subgraph. To avoid potential optimization towards filling the whole graph, the measure is 
+evaluated to infinity if either denomator *or* the nominator is zero (this means that whole connected components 
+should not be extracted). 
 If scores assume binary values, E[.] becomes set size and this calculates the induced subgraph Conductance. The constructor initializes the Conductance measure. 
 
 Args: 
- * *graph:* Optional. The graph on which to calculate the measure. If None (default) it is automatically extracted from graph signals passed for evaluation. 
  * *max_rank:* Optional. The maximum value scores can assume. To maintain a probabilistic formulation of conductance, this can be greater but not less than the maximum rank during evaluation. Default is 1. Pass algorithms through a normalization to ensure that this limit is not violated. 
+ * *autofix:* Optional. If True, automatically normalizes scores by multiplying with max_rank / their maximum. If False (default) and the maximum score is greater than max_rank, an exception is thrown. 
+ * *graph:* Optional. The graph on which to calculate the measure. If None (default) it is automatically extracted from graph signals passed for evaluation. 
+ * *preprocessor:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor, setting no normalization. 
 
 Example:
 
@@ -326,6 +330,16 @@ graph, seed_nodes, algorithm = ...
 algorithm = pg.Normalize(algorithm) 
 scores = algorithm.rank(graph, seed_nodes) 
 conductance = pg.Conductance().evaluate(scores) 
+```
+
+
+Example (same conductance):
+
+```python 
+import pygrank as pg 
+graph, seed_nodes, algorithm = ... 
+scores = algorithm.rank(graph, seed_nodes) 
+conductance = pg.Conductance(autofix=True).evaluate(scores) 
 ```
 
 ### <kbd>Unsupervised</kbd> Density
@@ -338,6 +352,8 @@ If scores assume binary values, E[.] becomes set size and this calculates the in
 
 Args: 
  * *graph:* Optional. The graph on which to calculate the measure. If None (default) it is automatically extracted from graph signals passed for evaluation. 
+ * *graph:* Optional. The graph on which to calculate the measure. If None (default) it is automatically extracted from graph signals passed for evaluation. 
+ * *preprocessor:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor, setting no normalization. 
 
 Example:
 
@@ -357,6 +373,8 @@ Args:
  * *max_rank:* Optional. Default is 1. 
  * *max_positive_samples:* Optional. The number of nodes with which to compute modularity. These are sampled uniformly from all graph nodes. If this is greater than the number of graph nodes, all nodes are used and the measure is deterministic. However, calculation time is O(max_positive_samples<sup>2</sup>) and thus a trade-off needs to be determined of time vs approximation quality. Effectively, the value should be high enough for max_positive_samples<sup>2</sup> to be comparable to the number of graph edges. Default is 2000. 
  * *seed:* Optional. Makes the evaluation seeded, for example to use in tuning. Default is 0. 
+ * *graph:* Optional. The graph on which to calculate the measure. If None (default) it is automatically extracted from graph signals passed for evaluation. 
+ * *preprocessor:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor, setting no normalization. 
 
 Example:
 

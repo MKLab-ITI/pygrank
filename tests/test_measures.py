@@ -56,6 +56,7 @@ def test_edge_cases():
         pg.Conductance(next(pg.load_datasets_graph(["graph5"])), max_rank=0.5)([1, 1, 1, 1, 1])
     import networkx as nx
     for _ in supported_backends():
+        assert pg.Conductance(nx.Graph())([]) == float("inf")  # this is indeed correct in python
         assert pg.Density(nx.Graph())([]) == 0
         assert pg.Modularity(nx.Graph())([]) == 0
         assert pg.KLDivergence([0,1,0])([0,1,0]) == 0
@@ -81,6 +82,17 @@ def test_correlation_compliance():
     pearson_ordinals = pg.PearsonCorrelation(pg.Ordinals(alg1)(graph))(pg.Ordinals(alg2)(graph))
     spearman = pg.SpearmanCorrelation(alg1(graph))(alg2(graph))
     assert pearson_ordinals == spearman
+
+
+def test_best_direction():
+    assert pg.Conductance().best_direction() == -1
+    assert pg.Density().best_direction() == 1
+    assert pg.Modularity().best_direction() == 1
+    assert pg.AUC([1, 2, 3]).best_direction() == 1
+    assert pg.Cos([1, 2, 3]).best_direction() == 1
+    assert pg.Dot([1, 2, 3]).best_direction() == 1
+    assert pg.TPR([1, 2, 3]).best_direction() == 1
+    assert pg.TNR([1, 2, 3]).best_direction() == 1
 
 
 def test_computations():

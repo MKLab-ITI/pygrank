@@ -1,4 +1,4 @@
-from pygrank.algorithms.utils import MethodHasher, call, ensure_used_args, remove_used_args
+from pygrank.core.utils import MethodHasher, call, ensure_used_args, remove_used_args
 from pygrank.core.signals import GraphSignal, to_signal, NodeRanking
 from pygrank.core import backend, GraphSignalGraph, GraphSignalData
 from typing import Union, Optional

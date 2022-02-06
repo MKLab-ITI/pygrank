@@ -1,5 +1,5 @@
 from pygrank.core.signals import GraphSignal, to_signal, NodeRanking, GraphSignalGraph, GraphSignalData, no_signal
-from pygrank.algorithms.utils import preprocessor, ensure_used_args, remove_used_args
+from pygrank.core.utils import preprocessor, ensure_used_args, remove_used_args
 from pygrank.algorithms.autotune.optimization import optimize
 from pygrank.measures import Measure, AUC
 from pygrank.measures.utils import split

@@ -1,6 +1,6 @@
 import numpy as np
-from pygrank.core import to_signal, NodeRanking, GraphSignalGraph, GraphSignalData
-from pygrank.algorithms.utils import ConvergenceManager, assert_binary
+from pygrank.core import to_signal, NodeRanking, GraphSignalGraph, GraphSignalData, assert_binary
+from pygrank.algorithms.convergence import ConvergenceManager
 from pygrank.algorithms.postprocess.postprocess import Postprocessor
 from pygrank.measures import MaxDifference
 

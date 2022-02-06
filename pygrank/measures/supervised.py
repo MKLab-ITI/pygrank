@@ -46,14 +46,6 @@ class Supervised(Measure):
             return backend.to_array(self.known_scores), scores
 
     def best_direction(self) -> int:
-        """
-        Automatically determines if higher or lower values of the measure are better.
-        Design measures so that outcomes of this method depends **only** on their class,
-        as it follows a class-based hashing to guarantee speed. Otherwise override th
-
-        Returns:
-            1 if higher values of the measure are better, -1 otherwise.
-        """
         ret = getattr(self.__class__, "__best_direction", None)
         if ret is None:
             ret = 1 if self.__class__([1, 0])([1, 0]) > self.__class__([1, 0])([0, 1]) else -1

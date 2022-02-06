@@ -1,11 +1,12 @@
-from pygrank.core.signals import GraphSignal, to_signal, NodeRanking
-from pygrank.algorithms.utils import ensure_used_args, arnoldi_iteration
-from pygrank.measures import Supervised, Cos, AUC
-from typing import Callable, Optional
 from pygrank.core import backend
+from pygrank.core.signals import GraphSignal, to_signal, NodeRanking
+from pygrank.core.utils import ensure_used_args
+from pygrank.measures import Supervised, Cos, AUC
+from pygrank.measures.utils import split
+from typing import Callable, Optional
+from pygrank.algorithms.filters.krylov_space import arnoldi_iteration
 from pygrank.algorithms.autotune.tuning import Tuner, SelfClearDict
 from pygrank.algorithms.autotune.optimization import optimize
-from pygrank.measures.utils import split
 from pygrank.algorithms.postprocess.postprocess import Tautology
 
 

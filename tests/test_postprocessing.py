@@ -105,9 +105,9 @@ def test_sweep():
 
 
 def test_threshold():
-    _, graph, group = next(pg.load_datasets_one_community(["graph9"]))
+    _, graph, group = next(pg.load_datasets_one_community(["bigraph"]))
     for _ in supported_backends():
         training, evaluation = pg.split(list(group), training_samples=0.5)
         cond1 = pg.Conductance().evaluate(pg.Threshold(pg.Sweep(pg.PageRank())).rank(graph, {v: 1 for v in training}))
-        cond2 = pg.Conductance().evaluate(pg.Threshold("gap").transform(pg.PageRank().rank(graph, {v: 1 for v in training}))) # try both api types
+        cond2 = pg.Conductance().evaluate(pg.Threshold("gap").transform(pg.PageRank().rank(graph, {v: 1 for v in training}))) # try all api types
         assert cond1 <= cond2

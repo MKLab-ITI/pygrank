@@ -1,10 +1,11 @@
 from pygrank.core import to_signal, NodeRanking, GraphSignalGraph, GraphSignalData, BackendGraph, BackendPrimitive, GraphSignal
-from pygrank.algorithms.utils import call, ensure_used_args
-from pygrank.algorithms.utils import preprocessor as default_preprocessor, ConvergenceManager, obj2id
-from pygrank.algorithms.utils import krylov_base, krylov2original, krylov_error_bound
+from pygrank.core.utils import call, ensure_used_args
+from pygrank.core.utils import preprocessor as default_preprocessor, obj2id
 from pygrank.core import backend
+from pygrank.algorithms.convergence import ConvergenceManager
+from pygrank.algorithms.filters.krylov_space import krylov_base, krylov2original, krylov_error_bound
 from pygrank.algorithms.postprocess import Postprocessor, Tautology
-from typing import Union, Optional
+from typing import Union
 
 
 class GraphFilter(NodeRanking):

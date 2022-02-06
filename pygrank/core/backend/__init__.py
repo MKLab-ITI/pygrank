@@ -8,9 +8,9 @@ from pygrank.core.backend.specification import *
 _imported_mods = dict()
 
 
-def safe_div(nom, denom):
+def safe_div(nom, denom, default=0):
     if denom == 0:
-        return nom
+        return default
     return nom / denom
 
 
