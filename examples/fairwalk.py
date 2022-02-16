@@ -19,8 +19,8 @@ for name, filter in filters.items():
                   "Mult": pg.AdHocFairness(filter, "B"),
                   "LFPRO": pg.AdHocFairness(filter, "O"),
                   #"FBuck-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=1, error_type=pg.Mabs, parameter_buckets=0),
-                  "FPers-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=0, error_type=pg.Mabs, error_skewing=True, parity_type="impact"),
-                  "Fest-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=1, error_type=pg.Mabs, error_skewing=False, parameter_buckets=1, parity_type="impact")
+                  "FPers-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=0, error_type=pg.Mabs, error_skewing=True, parity_type="mistreatment"),
+                  "Fest-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=1, error_type=pg.Mabs, error_skewing=False, parity_type="mistreatment")
                   #"FFfix-C": pg.FairTradeoff(filter, .8, pRule_weight=10, error_type=pg.Mabs)
                   #"FairTf": pg.FairnessTf(filter)
                  }
@@ -29,13 +29,10 @@ for name, filter in filters.items():
     #import cProfile as profile
     #pr = profile.Profile()
     #pr.enable()
-    mistreatment = lambda known_scores, sensitive_signal, exclude: \
-        pg.AM([pg.Disparity([pg.TPR(known_scores, exclude=1-(1-exclude.np)*sensitive_signal.np),
-                             pg.TPR(known_scores, exclude=1-(1-exclude.np)*(1-sensitive_signal.np))]),
-               pg.Disparity([pg.TNR(known_scores, exclude=1 - (1 - exclude.np) * sensitive_signal.np),
-                             pg.TNR(known_scores, exclude=1 - (1 - exclude.np) * (1 - sensitive_signal.np))])])
-    pg.benchmark_print(pg.benchmark(algorithms, pg.load_datasets_multiple_communities(datasets, max_group_number=2),
-                                    metric=pg.AUC, sensitive=pg.pRule, fraction_of_training=seed_fractions),
+
+    mistreatment = lambda *args: pg.AM([pg.Mistreatment(*args, pg.TPR), pg.Mistreatment(*args, pg.TNR)])
+    pg.benchmark_print(pg.benchmark(algorithms, pg.load_datasets_all_communities(datasets, max_group_number=2),
+                                    metric=pg.AUC, sensitive=mistreatment, fraction_of_training=seed_fractions),
                        delimiter=" & ", end_line="\\\\")
 
     #pr.disable()

@@ -3,6 +3,7 @@ import sklearn.metrics
 import scipy
 from pygrank.measures.utils import Measure
 from pygrank.core import backend, GraphSignal, to_signal, GraphSignalData, BackendPrimitive
+from pygrank.measures.combination import Parity
 import numbers
 from typing import Tuple, Union
 
@@ -232,9 +233,9 @@ class pRule(Supervised):
 
 class MannWhitneyParity(Supervised):
     """
-    Performs a two-tailed Mann-Whitney U-test to check that the scores of sensitive-attributed nodes do not exhibit
-    higher or lower values compared to the rest. To do this, the test's U statistic is transformed so that value
-    1 indicates that the probability of sensitive-attributed nodes exhibiting higher values is the same as
+    Performs a two-tailed Mann-Whitney U-test to check that the scores of sensitive-attributed nodes (ground truth)
+    do not exhibit  higher or lower values compared to the rest. To do this, the test's U statistic is transformed so
+    that value 1 indicates that the probability of sensitive-attributed nodes exhibiting higher values is the same as
     for lower values (50%). Value 0 indicates that either the probability of exhibiting only higher or only lower
     values is 100%.
     Known scores correspond to the binary sensitive attribute checking whether nodes are sensitive.
@@ -245,3 +246,23 @@ class MannWhitneyParity(Supervised):
         scores1 = scores[sensitive == 0]
         scores2 = scores[sensitive != 0]
         return 1-2*abs(0.5-scipy.stats.mannwhitneyu(scores1, scores2)[0]/len(scores1)/len(scores2))
+
+
+class Mistreatment(Supervised):
+    def __init__(self,
+                 known_scores: GraphSignalData,
+                 sensitive: GraphSignalData,
+                 exclude: GraphSignalData = None,
+                 measure: Supervised = AUC):
+        super().__init__(known_scores, exclude)
+        self.sensitive = sensitive
+        self.measure = measure
+
+    def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
+        sensitive = to_signal(scores, self.sensitive)
+        if self.exclude is not None:
+            exclude = to_signal(sensitive, self.exclude).np
+            return Parity([self.measure(self.known_scores, exclude=1-(1-exclude)*sensitive.np),
+                              self.measure(self.known_scores, exclude=1-(1-exclude)*(1-sensitive.np))]).evaluate(scores)
+        else:
+            return Parity([self.measure(self.known_scores), self.measure(self.known_scores)]).evaluate(scores)

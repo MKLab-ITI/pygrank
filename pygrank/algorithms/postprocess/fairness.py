@@ -1,7 +1,7 @@
 import pygrank
 from pygrank.algorithms.autotune import optimize
 from pygrank.algorithms.postprocess.postprocess import Tautology, Normalize, Postprocessor
-from pygrank.measures import pRule, Mabs, Supervised, AM, KLDivergence, TPR, TNR, Parity
+from pygrank.measures import pRule, Mabs, Supervised, AM, Mistreatment, TPR, TNR, Parity
 from pygrank.core import GraphSignal, to_signal, backend, BackendPrimitive, NodeRanking, GraphSignalGraph, GraphSignalData
 from typing import List, Optional, Union
 
@@ -89,48 +89,37 @@ class FairPersonalizer(Postprocessor):
                 res = res + (1-a)*backend.exp(b*backend.abs(ranks-personalization)) + a*backend.exp(-b*backend.abs(ranks-personalization))
         return (1.0-params[-1])*res + personalization*params[-1]
 
-    def __prule_loss(self,
-                     ranks: GraphSignal,
-                     original_ranks: GraphSignal,
-                     sensitive: GraphSignal,
-                     personalization: GraphSignal) -> object:
-        prule = self.pRule(ranks)
-        #ranks = ranks.np-backend.min(ranks.np)
-        ranks = ranks.np / backend.max(ranks.np)
-        original_ranks = original_ranks.np / backend.max(original_ranks.np)
-        error = self.error_type(original_ranks)
-        error_value = error(ranks)
-        return -self.retain_rank_weight * error_value * error.best_direction() - self.pRule_weight * min(self.target_pRule, prule) - 0.1*prule
-
     def rank(self,
-             G: GraphSignalGraph,
+             graph: GraphSignalGraph,
              personalization: GraphSignalData,
              sensitive: GraphSignalData, *args, **kwargs):
-        personalization = to_signal(G, personalization)
-        G = personalization.graph
+        from pygrank import split
+        personalization = to_signal(graph, personalization)
+        training, validation = split(personalization)
+        graph = personalization.graph
         if self.parity_type == "impact":
-            self.pRule = pRule(sensitive)
+            fairness_measure = pRule(sensitive, exclude=training)
         elif self.parity_type == "TPR":
-            self.pRule = Parity([TPR(personalization, exclude=1-sensitive.np),
-                                 TPR(personalization, exclude=1-(1-sensitive.np))])
+            fairness_measure = Mistreatment(validation, sensitive, exclude=training, measure=TPR)
         elif self.parity_type == "TNR":
-            self.pRule = Parity([TNR(personalization, exclude=1 - sensitive.np),
-                                 TNR(personalization, exclude=1 - (1 - sensitive.np))])
+            fairness_measure = Mistreatment(validation, sensitive, exclude=training, measure=TNR)
         elif self.parity_type == "mistreatment":
-            self.pRule = AM([Parity([TPR(personalization, exclude=1-sensitive.np),
-                                     TPR(personalization, exclude=1-(1-sensitive.np))]),
-                             Parity([TNR(personalization, exclude=1 - sensitive.np),
-                                     TNR(personalization, exclude=1 - (1 - sensitive.np))])
-                            ])
+            fairness_measure = AM([Mistreatment(validation, sensitive, exclude=training, measure=TPR), Mistreatment(personalization, sensitive, exclude=training, measure=TNR)])
         else:
             raise Exception("Invalid parity type "+self.parity_type+": expected impact, TPR, TNR or mistreatment")
         sensitive, personalization = pRule(sensitive).to_numpy(personalization)
-        ranks = self.ranker.rank(G, personalization, *args, **kwargs)
+        original_ranks = self.ranker.rank(graph, personalization, *args, **kwargs)
 
         def loss(params):
-            fair_pers = self.__culep(personalization, sensitive, ranks, params)
-            fair_ranks = self.ranker.rank(G, personalization=fair_pers, *args, **kwargs)
-            return self.__prule_loss(fair_ranks, ranks, sensitive, personalization)
+            fair_pers = self.__culep(training.np, sensitive, original_ranks, params)
+            fair_ranks = self.ranker.rank(graph, personalization=fair_pers, *args, **kwargs)
+            fairness_loss = fairness_measure(fair_ranks)
+            # ranks = ranks.np / backend.max(ranks.np)
+            # original_ranks = original_ranks.np / backend.max(original_ranks.np)
+            error = self.error_type(validation, exclude=training)
+            error_value = error(fair_ranks)
+            return - self.retain_rank_weight * error_value * error.best_direction() \
+                   - self.pRule_weight * min(self.target_pRule, fairness_loss) - 0.1 * fairness_loss
 
         optimal_params = optimize(loss,
                                   max_vals=[1, 1, 10, 10] * self.parameter_buckets + [self.max_residual],
@@ -139,8 +128,8 @@ class FairPersonalizer(Postprocessor):
                                   divide_range=1.5,
                                   partitions=5,
                                   depth=2)
-        optimal_personalization = personalization=self.__culep(personalization, sensitive, ranks, optimal_params)
-        return self.ranker.rank(G, optimal_personalization, *args, **kwargs)
+        optimal_personalization = self.__culep(personalization, sensitive, original_ranks, optimal_params)
+        return self.ranker.rank(graph, optimal_personalization, *args, **kwargs)
 
     def _reference(self):
         return "fair prior editing \\cite{krasanakis2020prioredit} for disparate "+self.parity_type+" mitigation"

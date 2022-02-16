@@ -19,15 +19,16 @@ All of them can be used through the code patterns presented at the library's [do
 13. [Mabs](#supervised-mabs)
 14. [MannWhitneyParity](#supervised-mannwhitneyparity)
 15. [MaxDifference](#supervised-maxdifference)
-16. [NDCG](#supervised-ndcg)
-17. [PearsonCorrelation](#supervised-pearsoncorrelation)
-18. [SpearmanCorrelation](#supervised-spearmancorrelation)
-19. [TNR](#supervised-tnr)
-20. [TPR](#supervised-tpr)
-21. [pRule](#supervised-prule)
-22. [Conductance](#unsupervised-conductance)
-23. [Density](#unsupervised-density)
-24. [Modularity](#unsupervised-modularity)
+16. [Mistreatment](#supervised-mistreatment)
+17. [NDCG](#supervised-ndcg)
+18. [PearsonCorrelation](#supervised-pearsoncorrelation)
+19. [SpearmanCorrelation](#supervised-spearmancorrelation)
+20. [TNR](#supervised-tnr)
+21. [TPR](#supervised-tpr)
+22. [pRule](#supervised-prule)
+23. [Conductance](#unsupervised-conductance)
+24. [Density](#unsupervised-density)
+25. [Modularity](#unsupervised-modularity)
 
 ### <kbd>Measure</kbd> Time
 
@@ -234,9 +235,9 @@ Args:
 
 ### <kbd>Supervised</kbd> MannWhitneyParity
 
-Performs a two-tailed Mann-Whitney U-test to check that the scores of sensitive-attributed nodes do not exhibit 
-higher or lower values compared to the rest. To do this, the test's U statistic is transformed so that value 
-1 indicates that the probability of sensitive-attributed nodes exhibiting higher values is the same as 
+Performs a two-tailed Mann-Whitney U-test to check that the scores of sensitive-attributed nodes (ground truth) 
+do not exhibit  higher or lower values compared to the rest. To do this, the test's U statistic is transformed so 
+that value 1 indicates that the probability of sensitive-attributed nodes exhibiting higher values is the same as 
 for lower values (50%). Value 0 indicates that either the probability of exhibiting only higher or only lower 
 values is 100%. 
 Known scores correspond to the binary sensitive attribute checking whether nodes are sensitive. The constructor initializes the supervised measure with desired graph signal outcomes. 
@@ -252,6 +253,9 @@ Computes the maximum absolute error between scores and known scores. The constru
 Args: 
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
+
+### <kbd>Supervised</kbd> Mistreatment
+
 
 ### <kbd>Supervised</kbd> NDCG
 
