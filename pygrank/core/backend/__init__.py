@@ -14,6 +14,20 @@ def safe_div(nom, denom, default=0):
     return nom / denom
 
 
+class Backend:
+    def __init__(self, mod_name):
+        self.mod_name = mod_name
+
+    def __enter__(self):
+        self._previous_backend = backend_name()
+        load_backend(self.mod_name)
+        return _imported_mods[self.mod_name]
+
+    def __exit__(self, *args, **kwargs):
+        load_backend(self._previous_backend)
+        return False
+
+
 def load_backend(mod_name):
     if mod_name not in ['pytorch', 'numpy', 'tensorflow']:
         raise Exception("Unsupported backend "+mod_name)

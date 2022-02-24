@@ -65,3 +65,11 @@ def test_backend_load():
     with pytest.raises(Exception):
         pg.load_backend("unknown")
     assert pg.backend_name() == "numpy"
+
+
+def test_backend_with():
+    for backend_name in ["pytorch", "tensorflow", "numpy"]:
+        with pg.Backend(backend_name) as backend:
+            assert pg.backend_name() == backend_name
+            assert backend.backend_name() == backend_name
+        assert pg.backend_name() == "numpy"
