@@ -3,7 +3,7 @@ import pygrank as pg
 #datasets = ["acm", "amazon", "ant", "citeseer","dblp","facebook0","facebook686","log4j","maven","pubmed","squirel", "twitter"]
 datasets = ["facebook0","facebook686", "log4j", "ant", "eucore", "citeseer", "dblp"]
 seed_fractions = [0.3, 0.5]
-pre = pg.preprocessor(assume_immutability=True, normalization="symmetric")
+pre = pg.preprocessor(assume_immutability=True, normalization="col")
 
 filters = {
     "ppr0.85": pg.PageRank(alpha=0.85, preprocessor=pre, max_iters=10000, tol=1.E-6),
@@ -19,9 +19,10 @@ for name, filter in filters.items():
     algorithms = {"None": filter,
                   "Mult": pg.AdHocFairness(filter, "B"),
                   "LFPRO": pg.AdHocFairness(filter, "O"),
+                  #"LFPRO+Fairwalk": pg.AdHocFairness(filter, "O"),
                   #"FBuck-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=1, error_type=pg.Mabs, parameter_buckets=0),
-                  "FPers-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=0, error_type=pg.Mabs, error_skewing=True, parity_type="impact"),
-                  "Fest-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=1, error_type=pg.Mabs, error_skewing=False, parity_type="impact"),
+                  "FPers-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=0, error_type=pg.Mabs, error_skewing=True),
+                  "Fest-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=1, error_type=pg.Mabs, error_skewing=False),
                   "Tensortune": Tensortune(filter),
                   #"FFfix-C": pg.FairTradeoff(filter, .8, pRule_weight=10, error_type=pg.Mabs)
                   #"FairTf": pg.FairnessTf(filter)

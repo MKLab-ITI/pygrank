@@ -52,7 +52,7 @@ import pygrank as pg
 known_scores, algorithm, personalization, sensitivity_scores = ... 
 auc = pg.AUC(known_scores, exclude=personalization) 
 prule = pg.pRule(sensitivity_scores, exclude=personalization) 
-measure = pg.AM([auc, prule], weights=[1, 10], thresholds=[(0,1), (0, 0.8)]) 
+measure = pg.AM([auc, prule], weights=[1., 10.], thresholds=[(0,1), (0, 0.8)]) 
 print(measure(algorithm(personalization))) 
 ```
 
@@ -64,7 +64,7 @@ import pygrank as pg
 known_scores, algorithm, personalization, sensitivity_scores = ... 
 auc = pg.AUC(known_scores, exclude=personalization) 
 prule = pg.pRule(sensitivity_scores, exclude=personalization) 
-measure = pg.AM().add(auc, weight=1, max_val=1).add(prule, weight=1, max_val=0.8) 
+measure = pg.AM().add(auc, weight=1., max_val=1).add(prule, weight=1., max_val=0.8) 
 print(measure(algorithm(personalization))) 
 ```
 
@@ -86,7 +86,7 @@ import pygrank as pg
 known_scores, algorithm, personalization, sensitivity_scores = ... 
 auc = pg.AUC(known_scores, exclude=personalization) 
 prule = pg.pRule(sensitivity_scores, exclude=personalization) 
-measure = pg.AM([auc, prule], weights=[1, 10], thresholds=[(0,1), (0, 0.8)]) 
+measure = pg.AM([auc, prule], weights=[1., 10.], thresholds=[(0,1), (0, 0.8)]) 
 print(measure(algorithm(personalization))) 
 ```
 
@@ -98,7 +98,7 @@ import pygrank as pg
 known_scores, algorithm, personalization, sensitivity_scores = ... 
 auc = pg.AUC(known_scores, exclude=personalization) 
 prule = pg.pRule(sensitivity_scores, exclude=personalization) 
-measure = pg.AM().add(auc, weight=1, max_val=1).add(prule, weight=1, max_val=0.8) 
+measure = pg.AM().add(auc, weight=1., max_val=1).add(prule, weight=1., max_val=0.8) 
 print(measure(algorithm(personalization))) 
 ```
 
@@ -119,7 +119,7 @@ import pygrank as pg
 known_scores, algorithm, personalization, sensitivity_scores = ... 
 auc = pg.AUC(known_scores, exclude=personalization) 
 prule = pg.pRule(sensitivity_scores, exclude=personalization) 
-measure = pg.AM([auc, prule], weights=[1, 10], thresholds=[(0,1), (0, 0.8)]) 
+measure = pg.AM([auc, prule], weights=[1., 10.], thresholds=[(0,1), (0, 0.8)]) 
 print(measure(algorithm(personalization))) 
 ```
 
@@ -131,7 +131,7 @@ import pygrank as pg
 known_scores, algorithm, personalization, sensitivity_scores = ... 
 auc = pg.AUC(known_scores, exclude=personalization) 
 prule = pg.pRule(sensitivity_scores, exclude=personalization) 
-measure = pg.AM().add(auc, weight=1, max_val=1).add(prule, weight=1, max_val=0.8) 
+measure = pg.AM().add(auc, weight=1., max_val=1).add(prule, weight=1., max_val=0.8) 
 print(measure(algorithm(personalization))) 
 ```
 
@@ -153,7 +153,7 @@ import pygrank as pg
 known_scores, algorithm, personalization, sensitivity_scores = ... 
 auc = pg.AUC(known_scores, exclude=personalization) 
 prule = pg.pRule(sensitivity_scores, exclude=personalization) 
-measure = pg.AM([auc, prule], weights=[1, 10], thresholds=[(0,1), (0, 0.8)]) 
+measure = pg.AM([auc, prule], weights=[1., 10.], thresholds=[(0,1), (0, 0.8)]) 
 print(measure(algorithm(personalization))) 
 ```
 
@@ -165,7 +165,7 @@ import pygrank as pg
 known_scores, algorithm, personalization, sensitivity_scores = ... 
 auc = pg.AUC(known_scores, exclude=personalization) 
 prule = pg.pRule(sensitivity_scores, exclude=personalization) 
-measure = pg.AM().add(auc, weight=1, max_val=1).add(prule, weight=1, max_val=0.8) 
+measure = pg.AM().add(auc, weight=1., max_val=1).add(prule, weight=1., max_val=0.8) 
 print(measure(algorithm(personalization))) 
 ```
 

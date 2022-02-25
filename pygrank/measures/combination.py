@@ -30,7 +30,7 @@ class MeasureCombination(Measure):
             >>> known_scores, algorithm, personalization, sensitivity_scores = ...
             >>> auc = pg.AUC(known_scores, exclude=personalization)
             >>> prule = pg.pRule(sensitivity_scores, exclude=personalization)
-            >>> measure = pg.AM([auc, prule], weights=[1, 10], thresholds=[(0,1), (0, 0.8)])
+            >>> measure = pg.AM([auc, prule], weights=[1., 10.], thresholds=[(0,1), (0, 0.8)])
             >>> print(measure(algorithm(personalization)))
 
         Example (same result):
@@ -38,7 +38,7 @@ class MeasureCombination(Measure):
             >>> known_scores, algorithm, personalization, sensitivity_scores = ...
             >>> auc = pg.AUC(known_scores, exclude=personalization)
             >>> prule = pg.pRule(sensitivity_scores, exclude=personalization)
-            >>> measure = pg.AM().add(auc, weight=1, max_val=1).add(prule, weight=1, max_val=0.8)
+            >>> measure = pg.AM().add(auc, weight=1., max_val=1).add(prule, weight=1., max_val=0.8)
             >>> print(measure(algorithm(personalization)))
         """
         self.measures = list() if measures is None else measures
@@ -47,7 +47,7 @@ class MeasureCombination(Measure):
 
     def add(self,
             measure: Measure,
-            weight: float = 1,
+            weight: float = 1.,
             min_val: float = -float('inf'),
             max_val: float = float('inf')):
         self.measures.append(measure)
@@ -56,9 +56,9 @@ class MeasureCombination(Measure):
         return self
 
     def _total_weight(self):
-        ret = 0
+        ret = 0.
         for weight in self.weights:
-            ret = ret + weight
+            ret = ret + backend.abs(weight)
         return ret
 
 
