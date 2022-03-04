@@ -14,21 +14,25 @@ All of them can be used through the code patterns presented at the library's [do
 8. [Cos](#supervised-cos)
 9. [CrossEntropy](#supervised-crossentropy)
 10. [Dot](#supervised-dot)
-11. [KLDivergence](#supervised-kldivergence)
-12. [MKLDivergence](#supervised-mkldivergence)
-13. [Mabs](#supervised-mabs)
-14. [MannWhitneyParity](#supervised-mannwhitneyparity)
-15. [MaxDifference](#supervised-maxdifference)
-16. [Mistreatment](#supervised-mistreatment)
-17. [NDCG](#supervised-ndcg)
-18. [PearsonCorrelation](#supervised-pearsoncorrelation)
-19. [SpearmanCorrelation](#supervised-spearmancorrelation)
-20. [TNR](#supervised-tnr)
-21. [TPR](#supervised-tpr)
-22. [pRule](#supervised-prule)
-23. [Conductance](#unsupervised-conductance)
-24. [Density](#unsupervised-density)
-25. [Modularity](#unsupervised-modularity)
+11. [Euclidean](#supervised-euclidean)
+12. [KLDivergence](#supervised-kldivergence)
+13. [L2](#supervised-l2)
+14. [L2Disparity](#supervised-l2disparity)
+15. [MKLDivergence](#supervised-mkldivergence)
+16. [MSQ](#supervised-msq)
+17. [Mabs](#supervised-mabs)
+18. [MannWhitneyParity](#supervised-mannwhitneyparity)
+19. [MaxDifference](#supervised-maxdifference)
+20. [Mistreatment](#supervised-mistreatment)
+21. [NDCG](#supervised-ndcg)
+22. [PearsonCorrelation](#supervised-pearsoncorrelation)
+23. [SpearmanCorrelation](#supervised-spearmancorrelation)
+24. [TNR](#supervised-tnr)
+25. [TPR](#supervised-tpr)
+26. [pRule](#supervised-prule)
+27. [Conductance](#unsupervised-conductance)
+28. [Density](#unsupervised-density)
+29. [Modularity](#unsupervised-modularity)
 
 ### <kbd>Measure</kbd> Time
 
@@ -209,6 +213,14 @@ Args:
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 
+### <kbd>Supervised</kbd> Euclidean
+
+Computes the mean absolute error between scores and known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
+
+Args: 
+ * *known_scores:* The desired graph signal outcomes. 
+ * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
+
 ### <kbd>Supervised</kbd> KLDivergence
 
 Computes the KL-divergence of given vs known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
@@ -217,9 +229,28 @@ Args:
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 
+### <kbd>Supervised</kbd> L2
+
+Computes the mean absolute error between scores and known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
+
+Args: 
+ * *known_scores:* The desired graph signal outcomes. 
+ * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
+
+### <kbd>Supervised</kbd> L2Disparity
+
+
 ### <kbd>Supervised</kbd> MKLDivergence
 
 Computes the KL-divergence of given vs known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
+
+Args: 
+ * *known_scores:* The desired graph signal outcomes. 
+ * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
+
+### <kbd>Supervised</kbd> MSQ
+
+Computes the mean absolute error between scores and known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
 
 Args: 
  * *known_scores:* The desired graph signal outcomes. 

@@ -65,7 +65,7 @@ def to_primitive(obj):
 def is_array(obj):
     if isinstance(obj, list):
         return True
-    return isinstance(obj, tf.Tensor)
+    return isinstance(obj, tf.Tensor) or isinstance(obj, tf.Variable)
 
 
 def self_normalize(obj):
@@ -78,7 +78,7 @@ def conv(signal, M):
 
 
 def length(x):
-    if isinstance(x, tf.Tensor):
+    if isinstance(x, tf.Tensor) or isinstance(x, tf.Variable):
         return x.shape[0]
     return len(x)
 

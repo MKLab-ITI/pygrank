@@ -69,8 +69,8 @@ class AM(MeasureCombination):
         result = 0
         for i in range(len(self.measures)):
             if self.weights[i] != 0:
-                evaluation = self.measures[i].evaluate(scores)
-                evaluation = min(max(evaluation, self.thresholds[i][0]), self.thresholds[i][1])
+                measure_evaluation = self.measures[i].evaluate(scores)
+                evaluation = min(max(measure_evaluation, self.thresholds[i][0]), self.thresholds[i][1])
                 result += self.weights[i]*evaluation
         return result / self._total_weight()
 
