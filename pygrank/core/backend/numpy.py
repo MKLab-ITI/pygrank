@@ -35,6 +35,8 @@ def to_array(obj, copy_array=False):
         if len(obj.shape) > 1:
             return obj.squeeze()
         return obj
+    if obj.__class__.__module__ == "tensorflow.python.framework.ops":
+        return obj.numpy()
     if obj.__class__.__module__ == "torch":
         return obj.detach().numpy()
     return np.array(obj)
@@ -45,7 +47,7 @@ def to_primitive(obj):
 
 
 def is_array(obj):
-    return isinstance(obj, list) or isinstance(obj, np.ndarray)
+    return isinstance(obj, list) or isinstance(obj, np.ndarray) or obj.__class__.__module__ == "tensorflow.python.framework.ops" or obj.__class__.__module__ == "torch"
 
 
 def self_normalize(obj):

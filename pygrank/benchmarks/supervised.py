@@ -78,10 +78,10 @@ def benchmark(algorithms: Mapping[str, NodeRanking],
                         try:
                             dataset_results.append(metric(graph)(predictions))
                         except:
-                            dataset_results.append(metric(evaluation, training)(predictions))
+                            dataset_results.append(metric(evaluation, training if training_samples != 1 else None)(predictions))
                     if sensitive is not None:
                         try:
-                            dataset_results.append(sensitive(sensitive_signal, training)(predictions))
+                            dataset_results.append(sensitive(sensitive_signal, training if training_samples != 1 else None)(predictions))
                         except:
-                            dataset_results.append(sensitive(evaluation, sensitive_signal, training)(predictions))
+                            dataset_results.append(sensitive(evaluation, sensitive_signal, training if training_samples != 1 else None)(predictions))
                 yield dataset_results

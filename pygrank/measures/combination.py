@@ -30,7 +30,7 @@ class MeasureCombination(Measure):
             >>> known_scores, algorithm, personalization, sensitivity_scores = ...
             >>> auc = pg.AUC(known_scores, exclude=personalization)
             >>> prule = pg.pRule(sensitivity_scores, exclude=personalization)
-            >>> measure = pg.AM([auc, prule], weights=[1, 10], thresholds=[(0,1), (0, 0.8)])
+            >>> measure = pg.AM([auc, prule], weights=[1., 10.], thresholds=[(0,1), (0, 0.8)])
             >>> print(measure(algorithm(personalization)))
 
         Example (same result):
@@ -38,7 +38,7 @@ class MeasureCombination(Measure):
             >>> known_scores, algorithm, personalization, sensitivity_scores = ...
             >>> auc = pg.AUC(known_scores, exclude=personalization)
             >>> prule = pg.pRule(sensitivity_scores, exclude=personalization)
-            >>> measure = pg.AM().add(auc, weight=1, max_val=1).add(prule, weight=1, max_val=0.8)
+            >>> measure = pg.AM().add(auc, weight=1., max_val=1).add(prule, weight=1., max_val=0.8)
             >>> print(measure(algorithm(personalization)))
         """
         self.measures = list() if measures is None else measures
@@ -47,7 +47,7 @@ class MeasureCombination(Measure):
 
     def add(self,
             measure: Measure,
-            weight: float = 1,
+            weight: float = 1.,
             min_val: float = -float('inf'),
             max_val: float = float('inf')):
         self.measures.append(measure)
@@ -56,9 +56,9 @@ class MeasureCombination(Measure):
         return self
 
     def _total_weight(self):
-        ret = 0
+        ret = 0.
         for weight in self.weights:
-            ret = ret + weight
+            ret = ret + backend.abs(weight)
         return ret
 
 
@@ -69,8 +69,8 @@ class AM(MeasureCombination):
         result = 0
         for i in range(len(self.measures)):
             if self.weights[i] != 0:
-                evaluation = self.measures[i].evaluate(scores)
-                evaluation = min(max(evaluation, self.thresholds[i][0]), self.thresholds[i][1])
+                measure_evaluation = self.measures[i].evaluate(scores)
+                evaluation = min(max(measure_evaluation, self.thresholds[i][0]), self.thresholds[i][1])
                 result += self.weights[i]*evaluation
         return result / self._total_weight()
 

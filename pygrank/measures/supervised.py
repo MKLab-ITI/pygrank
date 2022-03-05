@@ -95,6 +95,30 @@ class Mabs(Supervised):
         return backend.sum(backend.abs(known_scores-scores)) / backend.length(scores)
 
 
+class MSQ(Supervised):
+    """Computes the mean absolute error between scores and known scores."""
+
+    def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
+        known_scores, scores = self.to_numpy(scores)
+        return backend.sum((known_scores-scores)*(known_scores-scores)) / backend.length(scores)
+
+
+class Euclidean(Supervised):
+    """Computes the mean absolute error between scores and known scores."""
+
+    def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
+        known_scores, scores = self.to_numpy(scores)
+        return backend.sum((known_scores - scores) * (known_scores - scores))
+
+
+class L2(Supervised):
+    """Computes the mean absolute error between scores and known scores."""
+
+    def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
+        known_scores, scores = self.to_numpy(scores)
+        return backend.sum((known_scores - scores) * (known_scores - scores))**0.5
+
+
 class CrossEntropy(Supervised):
     """Computes a cross-entropy loss of given vs known scores."""
 
@@ -114,11 +138,11 @@ class KLDivergence(Supervised):
         known_scores, scores = self.to_numpy(scores, normalization=True)
         eps = backend.epsilon()
         known_scores = known_scores - backend.min(known_scores) + eps
-        known_scores = known_scores / backend.sum(known_scores)
-        scores = scores - backend.min(scores) + eps
-        scores = scores / backend.sum(scores)
-        ratio = scores/known_scores
-        ret = -backend.sum(scores*backend.log(ratio))
+        known_scores = backend.safe_div(known_scores, backend.sum(known_scores))
+        scores = scores - backend.min(scores)
+        scores = backend.safe_div(scores, backend.sum(scores))
+        ratio = scores / known_scores
+        ret = backend.sum(scores*backend.log(ratio+eps))
         return ret
 
 
@@ -184,7 +208,6 @@ class AUC(Supervised):
         fpr, tpr, _ = sklearn.metrics.roc_curve(known_scores, scores)
         return sklearn.metrics.auc(fpr, tpr)
 
-
 class Accuracy(Supervised):
     """Computes the accuracy as 1- mean absolute differences between given and known scores."""
 
@@ -220,7 +243,7 @@ class pRule(Supervised):
     def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
         sensitive, scores = self.to_numpy(scores)
         p1 = backend.dot(scores, sensitive)
-        p2 = backend.sum(scores) - p1
+        p2 = backend.dot(scores, 1-sensitive)
         if p1 == 0 or p2 == 0:
             return 0
         s = backend.sum(sensitive)
@@ -229,6 +252,28 @@ class pRule(Supervised):
         if p1 <= p2:  # this implementation is derivable
             return p1 / p2
         return p2 / p1
+
+
+class L2Disparity(Supervised):
+    def __init__(self, *args, target_pRule=0.8, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.target_pRule = target_pRule
+
+    def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
+        sensitive, scores = self.to_numpy(scores)
+        p1 = backend.dot(scores, sensitive)
+        p2 = backend.dot(scores, 1-sensitive)
+        s = backend.sum(sensitive)
+        n = backend.length(sensitive)
+        p1 = backend.safe_div(p1, s)
+        p2 = backend.safe_div(p2, n-s)
+        #if p1 <= p2*self.target_pRule:
+        #    p2 *= self.target_pRule
+        #elif p2 <= p1*self.target_pRule:
+        #    p1 *= self.target_pRule
+        #else:
+        #    return 0
+        return (p1-p2)**2*n
 
 
 class MannWhitneyParity(Supervised):

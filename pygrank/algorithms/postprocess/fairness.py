@@ -95,7 +95,7 @@ class FairPersonalizer(Postprocessor):
              sensitive: GraphSignalData, *args, **kwargs):
         from pygrank import split
         personalization = to_signal(graph, personalization)
-        training, validation = split(personalization)
+        training, validation = split(personalization, 1)
         graph = personalization.graph
         if self.parity_type == "impact":
             fairness_measure = pRule(sensitive, exclude=training)
@@ -109,6 +109,7 @@ class FairPersonalizer(Postprocessor):
             raise Exception("Invalid parity type "+self.parity_type+": expected impact, TPR, TNR or mistreatment")
         sensitive, personalization = pRule(sensitive).to_numpy(personalization)
         original_ranks = self.ranker.rank(graph, personalization, *args, **kwargs)
+        validation = original_ranks
 
         def loss(params):
             fair_pers = self.__culep(training.np, sensitive, original_ranks, params)
