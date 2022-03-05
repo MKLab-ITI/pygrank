@@ -1,7 +1,7 @@
 import pygrank as pg
 
 
-datasets = [ "eucore", "citeseer", "blockmodel"]
+datasets = ["dblp", "pubmed", "amazon", "eucore", "citeseer", "blockmodel"]
 #datasets = ["maven"]
 pre = pg.preprocessor(assume_immutability=True, normalization="symmetric")
 tol = 1.E-9
@@ -18,12 +18,8 @@ algorithms = algorithms# | pg.benchmarks.create_variations(algorithms, {"+sweep"
 
 tuned = {
     "selected": pg.AlgorithmSelection(algorithms.values(), fraction_of_training=0.8),
-    #"tuned": pg.ParameterTuner(preprocessor=pre, fraction_of_training=0.8, tol=tol, optimization_dict=optimization, measure=pg.AUC),
+    "tuned": pg.ParameterTuner(preprocessor=pre, fraction_of_training=0.8, tol=tol, optimization_dict=optimization, measure=pg.AUC),
     "arnoldi": pg.HopTuner(preprocessor=pre, basis="arnoldi", measure=pg.Cos, tol=tol, optimization_dict=optimization),
-    #"arnoldi2": pg.ParameterTuner(lambda params: pg.HopTuner(preprocessor=pre, basis="arnoldi", num_parameters=int(params[0]),
-    #                                                         measure=pg.Cos,
-    #                                                         tol=tol, optimization_dict=optimization, tunable_offset=None),
-    #                              max_vals=[40], min_vals=[5], divide_range=2, fraction_of_training=0.1),
 }
 
 #algorithms = pg.create_variations(algorithms, {"": pg.Tautology, "+Sweep": pg.Sweep})
@@ -31,7 +27,7 @@ tuned = {
 
 #for name, graph, group in pg.load_datasets_all_communities(datasets, min_group_size=50):
 #    print(" & ".join([str(val) for val in [name, len(graph), graph.number_of_edges(), len(group)]])+" \\\\")
-loader = pg.load_datasets_all_communities(datasets, min_group_size=50)
+loader = pg.load_datasets_all_communities(datasets, min_group_size=50, max_group_number=3)
 pg.benchmark_print(pg.benchmark(algorithms | tuned, loader, pg.AUC, fraction_of_training=.8, seed=list(range(1))),
                    decimals=3, delimiter=" & ", end_line="\\\\")
 
