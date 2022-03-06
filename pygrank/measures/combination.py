@@ -56,10 +56,7 @@ class MeasureCombination(Measure):
         return self
 
     def _total_weight(self):
-        ret = 0.
-        for weight in self.weights:
-            ret = ret + backend.abs(weight)
-        return ret
+        return backend.sum(backend.abs(backend.to_array(self.weights)))
 
 
 class AM(MeasureCombination):

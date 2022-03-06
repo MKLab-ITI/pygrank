@@ -8,7 +8,7 @@
     + [Implicit Use of Signals](#implicit-use-of-signals)
 4. [Graph Filters](#graph-filters)
     + [Passing Graph Signals through Filters](#passing-graph-signals-through-filters)
-    + [Graph Difusion Principles](#graph-diffusion-principles)
+    + [Graph Diffusion Principles](#graph-diffusion-principles)
     + [List of Filters](#list-of-filters)
     + [Convergence Criteria](#convergence-criteria)
     + [Graph Preprocessing and Normalization](#graph-preprocessing-and-normalization)
@@ -85,9 +85,14 @@ print(signal['A'], signal['B'])
 
 If is possible to directly access graph signal values as objects of the
 respective backend through a `signal.np` attribute. For example, if the
-default *numpy* backend is used, this attribute holds a numpy array
-(although it will hold different primitives, depending on the loaded backend, 
-these can manipulated through available backend operations).
+default *numpy* backend is used, this attribute holds a numpy array.
+Although it will hold different primitives, depending on the loaded backend, 
+these can manipulated through available backend operations. Importantly,
+the attribute is wrapped so that it is automatically converted to primitives
+of loaded backends. Take care to not break backpropagation pipelines by
+switching backends and setting new signal values.
+
+![graph signal](graph_signal.png)
 
 Continuing from the previous example,
 in the following code we divide a graph signal's elements with their sum.
@@ -101,7 +106,16 @@ print([(k,v) for k,v in signal.items()])
 # [('A', 0.6), ('B', 0.0), ('C', 0.4), ('D', 0.0), ('E', 0.0)]
 ```
 
-![graph signal](graph_signal.png)
+For comprehensibility purposes, arithmetic and backend operations
+are directly applicable to signals, in which case their `np` attributes are
+implied to be used. For instance, the previous example could be
+rewritten as:
+
+```python
+signal.np = signal / pg.sum(signal)
+print([(k,v) for k,v in signal.items()])
+# [('A', 0.6), ('B', 0.0), ('C', 0.4), ('D', 0.0), ('E', 0.0)]
+```
 
 
 ### Implicit Use of Signals

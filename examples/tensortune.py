@@ -3,63 +3,6 @@ import pygrank as pg
 from typing import Optional, Union
 
 
-class LFPR(pg.RecursiveGraphFilter):
-    def __init__(self, alpha: float = 0.85, redistributor: Optional[Union[str,pg.NodeRanking]] = None, target_pRule=1, *args, **kwargs):
-        self.alpha = alpha
-        kwargs["preprocessor"] = pg.preprocessor(assume_immutability=False, normalization="none")
-        self.redistributor = redistributor
-        self.target_pRule = target_pRule
-        super().__init__(*args, **kwargs)
-
-    def _start(self, M, personalization, ranks, sensitive, *args, **kwargs):
-        sensitive = pg.to_signal(ranks, sensitive)
-        outR = pg.conv(sensitive.np, M)
-        outB = pg.conv(1.-sensitive.np, M)
-        phi = pg.sum(sensitive.np)/pg.length(sensitive.np)*self.target_pRule
-        dR = pg.ones(len(sensitive.graph))*0
-        dB = pg.ones(len(sensitive.graph))*0
-        for v,u in zip(*M.nonzero()):
-            if outR[u] < phi*(outR[u]+outB[u]):
-                M[u,v] = (1-phi)/outB[u]
-                dR[u] = phi-(1-phi)/outB[u]*outR[u] # TODO: move these redundant computations in a separate for
-            elif outR[u] != 0:
-                M[u,v] = phi/outR[u]
-                dB[u] = (1-phi)-phi/outR[u]*outB[u]
-            else: # sink node
-                dR[u] = phi
-                dB[u] = 1-phi
-        personalization.np = pg.safe_div(sensitive.np*personalization.np, pg.sum(sensitive.np))*self.target_pRule \
-                                                 + pg.safe_div(personalization.np*(1-sensitive.np), pg.sum(1-sensitive.np))
-        personalization.np = pg.safe_div(personalization.np, pg.sum(personalization.np))
-        L = sensitive.np
-        if self.redistributor is None or self.redistributor == "uniform":
-            original_ranks = 1
-        elif self.redistributor == "original":
-            original_ranks = pg.PageRank(alpha=self.alpha,
-                                         preprocessor=pg.preprocessor(assume_immutability=False, normalization="col"),
-                                         convergence=self.convergence)(personalization).np
-        else:
-            original_ranks = self.redistributor(personalization).np
-
-        self.dR = dR
-        self.dB = dB
-        self.xR = original_ranks*L / pg.sum(original_ranks*L)
-        self.xB = original_ranks*(1-L) / pg.sum(original_ranks*(1-L))
-        super()._start(M, personalization, ranks, *args, **kwargs)
-
-    def _formula(self, M, personalization, ranks, sensitive, *args, **kwargs):
-        deltaR = pg.sum(self.dR*ranks)
-        deltaB = pg.sum(self.dB*ranks)
-        return (pg.conv(ranks, M) + deltaR*self.xR + deltaB*self.xB) * self.alpha + personalization * (1 - self.alpha)
-
-    def _end(self, M, personalization, ranks, *args, **kwargs):
-        del self.xR
-        del self.xB
-        del self.dR
-        del self.dB
-        super()._end(M, personalization, ranks, *args, **kwargs)
-
-
 class Tensortune(pg.Postprocessor):
     def __init__(self, ranker, pretrainer=None, model=None):
         self.ranker = ranker

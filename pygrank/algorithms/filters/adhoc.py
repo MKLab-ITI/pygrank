@@ -1,7 +1,8 @@
 import warnings
-from pygrank.core.signals import to_signal
-from pygrank import backend
+from pygrank.core import backend
 from pygrank.algorithms.filters.abstract_filters import RecursiveGraphFilter, ClosedFormGraphFilter
+from pygrank.core import to_signal, NodeRanking, preprocessor as default_preprocessor
+from typing import Union, Optional
 
 
 class PageRank(RecursiveGraphFilter):
@@ -105,7 +106,7 @@ class AbsorbingWalks(RecursiveGraphFilter):
         self.alpha = alpha  # typecast to make sure that a graph is not accidentally the first argument
 
     def _start(self, M, personalization, ranks, absorption=None, **kwargs):
-        self.absorption = to_signal(personalization.graph, absorption).np * (1 - self.alpha) / self.alpha
+        self.absorption = to_signal(personalization.graph, absorption) * ((1 - self.alpha) / self.alpha)
         self.degrees = backend.degrees(M)
 
     def _end(self, *args, **kwargs):
@@ -140,3 +141,80 @@ class BiasedKernel(RecursiveGraphFilter):
         refs = super().references()
         refs[0] = "local ranking heuristic of low quality \\cite{krasanakis2020unsupervised}"
         return refs
+
+
+class LFPR(RecursiveGraphFilter):
+    """Implements a locally fair variation of PageRank with universal fairness guarantees.
+    Its preprocessor is overwritten to perform no renormalization and not to assume immutability,
+    because it is a custom variation of column-based normalization that edits the adjacency matrix.
+    """
+
+    def __init__(self,
+                 alpha: float = 0.85,
+                 redistributor: Optional[Union[str, NodeRanking]] = None,
+                 target_pRule: float = 1, *args, **kwargs):
+        """
+        Initializes the locally fair random walk filter's parameters.
+        Args:
+            alpha: Corresponds to the respective parameter of PageRank.
+            redistributor: Redistribution strategy. If None (default) a uniform redistribution is
+                performed. If "original", a PageRank algorithm with colum-based normalization is run and used.
+                Otherwise, it can be a node ranking algorithm that estimates how much importance to
+                place on each node when redistributing non-fair random walk probability remainders.
+            target_pRule: Target pRule value to achieve. Default is 1.
+        """
+        self.alpha = alpha
+        # TODO: find a way to support immutability
+        kwargs["preprocessor"] = default_preprocessor(assume_immutability=False, normalization="none")
+        self.target_pRule = target_pRule
+        self.redistributor = redistributor
+        super().__init__(*args, **kwargs)
+
+    def _start(self, M, personalization, ranks, sensitive, *args, **kwargs):
+        sensitive = to_signal(ranks, sensitive)
+        outR = backend.conv(sensitive.np, M)
+        outB = backend.conv(1.-sensitive.np, M)
+        phi = backend.sum(sensitive.np)/backend.length(sensitive.np)*self.target_pRule
+        dR = backend.repeat(0., len(sensitive.graph))
+        dB = backend.repeat(0., len(sensitive.graph))
+        # TODO: convert to vectorized operatiors so that it runs with tensorflow
+        for v,u in zip(*M.nonzero()):
+            if outR[u] < phi*(outR[u]+outB[u]):
+                M[u,v] = (1-phi)/outB[u]
+                dR[u] = phi-(1-phi)/outB[u]*outR[u]  # TODO: move these redundant computations in a separate for
+            elif outR[u] != 0:
+                M[u,v] = phi/outR[u]
+                dB[u] = (1-phi)-phi/outR[u]*outB[u]
+            else:  # sink node
+                dR[u] = phi
+                dB[u] = 1-phi
+        personalization.np = backend.safe_div(sensitive.np*personalization.np, backend.sum(sensitive.np))*self.target_pRule \
+                                                 + backend.safe_div(personalization.np*(1-sensitive.np), backend.sum(1-sensitive.np))
+        personalization.np = backend.safe_div(personalization.np, backend.sum(personalization.np))
+        L = sensitive.np
+        if self.redistributor is None or self.redistributor == "uniform":
+            original_ranks = 1
+        elif self.redistributor == "original":
+            original_ranks = PageRank(alpha=self.alpha,
+                                         preprocessor=default_preprocessor(assume_immutability=False, normalization="col"),
+                                         convergence=self.convergence)(personalization).np
+        else:
+            original_ranks = self.redistributor(personalization).np
+
+        self.dR = dR
+        self.dB = dB
+        self.xR = backend.safe_div(original_ranks*L, backend.sum(original_ranks*L))
+        self.xB = backend.safe_div(original_ranks*(1-L), backend.sum(original_ranks*(1-L)))
+        super()._start(M, personalization, ranks, *args, **kwargs)
+
+    def _formula(self, M, personalization, ranks, sensitive, *args, **kwargs):
+        deltaR = backend.sum(ranks*self.dR)
+        deltaB = backend.sum(ranks*self.dB)
+        return (backend.conv(ranks, M) + deltaR*self.xR + deltaB*self.xB) * self.alpha + personalization * (1 - self.alpha)
+
+    def _end(self, M, personalization, ranks, *args, **kwargs):
+        del self.xR
+        del self.xB
+        del self.dR
+        del self.dB
+        super()._end(M, personalization, ranks, *args, **kwargs)

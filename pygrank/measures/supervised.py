@@ -5,7 +5,7 @@ from pygrank.measures.utils import Measure
 from pygrank.core import backend, GraphSignal, to_signal, GraphSignalData, BackendPrimitive
 from pygrank.measures.combination import Parity
 import numbers
-from typing import Tuple, Union
+from typing import Tuple, Union, Callable
 
 
 class Time(Measure):
@@ -103,16 +103,16 @@ class MSQ(Supervised):
         return backend.sum((known_scores-scores)*(known_scores-scores)) / backend.length(scores)
 
 
-class Euclidean(Supervised):
-    """Computes the mean absolute error between scores and known scores."""
+class L2(Supervised):
+    """Computes the L2 norm on the difference between scores and known scores."""
 
     def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
         known_scores, scores = self.to_numpy(scores)
         return backend.sum((known_scores - scores) * (known_scores - scores))
 
 
-class L2(Supervised):
-    """Computes the mean absolute error between scores and known scores."""
+class Euclidean(Supervised):
+    """Computes the Euclidean distance between scores and known scores."""
 
     def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
         known_scores, scores = self.to_numpy(scores)
@@ -139,15 +139,15 @@ class KLDivergence(Supervised):
         eps = backend.epsilon()
         known_scores = known_scores - backend.min(known_scores) + eps
         known_scores = backend.safe_div(known_scores, backend.sum(known_scores))
-        scores = scores - backend.min(scores)
+        scores = scores - backend.min(scores) + eps
         scores = backend.safe_div(scores, backend.sum(scores))
         ratio = scores / known_scores
-        ret = backend.sum(scores*backend.log(ratio+eps))
+        ret = backend.sum(scores*backend.log(ratio))
         return ret
 
 
 class MKLDivergence(Supervised):
-    """Computes the KL-divergence of given vs known scores."""
+    """Computes the mean KL-divergence of given vs known scores."""
 
     def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
         known_scores, scores = self.to_numpy(scores, normalization=True)
@@ -156,7 +156,7 @@ class MKLDivergence(Supervised):
         known_scores = known_scores / backend.sum(known_scores)
         scores = scores - backend.min(scores) + eps
         scores = scores / backend.sum(scores)
-        ratio = scores/known_scores
+        ratio = scores / known_scores
         ret = -backend.sum(scores*backend.log(ratio))
         return ret/backend.length(scores)
 
@@ -294,11 +294,29 @@ class MannWhitneyParity(Supervised):
 
 
 class Mistreatment(Supervised):
+    """Computes a disparate mistreatment assessment to test the fairness of given scores given
+    that they are similarly evaluated by a measure of choice."""
+
     def __init__(self,
                  known_scores: GraphSignalData,
                  sensitive: GraphSignalData,
                  exclude: GraphSignalData = None,
-                 measure: Supervised = AUC):
+                 measure: Callable[[GraphSignalData, GraphSignalData], Supervised] = AUC):
+        """
+
+        Args:
+            sensitive: A binary graph signal that separates sensitive from non-sensitive nodes.
+            measure: A supervised measure to compute disparate mistreament on. Default is AUC.
+
+        Example:
+            >>> import pygrank as pg
+            >>> known_score_signal, sensitive_signal = ...
+            >>> train, test = pg.split(known_scores, 0.8)  # 20% test set
+            >>> ranker = pg.LFPR()
+            >>> measure = pg.Mistreatment(known_scores, exclude=train, measure=pg.AUC)
+            >>> scores = ranker(train, sensitive=sensitive_signal)
+            >>> print(measure(scores))
+        """
         super().__init__(known_scores, exclude)
         self.sensitive = sensitive
         self.measure = measure
@@ -306,8 +324,8 @@ class Mistreatment(Supervised):
     def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
         sensitive = to_signal(scores, self.sensitive)
         if self.exclude is not None:
-            exclude = to_signal(sensitive, self.exclude).np
-            return Parity([self.measure(self.known_scores, exclude=1-(1-exclude)*sensitive.np),
-                              self.measure(self.known_scores, exclude=1-(1-exclude)*(1-sensitive.np))]).evaluate(scores)
+            exclude = to_signal(sensitive, self.exclude)
+            return Parity([self.measure(self.known_scores, 1-(1-exclude)*sensitive),
+                              self.measure(self.known_scores, 1-(1-exclude)*(1-sensitive))]).evaluate(scores)
         else:
-            return Parity([self.measure(self.known_scores), self.measure(self.known_scores)]).evaluate(scores)
+            return Parity([self.measure(self.known_scores, None), self.measure(self.known_scores, None)]).evaluate(scores)

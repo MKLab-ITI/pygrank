@@ -15,8 +15,9 @@ def test_fair_personalizer():
     _, graph, groups = next(pg.load_datasets_multiple_communities(["bigraph"]))
     labels = pg.to_signal(graph, groups[0])
     sensitive = pg.to_signal(graph, groups[1])
-    for algorithm in algorithms.values():
-        ranks = algorithm(graph, labels, sensitive)
+    for algorithm in algorithms:
+        ranks = algorithms[algorithm](graph, labels, sensitive)
+        # print(algorithm, pg.pRule(sensitive)(ranks))
         assert pg.pRule(sensitive)(ranks) > 0.79  # allow a leeway for generalization capabilities compared to 80%
 
 
@@ -29,20 +30,20 @@ def test_fair_personalizer_mistreatment():
         "FairPersTNR": pg.Normalize(pg.FairPersonalizer(H, parity_type="TNR", pRule_weight=-1))  # TNR optimization increases mistreatment for this example
     }
     mistreatment = lambda known_scores, sensitive_signal, exclude: \
-        pg.AM([pg.Disparity([pg.TPR(known_scores, exclude=1 - (1 - exclude.np) * sensitive_signal.np),
-                             pg.TPR(known_scores, exclude=1 - (1 - exclude.np) * (1 - sensitive_signal.np))]),
-               pg.Disparity([pg.TNR(known_scores, exclude=1 - (1 - exclude.np) * sensitive_signal.np),
-                             pg.TNR(known_scores, exclude=1 - (1 - exclude.np) * (1 - sensitive_signal.np))])])
+        pg.AM([pg.Disparity([pg.TPR(known_scores, exclude=1 - (1 - exclude) * sensitive_signal),
+                             pg.TPR(known_scores, exclude=1 - (1 - exclude) * (1 - sensitive_signal))]),
+               pg.Disparity([pg.TNR(known_scores, exclude=1 - (1 - exclude) * sensitive_signal),
+                             pg.TNR(known_scores, exclude=1 - (1 - exclude) * (1 - sensitive_signal))])])
     _, graph, groups = next(pg.load_datasets_multiple_communities(["synthfeats"]))
     labels = pg.to_signal(graph, groups[0])
     sensitive = pg.to_signal(graph, groups[1])
     train, test = pg.split(labels)
-    # TODO: maybe try to exceed 0.8 fairness on this dataset (instead of marginal improvement to just over 0.08)
+    # TODO: maybe try to check for greater improvement
     base_mistreatment = mistreatment(test, sensitive, train)(algorithms["Base"](graph, train, sensitive))
     for algorithm in algorithms.values():
         if algorithm != algorithms["Base"]:
             print(algorithm.cite())
-            assert base_mistreatment < mistreatment(test, sensitive, train)(algorithm(graph, train, sensitive))
+            assert base_mistreatment > mistreatment(test, sensitive, train)(algorithm(graph, train, sensitive))
     #for algorithm in algorithms.values():
         #print(mistreatment(test, sensitive, train)(algorithm(graph, train, sensitive)))
 
@@ -52,6 +53,8 @@ def test_fair_heuristics():
     algorithms = {
         "FairO": lambda G, p, s: pg.Normalize(pg.AdHocFairness(H, method="O")).rank(G, sensitive=s),
         "FairB": lambda G, p, s: pg.Normalize()(pg.AdHocFairness("B").transform(H.rank(G, p), sensitive=s)),
+        "LFPRN": lambda G, p, s: pg.Normalize()(pg.LFPR().rank(G, p, sensitive=s)),
+        "LFPRP": lambda G, p, s: pg.Normalize()(pg.LFPR(redistributor="original").rank(G, p, sensitive=s)),
         "FairWalk": lambda G, p, s: pg.FairWalk(H).rank(G, p, sensitive=s)
     }
 

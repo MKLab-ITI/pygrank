@@ -47,7 +47,21 @@ def load_backend(mod_name):
                 if api.startswith('__') or api in ["Iterable", "Optional", "Tuple", "BackendGraph", "BackendPrimitive"]:
                     continue
                 if api in mod.__dict__:
-                    setattr(thismod, api, mod.__dict__[api])
+                    def converter(method):
+                        if method.__name__ == "conv":
+                            def conv(x, M):
+                                from pygrank import to_signal
+                                if x.__class__.__name__ == "GraphSignal":
+                                    return to_signal(x, method(x.np, M))
+                                return method(x, M)
+                            return conv
+                        def converted(*args, **kwargs):
+                            args = [arg.np if arg.__class__.__name__ == "GraphSignal" else arg for arg in args]
+                            kwargs = {key: arg.np if arg.__class__.__name__ == "GraphSignal" else arg for key, arg in kwargs.items()}
+                            return method(*args, **kwargs)
+                        converted.__name__ = method.__name__
+                        return converted
+                    setattr(thismod, api, converter(mod.__dict__[api]))
                 else:  # pragma: no cover
                     raise Exception("Missing implementation for "+str(api))
     mod.backend_init()

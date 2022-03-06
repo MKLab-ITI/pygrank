@@ -1,3 +1,5 @@
+import networkx as nx
+
 import pygrank as pg
 import pytest
 
@@ -73,3 +75,32 @@ def test_backend_with():
             assert pg.backend_name() == backend_name
             assert backend.backend_name() == backend_name
         assert pg.backend_name() == "numpy"
+
+
+def test_signal_np_auto_conversion():
+    import tensorflow as tf
+    import numpy as np
+    graph = nx.DiGraph([(1, 2), (2, 3)])
+    signal = pg.to_signal(graph, tf.convert_to_tensor([1., 2., 3.]))
+    assert isinstance(signal.np, np.ndarray)
+    with pg.Backend("tensorflow"):
+        assert pg.backend_name() == "tensorflow"
+        assert not isinstance(signal.np, np.ndarray)
+    assert pg.backend_name() == "numpy"
+    assert isinstance(signal.np, np.ndarray)
+
+
+def test_signal_direct_operations():
+    graph = nx.DiGraph([(1, 2), (2, 3)])
+    signal = pg.to_signal(graph, [1., 2., 3.])
+    assert pg.sum(signal) == 6
+    assert pg.sum(signal+1) == 9
+    assert pg.sum(signal**2) == 14
+    assert pg.sum(signal-[1, 2, 2]) == 1
+    assert pg.sum(signal / pg.to_signal(graph, [1., 2., 3.])) == 3
+    assert pg.sum(3**signal) == 3+9+27
+    signal.np = pg.to_signal(graph, [4, 4, 4])
+    assert pg.sum(signal) == 12
+    with pytest.raises(Exception):
+        signal+pg.to_signal(graph.copy(), [1., 2., 3.])
+

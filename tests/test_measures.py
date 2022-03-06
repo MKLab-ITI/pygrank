@@ -93,6 +93,10 @@ def test_best_direction():
     assert pg.Dot([1, 2, 3]).best_direction() == 1
     assert pg.TPR([1, 2, 3]).best_direction() == 1
     assert pg.TNR([1, 2, 3]).best_direction() == 1
+    assert pg.Mabs([1, 2, 3]).best_direction() == -1
+    assert pg.MSQ([1, 2, 3]).best_direction() == -1
+    assert pg.Euclidean([1, 2, 3]).best_direction() == -1
+    assert pg.L2([1, 2, 3]).best_direction() == -1
 
 
 def test_computations():
@@ -106,6 +110,7 @@ def test_computations():
         assert float(pg.Dot([1, 1, 1])([1, 1, 1])) == 3
         assert float(pg.TPR([1, 0, 0, 0])([1, 1, 0, 0])) == 0.5
         assert float(pg.TNR([0, 0, 0, 1])([1, 1, 0, 0])) == 0.5
+        assert float(pg.Euclidean([0, 0, 0, 1])([1, 1, 0, 0])) < float(pg.Euclidean([0, 0, 0, 1])([1, 1, 1, 0]))
 
 
 def test_aggregated():

@@ -3,7 +3,7 @@ from pygrank.algorithms.autotune import optimize
 from pygrank.algorithms.postprocess.postprocess import Tautology, Normalize, Postprocessor
 from pygrank.measures import pRule, Mabs, Supervised, AM, Mistreatment, TPR, TNR, Parity
 from pygrank.core import GraphSignal, to_signal, backend, BackendPrimitive, NodeRanking, GraphSignalGraph, GraphSignalData
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Callable
 
 
 class FairPersonalizer(Postprocessor):
@@ -17,7 +17,7 @@ class FairPersonalizer(Postprocessor):
                  target_pRule: float = 1,
                  retain_rank_weight: float = 1,
                  pRule_weight: float = 1,
-                 error_type: Supervised = Mabs,
+                 error_type: Callable[[GraphSignalData, GraphSignalData], Supervised] = Mabs,
                  parameter_buckets: int = 1,
                  max_residual: float = 1,
                  error_skewing: bool = False,
@@ -93,9 +93,9 @@ class FairPersonalizer(Postprocessor):
              graph: GraphSignalGraph,
              personalization: GraphSignalData,
              sensitive: GraphSignalData, *args, **kwargs):
-        from pygrank import split
+        #from pygrank import split
         personalization = to_signal(graph, personalization)
-        training, validation = split(personalization, 1)
+        training, validation = None, None #split(personalization, 1)
         graph = personalization.graph
         if self.parity_type == "impact":
             fairness_measure = pRule(sensitive, exclude=training)
@@ -104,12 +104,13 @@ class FairPersonalizer(Postprocessor):
         elif self.parity_type == "TNR":
             fairness_measure = Mistreatment(validation, sensitive, exclude=training, measure=TNR)
         elif self.parity_type == "mistreatment":
-            fairness_measure = AM([Mistreatment(validation, sensitive, exclude=training, measure=TPR), Mistreatment(personalization, sensitive, exclude=training, measure=TNR)])
+            fairness_measure = AM([Mistreatment(validation, sensitive, exclude=training, measure=TPR),
+                                   Mistreatment(personalization, sensitive, exclude=training, measure=TNR)])
         else:
             raise Exception("Invalid parity type "+self.parity_type+": expected impact, TPR, TNR or mistreatment")
+        training = personalization
         sensitive, personalization = pRule(sensitive).to_numpy(personalization)
         original_ranks = self.ranker.rank(graph, personalization, *args, **kwargs)
-        validation = original_ranks
 
         def loss(params):
             fair_pers = self.__culep(training.np, sensitive, original_ranks, params)
@@ -117,7 +118,7 @@ class FairPersonalizer(Postprocessor):
             fairness_loss = fairness_measure(fair_ranks)
             # ranks = ranks.np / backend.max(ranks.np)
             # original_ranks = original_ranks.np / backend.max(original_ranks.np)
-            error = self.error_type(validation, exclude=training)
+            error = self.error_type(original_ranks, training)
             error_value = error(fair_ranks)
             return - self.retain_rank_weight * error_value * error.best_direction() \
                    - self.pRule_weight * min(self.target_pRule, fairness_loss) - 0.1 * fairness_loss

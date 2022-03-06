@@ -3,7 +3,6 @@ from collections.abc import MutableMapping
 import networkx as nx
 
 from pygrank.core import backend
-import numpy as np
 from pygrank.core.typing import GraphSignalGraph, GraphSignalData
 from typing import Optional, Mapping
 
@@ -21,17 +20,17 @@ class GraphSignal(MutableMapping):
         node2id: A map from graph nodes to their position inside the above-described numpy array.
 
     Example:
-        >>> from pygrank import to_signal
+        >>> import pygrank as pg
         >>> import networkx as nx
         >>> graph = nx.Graph()
         >>> graph.add_edge("A", "B")
         >>> graph.add_edge("B", "C")
-        >>> signal = to_signal(graph, {"A": 3, "C": 2})
+        >>> signal = pg.to_signal(graph, {"A": 3, "C": 2})
         >>> print(signal["A"], signal["B"])
         3.0 0.0
         >>> print(signal.np)
         [3. 0. 2.]
-        >>> signal.np /= signal.np.sum()
+        >>> signal.np /= pg.sum(signal.np)
         >>> print([(k,v) for k,v in signal.items()])
         [('A', 0.6), ('B', 0.0), ('C', 0.4)]
     """
@@ -46,15 +45,16 @@ class GraphSignal(MutableMapping):
             if backend.length(graph) != backend.length(obj):
                 raise Exception("Graph signal array dimensions " + str(backend.length(obj)) +
                                 " should be equal to graph nodes " + str(backend.length(graph)))
-            self.np = backend.to_array(obj)
+            self._np = backend.to_array(obj)
         elif obj is None:
-            self.np = backend.repeat(1.0, len(graph))
+            self._np = backend.repeat(1.0, len(graph))
         else:
-            self.np = np.repeat(0.0, len(graph)) # tensorflow does not initialize editing of eager tensors
+            import numpy as np
+            self._np = np.repeat(0.0, len(graph))  # tensorflow does not initialize editing of eager tensors
             for key, value in obj.items():
                 self[key] = value
-            self.np = backend.to_array(self.np)  # make all operations with numpy and then potentially switch to tensorflow
-        #if len(self.graph) != backend.length(self.np) or len(self.graph) != len(self.node2id):
+            self._np = backend.to_array(self._np)  # make all operations with numpy and then potentially switch to tensorflow
+        #if len(self.graph) != backend.length(self._np) or len(self.graph) != len(self.node2id):
         #    raise Exception("Graph signal arrays should have the same dimensions as graphs")
 
     def filter(self, exclude=None):
@@ -62,23 +62,98 @@ class GraphSignal(MutableMapping):
             #exclude = set([key for key, value in to_signal(self, exclude).items() if value != 0])
             #ret = backend.to_array([self[key] for key in self.graph if key not in exclude])
             exclude = to_signal(self, exclude)
-            return backend.filter_out(self.np, exclude.np)
-        return self.np
+            return backend.filter_out(self._np, exclude._np)
+        return self._np
+
+    @property
+    def np(self):
+        return backend.to_array(self._np)
+
+    @np.setter
+    def np(self, value):
+        self._np = backend.to_array(self.__compliant_value(value))
 
     def __getitem__(self, key):
-        return float(self.np[self.node2id[key]])
+        return float(self._np[self.node2id[key]])
 
     def __setitem__(self, key, value):
-        self.np[self.node2id[key]] = float(value)
+        self._np[self.node2id[key]] = float(value)
 
     def __delitem__(self, key):
-        self.np[self.node2id[key]] = 0
+        self._np[self.node2id[key]] = 0
 
     def __iter__(self):
         return iter(self.node2id)
 
     def __len__(self):
         return len(self.node2id)
+
+    def __compliant_value(self, other):
+        if isinstance(other, GraphSignal):
+            if other.graph != self.graph:
+                raise Exception("Can not operate between graph signals of different graphs")
+            return other.np
+        return other
+
+    def __add__(self, other):
+        return GraphSignal(self.graph, self.np + self.__compliant_value(other), self.node2id)
+
+    def __iadd__(self, other):
+        self.np = self.np + self.__compliant_value(other)
+
+    def __radd__(self, other):
+        return GraphSignal(self.graph, self.__compliant_value(other) + self.np, self.node2id)
+
+    def __sub__(self, other):
+        return GraphSignal(self.graph, self.np - self.__compliant_value(other), self.node2id)
+
+    def __isub__(self, other):
+        self.np = self.np - self.__compliant_value(other)
+
+    def __rsub__(self, other):
+        return GraphSignal(self.graph, self.__compliant_value(other) - self.np, self.node2id)
+
+    def __mul__(self, other):
+        return GraphSignal(self.graph, self.np * self.__compliant_value(other), self.node2id)
+
+    def __imul__(self, other):
+        self.np = self.np * self.__compliant_value(other)
+
+    def __rmul__(self, other):
+        return GraphSignal(self.graph, self.__compliant_value(other) * self.np, self.node2id)
+
+    def __pow__(self, other):
+        return GraphSignal(self.graph, self.np ** self.__compliant_value(other), self.node2id)
+
+    def __ipow__(self, other):
+        self.np = self.np ** self.__compliant_value(other)
+
+    def __rpow__(self, other):
+        return GraphSignal(self.graph, self.__compliant_value(other) ** self.np, self.node2id)
+
+    def __truediv__(self, other):
+        return GraphSignal(self.graph, self.np / self.__compliant_value(other), self.node2id)
+
+    def __itruediv__(self, other):
+        self.np = self.np / self.__compliant_value(other)
+
+    def __floordiv__(self, other):
+        return GraphSignal(self.graph, self.np // self.__compliant_value(other), self.node2id)
+
+    def __ifloordiv__(self, other):
+        self.np = self.np + self.__compliant_value(other)
+
+    def __rtruediv__(self, other):
+        return GraphSignal(self.graph, self.__compliant_value(other) / self.np, self.node2id)
+
+    def __rfloordiv__(self, other):
+        return GraphSignal(self.graph, self.__compliant_value(other) // self.np, self.node2id)
+
+    def __neg__(self):
+        return GraphSignal(self.graph, -self.np, self.node2id)
+
+    def __pos__(self):
+        return self
 
     def normalized(self, normalize=True, copy=True):
         """
@@ -90,9 +165,9 @@ class GraphSignal(MutableMapping):
                 and self is returned.
         """
         if copy:
-            return GraphSignal(self.graph, backend.copy(self.np), self.node2id).normalized(normalize, copy=False)
+            return GraphSignal(self.graph, backend.copy(self._np), self.node2id).normalized(normalize, copy=False)
         if normalize:
-            self.np = backend.self_normalize(self.np)
+            self._np = backend.self_normalize(self._np)
         return self
 
 
@@ -117,7 +192,7 @@ class NodeRanking(object):
         raise Exception("NodeRanking subclasses should implement a rank method")
 
     def propagate(self, graph, features, *args, **kwargs):
-        return backend.combine_cols([self.rank(graph, col, *args, **kwargs).np for col in backend.separate_cols(features)])
+        return backend.combine_cols([self.rank(graph, col, *args, **kwargs)._np for col in backend.separate_cols(features)])
 
     def references(self):
         return ["unknown node ranking algorithm"]

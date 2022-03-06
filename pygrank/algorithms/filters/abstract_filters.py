@@ -91,15 +91,12 @@ class RecursiveGraphFilter(GraphFilter):
         self.converge_to_eigenvectors = converge_to_eigenvectors
 
     def _step(self, M, personalization, ranks, *args, **kwargs):
-        ranks.np = self._formula(M, personalization.np, ranks.np, *args, **kwargs)
+        ranks.np = self._formula(M, personalization, ranks, *args, **kwargs)
 
         if isinstance(self.use_quotient, Postprocessor):
-            ranks.np = self.use_quotient.transform(ranks).np
+            ranks.np = self.use_quotient.transform(ranks)
         elif self.use_quotient:
-            ranks_sum = backend.sum(ranks.np)
-            if ranks_sum != 0:
-                ranks.np = ranks.np / ranks_sum
-
+            ranks.np = backend.safe_div(ranks, backend.sum(ranks))
         if self.converge_to_eigenvectors:
             personalization.np = ranks.np
 

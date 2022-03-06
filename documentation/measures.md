@@ -215,7 +215,7 @@ Args:
 
 ### <kbd>Supervised</kbd> Euclidean
 
-Computes the mean absolute error between scores and known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
+Computes the Euclidean distance between scores and known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
 
 Args: 
  * *known_scores:* The desired graph signal outcomes. 
@@ -231,7 +231,7 @@ Args:
 
 ### <kbd>Supervised</kbd> L2
 
-Computes the mean absolute error between scores and known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
+Computes the L2 norm on the difference between scores and known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
 
 Args: 
  * *known_scores:* The desired graph signal outcomes. 
@@ -242,7 +242,7 @@ Args:
 
 ### <kbd>Supervised</kbd> MKLDivergence
 
-Computes the KL-divergence of given vs known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
+Computes the mean KL-divergence of given vs known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
 
 Args: 
  * *known_scores:* The desired graph signal outcomes. 
@@ -287,6 +287,22 @@ Args:
 
 ### <kbd>Supervised</kbd> Mistreatment
 
+Computes a disparate mistreatment assessment to test the fairness of given scores given 
+that they are similarly evaluated by a measure of choice. The constructor args: 
+ * *sensitive:* A binary graph signal that separates sensitive from non-sensitive nodes. 
+ * *measure:* A supervised measure to compute disparate mistreament on. Default is AUC. 
+
+Example:
+
+```python 
+import pygrank as pg 
+known_score_signal, sensitive_signal = ... 
+train, test = pg.split(known_scores, 0.8)  # 20% test set 
+ranker = pg.LFPR() 
+measure = pg.Mistreatment(known_scores, exclude=train, measure=pg.AUC) 
+scores = ranker(train, sensitive=sensitive_signal) 
+print(measure(scores)) 
+```
 
 ### <kbd>Supervised</kbd> NDCG
 
