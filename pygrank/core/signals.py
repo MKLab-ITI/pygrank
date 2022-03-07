@@ -100,6 +100,7 @@ class GraphSignal(MutableMapping):
 
     def __iadd__(self, other):
         self.np = self.np + self.__compliant_value(other)
+        return self
 
     def __radd__(self, other):
         return GraphSignal(self.graph, self.__compliant_value(other) + self.np, self.node2id)
@@ -109,6 +110,7 @@ class GraphSignal(MutableMapping):
 
     def __isub__(self, other):
         self.np = self.np - self.__compliant_value(other)
+        return self
 
     def __rsub__(self, other):
         return GraphSignal(self.graph, self.__compliant_value(other) - self.np, self.node2id)
@@ -118,6 +120,7 @@ class GraphSignal(MutableMapping):
 
     def __imul__(self, other):
         self.np = self.np * self.__compliant_value(other)
+        return self
 
     def __rmul__(self, other):
         return GraphSignal(self.graph, self.__compliant_value(other) * self.np, self.node2id)
@@ -127,6 +130,7 @@ class GraphSignal(MutableMapping):
 
     def __ipow__(self, other):
         self.np = self.np ** self.__compliant_value(other)
+        return self
 
     def __rpow__(self, other):
         return GraphSignal(self.graph, self.__compliant_value(other) ** self.np, self.node2id)
@@ -136,12 +140,14 @@ class GraphSignal(MutableMapping):
 
     def __itruediv__(self, other):
         self.np = self.np / self.__compliant_value(other)
+        return self
 
     def __floordiv__(self, other):
         return GraphSignal(self.graph, self.np // self.__compliant_value(other), self.node2id)
 
     def __ifloordiv__(self, other):
-        self.np = self.np + self.__compliant_value(other)
+        self.np = self.np // self.__compliant_value(other)
+        return self
 
     def __rtruediv__(self, other):
         return GraphSignal(self.graph, self.__compliant_value(other) / self.np, self.node2id)

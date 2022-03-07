@@ -95,11 +95,29 @@ def test_signal_direct_operations():
     signal = pg.to_signal(graph, [1., 2., 3.])
     assert pg.sum(signal) == 6
     assert pg.sum(signal+1) == 9
+    assert pg.sum(1+signal) == 9
     assert pg.sum(signal**2) == 14
     assert pg.sum(signal-[1, 2, 2]) == 1
+    assert pg.sum(-1+signal) == 3
     assert pg.sum(signal / pg.to_signal(graph, [1., 2., 3.])) == 3
     assert pg.sum(3**signal) == 3+9+27
     signal.np = pg.to_signal(graph, [4, 4, 4])
+    assert pg.sum(signal) == 12
+    assert pg.sum(+signal) == 12
+    assert pg.sum(-signal) == -12
+    assert pg.sum(-signal/2) == -6
+    assert pg.sum(-signal//2) == -6
+    assert pg.sum(2/signal) == 1.5
+    assert pg.sum(2//signal) == 0
+    signal += 1
+    assert pg.sum(signal) == 15
+    signal -= 1
+    assert pg.sum(signal) == 12
+    signal /= 2
+    assert pg.sum(signal) == 6
+    signal //= 2
+    assert pg.sum(signal) == 3
+    signal *= 4
     assert pg.sum(signal) == 12
     with pytest.raises(Exception):
         signal+pg.to_signal(graph.copy(), [1., 2., 3.])
