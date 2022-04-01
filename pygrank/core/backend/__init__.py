@@ -29,7 +29,7 @@ class Backend:
 
 
 def load_backend(mod_name):
-    if mod_name not in ['pytorch', 'numpy', 'tensorflow']:
+    if mod_name not in ['pytorch', 'numpy', 'tensorflow', 'torch_sparse']:
         raise Exception("Unsupported backend "+mod_name)
     if mod_name in _imported_mods:
         mod = _imported_mods[mod_name]
@@ -79,7 +79,7 @@ def get_backend_preference():  # pragma: no cover
             mod_name = config_dict.get('backend', '').lower()
             remind_where_to_find = (config_dict.get('reminder', 'true').lower() == 'true')
 
-    if mod_name not in ['tensorflow', 'numpy', 'pytorch']:
+    if mod_name not in ['tensorflow', 'numpy', 'pytorch', 'torch_sparse']:
         print("pygrank backend "
               + ("not found." if mod_name is not None or mod_name == "None" else str(mod_name)+" is not valid. "
                 + "Automatically setting \"numpy\" as the backend of choice."),

@@ -6,7 +6,7 @@ Fast recommendation algorithms for large graphs based on link analysis.
 
 **License:** Apache Software License
 <br>**Author:** Emmanouil (Manios) Krasanakis
-<br>**Dependencies:** `networkx, numpy, scipy, sklearn, wget` (required) `tensorflow`, `torch` (optional)
+<br>**Dependencies:** `networkx, numpy, scipy, sklearn, wget` (required) `tensorflow`, `torch`, `torch_sparse` (optional)
 <br>*Externally install tensorflow and torch. Tests pass on the versions above.*
 
 ![build](https://github.com/MKLab-ITI/pygrank/actions/workflows/tests.yml/badge.svg)
@@ -34,18 +34,25 @@ pip install --upgrade pygrank
 ```
 
 To automatically use the machine learning backends (e.g. to integrate the package
-in machine learning projects) *tensorflow* and *pytorch*,
- manually change the automatically created
+in machine learning projects) *tensorflow*, *pytorch*, or *torch_sparse*,
+manually change the automatically created
 configuration file whose path is displayed in the error console.
-If you want others to run your code that depends on `pygrank`
-with specific backends, add the following recipe at your code's
-entry point to override other configurations:
+If you want others to run parts of your code that depend on `pygrank`
+with specific backends, use the following
+[context manager](https://book.pythontips.com/en/latest/context_managers.html)
+to override other any loaded configurations.
+Replacing *torch_sparse* with the desired backend name:
 
 ```python
 import pygrank as pg
-pg.load_backend(`pytorch`)
+with pg.Backend("torch_sparse"):
+    ... # run your pygrank code here
 ```
 
+Node ranking algorithms can be defined before contexts and only
+be called inside them. You can also use the simpler
+`pg.load_backend("torch_sparse")` to switch to a specific backend
+if you want to avoid contexts.
 
 # :zap: Quickstart
 As a quick start, let us construct a networkx graph `G` and a set of nodes `seeds`.
@@ -155,13 +162,14 @@ finds near-best base algorithms.
 
 To obtain a recommendation about how to cite complex
 algorithms, an automated description can be extracted by the source code per the following
-command, where bibtex entries corresponding to the citations can be found 
-[list of citations](documentation/citations.md).:
+command:
 
 ```python
 print(tuned_ranker.cite())
 # graph filter \cite{ortega2018graph} with dictionary-based hashing \cite{krasanakis2021pygrank} and parameters tuned \cite{krasanakis2021pygrank} to optimize AUC while withholding 0.200 of nodes for validation
 ```
+Bibtex entries corresponding to the citations can be found 
+in the [list of citations](documentation/citations.md).
 
 
 # :brain: Overview
@@ -198,6 +206,13 @@ Some of the library's advantages are:
 [Postprocessors](documentation/postprocessors.md)<br>
 [Tuners](documentation/tuners.md)<br>
 [Downloadable Datasets](documentation/datasets.md)<br>
+
+**Backend resources**<br>
+[tensorflow](https://www.tensorflow.org/install) <br>
+[pytorch](https://pytorch.org/get-started/locally) <br>
+[torch_sparse](https://github.com/rusty1s/pytorch_sparse) <br>
+<small>Backends other than *numpy* need to be manually installed
+to use.</small><br>
 
 # :fire: Features
 * Graph filters

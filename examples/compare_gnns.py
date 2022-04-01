@@ -33,9 +33,10 @@ for seed in range(10):
                      #"APFNP": APPNP(features.shape[1], labels.shape[1], alpha="estimated")
                      }
 
-    pg.load_backend('tensorflow')
-    accs = dict()
-    for architecture, model in architectures.items():
-        pg.gnn_train(model, graph, features, labels, training, validation, test=test)
-        accs[architecture] = float(pg.gnn_accuracy(labels, model([graph, features]), test))
-        print("seed"+str(seed)+" & "+" & ".join(str(acc) for acc in accs.values()))
+    with pg.Backend('tensorflow'):
+        with tf.device('/GPU:1'):
+            accs = dict()
+            for architecture, model in architectures.items():
+                pg.gnn_train(model, graph, features, labels, training, validation, test=test, verbose=True)
+                accs[architecture] = float(pg.gnn_accuracy(labels, model([graph, features]), test))
+                print("seed"+str(seed)+" & "+" & ".join(str(acc) for acc in accs.values()))

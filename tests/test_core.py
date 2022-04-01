@@ -5,7 +5,7 @@ import pytest
 
 
 def supported_backends():
-    for backend in ["pytorch", "tensorflow", "numpy"]:
+    for backend in ["pytorch", "tensorflow", "torch_sparse", "numpy"]:
         pg.load_backend(backend)
         yield backend
 
@@ -70,7 +70,7 @@ def test_backend_load():
 
 
 def test_backend_with():
-    for backend_name in ["pytorch", "tensorflow", "numpy"]:
+    for backend_name in ["pytorch", "tensorflow", "numpy", "torch_sparse"]:
         with pg.Backend(backend_name) as backend:
             assert pg.backend_name() == backend_name
             assert backend.backend_name() == backend_name

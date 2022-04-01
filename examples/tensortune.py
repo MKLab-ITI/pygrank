@@ -53,7 +53,7 @@ class Tensortune(pg.Postprocessor):
                     patience = 100
                     best_ranks = ranks
                     best_loss = validation_loss
-                    print("epoch", epoch, "loss", validation_loss, "prule", pg.pRule(tf.cast(sensitive.np, tf.float32))(ranks))
+                    #print("epoch", epoch, "loss", validation_loss, "prule", pg.pRule(tf.cast(sensitive.np, tf.float32))(ranks))
                 patience -= 1
                 if patience == 0:
                     break
