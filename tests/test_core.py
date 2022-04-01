@@ -121,4 +121,3 @@ def test_signal_direct_operations():
     assert pg.sum(signal) == 12
     with pytest.raises(Exception):
         signal+pg.to_signal(graph.copy(), [1., 2., 3.])
-

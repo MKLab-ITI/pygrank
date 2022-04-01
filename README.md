@@ -7,7 +7,7 @@ Fast recommendation algorithms for large graphs based on link analysis.
 **License:** Apache Software License
 <br>**Author:** Emmanouil (Manios) Krasanakis
 <br>**Dependencies:** `networkx, numpy, scipy, sklearn, wget` (required) `tensorflow`, `torch`, `torch_sparse` (optional)
-<br>*Externally install tensorflow and torch. Tests pass on the versions above.*
+<br><small>*Externally install optional depenendencies to support respective backends.*</small>
 
 ![build](https://github.com/MKLab-ITI/pygrank/actions/workflows/tests.yml/badge.svg)
 [![codecov](https://codecov.io/gh/MKLab-ITI/pygrank/branch/master/graph/badge.svg?token=RYZOT4UY8Q)](https://codecov.io/gh/MKLab-ITI/pygrank)
@@ -210,9 +210,7 @@ Some of the library's advantages are:
 **Backend resources**<br>
 [tensorflow](https://www.tensorflow.org/install) <br>
 [pytorch](https://pytorch.org/get-started/locally) <br>
-[torch_sparse](https://github.com/rusty1s/pytorch_sparse) <br>
-<small>Backends other than *numpy* need to be manually installed
-to use.</small><br>
+[torch_sparse](https://github.com/rusty1s/pytorch_sparse)
 
 # :fire: Features
 * Graph filters
