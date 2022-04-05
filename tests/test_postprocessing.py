@@ -108,6 +108,8 @@ def test_threshold():
     _, graph, group = next(pg.load_datasets_one_community(["bigraph"]))
     for _ in supported_backends():
         training, evaluation = pg.split(list(group), training_samples=0.5)
-        cond1 = pg.Conductance().evaluate(pg.Threshold(pg.Sweep(pg.PageRank())).rank(graph, {v: 1 for v in training}))
-        cond2 = pg.Conductance().evaluate(pg.Threshold("gap").transform(pg.PageRank().rank(graph, {v: 1 for v in training}))) # try all api types
+        algorithm = pg.PageRank()
+        cond1 = pg.Conductance().evaluate(pg.Threshold(pg.Sweep(algorithm)).rank(graph, {v: 1 for v in training}))
+        cond2 = pg.Conductance().evaluate(pg.Threshold(0.3).transform(algorithm.rank(graph, {v: 1 for v in training}))) # try all api types
+        # TODO: find an algorithm other than gap to outperform 0.2 threshold too
         assert cond1 <= cond2
