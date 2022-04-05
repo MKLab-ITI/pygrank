@@ -111,5 +111,7 @@ def test_threshold():
         algorithm = pg.PageRank()
         cond1 = pg.Conductance().evaluate(pg.Threshold(pg.Sweep(algorithm)).rank(graph, {v: 1 for v in training}))
         cond2 = pg.Conductance().evaluate(pg.Threshold(0.3).transform(algorithm.rank(graph, {v: 1 for v in training}))) # try all api types
+        cond3 = pg.Conductance().evaluate(pg.Threshold(1).transform(algorithm.rank(graph, {v: 1 for v in training})))  # should yield infinite conductance
         # TODO: find an algorithm other than gap to outperform 0.2 threshold too
         assert cond1 <= cond2
+        assert cond2 <= cond3
