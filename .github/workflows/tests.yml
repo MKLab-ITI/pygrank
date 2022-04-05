@@ -24,7 +24,7 @@ jobs:
           pip install wget
           pip install tensorflow
           pip install torch
-          pip install torch-scatter torch-sparse -f https://data.pyg.org/whl/torch-1.10.0+cpu.html
+          pip install torch-scatter torch-sparse -f https://data.pyg.org/whl/torch-1.11.0+cpu.html
           pip install pytest
           pip install pytest-cov
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
