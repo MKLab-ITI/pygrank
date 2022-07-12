@@ -212,6 +212,36 @@ class Transformer(Postprocessor):
         return "element-by-element "+self.expr.__name__
 
 
+class Undersample(Postprocessor):
+    def __init__(self,
+                 ranker: Union[float, NodeRanking] = None,
+                 fraction_of_training: Union[float, NodeRanking] = 0.5):
+
+        if ranker is not None and not callable(getattr(ranker, "rank", None)):
+            ranker, fraction_of_training = fraction_of_training, ranker
+            if not callable(getattr(ranker, "rank", None)):
+                ranker = None
+        super().__init__(Tautology() if ranker is None else ranker)
+        self.fraction_of_training = fraction_of_training
+
+    def _transform(self,
+                   ranks: GraphSignal,
+                   **kwargs):
+        ensure_used_args(kwargs)
+        threshold = 0
+        fraction_of_training = self.fraction_of_training*backend.length(ranks) if self.fraction_of_training<1 else self.fraction_of_training
+        fraction_of_training = int(fraction_of_training)
+        for v in sorted(ranks, key=ranks.get, reverse=True):
+            fraction_of_training -= 1
+            if fraction_of_training == 0:
+                threshold = ranks[v]
+                break
+        return {v: 1. if ranks[v] >= threshold else 0. for v in ranks.keys()}
+
+    def _reference(self):
+        return str(self.fraction_of_training)+" undersampling"
+
+
 class Threshold(Postprocessor):
     """ Converts ranking outcome to binary values based on a threshold value."""
 
@@ -315,3 +345,66 @@ class Sweep(Postprocessor):
         if self.uniform_ranker != self.ranker:
             return "sweep ratio postprocessing \\cite{andersen2007local} where non-personalized ranking is performed with a "+self.uniform_ranker.cite()
         return "sweep ratio postprocessing \\cite{andersen2007local}"
+
+
+class LinearSweep(Postprocessor):
+    """
+    Applies a sweep procedure that subtracts non-personalized ranks from personalized ones.
+    """
+    def __init__(self,
+                 ranker: NodeRanking,
+                 uniform_ranker: NodeRanking = None):
+        """
+        Initializes the sweep procedure.
+
+        Args:
+            ranker: The base ranker instance.
+            uniform_ranker: Optional. The ranker instance used to perform non-personalized ranking. If None (default)
+                the base ranker is used.
+
+        Example:
+            >>> import pygrank as pg
+            >>> graph, personalization, algorithm = ...
+            >>> algorithm = pg.LinearSweep(algorithm) # divides node scores by uniform ranker'personalization non-personalized outcome
+            >>> ranks = algorithm.rank(graph, personalization
+
+        Example with different rankers:
+            >>> import pygrank as pg
+            >>> graph, personalization, algorithm, uniform_ranker = ...
+            >>> algorithm = pg.LinearSweep(algorithm, uniform_ranker=uniform_ranker)
+            >>> ranks = algorithm.rank(graph, personalization)
+
+        Example (same outcome):
+            >>> import pygrank as pg
+            >>> graph, personalization, uniform_ranker, algorithm = ...
+            >>> ranks = pg.Threshold(uniform_ranker).transform(algorithm.rank(graph, personalization))
+        """
+        super().__init__(ranker)
+        self.uniform_ranker = ranker if uniform_ranker is None else uniform_ranker
+        self.centrality = MethodHasher(lambda graph: self.uniform_ranker.rank(graph), assume_immutability=True)
+
+    def _transform(self,
+                   ranks: GraphSignal,
+                   **kwargs):
+        ensure_used_args(kwargs)
+        uniforms = self.centrality(ranks.graph).np
+        return ranks.np - uniforms
+
+    def _reference(self):
+        if self.uniform_ranker != self.ranker:
+            return "sweep ratio postprocessing \\cite{andersen2007local} where non-personalized ranking is performed with a "+self.uniform_ranker.cite()
+        return "sweep ratio postprocessing \\cite{andersen2007local}"
+
+
+class Sequential(Postprocessor):
+    def __init__(self, *args):
+        super().__init__(args[0] if args else None)
+        self.rankers = args
+
+    def _transform(self,
+                   ranks: GraphSignal,
+                   **kwargs):
+        for ranker in self.rankers:
+            ranks = ranker(ranks)
+        return ranks
+

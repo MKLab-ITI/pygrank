@@ -15,10 +15,10 @@ algorithms = {"None": filter,
               "Mult": pg.AdHocFairness(filter, "B"),
               "LFPRO": pg.AdHocFairness(filter, "O"),
               #"FPers-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=0, error_type=pg.L2, error_skewing=True, parity_type="impact"),
-              #"Fest-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=1, error_type=pg.L2, error_skewing=False, parity_type="impact"),
+              "Fest-C": pg.FairPersonalizer(filter, .8, pRule_weight=10, max_residual=1, error_type=pg.L2, error_skewing=False, parity_type="impact"),
               #"Tensortune": Tensortune(filter),
               #"TensortuneOutputs": TensortuneOutputs(filter),
-              "TensortuneCombineed": TensortuneOutputs(Tensortune(filter), filter)
+              #"TensortuneCombineed": TensortuneOutputs(Tensortune(filter), filter)
               }
 algorithms = pg.create_variations(algorithms, pg.Normalize)
 

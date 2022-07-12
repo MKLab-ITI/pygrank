@@ -2,6 +2,7 @@ import networkx as nx
 import numpy as np
 import scipy
 from pygrank.core import backend
+from pygrank.fastgraph import fastgraph
 import uuid
 
 
@@ -10,8 +11,9 @@ def to_sparse_matrix(G, normalization="auto", weight="weight", renormalize=False
 
     Args:
         G: A networkx graph
-        normalization: Optional. The type of normalization can be "none", "col", "symmetric" or "auto" (default). The latter
-            selects the type of normalization depending on whether the graph is directed or not respectively.
+        normalization: Optional. The type of normalization can be "none", "col", "symmetric", "laplacian",
+            or "auto" (default). The last ine selects the type of normalization between "col" and "symmetric",
+            depending on whether the graph is directed or not respectively.
         weight: Optional. The weight attribute of the graph'personalization edges.
         renormalize: Optional. If True, the renormalization trick employed by graph neural networks to ensure iteration
             stability by shrinking the spectrum is applied. Default is False.
@@ -19,7 +21,7 @@ def to_sparse_matrix(G, normalization="auto", weight="weight", renormalize=False
     normalization = normalization.lower()
     if normalization == "auto":
         normalization = "col" if G.is_directed() else "symmetric"
-    M = nx.to_scipy_sparse_matrix(G, weight=weight, dtype=float)
+    M = G.to_scipy_sparse_matrix() if isinstance(G, fastgraph.Graph) else nx.to_scipy_sparse_matrix(G, weight=weight, dtype=float)
     if renormalize:
         M = M + scipy.sparse.eye(M.shape[0])*float(renormalize)
     if normalization == "col":
@@ -27,6 +29,15 @@ def to_sparse_matrix(G, normalization="auto", weight="weight", renormalize=False
         S[S != 0] = 1.0 / S[S != 0]
         Q = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
         M = Q * M
+    elif normalization == "laplacian":
+        S = np.array(np.sqrt(M.sum(axis=1))).flatten()
+        S[S != 0] = 1.0 / S[S != 0]
+        Qleft = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
+        S = np.array(np.sqrt(M.sum(axis=0))).flatten()
+        S[S != 0] = 1.0 / S[S != 0]
+        Qright = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
+        M = Qleft * M * Qright
+        M = -M + scipy.sparse.eye(M.shape[0])
     elif normalization == "symmetric":
         S = np.array(np.sqrt(M.sum(axis=1))).flatten()
         S[S != 0] = 1.0 / S[S != 0]
@@ -118,15 +129,23 @@ class MethodHasher:
             return self._method(*args, **kwargs)
 
 
-def preprocessor(normalization="auto", assume_immutability=False, renormalize=False):
+def preprocessor(normalization: str = "auto",
+                 assume_immutability: bool = False,
+                 weight: str = "weight",
+                 renormalize: bool = False):
     """ Wrapper function that generates lambda expressions for the method to_sparse_matrix.
 
     Args:
-        normalization: Normalization parameter for `to_sparse_matrix` (default is "auto").
+        normalization: Optional. The type of normalization can be "none", "col", "symmetric" or "auto" (default). The latter
+            selects the type of normalization depending on whether the graph is directed or not respectively.
         assume_immutability: If True, then the output is further wrapped through a MethodHasher to avoid redundant
             calls. Default is False, as graph immutability needs be explicitly assumed but cannot be guaranteed.
-        renormalize: Graph renormalization parameter for `to_sparse_matrix` (default is False).
+        G: A networkx graph
+        weight: Optional. The weight attribute of the graph'personalization edges.
+        renormalize: Optional. If True, the renormalization trick employed by graph neural networks to ensure iteration
+            stability by shrinking the spectrum is applied. Default is False.
     """
     if assume_immutability:
-        return MethodHasher(preprocessor(normalization, False, renormalize))
-    return lambda G: to_sparse_matrix(G, normalization=normalization, renormalize=renormalize)
+        return MethodHasher(preprocessor(assume_immutability=False,
+                                         normalization=normalization, weight=weight, renormalize=renormalize))
+    return lambda G: to_sparse_matrix(G, normalization=normalization, weight=weight, renormalize=renormalize)

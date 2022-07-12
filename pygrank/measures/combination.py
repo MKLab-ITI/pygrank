@@ -95,7 +95,7 @@ class Parity(MeasureCombination):
         mult = 1
         for i in range(len(self.measures)):
             if self.weights[i] != 0:
-                evaluation = self.measures[i].evaluate(scores)
+                evaluation = self.measures[i](scores)
                 evaluation = min(max(evaluation, self.thresholds[i][0]), self.thresholds[i][1])
                 result += (self.weights[i]*mult)*evaluation
             mult *= -1
@@ -109,7 +109,7 @@ class GM(MeasureCombination):
         result = 0
         for i in range(len(self.measures)):
             if self.weights[i] != 0:
-                evaluation = self.measures[i].evaluate(scores)
+                evaluation = self.measures[i](scores)
                 evaluation = min(max(evaluation, self.thresholds[i][0]), self.thresholds[i][1])
                 result += self.weights[i]*log(max(backend.epsilon(), evaluation))
         return exp(result / self._total_weight())

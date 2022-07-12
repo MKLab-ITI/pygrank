@@ -8,14 +8,17 @@ All of them can be used through the code patterns presented at the library's [do
 2. [BoostedSeedOversampling](#postprocessor-boostedseedoversampling)
 3. [FairPersonalizer](#postprocessor-fairpersonalizer)
 4. [FairWalk](#postprocessor-fairwalk)
-5. [MabsMaintain](#postprocessor-mabsmaintain)
-6. [Normalize](#postprocessor-normalize)
-7. [Ordinals](#postprocessor-ordinals)
-8. [SeedOversampling](#postprocessor-seedoversampling)
-9. [Sweep](#postprocessor-sweep)
-10. [Tautology](#postprocessor-tautology)
-11. [Threshold](#postprocessor-threshold)
-12. [Transformer](#postprocessor-transformer)
+5. [LinearSweep](#postprocessor-linearsweep)
+6. [MabsMaintain](#postprocessor-mabsmaintain)
+7. [Normalize](#postprocessor-normalize)
+8. [Ordinals](#postprocessor-ordinals)
+9. [SeedOversampling](#postprocessor-seedoversampling)
+10. [Sequential](#postprocessor-sequential)
+11. [Sweep](#postprocessor-sweep)
+12. [Tautology](#postprocessor-tautology)
+13. [Threshold](#postprocessor-threshold)
+14. [Transformer](#postprocessor-transformer)
+15. [Undersample](#postprocessor-undersample)
 
 ### <kbd>Postprocessor</kbd> AdHocFairness
 
@@ -89,6 +92,42 @@ graphs also clear the dictionary where preprocessed graphs are inputted by calli
 
 Args: 
  * *ranker:* Optional. The base ranker instance. If None (default), a Tautology() ranker is created.
+
+### <kbd>Postprocessor</kbd> LinearSweep
+
+Applies a sweep procedure that subtracts non-personalized ranks from personalized ones. The constructor initializes the sweep procedure. 
+
+Args: 
+ * *ranker:* The base ranker instance. 
+ * *uniform_ranker:* Optional. The ranker instance used to perform non-personalized ranking. If None (default) the base ranker is used. 
+
+Example:
+
+```python 
+import pygrank as pg 
+graph, personalization, algorithm = ... 
+algorithm = pg.LinearSweep(algorithm) # divides node scores by uniform ranker'personalization non-personalized outcome 
+ranks = algorithm.rank(graph, personalization 
+```
+
+
+Example with different rankers:
+
+```python 
+import pygrank as pg 
+graph, personalization, algorithm, uniform_ranker = ... 
+algorithm = pg.LinearSweep(algorithm, uniform_ranker=uniform_ranker) 
+ranks = algorithm.rank(graph, personalization) 
+```
+
+
+Example (same outcome):
+
+```python 
+import pygrank as pg 
+graph, personalization, uniform_ranker, algorithm = ... 
+ranks = pg.Threshold(uniform_ranker).transform(algorithm.rank(graph, personalization)) 
+```
 
 ### <kbd>Postprocessor</kbd> MabsMaintain
 
@@ -166,6 +205,9 @@ graph, seed_nodes = ...
 algorithm = pg.SeedOversampling(pg.PageRank(alpha=0.99)) 
 ranks = algorithm.rank(graph, personalization={1 for v in seed_nodes}) 
 ```
+
+### <kbd>Postprocessor</kbd> Sequential
+
 
 ### <kbd>Postprocessor</kbd> Sweep
 
@@ -256,3 +298,6 @@ r1 = pg.Normalize(algorithm, "sum").rank(graph, personalization)
 r2 = pg.Transformer(algorithm, lambda x: x/pg.sum(x)).rank(graph, personalization) 
 print(pg.Mabs(r1)(r2)) 
 ```
+
+### <kbd>Postprocessor</kbd> Undersample
+

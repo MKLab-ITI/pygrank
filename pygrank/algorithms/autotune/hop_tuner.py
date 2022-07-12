@@ -5,7 +5,8 @@ from pygrank.measures import Supervised, Cos, AUC
 from pygrank.measures.utils import split
 from typing import Callable, Optional
 from pygrank.algorithms.filters.krylov_space import arnoldi_iteration
-from pygrank.algorithms.autotune.tuning import Tuner, SelfClearDict
+from pygrank.algorithms.autotune.tuning import Tuner
+from pygrank.algorithms.autotune.parameterized import SelfClearDict
 from pygrank.algorithms.autotune.optimization import optimize
 from pygrank.algorithms.postprocess.postprocess import Tautology
 
@@ -22,7 +23,8 @@ class HopTuner(Tuner):
                  tuning_backend: Optional[str] = None,
                  autoregression: int = 0,
                  num_parameters: int = 20,
-                 tunable_offset: Optional[Callable[[GraphSignal, GraphSignal], Supervised]] = AUC,
+                 tunable_offset: Optional[Callable[[GraphSignal, GraphSignal], Supervised]] = None,
+                 pre_diffuse: Optional[NodeRanking] = None,
                  **kwargs):
         """
         Instantiates the tuning mechanism.
@@ -62,6 +64,7 @@ class HopTuner(Tuner):
         self.autoregression = autoregression
         self.num_parameters = num_parameters
         self.tunable_offset = tunable_offset
+        self.pre_diffuse = pre_diffuse
         self.basis = basis.lower()
 
     def _tune(self, graph=None, personalization=None, *args, **kwargs):
@@ -87,8 +90,8 @@ class HopTuner(Tuner):
         training1, training2 = split(training, 0.5)
 
         propagated = [training1.np, training2.np]
-        measures = [self.measure(backend_personalization, training1), self.measure(backend_personalization, training2)]
-        #measures = [self.measure(validation, training), self.measure(training, validation)]
+        measures = [self.measure(validation, training1),
+                    self.measure(validation, training2)]
 
         if self.basis == "krylov":
             for i in range(len(measure_values)):
@@ -134,8 +137,11 @@ class HopTuner(Tuner):
                 if error == 0 or abs(error-prev_error)/error < 1.E-6:
                     best_parameters = parameters
                     break
-        best_parameters = backend.mean(best_parameters[:self.num_parameters, :] * backend.to_primitive(measure_weights), axis=1) + backend.mean(mean_value)
-
+        best_parameters = backend.mean(best_parameters[:self.num_parameters, :]
+                                       * backend.to_primitive(measure_weights), axis=1) + backend.mean(mean_value)
+        #best_parameters = best_parameters + best_parameters[::-1]
+        #print(best_parameters)
+        """
         if self.tunable_offset is not None:
             div = backend.max(best_parameters)
             if div != 0:
@@ -143,15 +149,17 @@ class HopTuner(Tuner):
             measure = self.tunable_offset(validation, training)
             base = basis[0] if self.basis != "krylov" else None
             best_offset = optimize(
-                lambda params: - measure.best_direction()*measure(self._run(training, [(best_parameters[i]+params[2])*params[0]**i+params[1] for i in range(len(best_parameters))], base, *args, **kwargs)),
-                #lambda params: - measure.evaluate(self._run(training, best_parameters + params[0], *args, **kwargs)),
-                max_vals=[1, 0, 0], min_vals=[0, 0, 0], deviation_tol=0.005, parameter_tol=1, partitions=5, divide_range=2)
+                lambda params: - measure.best_direction()*measure(
+                    self._run(training, [best_parameters[i]+params[0]
+                                         for i in range(len(best_parameters))], base, *args, **kwargs)),
+                max_vals=[1], min_vals=[0], deviation_tol=0.005, parameter_tol=1, partitions=5, divide_range=1.1)
             #best_parameters += best_offset[0]
-            best_parameters = [(best_parameters[i]+best_offset[2])*best_offset[0]**i+best_offset[1] for i in range(len(best_parameters))]
-
+            best_parameters = [best_parameters[i]+best_offset[0] for i in range(len(best_parameters))]
+        """
         best_parameters = backend.to_primitive(best_parameters)
         if backend.sum(backend.abs(best_parameters)) != 0:
             best_parameters /= backend.mean(backend.abs(best_parameters))
+
         if self.tuning_backend is not None and self.tuning_backend != previous_backend:
             best_parameters = [float(param) for param in best_parameters]  # convert parameters to backend-independent list
             backend.load_backend(previous_backend)

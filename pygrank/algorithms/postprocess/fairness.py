@@ -1,5 +1,5 @@
 import pygrank
-from pygrank.algorithms.autotune import optimize
+from pygrank.algorithms.autotune import nelder_mead
 from pygrank.algorithms.postprocess.postprocess import Tautology, Normalize, Postprocessor
 from pygrank.measures import pRule, Mabs, Supervised, AM, Mistreatment, TPR, TNR, Parity
 from pygrank.core import GraphSignal, to_signal, backend, BackendPrimitive, NodeRanking, GraphSignalGraph, GraphSignalData
@@ -78,7 +78,7 @@ class FairPersonalizer(Postprocessor):
                 ranks: BackendPrimitive,
                 params: List[float]):
         ranks = ranks.np / backend.max(ranks.np)
-        personalization = personalization / backend.max(personalization)
+        #personalization = personalization / backend.max(personalization)
         res = ranks if self.parameter_buckets == 0 else 0
         for i in range(self.parameter_buckets):
             a = sensitive*(params[0+4*i]-params[1+4*i]) + params[1+4*i]
@@ -123,13 +123,10 @@ class FairPersonalizer(Postprocessor):
             return - self.retain_rank_weight * error_value * error.best_direction() \
                    - self.pRule_weight * min(self.target_pRule, fairness_loss) - 0.1 * fairness_loss
 
-        optimal_params = optimize(loss,
-                                  max_vals=[1, 1, 10, 10] * self.parameter_buckets + [self.max_residual],
-                                  min_vals=[0, 0, -10, -10]*self.parameter_buckets+[0],
-                                  deviation_tol=1.E-3,
-                                  divide_range=1.5,
-                                  partitions=5,
-                                  depth=2)
+        optimal_params = nelder_mead(loss,
+                                  max_vals=[1, 1, 3, 3] * self.parameter_buckets + [self.max_residual],
+                                  min_vals=[0, 0, -3, -3]*self.parameter_buckets+[0],
+                                  deviation_tol=1.E-8, parameter_tol=1.E-8)
         optimal_personalization = self.__culep(personalization, sensitive, original_ranks, optimal_params)
         return self.ranker.rank(graph, optimal_personalization, *args, **kwargs)
 

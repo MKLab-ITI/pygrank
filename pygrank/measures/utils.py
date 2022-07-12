@@ -66,12 +66,12 @@ def split(groups: Union[GraphSignalData, Mapping[str, GraphSignalData]],
     if isinstance(groups, GraphSignal):
         group = [v for v in groups if groups[v] != 0]
         random.Random(seed).shuffle(group)
-        splt = training_samples if training_samples > 1 else int(len(group) * training_samples)
+        splt = int(training_samples) if training_samples > 1 else (int(len(group) * training_samples) if training_samples >= 0 else len(group)+int(training_samples))
         return to_signal(groups, {v: groups[v] for v in group[:splt]}), to_signal(groups, {v: groups[v] for v in group[splt:]})
     if not isinstance(groups, collections.abc.Mapping):
         group = list(groups)
         random.Random(seed).shuffle(group)
-        splt = training_samples if training_samples > 1 else int(len(group) * training_samples)
+        splt = int(training_samples) if training_samples > 1 else (int(len(group) * training_samples) if training_samples >= 0 else len(group)+int(training_samples))
         return group[:splt], group[splt:]
     testing = {}
     training = {}

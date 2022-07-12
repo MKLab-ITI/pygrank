@@ -44,7 +44,7 @@ class GraphSignal(MutableMapping):
         if backend.is_array(obj):
             if backend.length(graph) != backend.length(obj):
                 raise Exception("Graph signal array dimensions " + str(backend.length(obj)) +
-                                " should be equal to graph nodes " + str(backend.length(graph)))
+                                " should be equal to graph nodes " + str(len(graph)))
             self._np = backend.to_array(obj)
         elif obj is None:
             self._np = backend.repeat(1.0, len(graph))

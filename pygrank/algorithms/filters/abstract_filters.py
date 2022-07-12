@@ -16,6 +16,7 @@ class GraphFilter(NodeRanking):
                  preprocessor=None,
                  convergence=None,
                  personalization_transform: Postprocessor = None,
+                 preserve_norm: bool = True,
                  ** kwargs):
         """
         Args:
@@ -27,10 +28,14 @@ class GraphFilter(NodeRanking):
                 automatically extracted from the ones passed to this constructor.
             personalization_transform: Optional. A Postprocessor whose `transform` method is used to transform
                 the personalization before applying the graph filter. If None (default) a Tautology is used.
+            preserve_norm: Optional. If True (default) the input's norm is used to scale the output. For example,
+                if *convergence* is L1, this effectively means that the sum of output values is equal to the sum
+                of input values.
         """
         self.preprocessor = call(default_preprocessor, kwargs) if preprocessor is None else preprocessor
         self.convergence = call(ConvergenceManager, kwargs) if convergence is None else convergence
         self.personalization_transform = Tautology() if personalization_transform is None else personalization_transform
+        self.preserve_norm = preserve_norm
         ensure_used_args(kwargs, [default_preprocessor, ConvergenceManager])
 
     def _prepare(self, personalization: GraphSignal):
@@ -55,7 +60,8 @@ class GraphFilter(NodeRanking):
         while not self.convergence.has_converged(ranks.np):
             self._step(backend.graph_dropout(M, graph_dropout), personalization, ranks, *args, **kwargs)
         self._end(backend.graph_dropout(M, graph_dropout), personalization, ranks, *args, **kwargs)
-        ranks.np = ranks.np * personalization_norm
+        if self.preserve_norm:
+            ranks.np = ranks.np * personalization_norm
         return ranks
 
     def _start(self, M, personalization, ranks, *args, **kwargs):
@@ -69,6 +75,23 @@ class GraphFilter(NodeRanking):
 
     def references(self):
         return ["graph filter \\cite{ortega2018graph}"]
+
+
+class ImpulseGraphFilter(GraphFilter):
+    def __init__(self, params, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.params = params
+
+    def _step(self, M, personalization, ranks, *args, **kwargs):
+        if self.convergence.iteration > len(self.params):
+            return 0
+        param = self.params[self.convergence.iteration-1]
+        if param == 0:
+            return ranks
+        if param == 1:
+            ranks.np = backend.conv(ranks, M).np
+            return ranks
+        ranks.np = (backend.conv(ranks, M)*param + ranks*(1-param)).np
 
 
 class RecursiveGraphFilter(GraphFilter):

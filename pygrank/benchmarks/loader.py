@@ -1,4 +1,4 @@
-import networkx as nx
+from pygrank.fastgraph import fastgraph as nx
 import os
 import numpy as np
 from pygrank.core import to_signal
@@ -17,7 +17,7 @@ def import_snap_format_dataset(dataset: str,
     if not os.path.isdir(path):   # pragma: no cover
         path = "../"+path
     download_dataset(dataset, path=path)
-    G = nx.DiGraph() if directed else nx.Graph()
+    G = nx.Graph(False) if directed else nx.Graph()
     groups = {}
     with open(path+'/'+dataset+'/'+pair_file, 'r', encoding='utf-8') as file:
         for line in file:

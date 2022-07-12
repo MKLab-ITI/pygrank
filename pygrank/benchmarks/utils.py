@@ -2,6 +2,8 @@ import io
 import math
 import sys
 from typing import Optional
+from scipy import stats
+import numpy as np
 
 
 def _fraction2str(num, decimals=2):
@@ -77,6 +79,42 @@ def benchmark_print(benchmark,
 
 def benchmark_scores(benchmark):
     return [value for line in benchmark for value in line if not isinstance(value, str)]
+
+
+def benchmark_ranks(benchmark):
+    for line in benchmark:
+        numbers = [-value for value in line if not isinstance(value, str)]
+        #orders = {i: order+1 for order, i in enumerate(sorted(list(range(len(numbers))), key=lambda i: numbers[i], reverse=True))}
+        orders = stats.rankdata(numbers)
+        ret = list()
+        i = 0
+        for value in line:
+            if isinstance(value, str):
+                ret.append(value)
+            else:
+                #ret.append(str(value)+" ("+str(orders[i])+")")
+                ret.append(orders[i])
+                i += 1
+        yield ret
+
+
+def benchmark_average(benchmark, posthocs=False):
+    sums = None
+    for prev_line in benchmark:
+        line = prev_line[1:]
+        if not isinstance(line[0], str):
+            if sums is None:
+                sums = [[value] for value in line]
+            else:
+                for values, value in zip(sums, line):
+                    values.append(value)
+        yield prev_line
+    if sums is not None:
+        yield ["Average"]+[sum(values)/len(values) for values in sums]
+    if sums is not None and posthocs:
+        import scikit_posthocs as ph
+        print(ph.posthoc_nemenyi_friedman(np.array(sums).T))
+
 
 
 def benchmark_dict(benchmark):

@@ -1,7 +1,11 @@
+import random
 from math import log
+from numpy.random import normal
+from random import random, choice
+import sys
 
 
-def __add(weights, index, increment, max_val, min_val):
+def __add(weights, index, increment, max_val, min_val, coarse=0):
     """
     Adds to a value to a specific index in a list of weights while thresholding the outcome to a minimum and maximum value.
     Creates new list of weights holding the result without altering the original.
@@ -15,6 +19,8 @@ def __add(weights, index, increment, max_val, min_val):
     """
     weights = [weight for weight in weights]
     weights[index] = min(max_val, max(min_val, weights[index]+increment))
+    if coarse != 0:
+        weights[index] = round(weights[index]/coarse)*coarse
     #if increment != 0 and (weights[index] == min_val or weights[index] == max_val):
     #    return None
     # normalize weights
@@ -28,16 +34,108 @@ def __add(weights, index, increment, max_val, min_val):
     return weights
 
 
+def evolutionary_optimize(loss,
+                          max_vals=[1 for _ in range(1)],
+                          min_vals=None,
+                          verbose=True,
+                          **kwargs):
+    for min_val, max_val in zip(min_vals, max_vals):
+        if min_val > max_val:
+            raise Exception("Empty parameter range ["+str(min_val)+","+str(max_val)+"]")
+    first = [(min_val + max_val) / 2 for min_val, max_val in zip(min_vals, max_vals)]
+    iterations = [0 for first in range(len(first))]
+    solutions = [(first, iterations, loss(first))]
+    dims = list(range(len(max_vals)))
+    prev_std = float('inf')
+    num_evals = 0
+    while True:
+        candidates = list()
+        for _ in range(len(max_vals)*5):
+            dim = choice(dims)
+            solution, iterations = choice([(solution, iterations) for solution, _, _ in solutions])
+            #deviation = (max_vals[dim]-min_vals[dim])/((iteration+1)**.5*log(iteration+2))
+            mean = sum(solution[dim] for solution, _, _ in solutions) / len(solutions)
+            #mean_sqr = sum(solution[dim]**2 for solution, _ in solutions) / len(solutions)
+            #std = max(0, mean_sqr - mean**2)**0.5  # max fixes the occasional rounding error
+            #if std == 0 or len(solutions) == 0:
+            std = (max_vals[dim] - min_vals[dim]) / ((iterations[dim] + 1) ** 5 * log(iterations[dim] + 2))
+            solution = __add(solution, dim, normal(mean, std/(12**0.5)), max_vals[dim], min_vals[dim])
+            iterations = [iteration for iteration in iterations]
+            iterations[dim] = iterations[dim] + 1
+            num_evals += 1
+            candidates.append((solution, iterations, loss(solution)))
+        solutions.extend(candidates)
+        solutions = sorted(solutions, key=lambda x: x[2])[:10]
+
+        mean = sum(val for _, _, val in solutions) / len(solutions)
+        mean_sqr = sum(val ** 2 for _, _, val in solutions) / len(solutions)
+        std = max(0, mean_sqr - mean ** 2) ** 0.5
+        if verbose:
+            sys.stdout.write(f"\rLoss {mean_sqr:.3f} +- {std:.3f}")
+            sys.stdout.flush()
+        #print(solutions[0][2])
+        if std < 1E-4:
+            break
+        """    patience = 100
+        else:
+            patience -= 1
+            if patience == 0:
+                break"""
+        prev_std = std
+    if verbose:
+        sys.stdout.write("\r")
+        sys.stdout.flush()
+    #print("Evaluations:", num_evals)
+    return solutions[0][0]
+
+
+def nelder_mead(loss, max_vals, min_vals=None, weights=None, deviation_tol=1.E-6, parameter_tol: float = float('inf'), verbose=False, **kwargs):
+    if min_vals is None:
+        min_vals = [0]*len(max_vals)
+    if weights is None:
+        weights = [(min_val+max_val)/2 for min_val, max_val in zip(min_vals, max_vals)]
+    import scipy.optimize
+    import scipy.sparse
+    ret = scipy.optimize.minimize(loss,
+                                  bounds=[(min_val, max_val) for min_val, max_val in zip(min_vals, max_vals)],
+                                  method='Nelder-Mead',
+                                  x0=weights, options={"fatol": deviation_tol, "xatol": parameter_tol})
+    if verbose:
+        print(f"Evaluations {ret.nfev}")
+    return ret.final_simplex[0][0]
+
+
+def lbfgsb(loss, max_vals, min_vals=None, weights=None, deviation_tol=1.E-6, verbose=False, **kwargs):
+    if min_vals is None:
+        min_vals = [0]*len(max_vals)
+    if weights is None:
+        weights = [(min_val+max_val)/2 for min_val, max_val in zip(min_vals, max_vals)]
+    import scipy.optimize
+    import scipy.sparse
+    ret = scipy.optimize.minimize(loss,
+                                  bounds=[(min_val, max_val) for min_val, max_val in zip(min_vals, max_vals)],
+                                  method='L-BFGS-B',
+                                  x0=weights, options={"ftol": deviation_tol})
+    if verbose:
+        print(f"Evaluations {ret.nfev}")
+    return ret.x
+
+
 def optimize(loss,
              max_vals=[1 for _ in range(1)],
              min_vals=None,
-             deviation_tol: float = 1.E-8,
-             divide_range=1.01,
-             partitions = 5,
+             deviation_tol: float = 1.E-9,
+             divide_range: float = 1.01,
+             partitions=5,
              parameter_tol: float = float('inf'),
-             depth=1,
+             depth: int = 1,
+             coarse: float = 0,
+             shrink_strategy: str = "divide",
+             partition_strategy: str = "split",
+             randomize: bool = False,
              weights=None,
-             verbose=False):
+             verbose: bool = True,
+             validation_loss=None):
     """
     Implements a coordinate descent algorithm for optimizing the argument vector of the given loss function.
     Arguments:
@@ -49,14 +147,26 @@ def optimize(loss,
         deviation_tol: Optional. The numerical tolerance of the loss to optimize to. Default is 1.E-8.
         divide_range: Optional. Value greater than 1 with which to divide the range at each iteration. Default is 1.01,
             which guarantees convergence even for difficult-to-optimize functions, but values such as 1.1, 1.2 or 2 may
-            also be used for much faster, albeit a little coarser, convergence. Can use "shrinking" to perform personalization
-            hrinking block coordinate descent, but this does not guarantee convergence for some node ranking settings.
+            also be used for much faster, albeit a little coarser, convergence. If the *shrink_strategy* argument
+            is set to "shrinking" instead, the range is scaled proportionally to
+            *iteration<sup>divide_range</sup>/log(iteration)* per block coordinate descent.
         partitions: Optional. In how many pieces to break the search space on each iteration. Default is 5.
         parameter_tol: Optional. The numerical tolerance of parameter values to optimize to. **Both** this and
             deviation_tol need to be met. Default is infinity.
         depth: Optional. Declares the number of times to re-perform the optimization given the previous found solution.
             Default is 1, which only runs the optimization once. Larger depth values can help offset coarseness
             introduced by divide_range.
+        coarse: Optional. Optional. Snaps solution to this precision. If 0 (default) then this behavior is ignored.
+        shrink_strategy: Optional. The shrinking strategy towards convergence. If "divide" (default), then
+            the search range is divided by the argument *divide_range*, but if "shrinking" then it is
+            scaled based on block coordinate descent.
+        partition_strategy: Optional. Strategy with which to traverse partitions. If "split" (default), then
+            the partition is split to *partitions* parts. If "step", then the *partitions* argument is used as a fixed
+            step and however many splits are needed to achieve this are performed. This last strategy helps
+            force block coordinate descent traverse a finite set of values, as long as it holds that
+            **coarse==partitions**.
+        randomize: Optional. If True (default), then a random parameter is updated each time instead of moving
+            though them in a cyclic order.
         weights: Optional. An estimation of parameters to start optimization from. The algorithm tries to center
             solution search around these - hence the usefulness of *depth* as an iterative scheme. If None (default),
             the center of the search range (max_vals+min_vals)/2 is used as a starting estimation.
@@ -82,32 +192,66 @@ def optimize(loss,
         weights = [(min_val+max_val)/2 for min_val, max_val in zip(min_vals, max_vals)]
     range_search = [(max_val-min_val)/2 for min_val, max_val in zip(min_vals, max_vals)]
     curr_variable = 0
-    if verbose:
-        print("first loss", loss(weights))
     iter = 0
     range_deviations = [float('inf')]*len(max_vals)
     #checkpoint_weights = weights
+    best_weights = weights
+    best_loss = float('inf')
+    evals = 0
     while True:
+        if randomize:
+            curr_variable = int(random()*len(weights))
+        if max(range_search) == 0:
+            break
         assert max(range_search) != 0, "Something went wrong and took too many iterations for optimizer to run (check for nans)"
+        if shrink_strategy == "shrinking":
+            range_search[curr_variable] = (max_vals[curr_variable]-min_vals[curr_variable])/((iter+1)**divide_range*log(iter+2))
+        elif shrink_strategy == "divide":
+            range_search[curr_variable] /= divide_range
+        else:
+            raise Exception("Invalid shrink strategy: either shrinking or divide expected")
         if range_search[curr_variable] == 0:
             range_deviations[curr_variable] = 0
             curr_variable += 1
             if curr_variable >= len(max_vals):
                 curr_variable -= len(max_vals)
-            range_deviations[curr_variable] = 0
             continue
-        candidate_weights = [__add(weights, curr_variable, range_search[curr_variable]*(part*2./(partitions-1)-1), max_vals[curr_variable], min_vals[curr_variable]) for part in range(partitions)]
-        #print(candidate_weights)
-        loss_pairs = [(w,loss(w)) for w in candidate_weights if w is not None]
-        #print(loss_pairs)
-        weights, _ = min(loss_pairs, key=lambda pair: pair[1])
-        if divide_range == "shrinking":
-            range_search[curr_variable] = (max_vals[curr_variable]-min_vals[curr_variable])/((iter+1)**0.5*log(iter+2))
+        if partition_strategy == "split":
+            candidate_weights = [__add(weights,
+                                       curr_variable,
+                                       range_search[curr_variable]*(part*2./(partitions-1)-1),
+                                       max_vals[curr_variable],
+                                       min_vals[curr_variable],
+                                       coarse=coarse) for part in range(partitions)]
+        elif partition_strategy == "step":
+            candidate_weights = [__add(weights,
+                                       curr_variable,
+                                       part*partitions,
+                                       max_vals[curr_variable],
+                                       min_vals[curr_variable],
+                                       coarse=coarse) for part in range(
+                                                -int(range_search[curr_variable]/partitions),
+                                                1+int(range_search[curr_variable]/partitions))]
         else:
-            range_search[curr_variable] /= divide_range
-        range_deviations[curr_variable] = max([loss for _, loss in loss_pairs])-min([loss for _, loss in loss_pairs])
+            raise Exception("Invalid partition strategy: either split or step expected")
+        loss_pairs = [(w,loss(w)) for w in candidate_weights if w is not None]
+        evals += len(loss_pairs)
+        weights, weights_loss = min(loss_pairs, key=lambda pair: pair[1])
+        prev_best_loss = best_loss
+        if validation_loss is not None:
+            weights_loss = validation_loss(weights)
+            if weights_loss < best_loss:
+                best_loss = weights_loss
+                best_weights = weights
+        else:
+            best_loss = weights_loss
+            best_weights = weights
+        range_deviations[curr_variable] = abs(prev_best_loss-best_loss)
         if verbose:
-            print('Params', weights, '\t Loss', loss(weights), '+-', max(range_deviations), '\t Var',curr_variable, '\t Parameter max range', max(range_search))
+            #print('Params', weights, '\t Loss', loss(weights), '+-', max(range_deviations), '\t Var',curr_variable, '\t Parameter max range', max(range_search))
+            sys.stdout.write(f"\rTuning evaluations {evals} loss {best_loss:.8f} +- {max(range_deviations):.8f}")
+            sys.stdout.flush()
+
         if max(range_deviations) <= deviation_tol and max(range_search) <= parameter_tol:
             break
         # move to next var
@@ -119,6 +263,32 @@ def optimize(loss,
             #    break
             #checkpoint_weights = weights
     #print("trained weights in", iter, "iterations", weights, "final loss", loss(weights))
+    weights = best_weights
+    if verbose:
+        sys.stdout.write("\r")
+        sys.stdout.flush()
     if depth > 1:
-        return optimize(loss, max_vals, min_vals, deviation_tol, divide_range, partitions, parameter_tol, depth - 1, weights, verbose)
+        return optimize(loss, max_vals, min_vals,
+                        deviation_tol, divide_range, partitions, parameter_tol, depth-1, coarse,
+                        shrink_strategy, partition_strategy, randomize, weights, verbose, validation_loss)
     return weights
+
+
+def __replace(params, pos, value):
+    new_params = [p for p in params]
+    new_params[pos] = value
+    return new_params
+
+
+def incremental_optimizer(
+             loss,
+             max_vals=[1 for _ in range(1)],
+             min_vals=None,
+             *args, **kwargs):
+    found_params = [0 for _ in range(len(max_vals))]
+    for i in range(len(max_vals)):
+        found_params[i] = optimize(lambda params: loss(__replace(found_params, i, params[0])),
+                                   max_vals=[max_vals[i]],
+                                   min_vals=[min_vals[i]],
+                                   *args, **kwargs)[0]
+    return found_params

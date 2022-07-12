@@ -64,9 +64,9 @@ def benchmark(algorithms: Mapping[str, NodeRanking],
                         if not multigroup:
                             sensitive_signal = to_signal(training, 1-evaluation.np)
                         #training.np = training.np*(1-sensitive_signal.np)
-                        rank = lambda algorithm: algorithm(graph, training, sensitive=sensitive_signal)
+                        rank = lambda algorithm: algorithm(training, sensitive=sensitive_signal)
                     else:
-                        rank = lambda algorithm: algorithm(graph, training)
+                        rank = lambda algorithm: algorithm(training)
                 dataset_results = [name]
                 for algorithm in algorithms.values():
                     if metric == Time:

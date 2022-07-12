@@ -13,10 +13,9 @@ class Tensortune(pg.Postprocessor):
         if self._model is None:
             model = tf.keras.models.Sequential()
             model.add(tf.keras.Input(shape=(3,)))
+            model.add(tf.keras.layers.Dense(16, activation='relu'))
             model.add(tf.keras.layers.Dropout(0.5))
-            model.add(tf.keras.layers.Dense(16, activation='tanh'))
-            model.add(tf.keras.layers.Dropout(0.5))
-            model.add(tf.keras.layers.Dense(16, activation='tanh'))
+            model.add(tf.keras.layers.Dense(16, activation='relu'))
             model.add(tf.keras.layers.Dropout(0.5))
             model.add(tf.keras.layers.Dense(1, activation='sigmoid'))
             self._model = model
@@ -38,28 +37,32 @@ class Tensortune(pg.Postprocessor):
             best_ranks = None
             optimizer = tf.keras.optimizers.Adam(learning_rate=0.01)
 
+            #degrade = 1
             for epoch in range(5000):
                 with tf.GradientTape() as tape:
                     personalization = pg.to_signal(personalization, model(features))
-                    personalization.np = tf.nn.relu(personalization.np*2-1)
+                    #personalization.np = tf.nn.relu(personalization.np*2-1)
                     ranks = self.ranker(graph, personalization, *args, **kwargs)
                     loss = training_objective(ranks)
                     for var in model.trainable_variables:
                         loss = loss + 1.E-5 * tf.reduce_sum(var * var)
+                    #loss = loss * degrade
                 grads = tape.gradient(loss, model.trainable_variables)
+                #degrade *= 0.9
                 optimizer.apply_gradients(zip(grads, model.trainable_variables))
                 validation_loss = training_objective(ranks)
                 if validation_loss < best_loss:
-                    patience = 100
+                    patience = 10
                     best_ranks = ranks
                     best_loss = validation_loss
-                    #print("epoch", epoch, "loss", validation_loss, "prule", pg.pRule(tf.cast(sensitive.np, tf.float32))(ranks))
+                    print("epoch", epoch, "loss", validation_loss, "prule", pg.pRule(tf.cast(sensitive.np, tf.float32))(ranks))
                 patience -= 1
                 if patience == 0:
                     break
         return best_ranks
 
     def rank(self, graph, personalization, sensitive, *args, **kwargs):
+        personalization = pg.to_signal(graph, personalization)
         #if self.pretrainer is not None:
         #    pretrain_tuner = Tensortune(self.ranker, model=self.model())
         #    pretrain_tuner.train_model(graph, personalization, sensitive, *args, **kwargs)
