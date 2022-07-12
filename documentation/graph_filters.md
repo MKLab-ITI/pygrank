@@ -4,25 +4,10 @@
 The following filters can be imported from the package `pygrank.algorithms`.
 Constructor details are provided, including arguments inherited from and passed to parent classes.
 All of them can be used through the code patterns presented at the library's [documentation](documentation.md#graph-filters). 
-1. [ConvergingGraphFilter](#closedformgraphfilter-converginggraphfilter)
-2. [GenericGraphFilter](#closedformgraphfilter-genericgraphfilter)
-3. [HeatKernel](#closedformgraphfilter-heatkernel)
-4. [AbsorbingWalks](#recursivegraphfilter-absorbingwalks)
-5. [PageRank](#recursivegraphfilter-pagerank)
-
-### <kbd>ClosedFormGraphFilter</kbd> ConvergingGraphFilter
-
-Implements a graph filter with a specific vector of weight parameters. The constructor initializes the graph filter. 
-
-Args: 
- * *weights:* Optional. A list-like object with elements weights[n] proportional to the importance of propagating personalization graph signals n hops away. If None (default) then [0.9]*10 is used. 
-
-Example:
-
-```python 
-from pygrank import GenericGraphFilter 
-algorithm = GenericGraphFilter([0.5, 0.25, 0.125], tol=1.E-9) # tol passed to ConvergenceManager 
-```
+1. [GenericGraphFilter](#closedformgraphfilter-genericgraphfilter)
+2. [HeatKernel](#closedformgraphfilter-heatkernel)
+3. [AbsorbingWalks](#recursivegraphfilter-absorbingwalks)
+4. [PageRank](#recursivegraphfilter-pagerank)
 
 ### <kbd>ClosedFormGraphFilter</kbd> GenericGraphFilter
 

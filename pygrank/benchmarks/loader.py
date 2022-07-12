@@ -13,11 +13,12 @@ def import_snap_format_dataset(dataset: str,
                                group_file: str = 'groups.txt',
                                directed: bool = False,
                                min_group_size: float = 0.01,
-                               max_group_number: int = 20):
+                               max_group_number: int = 20,
+                               graph_api = nx):
     if not os.path.isdir(path):   # pragma: no cover
         path = "../"+path
     download_dataset(dataset, path=path)
-    G = nx.Graph(False) if directed else nx.Graph()
+    G = graph_api.Graph(False) if directed else graph_api.Graph()
     groups = {}
     with open(path+'/'+dataset+'/'+pair_file, 'r', encoding='utf-8') as file:
         for line in file:

@@ -37,7 +37,8 @@ def test_convergence_string_conversion():
 
 
 def test_pagerank_vs_networkx():
-    graph = next(pg.load_datasets_graph(["graph9"]))
+    graph = next(pg.load_datasets_graph(["graph9"], graph_api=nx))
+    # graph_api needed so that nx.pagerank can perform internal computations
     for _ in supported_backends():
         ranker = pg.Normalize("sum", pg.PageRank(normalization='col', tol=1.E-9))
         test_result = ranker(graph)
@@ -134,4 +135,4 @@ def test_optimization_dict():
         pg.ParameterTuner(optimization_dict=optimization, preprocessor=preprocessor, tol=1.E-9).rank(graph, personalization)
     optimized = time() - tic
     assert len(optimization) == 20
-    assert unoptimized > optimized*1.8
+    assert unoptimized > optimized*1.5

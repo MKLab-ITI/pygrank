@@ -192,7 +192,7 @@ class Modularity(Unsupervised):
         Q = 0
         for v in self.progress(positive_candidates):
             for u in positive_candidates:
-                Avu = 1 if graph.has_edge(v,u) else 0
+                Avu = 1 if graph.has_edge(v, u) else 0
                 Avu -= graph.degree[v]*graph.degree[u]/2/m
                 Q += Avu*(scores[v]/self.max_rank)*(scores[u]/self.max_rank)
         return Q/2/m

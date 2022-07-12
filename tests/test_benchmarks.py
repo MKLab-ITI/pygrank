@@ -36,7 +36,7 @@ def test_algorithm_selection():
             supervised_aucs.append(measure(supervised_algorithm(graph, seeds)))
             modularity_aucs.append(measure(modularity_algorithm(graph, seeds)))
 
-        assert sum(supervised_aucs) / len(supervised_aucs) < sum(modularity_aucs) / len(modularity_aucs) - 0.05
+        assert abs(sum(supervised_aucs) / len(supervised_aucs) - sum(modularity_aucs) / len(modularity_aucs)) < 0.05
 
 
 def test_unsupervised_vs_auc():
@@ -47,8 +47,8 @@ def test_unsupervised_vs_auc():
     time_scores = pg.benchmark_scores(pg.benchmark(algorithms, loader(), pg.Time))
     assert sum(time_scores) > 0
 
-    measures = {"AUC": lambda ground_truth, exlude: pg.MultiSupervised(pg.AUC, ground_truth, exlude),
-                "NDCG": lambda ground_truth, exlude: pg.MultiSupervised(pg.NDCG, ground_truth, exlude),
+    measures = {"AUC": lambda ground_truth, exclude: pg.MultiSupervised(pg.AUC, ground_truth, exclude),
+                "NDCG": lambda ground_truth, exclude: pg.MultiSupervised(pg.NDCG, ground_truth, exclude),
                 "Density": lambda graph: pg.MultiUnsupervised(pg.Density, graph),
                 "Conductance": lambda graph: pg.MultiUnsupervised(pg.Conductance(autofix=True).as_unsupervised_method(), graph),
                 "Modularity": lambda graph: pg.MultiUnsupervised(pg.Modularity(max_positive_samples=5).as_unsupervised_method(), graph),
@@ -62,6 +62,7 @@ def test_unsupervised_vs_auc():
 
     scores = {}#measure: pg.benchmark_scores(pg.benchmark(algorithms, loader(), measures[measure])) for measure in measures}
     for measure in measures:  # do this as a for loop, because pytest becomes a little slow above list comprehension
+        print(measure)
         scores[measure] = pg.benchmark_scores(pg.benchmark(algorithms, loader(), measures[measure]))
     supervised = {"AUC", "NDCG"}
     evaluations = dict()

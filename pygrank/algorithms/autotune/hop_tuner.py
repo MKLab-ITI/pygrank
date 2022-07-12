@@ -141,7 +141,7 @@ class HopTuner(Tuner):
                                        * backend.to_primitive(measure_weights), axis=1) + backend.mean(mean_value)
         #best_parameters = best_parameters + best_parameters[::-1]
         #print(best_parameters)
-        """
+
         if self.tunable_offset is not None:
             div = backend.max(best_parameters)
             if div != 0:
@@ -155,7 +155,7 @@ class HopTuner(Tuner):
                 max_vals=[1], min_vals=[0], deviation_tol=0.005, parameter_tol=1, partitions=5, divide_range=1.1)
             #best_parameters += best_offset[0]
             best_parameters = [best_parameters[i]+best_offset[0] for i in range(len(best_parameters))]
-        """
+
         best_parameters = backend.to_primitive(best_parameters)
         if backend.sum(backend.abs(best_parameters)) != 0:
             best_parameters /= backend.mean(backend.abs(best_parameters))

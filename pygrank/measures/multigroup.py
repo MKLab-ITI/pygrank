@@ -30,7 +30,15 @@ def _dot_similarity(v, u, scores):
 class LinkAssessment:
     """ Normalizes scores by dividing with their maximal value.
     """
-    def __init__(self, graph, nodes=None, measure=AUC, similarity="cos", hops=1, max_positive_samples=2000, max_negative_samples=2000, seed=0, progress=lambda x: x):
+    def __init__(self, graph,
+                 nodes=None,
+                 measure=AUC,
+                 similarity="cos",
+                 hops=1,
+                 max_positive_samples=2000,
+                 max_negative_samples=2000,
+                 seed=0,
+                 progress=lambda x: x):
         """
         Args:
             graph: The graph on which to perform the evaluation.
@@ -76,8 +84,9 @@ class LinkAssessment:
             while len(pending) != 0:
                 next_node = pending.pop()
                 hops = neighbors[next_node]
+                Gneighbors = set(self.G.neighbors(next_node))
                 if hops < self.hops:
-                    for neighbor in self.G._adj[next_node]:
+                    for neighbor in Gneighbors:
                         if neighbor not in neighbors:
                             neighbors[neighbor] = hops + 1
                             pending.append(neighbor)

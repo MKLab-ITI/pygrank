@@ -7,9 +7,9 @@ from pygrank.measures import Measure, AUC, split
 
 
 default_tuning_optimization = {
-    "max_vals": [1] * 40,
-    "min_vals": [0] * 40,
-    "deviation_tol": 0.005,
+    "max_vals": [1]+[1] * 40,
+    "min_vals": [1]+[0] * 40,
+    "deviation_tol": 1.E-6,
     "parameter_tol": 1,
     "verbose": True,
     "divide_range": 1.01,
@@ -176,7 +176,7 @@ class ParameterTuner(Tuner):
             backend.load_backend(previous_backend)
             # TODO: make training back-propagate through tensorflow for combined_prediction==False (do this with a gather in the split method)
         self.last_params = best_params
-        print(best_params)
+        #print(best_params)
         return self.ranker_generator(best_params), personalization if self.combined_prediction else internal_training
 
     def references(self):

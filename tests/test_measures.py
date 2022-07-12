@@ -128,7 +128,9 @@ def test_aggregated():
 
 
 def test_remove_edges():
-    graph = next(pg.load_datasets_graph(["graph5"]))
+    import networkx as nx
+    graph = next(pg.load_datasets_graph(["graph5"], graph_api=nx))
+    # TODO: make removing edges possible for fastgraph
     assert graph.has_edge("A", "B")
     assert graph.has_edge("C", "D")
     pg.remove_intra_edges(graph, {"community1": ["A", "B"], "community2": ["D", "C"]})
