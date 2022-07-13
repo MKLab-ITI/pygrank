@@ -22,6 +22,23 @@ def test_tautology():
     assert float(sum(u.np)) == len(graph)
 
 
+def test_seed_undersampling():
+    _, graph, group = next(pg.load_datasets_one_community(["bigraph"]))
+    for _ in supported_backends():
+        training, evaluation = pg.split(list(group), training_samples=2)
+        original_training = set(training)
+        from random import random, seed
+        seed(0)
+        training, evaluation = pg.to_signal(graph, {v: 1 for v in graph if v in original_training or random() < 0.5}), \
+                               pg.to_signal(graph, {v: 1 for v in evaluation})
+        for measure in [pg.AUC]:
+            ranks = pg.PageRank(0.9, max_iters=1000).rank(graph, training)
+            base_result = measure(evaluation, list(original_training)).evaluate(ranks)
+            ranks = pg.Undersample(pg.PageRank(0.9, max_iters=1000), 0.9).rank(graph, training)
+            undersampled_result = measure(evaluation, list(original_training)).evaluate(ranks)
+            assert float(base_result) < float(undersampled_result)
+
+
 def test_seed_oversampling_arguments():
     _, graph, group = next(pg.load_datasets_one_community(["graph9"]))
     with pytest.raises(Exception):
@@ -73,7 +90,6 @@ def test_sequential():
         assert pg.sum(pg.abs(posterior1-posterior3)) == 0
 
 
-
 def test_normalize():
     import networkx as nx
     graph = next(pg.load_datasets_graph(["graph5"]))
@@ -113,7 +129,10 @@ def test_sweep():
         training, evaluation = pg.split(list(group), training_samples=0.1)
         auc1 = pg.AUC({v: 1 for v in evaluation}, exclude=training).evaluate(pg.Sweep(pg.PageRank()).rank(graph, {v: 1 for v in training}))
         auc2 = pg.AUC({v: 1 for v in evaluation}, exclude=training).evaluate(pg.PageRank().rank(graph, {v: 1 for v in training}))
+        auc3 = pg.AUC({v: 1 for v in evaluation}, exclude=training).evaluate(
+            pg.LinearSweep(pg.Transformer(pg.PageRank(), pg.log)).rank(graph, {v: 1 for v in training}))
         assert auc1 > auc2
+        assert auc1 == auc3
 
 
 def test_threshold():
