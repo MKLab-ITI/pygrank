@@ -217,9 +217,3 @@ def optimize(loss,
                         deviation_tol, divide_range, partitions, parameter_tol, depth-1, coarse,
                         shrink_strategy, partition_strategy, randomize, weights, verbose, validation_loss)
     return weights
-
-
-def __replace(params, pos, value):
-    new_params = [p for p in params]
-    new_params[pos] = value
-    return new_params

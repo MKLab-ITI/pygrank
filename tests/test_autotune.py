@@ -33,6 +33,18 @@ def test_optimizer():
         assert abs(p[0]-2) < 1.E-6
         assert abs(p[1]-1) < 1.E-6
 
+        # a simple function
+        p = pg.optimize(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4, max_vals=[5, 5], parameter_tol=1.E-8, verbose=False,
+                        partition_strategy="step", partitions=0.01)
+        assert abs(p[0]-2) < 1.E-6
+        assert abs(p[1]-1) < 1.E-6
+
+        # a simple function
+        p = pg.optimize(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4, max_vals=[5, 5], parameter_tol=1.E-8, verbose=False,
+                        partition_strategy="step", partitions=0.01, randomize=True)
+        assert abs(p[0]-2) < 1.E-6
+        assert abs(p[1]-1) < 1.E-6
+
         # a simple function with redundant inputs and tol instead of parameter tolerance
         p = pg.optimize(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4,
                         max_vals=[5, 5, 5], min_vals=[0, 0, 5], deviation_tol=1.E-6, shrink_strategy="shrinking", verbose=False)
@@ -46,6 +58,17 @@ def test_optimizer():
                         max_vals=[4.5, 4.5], min_vals=[-4.5, -4.5], parameter_tol=1.E-8, verbose=False)
         assert abs(p[0]-3) < 1.E-6
         assert abs(p[1]-0.5) < 1.E-6
+
+        # noisy Beale function
+        from random import random, seed
+        seed(0)
+        noisy_beale = lambda p: (1.5 - p[0] + p[0] * p[1]) ** 2 + (2.25 - p[0] + p[0] * p[1] ** 2) ** 2 + (
+                    2.625 - p[0] + p[0] * p[1] ** 3) ** 2 + random()
+        p = pg.optimize(loss=noisy_beale,
+                        validation_loss=beale,
+                        max_vals=[4.5, 4.5], min_vals=[-4.5, -4.5], parameter_tol=1.E-8, verbose=False)
+        assert abs(p[0] - 3) < .1
+        assert abs(p[1] - 0.5) < .1
 
         # Beale function with nelder mead
         p = pg.nelder_mead(loss=beale,

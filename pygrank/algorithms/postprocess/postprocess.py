@@ -399,12 +399,13 @@ class LinearSweep(Postprocessor):
 class Sequential(Postprocessor):
     def __init__(self, *args):
         super().__init__(args[0] if args else None)
-        self.rankers = args
+        self.rankers = list(args)
 
     def _transform(self,
                    ranks: GraphSignal,
                    **kwargs):
         for ranker in self.rankers:
-            ranks = ranker(ranks)
+            if ranker != self.ranker:
+                ranks = ranker(ranks)
         return ranks
 

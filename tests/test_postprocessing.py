@@ -59,7 +59,19 @@ def test_norm_maintain():
     for _ in supported_backends():
         prior = pg.to_signal(graph, {"A": 2})
         posterior = pg.MabsMaintain(pg.Normalize(pg.PageRank(), "range")).rank(prior)
-        assert abs(pg.sum(pg.abs(posterior.np)) - 2) < 2.5*pg.epsilon()
+        assert abs(pg.sum(pg.abs(posterior)) - 2) < 2.5*pg.epsilon()
+
+
+def test_sequential():
+    graph = next(pg.load_datasets_graph(["graph5"]))
+    for _ in supported_backends():
+        prior = pg.to_signal(graph, {"A": 2})
+        posterior1 = pg.Normalize(pg.PageRank(), "range").rank(prior)
+        posterior2 = pg.Normalize("range")(pg.PageRank()(prior))
+        posterior3 = pg.Sequential(pg.PageRank(), pg.Normalize("range")).rank(prior)
+        assert pg.sum(pg.abs(posterior1-posterior2)) == 0
+        assert pg.sum(pg.abs(posterior1-posterior3)) == 0
+
 
 
 def test_normalize():
