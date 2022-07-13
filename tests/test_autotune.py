@@ -153,7 +153,17 @@ def test_hoptuner_autorgression():
     training, evaluation = pg.split(pg.to_signal(G, {v: 1 for v in group}), training_samples=0.01)
     auc1 = pg.AUC(evaluation, exclude=training)(pg.HopTuner(measure=pg.AUC).rank(training))
     auc3 = pg.AUC(evaluation, exclude=training)(pg.HopTuner(measure=pg.AUC, autoregression=5).rank(training))
-    assert auc3 > auc1*0.9  # TODO: add a stricter test once a publication of HopTuner finds best method
+    assert auc3 > auc1*0.9
+    # TODO: add a stricter test once a publication of HopTuner finds best method
+
+
+def test_impulse_tuning():
+    _, G, groups = next(pg.load_datasets_multiple_communities(["bigraph"]))
+    group = groups[0]
+    training, evaluation = pg.split(pg.to_signal(G, {v: 1 for v in group}), training_samples=0.1)
+    auc1 = pg.AUC(evaluation, exclude=training)(pg.ParameterTuner(lambda params: pg.GenericGraphFilter(params)).rank(training))
+    auc2 = pg.AUC(evaluation, exclude=training)(pg.ParameterTuner(lambda params: pg.ImpulseGraphFilter(params)).rank(training))
+    assert auc2 > auc1*0.9
 
 
 def test_hoptuner_arnoldi_backends():

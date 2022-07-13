@@ -3,6 +3,18 @@ import pygrank as pg
 from .test_core import supported_backends
 
 
+def test_preprocessor_types():
+    def test_graph():
+        return next(pg.load_datasets_graph(["graph5"]))
+    for _ in supported_backends():
+        from random import random
+        graph = test_graph()
+        signal = pg.to_signal(graph, {v: random() for v in graph})
+        laplacian = pg.preprocessor(normalization="laplacian")(graph)
+        symmetric = pg.preprocessor(normalization="symmetric")(graph)
+        assert pg.abs(pg.sum(pg.conv(signal, laplacian) + pg.conv(signal, symmetric) - signal)) < pg.epsilon()
+
+
 def test_preprocessor():
     def test_graph():
         return next(pg.load_datasets_graph(["graph5"]))
