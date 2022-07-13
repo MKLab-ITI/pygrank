@@ -34,61 +34,6 @@ def __add(weights, index, increment, max_val, min_val, coarse=0):
     return weights
 
 
-def evolutionary_optimize(loss,
-                          max_vals=[1 for _ in range(1)],
-                          min_vals=None,
-                          verbose=True,
-                          **kwargs):
-    for min_val, max_val in zip(min_vals, max_vals):
-        if min_val > max_val:
-            raise Exception("Empty parameter range ["+str(min_val)+","+str(max_val)+"]")
-    first = [(min_val + max_val) / 2 for min_val, max_val in zip(min_vals, max_vals)]
-    iterations = [0 for first in range(len(first))]
-    solutions = [(first, iterations, loss(first))]
-    dims = list(range(len(max_vals)))
-    prev_std = float('inf')
-    num_evals = 0
-    while True:
-        candidates = list()
-        for _ in range(len(max_vals)*5):
-            dim = choice(dims)
-            solution, iterations = choice([(solution, iterations) for solution, _, _ in solutions])
-            #deviation = (max_vals[dim]-min_vals[dim])/((iteration+1)**.5*log(iteration+2))
-            mean = sum(solution[dim] for solution, _, _ in solutions) / len(solutions)
-            #mean_sqr = sum(solution[dim]**2 for solution, _ in solutions) / len(solutions)
-            #std = max(0, mean_sqr - mean**2)**0.5  # max fixes the occasional rounding error
-            #if std == 0 or len(solutions) == 0:
-            std = (max_vals[dim] - min_vals[dim]) / ((iterations[dim] + 1) ** 5 * log(iterations[dim] + 2))
-            solution = __add(solution, dim, normal(mean, std/(12**0.5)), max_vals[dim], min_vals[dim])
-            iterations = [iteration for iteration in iterations]
-            iterations[dim] = iterations[dim] + 1
-            num_evals += 1
-            candidates.append((solution, iterations, loss(solution)))
-        solutions.extend(candidates)
-        solutions = sorted(solutions, key=lambda x: x[2])[:10]
-
-        mean = sum(val for _, _, val in solutions) / len(solutions)
-        mean_sqr = sum(val ** 2 for _, _, val in solutions) / len(solutions)
-        std = max(0, mean_sqr - mean ** 2) ** 0.5
-        if verbose:
-            sys.stdout.write(f"\rLoss {mean_sqr:.3f} +- {std:.3f}")
-            sys.stdout.flush()
-        #print(solutions[0][2])
-        if std < 1E-4:
-            break
-        """    patience = 100
-        else:
-            patience -= 1
-            if patience == 0:
-                break"""
-        prev_std = std
-    if verbose:
-        sys.stdout.write("\r")
-        sys.stdout.flush()
-    #print("Evaluations:", num_evals)
-    return solutions[0][0]
-
-
 def nelder_mead(loss, max_vals, min_vals=None, weights=None, deviation_tol=1.E-6, parameter_tol: float = float('inf'), verbose=False, **kwargs):
     if min_vals is None:
         min_vals = [0]*len(max_vals)
@@ -278,17 +223,3 @@ def __replace(params, pos, value):
     new_params = [p for p in params]
     new_params[pos] = value
     return new_params
-
-
-def incremental_optimizer(
-             loss,
-             max_vals=[1 for _ in range(1)],
-             min_vals=None,
-             *args, **kwargs):
-    found_params = [0 for _ in range(len(max_vals))]
-    for i in range(len(max_vals)):
-        found_params[i] = optimize(lambda params: loss(__replace(found_params, i, params[0])),
-                                   max_vals=[max_vals[i]],
-                                   min_vals=[min_vals[i]],
-                                   *args, **kwargs)[0]
-    return found_params

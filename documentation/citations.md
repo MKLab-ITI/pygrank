@@ -50,6 +50,14 @@ this library. These are presented in reverse chronological order.
 }
 ```
 ```
+@inproceedings{krasanakis2022autogf,
+  title={AutoGF: Runtime Graph Filter Tuning for Community Node Ranking},
+  author={Krasanakis, Emmanouiland Papadopoulos, Symeon and Kompatsiaris, Ioannis},
+  year={2022},
+  booktitle={Complex Networks},
+}
+```
+```
 @inproceedings{krasanakis2020stopping,
   title={Stopping Personalized PageRank without an Error Tolerance Parameter},
   author={Krasanakis, Emmanouil and Papadopoulos, Symeon and Kompatsiaris, Ioannis},

@@ -10,7 +10,7 @@ import numpy as np
 class AlgorithmSelection(Tuner):
     def __init__(self, rankers: Iterable[NodeRanking] = None,
                  measure: Callable[[GraphSignal, GraphSignal], Measure] = AUC,
-                 fraction_of_training: Union[Iterable[float], float] = 0.8,
+                 fraction_of_training: Union[Iterable[float], float] = 0.9,
                  combined_prediction: bool = True,
                  tuning_backend: str = None):
         """
@@ -81,8 +81,9 @@ class AlgorithmSelection(Tuner):
         return best_ranker, personalization if self.combined_prediction else training
 
     def references(self):
-        desc = "selected the best among the following algorithms that optimizes "+self.measure(no_signal, no_signal).__class__.__name__ \
-               +f" while withholding {1-self.fraction_of_training:.3f} of nodes for validation: \\\\\n"
+        desc = "selected the best among the following algorithms \\cite{krasanakis2022autogf} that optimizes "\
+               + self.measure(no_signal, no_signal).__class__.__name__ \
+               + f" while withholding {1-self.fraction_of_training:.3f} of nodes for validation: \\\\\n"
         for ranker in self.rankers:
             desc += "  - "+ranker.cite()+" \\\\\n"
         return [desc]

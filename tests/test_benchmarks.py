@@ -89,7 +89,7 @@ def test_one_community_benchmarks():
     # pg.benchmark(algorithms, loader, "time", verbose=True)
 
     loader = pg.load_datasets_one_community(datasets)
-    pg.benchmark_print(pg.benchmark(algorithms, loader, pg.AUC, fraction_of_training=.8))
+    pg.benchmark_print(pg.benchmark_average(pg.benchmark_ranks(pg.benchmark(algorithms, loader, pg.AUC, fraction_of_training=.8))))
 
 
 def test_load_dataset_load():

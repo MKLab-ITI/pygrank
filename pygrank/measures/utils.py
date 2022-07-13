@@ -1,7 +1,7 @@
 import random
-import collections
+import collections.abc
 from pygrank.core import GraphSignal, to_signal, GraphSignalData
-from typing import Mapping, Union, Iterable
+from typing import Mapping, Union
 import networkx as nx
 
 
@@ -76,16 +76,16 @@ def split(groups: Union[GraphSignalData, Mapping[str, GraphSignalData]],
     testing = {}
     training = {}
     for group_id, group in groups.items():
-        training[group_id],testing[group_id] = split(group, training_samples, seed)
+        training[group_id], testing[group_id] = split(group, training_samples, seed)
     return training, testing
 
 
-def remove_intra_edges(G: nx.Graph, group: Union[GraphSignalData, Mapping[str, GraphSignalData]]):
+def remove_intra_edges(graph: nx.Graph, group: Union[GraphSignalData, Mapping[str, GraphSignalData]]):
     if isinstance(group, collections.abc.Mapping):
         for actual_group in group.values():
-            remove_intra_edges(G, actual_group)
+            remove_intra_edges(graph, actual_group)
     else:
         for v in group:
             for u in group:
-                if G.has_edge(v, u) or G.has_edge(u, v):
-                    G.remove_edge(v, u)
+                if graph.has_edge(v, u) or graph.has_edge(u, v):
+                    graph.remove_edge(v, u)
