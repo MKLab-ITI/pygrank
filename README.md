@@ -34,13 +34,13 @@ pip install --upgrade pygrank
 ```
 
 To automatically use the machine learning backends (e.g. to integrate the package
-in machine learning projects) *tensorflow*, *pytorch*, or *torch_sparse*,
+in machine learning projects), namely *tensorflow*, *pytorch*, or *torch_sparse*,
 manually change the automatically created
 configuration file whose path is displayed in the error console.
 If you want others to run parts of your code that depend on `pygrank`
 with specific backends, use the following
 [context manager](https://book.pythontips.com/en/latest/context_managers.html)
-to override other any loaded configurations.
+to override any prior configurations.
 Replacing *torch_sparse* with the desired backend name:
 
 ```python

@@ -42,11 +42,11 @@ def test_filter_citations():
 
 def test_explicit_citations():
     assert "unknown node ranking algorithm" == pg.NodeRanking().cite()
-    assert "with parameters tuned \cite{krasanakis2021pygrank}" in pg.ParameterTuner(
+    assert "with parameters tuned \cite{krasanakis2022autogf}" in pg.ParameterTuner(
         lambda params: pg.PageRank(params[0])).cite()
     assert "Postprocessor" in pg.Postprocessor().cite()
     assert pg.PageRank().cite() in pg.AlgorithmSelection().cite()
-    assert "krasanakis2021pygrank" in pg.ParameterTuner().cite()
+    assert "krasanakis2022autogf" in pg.ParameterTuner().cite()
     assert "ortega2018graph" in pg.ParameterTuner().cite()
     assert pg.HeatKernel().cite() in pg.SeedOversampling(pg.HeatKernel()).cite()
     assert pg.AbsorbingWalks().cite() in pg.BoostedSeedOversampling(pg.AbsorbingWalks()).cite()
