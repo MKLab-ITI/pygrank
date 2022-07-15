@@ -69,9 +69,10 @@ assume graph immutability to hash the preprocessor's outcome
 so that it is not recomputed every time we experiment with the
 same graphs.
 
-The snippet makes use of the library's `>>` operator to chain
-node ranking algorithms into being wrapped by various kinds of 
-postprocessors
+The snippet makes use of the library's 
+[chain operators](documentation/functional.md), for example
+to wrap node ranking algorithms by various kinds of postprocessors
+with the `>>` operator
 (you can also put algorithms into each other's constructors
 if you are not a fan of functional programming).
 The chain starts from a pagerank graph filter with diffusion parameter
