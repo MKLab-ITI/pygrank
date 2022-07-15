@@ -7,7 +7,7 @@ Fast recommendation algorithms for large graphs based on link analysis.
 **License:** Apache Software License
 <br>**Author:** Emmanouil (Manios) Krasanakis
 <br>**Dependencies:** `networkx, numpy, scipy, sklearn, wget` (required) `tensorflow`, `torch`, `torch_sparse` (optional)
-<br><small>*Externally install optional depenendencies to support respective backends.*</small>
+<br><small>*Externally install optional dependencies to support respective backends.*</small>
 
 ![build](https://github.com/MKLab-ITI/pygrank/actions/workflows/tests.yml/badge.svg)
 [![codecov](https://codecov.io/gh/MKLab-ITI/pygrank/branch/master/graph/badge.svg?token=RYZOT4UY8Q)](https://codecov.io/gh/MKLab-ITI/pygrank)
@@ -63,8 +63,8 @@ assume graph immutability to hash the preprocessor's outcome
 so that it is not recomputed every time we experiment with the
 same graphs.
 
-The snippet then makes use of the library's idiom for chaining
-node ranking algorithms into being wrapped various kinds of 
+The snippet then makes use of the library's `>>` operator for chaining
+node ranking algorithms into being wrapped by various kinds of 
 postprocessors
 (you can also parse algorithms into each other's constructors
 if you are not a fan of functional programming practices).
@@ -107,7 +107,7 @@ Some of the library's advantages are:
 2. **Datacentric** interfaces that do not require transformations to identifiers.
 3. **Large** graph support with sparse representations and fast algorithms.
 4. **Seamless** pipelines, from graph preprocessing up to benchmarking and evaluation.
-5. **Modular** components to be combined and an optional streaming interface.
+5. **Modular** components to be combined and a chaining interface for complex combinations.
 
 
 # :link: Material
