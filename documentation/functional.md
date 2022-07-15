@@ -67,11 +67,12 @@ graph, seeds = ...
 ranks = pg.to_signal(graph, seeds) >> pg.PageRank() >> pg.Normalize()
 ```
 
-What you need to remember is chaining a signal into an algorithm
-via the `>>` operator creates a new signal to be passed on in
-future calls and that some -but not all- postprocessors 
+What you need to remember is that chaining a signal into an algorithm
+via the `>>` operator creates a new signal to be passed on to
+future calls. Some -but not all- postprocessors 
 just happen to support calling with no base ranking algorithm, in
-which case the base algorithm is assumed to be a tautology.
+which case the base algorithm is assumed to be a tautology. However,
+iterative postprocessors are not able to follow this convention.
 For example, substituting normalization with the
 sweep procedure in the last snippet does not work and parenthesis
 need to be added for the algorithm definition, somewhat defeating 
@@ -114,5 +115,4 @@ ranks = algorithm(graph, seeds)
 ```
 
 Notice that `+` has higher priority than `>>`, which means that 
-adjusting filters takes priority before applying the chain and 
-thus no parenthesis is needed.
+filters are adjusted before applying the chain and no parenthesis is needed.
