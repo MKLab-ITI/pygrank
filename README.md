@@ -24,11 +24,11 @@ namely *tensorflow* or *pytorch*, either change the automatically created
 configuration file or run parts of your code within the following
 [context manager](https://book.pythontips.com/en/latest/context_managers.html)
 to override other configurations.
-Replace *torch_sparse* with other desired backend names:
+Replace *torch* with other desired backend names:
 
 ```python
 import pygrank as pg
-with pg.Backend("torch_sparse"):
+with pg.Backend("torch"):
     ... # run your pygrank code here
 ```
 
@@ -36,133 +36,53 @@ If you do nothing, everything runs on top of `numpy` (currently, this
 is faster for forward passes).
 The library's algorithms can be defined before contexts and only
 be called inside them. You can also use the simpler
-`pg.load_backend("torch_sparse")` to switch to a specific backend
+`pg.load_backend("torch")` to switch to a specific backend
 if you want to avoid contexts.
 
 # :zap: Quickstart
-As a quick start, let us construct a graph 
-and a set of nodes. The graph's class can be
-imported either from the `networkx` library or from
-`pygrank` itself. The two are in large part interoperable
-and both can be parsed by our algorithms.
-But our implementation is tailored to graph signal
-processing needs and thus tends to be faster and consume
-only a fraction of the memory.
-
-```python
-from pygrank import Graph
-
-graph = Graph()
-graph.add_edge("A", "B")
-graph.add_edge("B", "C")
-graph.add_edge("C", "D")
-graph.add_edge("D", "E")
-graph.add_edge("A", "C")
-graph.add_edge("C", "E")
-graph.add_edge("B", "E")
-seeds = {"A", "B"}
-```
-
-We now run a personalized PageRank [graph filter](documentation/documentation.md#graph-filters)
-to score the structural relatedness of graph nodes to the ones of the given set.
-First, let us import the library:
+Before looking at the library's details, we show a fully functional
+pipeline that can rank the importance of a node in relation to 
+example seed nodes. Within a graph's structure:
 
 ```python
 import pygrank as pg
+graph, seeds, node = ...
+
+pre = pg.preprocessor(assume_immutability=True, normalization="symmetric")
+algorithm = pg.PageRank(alpha=0.85, preprocessor=pre) >> pg.Sweep() >> pg.Ordinals()
+ranks = algorithm(graph, seeds)
+print(ranks[node])
+print(algorithm.cite())
 ```
 
-For instructional purposes,
-we experiment with (personalized) *PageRank*. 
-Instantiation of this and more filters is described [here](documentation/graph_filters.md),
-and can be accessed from the top-level import.
-We also set the default values of some parameters: the graph diffusion
-rate *alpha* required by this particular filter, a numerical tolerance *tol* at the
-convergence point and a graph preprocessing strategy *"auto"* that normalizes
-the graph adjacency matrix in either a column-based or symmetric
-way, depending on whether the graph is undirected (as in this example)
-or not respectively.
+The above snippet first defines a preprocessor, 
+which defines how the graph adjacency matrices will be normalized 
+by algorithm that use it. In this case, a symmetric normalization
+takes place (which is ideal for undirected graphs) and we also
+assume graph immutability to hash the preprocessor's outcome
+so that it is not recomputed every time we experiment with the
+same graphs.
 
-```python
-ranker = pg.PageRank(alpha=0.85, tol=1.E-6, normalization="auto")
-ranks = ranker(graph, {v: 1 for v in seeds})
-```
+The snippet then makes use of the library's idiom for chaining
+node ranking algorithms into being wrapped various kinds of 
+postprocessors
+(you can also parse algorithms into each other's constructors
+if you are not a fan of functional programming practices).
+The chain starts from a pagerank graph filter with diffusion parameter
+0.85 - other types of filters and even automatically tuned ones
+can be run.
 
-Node ranking outputs are always organized into
-[graph signals](documentation/documentation.md#graph-signals).
-These can be used like dictionaries for easy access.
-For example, printing the scores of some nodes can be done per:
+Then, the algorithm is run as a callable,
+producing a map between nodes and values 
+(in graph signal processing, such maps are called graph signals)
+and we print the value of a particular node.
 
-```python
-print(ranks["B"], ranks["D"], ranks["E"])
-# 0.5173091321819129 0.24969444089457765 0.3415804634807899
-```
+Finally, we also print a recommended citation for the algorithm.
 
-We alter this outcome so that it outputs node order, 
-where higher node scores are assigned lower order,
-by wrapping a postprocessor around the base algorithm. 
-You can find more postprocessors [here](documentation/postprocessors.md),
-including ones to make scores fairness-aware.
+### More examples
 
-```python
-ordinals = pg.Ordinals(ranker).rank(graph, {v: 1 for v in seeds})
-print(ordinals["B"], ordinals["D"], ordinals["E"])
-# 1.0 5.0 4.0
-```
-
-How much time did it take for the base ranker to converge?
-(Depends on backend and device characteristics.)
-
-```python
-print(ranker.convergence)
-# 19 iterations (0.0021852000063518062 sec)
-```
-
-Since for this example only the node order is important,
-we can use a different way to specify convergence:
-
-```python
-convergence = pg.RankOrderConvergenceManager(pagerank_alpha=0.85, confidence=0.98) 
-early_stop_ranker = pg.PageRank(alpha=0.85, convergence=convergence)
-ordinals = pg.Ordinals(early_stop_ranker).rank(graph, {v: 1 for v in seeds})
-print(early_stop_ranker.convergence)
-# 2 iterations (0.0005241000035312027 sec)
-print(ordinals["B"], ordinals["D"], ordinals["E"])
-# 3.0 5.0 4.0
-```
-
-Close to the previous results at a fraction of the time!! For large graphs,
-most ordinals would be near the ideal ones. Note that convergence time 
-does not take into account the time needed to preprocess graphs.
-
-Till now, we used `PageRank`, but what would happen if we do not know which base
-algorithm to use? In these cases `pygrank` provides online tuning of generalized
-graph signal processing filters on the personalization. The ranker
-in the ranking algorithm construction code can be replaced with an automatically tuned
-equivalent per:
-
-```python
-tuned_ranker = pg.ParameterTuner()
-ordinals = pg.Ordinals(tuned_ranker).rank(graph, {v: 1 for v in seeds})
-print(ordinals["B"], ordinals["D"], ordinals["E"])
-# 2.0 5.0 4.0
-```
-
-This yields similar node ordinals, which means that tuning constructed
-a graph filter similar to `PageRank`.
-Tuning may be worse than highly specialized algorithms in some settings, 
-but usually finds near-best base algorithms.
-
-To obtain a recommendation about how to cite complex
-algorithms, an automated description can be extracted 
-by the source code per the following
-command:
-
-```python
-print(tuned_ranker.cite())
-# graph filter \cite{ortega2018graph} with dictionary-based hashing \cite{krasanakis2021pygrank}, max normalization and parameters tuned \cite{krasanakis2022autogf} to optimize AUC while withholding 0.100 of nodes for validation
-```
-Bibtex entries corresponding to the citations can be found 
-[here](documentation/citations.md).
+[Showcase](documentation/showcase.md) <br>
+[See it in action](https://github.com/maniospas/pygrank-downstream) <br>
 
 
 # :brain: Overview
@@ -187,7 +107,7 @@ Some of the library's advantages are:
 2. **Datacentric** interfaces that do not require transformations to identifiers.
 3. **Large** graph support with sparse representations and fast algorithms.
 4. **Seamless** pipelines, from graph preprocessing up to benchmarking and evaluation.
-5. **Modular** components to be combined.
+5. **Modular** components to be combined and an optional streaming interface.
 
 
 # :link: Material
