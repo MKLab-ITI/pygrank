@@ -135,6 +135,18 @@ def test_sweep():
         assert auc1 == auc3
 
 
+def test_sweep_streaming():
+    _, graph, group = next(pg.load_datasets_one_community(["bigraph"]))
+    for _ in supported_backends():
+        training, evaluation = pg.split(list(group), training_samples=0.1)
+        auc1 = pg.AUC({v: 1 for v in evaluation}, exclude=training).evaluate(pg.Sweep(pg.PageRank()).rank(graph, {v: 1 for v in training}))
+        auc2 = pg.AUC({v: 1 for v in evaluation}, exclude=training).evaluate(pg.PageRank().rank(graph, {v: 1 for v in training}))
+        auc3 = pg.AUC({v: 1 for v in evaluation}, exclude=training).evaluate(
+            pg.PageRank() >> pg.Transformer(pg.log) >> pg.LinearSweep() | pg.to_signal(graph, {v: 1 for v in training}))
+        assert auc1 > auc2
+        assert auc1 == auc3
+
+
 def test_threshold():
     _, graph, group = next(pg.load_datasets_one_community(["bigraph"]))
     for _ in supported_backends():

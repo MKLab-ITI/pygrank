@@ -208,6 +208,7 @@ class AUC(Supervised):
         fpr, tpr, _ = sklearn.metrics.roc_curve(known_scores, scores)
         return sklearn.metrics.auc(fpr, tpr)
 
+
 class Accuracy(Supervised):
     """Computes the accuracy as 1- mean absolute differences between given and known scores."""
 

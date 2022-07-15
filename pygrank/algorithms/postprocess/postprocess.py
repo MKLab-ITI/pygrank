@@ -1,7 +1,7 @@
 from pygrank.core.utils import MethodHasher, call, ensure_used_args, remove_used_args
 from pygrank.core.signals import GraphSignal, to_signal, NodeRanking
 from pygrank.core import backend, GraphSignalGraph, GraphSignalData
-from typing import Union, Optional
+from typing import Union, Optional, Callable
 
 
 class Postprocessor(NodeRanking):
@@ -30,6 +30,12 @@ class Postprocessor(NodeRanking):
         if ref is not None and len(ref) > 0:
             refs.append(ref)
         return refs
+
+    def __lshift__(self, ranker):
+        if not isinstance(ranker, NodeRanking):
+            raise Exception("pygrank can only shift rankers into postprocessors")
+        self.ranker = ranker
+        return ranker
 
 
 class Tautology(Postprocessor):
@@ -176,7 +182,9 @@ class Ordinals(Postprocessor):
 class Transformer(Postprocessor):
     """Applies an element-by-element transformation on a graph signal based on a given expression."""
 
-    def __init__(self, ranker=None, expr=backend.exp):
+    def __init__(self,
+                 ranker: Union[Optional[NodeRanking], Callable] = None,
+                 expr: Union[Optional[NodeRanking], Callable] = backend.exp):
         """ Initializes the class with a base ranker instance. Args are automatically filled in and
         re-ordered if at least one is provided.
 
@@ -194,9 +202,9 @@ class Transformer(Postprocessor):
             >>> r2 = pg.Transformer(algorithm, lambda x: x/pg.sum(x)).rank(graph, personalization)
             >>> print(pg.Mabs(r1)(r2))
         """
-        if ranker is not None and not callable(getattr(ranker, "rank", None)):
+        if ranker is not None and not isinstance(ranker, NodeRanking):
             ranker, expr = expr, ranker
-            if not callable(getattr(ranker, "rank", None)):
+            if not isinstance(ranker, NodeRanking):
                 ranker = None
         super().__init__(Tautology() if ranker is None else ranker)
         self.expr = expr
@@ -303,7 +311,7 @@ class Sweep(Postprocessor):
     Applies a sweep procedure that divides personalized node ranks by corresponding non-personalized ones.
     """
     def __init__(self,
-                 ranker: NodeRanking,
+                 ranker: NodeRanking = None,
                  uniform_ranker: NodeRanking = None):
         """
         Initializes the sweep procedure.
@@ -346,13 +354,18 @@ class Sweep(Postprocessor):
             return "sweep ratio postprocessing \\cite{andersen2007local} where non-personalized ranking is performed with a "+self.uniform_ranker.cite()
         return "sweep ratio postprocessing \\cite{andersen2007local}"
 
+    def __lshift__(self, ranker):
+        super().__lshift__(ranker)
+        self.uniform_ranker = ranker
+        return ranker
+
 
 class LinearSweep(Postprocessor):
     """
     Applies a sweep procedure that subtracts non-personalized ranks from personalized ones.
     """
     def __init__(self,
-                 ranker: NodeRanking,
+                 ranker: NodeRanking = None,
                  uniform_ranker: NodeRanking = None):
         """
         Initializes the sweep procedure.
@@ -394,6 +407,11 @@ class LinearSweep(Postprocessor):
         if self.uniform_ranker != self.ranker:
             return "sweep ratio postprocessing \\cite{andersen2007local} where non-personalized ranking is performed with a "+self.uniform_ranker.cite()
         return "sweep ratio postprocessing \\cite{andersen2007local}"
+
+    def __lshift__(self, ranker):
+        super().__lshift__(ranker)
+        self.uniform_ranker = ranker
+        return ranker
 
 
 class Sequential(Postprocessor):

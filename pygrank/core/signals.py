@@ -187,9 +187,18 @@ class NodeRanking(object):
 
     def __call__(self,
                  graph: GraphSignalGraph = None,
-                 personalization : GraphSignalData = None,
+                 personalization: GraphSignalData = None,
                  *args, **kwargs) -> GraphSignal:
         return self.rank(graph, personalization, *args, **kwargs)
+
+    def __or__(self, data) -> GraphSignal:
+        if not isinstance(data, GraphSignal):
+            raise Exception("Can only apply signals into rankers (use pygrank.to_signal(graph, data)) to create those)")
+        return self(data)
+
+    def __rshift__(self, other):
+        other.__lshift__(self)
+        return other
 
     def rank(self,
              graph: GraphSignalGraph = None,
