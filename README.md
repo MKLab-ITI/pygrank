@@ -13,7 +13,7 @@ Fast recommendation algorithms for large graphs based on link analysis.
 [![codecov](https://codecov.io/gh/MKLab-ITI/pygrank/branch/master/graph/badge.svg?token=RYZOT4UY8Q)](https://codecov.io/gh/MKLab-ITI/pygrank)
 [![Downloads](https://static.pepy.tech/personalized-badge/pygrank?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads)](https://pepy.tech/project/pygrank)
 
-# :rocket: New features
+# :rocket: New features (after 0.2.7)
 * Algorithm definition [chains](documentation/functional.md)
 * More [downloadable datasets](documentation/datasets.md)
 * New graph management for minimal memory consumption
