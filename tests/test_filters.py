@@ -67,6 +67,14 @@ def test_custom_runs():
         assert pg.Mabs(ranks1)(ranks2) < 1.E-6
 
 
+def test_stream_run():
+    graph = next(pg.load_datasets_graph(["graph9"]))
+    for _ in supported_backends():
+        ranks1 = pg.Normalize(pg.PageRank(0.85, tol=pg.epsilon(), max_iters=1000, use_quotient=False)).rank(graph, {"A": 1})
+        ranks2 = pg.to_signal(graph, {"A": 1}) >> pg.PageRank(0.85, tol=pg.epsilon(), max_iters=1000) + pg.Tautology() >> pg.Normalize()
+        assert pg.Mabs(ranks1)(ranks2) == 0
+
+
 def test_completion():
     graph = next(pg.load_datasets_graph(["graph9"]))
     for _ in supported_backends():
@@ -82,6 +90,18 @@ def test_quotient():
     for _ in supported_backends():
         test_result = pg.PageRank(normalization='symmetric', tol=max(1.E-9, pg.epsilon()), use_quotient=True).rank(graph)
         norm_result = pg.PageRank(normalization='symmetric', tol=max(1.E-9, pg.epsilon()), use_quotient=pg.Normalize("sum")).rank(graph)
+        assert pg.Mabs(test_result)(norm_result) < pg.epsilon()
+
+
+def test_filter_stream():
+    graph = next(pg.load_datasets_graph(["graph9"]))
+    for _ in supported_backends():
+        test_result = pg.Normalize(pg.PageRank(normalization='symmetric', tol=max(1.E-9, pg.epsilon()), use_quotient=True)).rank(graph)
+        norm_result = pg.PageRank(tol=max(1.E-9, pg.epsilon())) \
+            + pg.preprocessor(normalization='symmetric') \
+            + pg.Normalize("sum") \
+            >> pg.Normalize() \
+            | pg.to_signal(graph, {v: 1 for v in graph})
         assert pg.Mabs(test_result)(norm_result) < pg.epsilon()
 
 

@@ -76,6 +76,18 @@ class GraphFilter(NodeRanking):
     def references(self):
         return ["graph filter \\cite{ortega2018graph}"]
 
+    def __add__(self, other):
+        if isinstance(other, ConvergenceManager):
+            self.convergence = other
+        elif hasattr(other, "__name__") and other.__name__ == "preprocess":
+            self.preprocessor = other
+        elif isinstance(other, Postprocessor):
+            self.use_quotient = other
+        else:
+            print(other.__name__)
+            raise Exception("Can only add convergence managers and preprocessors to graph filters")
+        return self
+
 
 class ImpulseGraphFilter(GraphFilter):
     def __init__(self, params, *args, **kwargs):

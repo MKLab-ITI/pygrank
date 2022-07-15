@@ -65,6 +65,9 @@ class GraphSignal(MutableMapping):
             return backend.filter_out(self._np, exclude._np)
         return self._np
 
+    def __rshift__(self, other):
+        return other(self)
+
     @property
     def np(self):
         return backend.to_array(self._np)

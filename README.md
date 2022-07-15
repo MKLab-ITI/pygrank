@@ -49,7 +49,7 @@ import pygrank as pg
 graph, seeds, node = ...
 
 pre = pg.preprocessor(assume_immutability=True, normalization="symmetric")
-algorithm = pg.PageRank(alpha=0.85, preprocessor=pre) >> pg.Sweep() >> pg.Ordinals()
+algorithm = pg.PageRank(alpha=0.85)+pre >> pg.Sweep() >> pg.Ordinals()
 ranks = algorithm(graph, seeds)
 print(ranks[node])
 print(algorithm.cite())
@@ -62,18 +62,18 @@ conversion to integer identifiers - the library does all this
 internally and very fastly.
 
 The above snippet first defines a `preprocessor`, 
-which determines how the graph adjacency matrices will be normalized 
-by algorithm that use it. In this case, a symmetric normalization
+which controls how graph adjacency matrices will be normalized 
+by related algorithms. In this case, a symmetric normalization
 takes place (which is ideal for undirected graphs) and we also
 assume graph immutability to hash the preprocessor's outcome
 so that it is not recomputed every time we experiment with the
 same graphs.
 
-The snippet then makes use of the library's `>>` operator for chaining
+The snippet makes use of the library's `>>` operator to chain
 node ranking algorithms into being wrapped by various kinds of 
 postprocessors
-(you can also parse algorithms into each other's constructors
-if you are not a fan of functional programming practices).
+(you can also put algorithms into each other's constructors
+if you are not a fan of functional programming).
 The chain starts from a pagerank graph filter with diffusion parameter
 0.85 - other types of filters and even automatically tuned ones
 can be run.
@@ -123,6 +123,7 @@ Some of the library's advantages are:
 
 # :link: Material
 [Tutorials & Documentation](documentation/documentation.md)
+[Functional Interface](documentation/functional.md)
 
 **Quick links**<br>
 [Measures](documentation/measures.md)<br>

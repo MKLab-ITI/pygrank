@@ -146,6 +146,12 @@ def preprocessor(normalization: str = "auto",
             stability by shrinking the spectrum is applied. Default is False.
     """
     if assume_immutability:
-        return MethodHasher(preprocessor(assume_immutability=False,
+        ret = MethodHasher(preprocessor(assume_immutability=False,
                                          normalization=normalization, weight=weight, renormalize=renormalize))
-    return lambda G: to_sparse_matrix(G, normalization=normalization, weight=weight, renormalize=renormalize)
+        ret.__name__ = "preprocess"
+        return ret
+
+    def preprocess(G):
+        return to_sparse_matrix(G, normalization=normalization, weight=weight, renormalize=renormalize)
+
+    return preprocess
