@@ -42,7 +42,7 @@ if you want to avoid contexts.
 # :zap: Quickstart
 Before looking at the library's details, we show a fully functional
 pipeline that can rank the importance of a node in relation to 
-example seed nodes. Within a graph's structure:
+a list of "seed" nodes within a graph's structure:
 
 ```python
 import pygrank as pg
@@ -55,8 +55,14 @@ print(ranks[node])
 print(algorithm.cite())
 ```
 
-The above snippet first defines a preprocessor, 
-which defines how the graph adjacency matrices will be normalized 
+The graph can be created with `networkx` or, for faster computations,
+with the library itself. Nodes can hold any 
+kind of object or data type and you don't need to bother with
+conversion to integer identifiers - the library does all this
+internally and very fastly.
+
+The above snippet first defines a `preprocessor`, 
+which determines how the graph adjacency matrices will be normalized 
 by algorithm that use it. In this case, a symmetric normalization
 takes place (which is ideal for undirected graphs) and we also
 assume graph immutability to hash the preprocessor's outcome
@@ -75,9 +81,14 @@ can be run.
 Then, the algorithm is run as a callable,
 producing a map between nodes and values 
 (in graph signal processing, such maps are called graph signals)
-and we print the value of a particular node.
+and we print the value of a particular node. Graph signals can
+also be created and directly parsed by algorithms, for example per:
+```
+signal = pg.to_signal(graph, {v: 1. for v in seeds})
+ranks = algorithm(signal)
+```
 
-Finally, we also print a recommended citation for the algorithm.
+Finally, the snippet prints a recommended citation for the algorithm.
 
 ### More examples
 
