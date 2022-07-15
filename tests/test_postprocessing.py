@@ -65,8 +65,8 @@ def test_seed_oversampling():
                 pg.BoostedSeedOversampling(pg.PageRank(0.9, max_iters=1000)).rank(graph, training))
             assert float(base_result) <= float(so_result)
             assert float(so_result) <= float(bso_result)
-        pg.SeedOversampling(pg.PageRank(0.99, max_iters=1000), "top").rank(graph, training)
-        pg.SeedOversampling(pg.PageRank(0.99, max_iters=1000), "neighbors").rank(graph, training)
+        pg.PageRank(0.99, max_iters=1000) >> pg.SeedOversampling("top") | pg.to_signal(graph, training)
+        pg.SeedOversampling("neighbors", pg.PageRank(0.99, max_iters=1000)).rank(graph, training)
         pg.BoostedSeedOversampling(pg.PageRank(max_iters=1000), 'naive', oversample_from_iteration='original').rank(graph, {"A": 1})
 
 

@@ -3,14 +3,14 @@ from pygrank.core import to_signal, NodeRanking, GraphSignalGraph, GraphSignalDa
 from pygrank.algorithms.convergence import ConvergenceManager
 from pygrank.algorithms.postprocess.postprocess import Postprocessor
 from pygrank.measures import MaxDifference
-
+from typing import Optional, Union
 
 class SeedOversampling(Postprocessor):
     """Performs seed oversampling on a base ranker to improve the quality of predicted seeds."""
 
     def __init__(self,
-                 ranker: NodeRanking,
-                 method: str = 'safe'):
+                 ranker: Optional[Union[NodeRanking, str]] = None,
+                 method: Optional[Union[NodeRanking, str]] = 'safe'):
         """ Initializes the class with a base ranker.
 
         Attributes:
@@ -24,6 +24,8 @@ class SeedOversampling(Postprocessor):
             >>> algorithm = pg.SeedOversampling(pg.PageRank(alpha=0.99))
             >>> ranks = algorithm.rank(graph, personalization={1 for v in seed_nodes})
         """
+        if ranker is not None and not isinstance(ranker, NodeRanking):
+            ranker, method = method, ranker
         super().__init__(ranker)
         self.method = method.lower()
 
@@ -61,7 +63,8 @@ class SeedOversampling(Postprocessor):
 class BoostedSeedOversampling(Postprocessor):
     """ Iteratively performs seed oversampling and combines found ranks by weighting them with a Boosting scheme."""
 
-    def __init__(self, ranker: NodeRanking,
+    def __init__(self,
+                 ranker: NodeRanking = None,
                  objective: str = 'partial',
                  oversample_from_iteration: str = 'previous',
                  weight_convergence: ConvergenceManager = None):
