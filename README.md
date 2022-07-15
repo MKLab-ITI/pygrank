@@ -14,11 +14,9 @@ Fast recommendation algorithms for large graphs based on link analysis.
 [![Downloads](https://static.pepy.tech/personalized-badge/pygrank?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads)](https://pepy.tech/project/pygrank)
 
 # :rocket: New features
-:bell: Algorithm definitions [chains](documentation/functional.md).<br>
-:bell: More [downloadable datasets](documentation/datasets.md).<br>
-:bell: Our own default graph management interface using a fraction 
-of `networkx`'s memory in most scenarios (e.g. supports benchmarks
-with big graphs in regular computers).
+* Algorithm definition [chains](documentation/functional.md)
+* More [downloadable datasets](documentation/datasets.md)
+* New graph management for minimal memory consumption
 
 # :hammer_and_wrench: Installation
 `pygrank` is meant to work with Python 3.9 or later. The latest version can be installed with pip per:
