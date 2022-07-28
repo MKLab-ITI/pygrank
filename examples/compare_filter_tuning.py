@@ -1,7 +1,9 @@
 import pygrank as pg
 
+pg.load_backend("matvec")
+
 #datasets = ["amazon", "citeseer", "maven"]
-datasets = ["citeseer"]
+datasets = ["amazon"]
 community_size = 500
 
 pre = pg.preprocessor(assume_immutability=True, normalization="symmetric")
@@ -23,7 +25,7 @@ algorithms = {
 
 postprocessor = pg.Tautology
 algorithms = pg.benchmarks.create_variations(algorithms, postprocessor)
-measure = pg.AUC
+measure = pg.Time
 optimization = pg.SelfClearDict()
 
 
@@ -37,8 +39,8 @@ def create_param_tuner(optimizer=pg.optimize):
 
 
 tuned = {
-   #"select": pg.AlgorithmSelection(algorithms.values(), fraction_of_training=0.9, measure=measure),#, combined_prediction=False),
-   "tune": create_param_tuner(),
+   "select": pg.AlgorithmSelection(algorithms.values()),#, combined_prediction=False),
+   #"tune": create_param_tuner(),
    #"tuneLBFGSB": create_param_tuner(pg.lbfgsb)
 }
 

@@ -62,6 +62,8 @@ def test_unimplemented_rank():
 def test_backend_load():
     pg.load_backend("tensorflow")
     assert pg.backend_name() == "tensorflow"
+    #pg.load_backend("matvec")
+    #assert pg.backend_name() == "matvec"
     pg.load_backend("numpy")
     assert pg.backend_name() == "numpy"
     with pytest.raises(Exception):
@@ -70,6 +72,7 @@ def test_backend_load():
 
 
 def test_backend_with():
+    #for backend_name in ["matvec", "pytorch", "tensorflow", "numpy", "torch_sparse"]:
     for backend_name in ["pytorch", "tensorflow", "numpy", "torch_sparse"]:
         with pg.Backend(backend_name) as backend:
             assert pg.backend_name() == backend_name
@@ -91,35 +94,36 @@ def test_signal_np_auto_conversion():
 
 
 def test_signal_direct_operations():
-    graph = nx.DiGraph([(1, 2), (2, 3)])
-    signal = pg.to_signal(graph, [1., 2., 3.])
-    assert pg.sum(signal) == 6
-    assert pg.sum(signal+1) == 9
-    assert pg.sum(1+signal) == 9
-    assert pg.sum(signal**2) == 14
-    assert pg.sum(signal-[1, 2, 2]) == 1
-    assert pg.sum(-1+signal) == 3
-    assert pg.sum(signal / pg.to_signal(graph, [1., 2., 3.])) == 3
-    assert pg.sum(3**signal) == 3+9+27
-    signal **= 2
-    assert pg.sum(signal) == 14
-    signal.np = pg.to_signal(graph, [4, 4, 4])
-    assert pg.sum(signal) == 12
-    assert pg.sum(+signal) == 12
-    assert pg.sum(-signal) == -12
-    assert pg.sum(-signal/2) == -6
-    assert pg.sum(-signal//2) == -6
-    assert pg.sum(2/signal) == 1.5
-    assert pg.sum(2//signal) == 0
-    signal += 1
-    assert pg.sum(signal) == 15
-    signal -= 1
-    assert pg.sum(signal) == 12
-    signal /= 2
-    assert pg.sum(signal) == 6
-    signal //= 2
-    assert pg.sum(signal) == 3
-    signal *= 4
-    assert pg.sum(signal) == 12
-    with pytest.raises(Exception):
-        signal+pg.to_signal(graph.copy(), [1., 2., 3.])
+    for _ in supported_backends():
+        graph = nx.DiGraph([(1, 2), (2, 3)])
+        signal = pg.to_signal(graph, [1., 2., 3.])
+        assert pg.sum(signal) == 6
+        assert pg.sum(signal+1) == 9
+        assert pg.sum(1+signal) == 9
+        assert pg.sum(signal**2) == 14
+        assert pg.sum(signal-pg.to_signal(graph, [1, 2, 2])) == 1
+        assert pg.sum(-1+signal) == 3
+        assert pg.sum(signal / pg.to_signal(graph, [1., 2., 3.])) == 3
+        assert pg.sum(3**signal) == 3+9+27
+        signal **= 2
+        assert pg.sum(signal) == 14
+        signal.np = pg.to_signal(graph, [4, 4, 4])
+        assert pg.sum(signal) == 12
+        assert pg.sum(+signal) == 12
+        assert pg.sum(-signal) == -12
+        assert pg.sum(-signal/2) == -6
+        assert pg.sum(-signal//2) == -6
+        assert pg.sum(2/signal) == 1.5
+        assert pg.sum(2//signal) == 0
+        signal += 1
+        assert pg.sum(signal) == 15
+        signal -= 1
+        assert pg.sum(signal) == 12
+        signal /= 2
+        assert pg.sum(signal) == 6
+        signal //= 2
+        assert pg.sum(signal) == 3
+        signal *= 4
+        assert pg.sum(signal) == 12
+        with pytest.raises(Exception):
+            signal+pg.to_signal(graph.copy(), [1., 2., 3.])

@@ -38,7 +38,7 @@ class PageRank(RecursiveGraphFilter):
     def references(self):
         refs = super().references()
         refs[0] = "personalized PageRank \\cite{page1999pagerank}"
-        refs.insert(1, f"diffusion rate {int(self.alpha*1000)/1000.}")
+        refs.insert(1, f"diffusion rate {int(self.alpha * 1000) / 1000.}")
         return refs
 
 
@@ -64,7 +64,8 @@ class HeatKernel(ClosedFormGraphFilter):
 
     def _coefficient(self, previous_coefficient):
         # backend.exp(-self.t)
-        return 1. if previous_coefficient is None else (previous_coefficient * self.t / (self.convergence.iteration + 1))
+        return 1. if previous_coefficient is None else (
+                previous_coefficient * self.t / (self.convergence.iteration + 1))
 
     def references(self):
         refs = super().references()
@@ -78,7 +79,7 @@ class AbsorbingWalks(RecursiveGraphFilter):
     """
 
     def __init__(self,
-                 alpha: float = 1-1.E-6,
+                 alpha: float = 1 - 1.E-6,
                  *args, **kwargs):
         """ Initializes the AbsorbingWalks filter parameters. For appropriate parameter values. This can model PageRank
         but is in principle a generalization that allows custom absorption rate per node (when not given, these are I).
@@ -115,7 +116,8 @@ class AbsorbingWalks(RecursiveGraphFilter):
         del self.degrees
 
     def _formula(self, M, personalization, ranks, *args, **kwargs):
-        ret = (backend.conv(ranks, M) * self.degrees + personalization * self.absorption) / (self.absorption + self.degrees)
+        ret = (backend.conv(ranks, M) * self.degrees + personalization * self.absorption) / (
+                self.absorption + self.degrees)
         return ret
 
     def references(self):
@@ -164,57 +166,86 @@ class LFPR(RecursiveGraphFilter):
             target_pRule: Target pRule value to achieve. Default is 1.
         """
         self.alpha = alpha
-        # TODO: find a way to support immutability
-        kwargs["preprocessor"] = default_preprocessor(assume_immutability=False, normalization="none")
+
+        # TODO: find a way to assume immutability with transparency
+        kwargs["preprocessor"] = default_preprocessor(assume_immutability=False, normalization=self.normalization)
         self.target_pRule = target_pRule
         self.redistributor = redistributor
         super().__init__(*args, **kwargs)
 
+    def normalization(self, M):
+        import scipy.sparse
+        sensitive = self.sensitive
+        phi = self.phi
+        outR = backend.conv(sensitive.np, M)
+        outB = backend.conv(1. - sensitive.np, M)
+        case1 = outR < phi * (outR + outB)
+        case2 = (1 - case1) * (outR != 0)
+        case3 = (1 - case1) * (1 - case2)
+        d = backend.repeat(0, backend.length(outR))
+        d[case1] = (1 - phi) / outB[case1]
+        d[case2] = phi / outR[case2]
+        d[case3] = 1
+        Q = scipy.sparse.spdiags(d, 0, *M.shape)
+        M = M + Q * M
+        self.outR = outR
+        self.outB = outB
+        return M
+
+    def _prepare_graph(self, graph, sensitive, *args, **kwargs):
+        sensitive = to_signal(graph, sensitive)
+        self.sensitive = sensitive
+        self.phi = backend.sum(sensitive.np) / backend.length(sensitive.np) * self.target_pRule
+        return graph
+
     def _start(self, M, personalization, ranks, sensitive, *args, **kwargs):
         sensitive = to_signal(ranks, sensitive)
-        outR = backend.conv(sensitive.np, M)
-        outB = backend.conv(1.-sensitive.np, M)
-        phi = backend.sum(sensitive.np)/backend.length(sensitive.np)*self.target_pRule
+        outR = self.outR  # backend.conv(sensitive.np, M)
+        outB = self.outB  # backend.conv(1.-sensitive.np, M)
+        phi = backend.sum(sensitive.np) / backend.length(sensitive.np) * self.target_pRule
         dR = backend.repeat(0., len(sensitive.graph))
         dB = backend.repeat(0., len(sensitive.graph))
-        # TODO: convert to vectorized operatiors so that it runs with tensorflow
-        for v,u in zip(*M.nonzero()):
-            if outR[u] < phi*(outR[u]+outB[u]):
-                M[u,v] = (1-phi)/outB[u]
-                dR[u] = phi-(1-phi)/outB[u]*outR[u]  # TODO: move these redundant computations in a separate for
-            elif outR[u] != 0:
-                M[u,v] = phi/outR[u]
-                dB[u] = (1-phi)-phi/outR[u]*outB[u]
-            else:  # sink node
-                dR[u] = phi
-                dB[u] = 1-phi
-        personalization.np = backend.safe_div(sensitive.np*personalization.np, backend.sum(sensitive.np))*self.target_pRule \
-                                                 + backend.safe_div(personalization.np*(1-sensitive.np), backend.sum(1-sensitive.np))
+
+        case1 = outR < phi * (outR + outB)
+        case2 = (1 - case1) * (outR != 0)
+        case3 = (1 - case1) * (1 - case2)
+        dR[case1] = phi - (1 - phi) / outB[case1] * outR[case1]
+        dR[case3] = phi
+        dB[case2] = (1 - phi) - phi / outR[case2] * outB[case2]
+        dB[case3] = 1 - phi
+
+        personalization.np = backend.safe_div(sensitive.np * personalization.np, backend.sum(sensitive.np)) * self.target_pRule \
+                             + backend.safe_div(personalization.np * (1 - sensitive.np), backend.sum(1 - sensitive.np))
         personalization.np = backend.safe_div(personalization.np, backend.sum(personalization.np))
         L = sensitive.np
         if self.redistributor is None or self.redistributor == "uniform":
             original_ranks = 1
         elif self.redistributor == "original":
             original_ranks = PageRank(alpha=self.alpha,
-                                         preprocessor=default_preprocessor(assume_immutability=False, normalization="col"),
-                                         convergence=self.convergence)(personalization).np
+                                      preprocessor=default_preprocessor(assume_immutability=False, normalization="col"),
+                                      convergence=self.convergence)(personalization).np
         else:
             original_ranks = self.redistributor(personalization).np
 
         self.dR = dR
         self.dB = dB
-        self.xR = backend.safe_div(original_ranks*L, backend.sum(original_ranks*L))
-        self.xB = backend.safe_div(original_ranks*(1-L), backend.sum(original_ranks*(1-L)))
+        self.xR = backend.safe_div(original_ranks * L, backend.sum(original_ranks * L))
+        self.xB = backend.safe_div(original_ranks * (1 - L), backend.sum(original_ranks * (1 - L)))
         super()._start(M, personalization, ranks, *args, **kwargs)
 
     def _formula(self, M, personalization, ranks, sensitive, *args, **kwargs):
-        deltaR = backend.sum(ranks*self.dR)
-        deltaB = backend.sum(ranks*self.dB)
-        return (backend.conv(ranks, M) + deltaR*self.xR + deltaB*self.xB) * self.alpha + personalization * (1 - self.alpha)
+        deltaR = backend.sum(ranks * self.dR)
+        deltaB = backend.sum(ranks * self.dB)
+        return (backend.conv(ranks, M) + deltaR * self.xR + deltaB * self.xB) * self.alpha + personalization * (
+                1 - self.alpha)
 
     def _end(self, M, personalization, ranks, *args, **kwargs):
         del self.xR
         del self.xB
         del self.dR
         del self.dB
+        del self.sensitive
+        del self.phi
+        del self.outR
+        del self.outB
         super()._end(M, personalization, ranks, *args, **kwargs)

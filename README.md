@@ -139,6 +139,7 @@ Some of the library's advantages are:
 [Downloadable Datasets](documentation/datasets.md)<br>
 
 **Backend resources**<br>
+[numpy](https://numpy.org/) (default, no additional installation) <br>
 [tensorflow](https://www.tensorflow.org/install) <br>
 [pytorch](https://pytorch.org/get-started/locally) <br>
 [torch_sparse](https://github.com/rusty1s/pytorch_sparse)
@@ -171,5 +172,5 @@ If `pygrank` has been useful in your research and you would like to cite it in a
       primaryClass={cs.LG}
 }
 ```
-To publish research that makes use provided methods,
+To publish research that makes use of provided methods,
 please cite all [relevant publications](documentation/citations.md).

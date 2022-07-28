@@ -54,7 +54,7 @@ class GraphFilter(NodeRanking):
             return personalization
         personalization = to_signal(personalization, personalization.np / personalization_norm)
         ranks = to_signal(personalization, backend.copy(personalization.np) if warm_start is None else warm_start)
-        M = self.preprocessor(personalization.graph)
+        M = self.preprocessor(self._prepare_graph(personalization.graph, *args, **kwargs))
         self.convergence.start()
         self._start(backend.graph_dropout(M, graph_dropout), personalization, ranks, *args, **kwargs)
         while not self.convergence.has_converged(ranks.np):
@@ -63,6 +63,9 @@ class GraphFilter(NodeRanking):
         if self.preserve_norm:
             ranks.np = ranks.np * personalization_norm
         return ranks
+
+    def _prepare_graph(self, graph, *args, **kwargs):
+        return graph
 
     def _start(self, M, personalization, ranks, *args, **kwargs):
         pass

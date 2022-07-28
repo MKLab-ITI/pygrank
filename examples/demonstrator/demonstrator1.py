@@ -1,5 +1,6 @@
 import pygrank as pg
 
+
 for name, graph, community in pg.load_datasets_one_community(["EUCore", "Amazon"]):
     print(name, "nodes:   ", len(graph))
     print(name, "edges:   ", graph.number_of_edges())

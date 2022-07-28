@@ -43,7 +43,7 @@ def to_array(obj, copy_array=False):
 
 
 def to_primitive(obj):
-    return np.array(obj)
+    return np.array(obj, copy=False)
 
 
 def is_array(obj):

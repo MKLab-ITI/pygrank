@@ -18,7 +18,7 @@ def to_sparse_matrix(G, normalization="auto", weight="weight", renormalize=False
         renormalize: Optional. If True, the renormalization trick employed by graph neural networks to ensure iteration
             stability by shrinking the spectrum is applied. Default is False.
     """
-    normalization = normalization.lower()
+    normalization = normalization.lower() if isinstance(normalization, str) else normalization
     if normalization == "auto":
         normalization = "col" if G.is_directed() else "symmetric"
     M = G.to_scipy_sparse_matrix() if isinstance(G, fastgraph.Graph) else nx.to_scipy_sparse_matrix(G, weight=weight, dtype=float)
@@ -46,6 +46,8 @@ def to_sparse_matrix(G, normalization="auto", weight="weight", renormalize=False
         S[S != 0] = 1.0 / S[S != 0]
         Qright = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
         M = Qleft * M * Qright
+    elif callable(normalization):
+        M = normalization(M)
     elif normalization != "none":
         raise Exception("Supported normalizations: none, col, symmetric, auto")
     return backend.scipy_sparse_to_backend(M)

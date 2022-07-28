@@ -44,7 +44,7 @@ def test_fair_personalizer_mistreatment():
     for algorithm in algorithms.values():
         if algorithm != algorithms["Base"]:
             print(algorithm.cite())
-            assert base_mistreatment > mistreatment(test, sensitive, train)(algorithm(graph, train, sensitive))
+            assert base_mistreatment >= mistreatment(test, sensitive, train)(algorithm(graph, train, sensitive))
     #for algorithm in algorithms.values():
         #print(mistreatment(test, sensitive, train)(algorithm(graph, train, sensitive)))
 
@@ -63,13 +63,19 @@ def test_fair_heuristics():
     # TODO: networx needed due to edge weighting by some algorithms
     labels = pg.to_signal(graph, groups[0])
     sensitive = pg.to_signal(graph, groups[1])
-    for algorithm in algorithms.values():
+    for name, algorithm in algorithms.items():
         ranks = algorithm(graph, labels, sensitive)
-        assert pg.pRule(sensitive)(ranks) > 0.6  # TODO: Check why fairwalk fails by that much and increase the limit.
+        if name == "FairWalk":
+            assert pg.pRule(sensitive)(ranks) > 0.6  # TODO: Check why fairwalk fails by that much and increase the limit.
+        else:
+            assert pg.pRule(sensitive)(ranks) > 0.98
     sensitive = 1 - sensitive.np
-    for algorithm in algorithms.values():
+    for name, algorithm in algorithms.items():
         ranks = algorithm(graph, labels, sensitive)
-        assert pg.pRule(sensitive)(ranks) > 0.6
+        if name == "FairWalk":
+            assert pg.pRule(sensitive)(ranks) > 0.6
+        else:
+            assert pg.pRule(sensitive)(ranks) > 0.98
 
 
 def test_invalid_fairness_arguments():

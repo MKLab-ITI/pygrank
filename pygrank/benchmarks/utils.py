@@ -38,6 +38,18 @@ def _fill(text="", tab=14):
     return text+(" "*(tab-len(text)))
 
 
+def benchmark_print_line(*line,
+                    delimiter: str = " \t ",
+                    end_line: str = "",
+                    decimals: int = 2,
+                    out: Optional[io.TextIOWrapper] = sys.stdout,
+                    tabs: list = None):
+    if tabs is None:
+        tabs = [7]*len(line)
+        tabs[0] = 14
+    print(delimiter.join([_fill(_fraction2str(value, decimals=decimals), tab) for tab, value in zip(tabs, line)]) + end_line, file=out)
+
+
 def benchmark_print(benchmark,
                     delimiter: str = " \t ",
                     end_line: str = "",
@@ -68,7 +80,7 @@ def benchmark_print(benchmark,
             if tabs is None:
                 tabs = [len(value)+1 for value in line]  # first line should be algorithm names
                 tabs[0] = 14
-            print(delimiter.join([_fill(_fraction2str(value, decimals=decimals), tab) for tab, value in zip(tabs, line)]) + end_line, file=out)
+            benchmark_print_line(*line, delimiter=delimiter, end_line=end_line, out=out, decimals=decimals, tabs=tabs)
     finally:
         sys.stderr = old_stderr
         out.flush()
@@ -114,7 +126,6 @@ def benchmark_average(benchmark, posthocs=False):
     if sums is not None and posthocs:
         import scikit_posthocs as ph
         print(ph.posthoc_nemenyi_friedman(np.array(sums).T))
-
 
 
 def benchmark_dict(benchmark):

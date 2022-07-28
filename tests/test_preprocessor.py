@@ -12,7 +12,7 @@ def test_preprocessor_types():
         signal = pg.to_signal(graph, {v: random() for v in graph})
         laplacian = pg.preprocessor(normalization="laplacian")(graph)
         symmetric = pg.preprocessor(normalization="symmetric")(graph)
-        assert pg.abs(pg.sum(pg.conv(signal, laplacian) + pg.conv(signal, symmetric) - signal)) < pg.epsilon()
+        assert pg.abs(pg.sum(pg.conv(signal, laplacian) + pg.conv(signal, symmetric) - signal)) <= pg.epsilon()
 
 
 def test_preprocessor():

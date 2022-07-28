@@ -29,7 +29,7 @@ class Backend:
 
 
 def load_backend(mod_name):
-    if mod_name not in ['pytorch', 'numpy', 'tensorflow', 'torch_sparse']:
+    if mod_name not in ['pytorch', 'numpy', 'tensorflow', 'torch_sparse', 'matvec']:
         raise Exception("Unsupported backend "+mod_name)
     if mod_name in _imported_mods:
         mod = _imported_mods[mod_name]
