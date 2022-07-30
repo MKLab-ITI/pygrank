@@ -19,7 +19,6 @@ jobs:
         id: cuda-toolkit
         with:
           cuda: '11.7.0'
-        run: nvcc -V
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
