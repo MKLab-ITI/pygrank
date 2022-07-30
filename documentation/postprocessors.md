@@ -17,8 +17,8 @@ All of them can be used through the code patterns presented at the library's [do
 11. [Sweep](#postprocessor-sweep)
 12. [Tautology](#postprocessor-tautology)
 13. [Threshold](#postprocessor-threshold)
-14. [Transformer](#postprocessor-transformer)
-15. [Undersample](#postprocessor-undersample)
+14. [Top](#postprocessor-top)
+15. [Transformer](#postprocessor-transformer)
 
 ### <kbd>Postprocessor</kbd> AdHocFairness
 
@@ -260,7 +260,7 @@ re-ordered if at least one is provided.
 
 Args: 
  * *ranker:* Optional. The base ranker instance. A Tautology() ranker is created if None (default) was specified. 
- * *threshold:* Optional. The minimum numeric value required to output rank 1 instead of 0. If "gap" (default) then its value is automatically determined based on the maximal percentage increase between consecutive ranks. 
+ * *threshold:* Optional. The maximum numeric value required to output rank 0 instead of 1. If "gap" then its value is automatically determined based on the maximal percentage increase between consecutive ranks. Default is 0. 
 
 Example:
 
@@ -278,6 +278,35 @@ Example (same outcome):
 import pygrank as pg 
 graph, personalization, algorithm = ... 
 ranks = pg.Threshold(0.5).transform(algorithm.rank(graph, personalization)) 
+```
+
+
+Example (binary conversion):
+
+```python 
+import pygrank as pg 
+graph = ... 
+binary = pg.Threshold(0).transform(pg.to_signal(graph, [0, 0.1, 0, 1]))  # creates [0, 1, 0, 1] ranks 
+```
+
+### <kbd>Postprocessor</kbd> Top
+
+Keeps the top ranks as are and converts other ranks to zero. The constructor initializes the class with a  base ranker instance and number of top examples. 
+
+Args: 
+ * *ranker:* Optional. The base ranker instance. A Tautology() ranker is created if None (default) was specified. 
+ * *fraction_of_training:* Optional. If 1 (default) or greater, keep that many top-scored nodes. If less than 1, it finds a corresponding fraction of the the graph signal to zero (e.g. for 0.5 set the lower half node scores to zero). 
+
+Example:
+
+```python 
+import pygrank as pg 
+graph, group, algorithm = ... 
+training, test = pg.split(pg.to_signal(graph, group)) 
+ranks = pg.Normalize(algorithm, "sum").rank(training) 
+ranks = ranks*(1-training) 
+top5 = pg.Threshold(pg.Top(5))(ranks)  # top5 ranks converted to 1, others to 0 
+print(pg.TPR(test, exclude=training)(top5)) 
 ```
 
 ### <kbd>Postprocessor</kbd> Transformer
@@ -298,6 +327,3 @@ r1 = pg.Normalize(algorithm, "sum").rank(graph, personalization)
 r2 = pg.Transformer(algorithm, lambda x: x/pg.sum(x)).rank(graph, personalization) 
 print(pg.Mabs(r1)(r2)) 
 ```
-
-### <kbd>Postprocessor</kbd> Undersample
-

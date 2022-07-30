@@ -21,7 +21,7 @@ def to_sparse_matrix(G, normalization="auto", weight="weight", renormalize=False
     normalization = normalization.lower() if isinstance(normalization, str) else normalization
     if normalization == "auto":
         normalization = "col" if G.is_directed() else "symmetric"
-    M = G.to_scipy_sparse_matrix() if isinstance(G, fastgraph.Graph) else nx.to_scipy_sparse_matrix(G, weight=weight, dtype=float)
+    M = G.to_scipy_sparse_array() if isinstance(G, fastgraph.Graph) else nx.to_scipy_sparse_matrix(G, weight=weight, dtype=float)
     if renormalize:
         M = M + scipy.sparse.eye(M.shape[0])*float(renormalize)
     if normalization == "col":

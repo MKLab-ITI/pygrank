@@ -220,10 +220,29 @@ class Transformer(Postprocessor):
         return "element-by-element "+self.expr.__name__
 
 
-class Undersample(Postprocessor):
+class Top(Postprocessor):
+    """Keeps the top ranks as are and converts other ranks to zero."""
+    
     def __init__(self,
                  ranker: Union[float, NodeRanking] = None,
-                 fraction_of_training: Union[float, NodeRanking] = 0.5):
+                 fraction_of_training: Union[float, NodeRanking] = 1):
+        """
+        Initializes the class with a  base ranker instance and number of top examples.
+        Args:
+            ranker: Optional. The base ranker instance. A Tautology() ranker is created if None (default) was specified.
+            fraction_of_training: Optional. If 1 (default) or greater, keep that many top-scored nodes. If less than
+                1, it finds a corresponding fraction of the the graph signal to zero
+                (e.g. for 0.5 set the lower half node scores to zero).
+
+        Example:
+            >>> import pygrank as pg
+            >>> graph, group, algorithm = ...
+            >>> training, test = pg.split(pg.to_signal(graph, group))
+            >>> ranks = pg.Normalize(algorithm, "sum").rank(training)
+            >>> ranks = ranks*(1-training)
+            >>> top5 = pg.Threshold(pg.Top(5))(ranks)  # top5 ranks converted to 1, others to 0
+            >>> print(pg.TPR(test, exclude=training)(top5))
+        """
 
         if ranker is not None and not callable(getattr(ranker, "rank", None)):
             ranker, fraction_of_training = fraction_of_training, ranker
@@ -237,7 +256,7 @@ class Undersample(Postprocessor):
                    **kwargs):
         ensure_used_args(kwargs)
         threshold = 0
-        fraction_of_training = self.fraction_of_training*backend.length(ranks) if self.fraction_of_training<1 else self.fraction_of_training
+        fraction_of_training = self.fraction_of_training*backend.length(ranks) if self.fraction_of_training < 1 else self.fraction_of_training
         fraction_of_training = int(fraction_of_training)
         for v in sorted(ranks, key=ranks.get, reverse=True):
             fraction_of_training -= 1
@@ -255,15 +274,15 @@ class Threshold(Postprocessor):
 
     def __init__(self,
                  ranker: Union[str, float, NodeRanking] = None,
-                 threshold: Union[str, float, NodeRanking] = "gap"):
+                 threshold: Union[str, float, NodeRanking] = 0):
         """ Initializes the Threshold postprocessing scheme. Args are automatically filled in and
         re-ordered if at least one is provided.
 
         Args:
             ranker: Optional. The base ranker instance. A Tautology() ranker is created if None (default) was specified.
-            threshold: Optional. The minimum numeric value required to output rank 1 instead of 0. If "gap" (default)
+            threshold: Optional. The maximum numeric value required to output rank 0 instead of 1. If "gap"
                 then its value is automatically determined based on the maximal percentage increase between consecutive
-                ranks.
+                ranks. Default is 0.
 
         Example:
             >>> import pygrank as pg
@@ -275,6 +294,11 @@ class Threshold(Postprocessor):
             >>> import pygrank as pg
             >>> graph, personalization, algorithm = ...
             >>> ranks = pg.Threshold(0.5).transform(algorithm.rank(graph, personalization))
+
+        Example (binary conversion):
+            >>> import pygrank as pg
+            >>> graph = ...
+            >>> binary = pg.Threshold(0).transform(pg.to_signal(graph, [0, 0.1, 0, 1]))  # creates [0, 1, 0, 1] ranks
         """
         if ranker is not None and not callable(getattr(ranker, "rank", None)):
             ranker, threshold = threshold, ranker
@@ -300,7 +324,7 @@ class Threshold(Postprocessor):
                         max_diff = diff
                         threshold = ranks[v]
                 prev_rank = ranks[v]
-        return {v: 1 if ranks[v] >= threshold else 0 for v in ranks.keys()}
+        return {v: 1 if ranks[v] > threshold else 0 for v in ranks.keys()}
 
     def _reference(self):
         return str(self.threshold)+" threshold"
@@ -426,4 +450,3 @@ class Sequential(Postprocessor):
             if ranker != self.ranker:
                 ranks = ranker(ranks)
         return ranks
-

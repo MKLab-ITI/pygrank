@@ -38,7 +38,7 @@ class PageRank(RecursiveGraphFilter):
     def references(self):
         refs = super().references()
         refs[0] = "personalized PageRank \\cite{page1999pagerank}"
-        refs.insert(1, f"diffusion rate {int(self.alpha * 1000) / 1000.}")
+        refs.insert(1, f"diffusion rate {self.alpha:.3f}")
         return refs
 
 
@@ -75,8 +75,8 @@ class HeatKernel(ClosedFormGraphFilter):
 
 
 class AbsorbingWalks(RecursiveGraphFilter):
-    """ Implementation of partial absorbing random walks for Lambda = (1-alpha)/alpha diag(absorption vector) .
-    """
+    """ Implementation of partial absorbing random walks for Lambda = (1-alpha)/alpha diag(absorption vector).
+    To determine parameters based on symmetricity principles, please use *SymmetricAbsorbingRandomWalks*."""
 
     def __init__(self,
                  alpha: float = 1 - 1.E-6,
@@ -154,7 +154,8 @@ class LFPR(RecursiveGraphFilter):
     def __init__(self,
                  alpha: float = 0.85,
                  redistributor: Optional[Union[str, NodeRanking]] = None,
-                 target_pRule: float = 1, *args, **kwargs):
+                 target_prule: float = 1,
+                 *args, **kwargs):
         """
         Initializes the locally fair random walk filter's parameters.
         Args:
@@ -163,13 +164,13 @@ class LFPR(RecursiveGraphFilter):
                 performed. If "original", a PageRank algorithm with colum-based normalization is run and used.
                 Otherwise, it can be a node ranking algorithm that estimates how much importance to
                 place on each node when redistributing non-fair random walk probability remainders.
-            target_pRule: Target pRule value to achieve. Default is 1.
+            target_prule: Target pRule value to achieve. Default is 1.
         """
         self.alpha = alpha
 
         # TODO: find a way to assume immutability with transparency
         kwargs["preprocessor"] = default_preprocessor(assume_immutability=False, normalization=self.normalization)
-        self.target_pRule = target_pRule
+        self.target_prule = target_prule
         self.redistributor = redistributor
         super().__init__(*args, **kwargs)
 
@@ -195,14 +196,14 @@ class LFPR(RecursiveGraphFilter):
     def _prepare_graph(self, graph, sensitive, *args, **kwargs):
         sensitive = to_signal(graph, sensitive)
         self.sensitive = sensitive
-        self.phi = backend.sum(sensitive.np) / backend.length(sensitive.np) * self.target_pRule
+        self.phi = backend.sum(sensitive.np) / backend.length(sensitive.np) * self.target_prule
         return graph
 
     def _start(self, M, personalization, ranks, sensitive, *args, **kwargs):
         sensitive = to_signal(ranks, sensitive)
         outR = self.outR  # backend.conv(sensitive.np, M)
         outB = self.outB  # backend.conv(1.-sensitive.np, M)
-        phi = backend.sum(sensitive.np) / backend.length(sensitive.np) * self.target_pRule
+        phi = backend.sum(sensitive.np) / backend.length(sensitive.np) * self.target_prule
         dR = backend.repeat(0., len(sensitive.graph))
         dB = backend.repeat(0., len(sensitive.graph))
 
@@ -214,7 +215,7 @@ class LFPR(RecursiveGraphFilter):
         dB[case2] = (1 - phi) - phi / outR[case2] * outB[case2]
         dB[case3] = 1 - phi
 
-        personalization.np = backend.safe_div(sensitive.np * personalization.np, backend.sum(sensitive.np)) * self.target_pRule \
+        personalization.np = backend.safe_div(sensitive.np * personalization.np, backend.sum(sensitive.np)) * self.target_prule \
                              + backend.safe_div(personalization.np * (1 - sensitive.np), backend.sum(1 - sensitive.np))
         personalization.np = backend.safe_div(personalization.np, backend.sum(personalization.np))
         L = sensitive.np
@@ -249,3 +250,75 @@ class LFPR(RecursiveGraphFilter):
         del self.outR
         del self.outB
         super()._end(M, personalization, ranks, *args, **kwargs)
+
+    def references(self):
+        refs = super().references()
+        refs[0] = "fairness-aware PageRank \\cite{tsioutsiouliklis2021fairness}"
+        refs.insert(1, f"diffusion rate {self.alpha:.3f}")
+        redistributor = 'uniform' if self.redistributor is None else self.redistributor
+        redistributor = redistributor if isinstance(redistributor, str) else redistributor.cite()
+        refs.insert(2, f"{redistributor} rank redistribution strategy")
+        return refs
+
+
+class SymmetricAbsorbingRandomWalks(RecursiveGraphFilter):
+    """ Implementation of partial absorbing random walks for *Lambda = (1-alpha)/alpha diag(absorption vector)*."""
+
+    def __init__(self,
+                 alpha: float = 0.5,
+                 symmetric: bool = True,
+                 *args, **kwargs):
+        """ Initializes the AbsorbingWalks filter parameters for appropriate parameter values. This can model PageRank
+        but is in principle a generalization that allows custom absorption rates per node (when not given, these are I).
+
+        Args:
+            alpha: Optional. (1-alpha)/alpha is the absorption rate of the random walk multiplied with individual node
+                absorption rates. This is chosen to yield the
+                same underlying meaning as PageRank (for which Lambda = alpha Diag(degrees) ) when the same parameter
+                value alpha is chosen. Default is 0.5 to match the approach of [krasanakis2022fast],
+                which uses absorption rate 1. Ideally, to set this parameter, refer to *AbsorbingWalks*.
+
+        Example:
+            >>> from pygrank.algorithms import AbsorbingWalks
+            >>> algorithm = AbsorbingWalks(1-1.E-6, tol=1.E-9)
+            >>> graph, seed_nodes = ...
+            >>> ranks = algorithm(graph, {v: 1 for v in seed_nodes})
+
+        Example (same outcome, explicit absorption rate definition):
+            >>> from pygrank.algorithms import AbsorbingWalks
+            >>> algorithm = AbsorbingWalks(1-1.E-6, tol=1.E-9)
+            >>> graph, seed_nodes = ...
+            >>> ranks = algorithm(graph, {v: 1 for v in seed_nodes}, absorption={v: 1 for v in graph})
+        """
+
+        super().__init__(*args, **kwargs)
+        self.alpha = alpha
+        self.symmetric = symmetric
+
+    def _start(self, M, personalization, ranks, absorption=None, **kwargs):
+        self.degrees = backend.degrees(M)
+        if self.symmetric:
+            self.absorption = (1+(1+4*self.degrees)**0.5)/2
+        else:
+            self.absorption = to_signal(personalization.graph, absorption).np * (1 - self.alpha) / self.alpha
+        self.personalization_skew = self.absorption / (self.absorption + self.degrees)
+        self.sqrt_degrees = (self.degrees / (self.absorption + self.degrees))
+        self.sqrt_degrees_left = 1./self.absorption
+
+    def _end(self, *args, **kwargs):
+        super()._end(*args, **kwargs)
+        del self.absorption
+        del self.degrees
+        del self.sqrt_degrees
+        del self.sqrt_degrees_left
+        del self.personalization_skew
+
+    def _formula(self, M, personalization, ranks, *args, **kwargs):
+        ret = backend.conv(ranks*self.sqrt_degrees_left, M) * self.sqrt_degrees \
+               + personalization * self.personalization_skew
+        return ret
+
+    def references(self):
+        refs = super().references()
+        refs[0] = "symmetric partially absorbing random walks \\cite{krasanakis2022fast}"
+        return refs

@@ -8,6 +8,7 @@ All of them can be used through the code patterns presented at the library's [do
 2. [HeatKernel](#closedformgraphfilter-heatkernel)
 3. [AbsorbingWalks](#recursivegraphfilter-absorbingwalks)
 4. [PageRank](#recursivegraphfilter-pagerank)
+5. [SymmetricAbsorbingRandomWalks](#recursivegraphfilter-symmetricabsorbingrandomwalks)
 
 ### <kbd>ClosedFormGraphFilter</kbd> GenericGraphFilter
 
@@ -41,7 +42,8 @@ ranks = algorithm(graph, {v: 1 for v in seed_nodes})
 
 ### <kbd>RecursiveGraphFilter</kbd> AbsorbingWalks
 
-Implementation of partial absorbing random walks for Lambda = (1-alpha)/alpha diag(absorption vector) . The constructor initializes the AbsorbingWalks filter parameters. For appropriate parameter values. This can model PageRank 
+Implementation of partial absorbing random walks for Lambda = (1-alpha)/alpha diag(absorption vector). 
+To determine parameters based on symmetricity principles, please use *SymmetricAbsorbingRandomWalks*. The constructor initializes the AbsorbingWalks filter parameters. For appropriate parameter values. This can model PageRank 
 but is in principle a generalization that allows custom absorption rate per node (when not given, these are I). 
 
 Args: 
@@ -80,4 +82,31 @@ import pygrank as pg
 algorithm = pg.PageRank(alpha=0.99, tol=1.E-9) # tol passed to the ConvergenceManager 
 graph, seed_nodes = ... 
 ranks = algorithm(graph, {v: 1 for v in seed_nodes}) 
+```
+
+### <kbd>RecursiveGraphFilter</kbd> SymmetricAbsorbingRandomWalks
+
+Implementation of partial absorbing random walks for *Lambda = (1-alpha)/alpha diag(absorption vector)*. The constructor initializes the AbsorbingWalks filter parameters for appropriate parameter values. This can model PageRank 
+but is in principle a generalization that allows custom absorption rates per node (when not given, these are I). 
+
+Args: 
+ * *alpha:* Optional. (1-alpha)/alpha is the absorption rate of the random walk multiplied with individual node absorption rates. This is chosen to yield the same underlying meaning as PageRank (for which Lambda = alpha Diag(degrees) ) when the same parameter value alpha is chosen. Default is 0.5 to match the approach of [krasanakis2022fast], which uses absorption rate 1. Ideally, to set this parameter, refer to *AbsorbingWalks*. 
+
+Example:
+
+```python 
+from pygrank.algorithms import AbsorbingWalks 
+algorithm = AbsorbingWalks(1-1.E-6, tol=1.E-9) 
+graph, seed_nodes = ... 
+ranks = algorithm(graph, {v: 1 for v in seed_nodes}) 
+```
+
+
+Example (same outcome, explicit absorption rate definition):
+
+```python 
+from pygrank.algorithms import AbsorbingWalks 
+algorithm = AbsorbingWalks(1-1.E-6, tol=1.E-9) 
+graph, seed_nodes = ... 
+ranks = algorithm(graph, {v: 1 for v in seed_nodes}, absorption={v: 1 for v in graph}) 
 ```

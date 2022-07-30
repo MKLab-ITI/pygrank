@@ -14,7 +14,7 @@ def import_snap_format_dataset(dataset: str,
                                directed: bool = False,
                                min_group_size: float = 0.01,
                                max_group_number: int = 20,
-                               graph_api = nx):
+                               graph_api=nx):
     if not os.path.isdir(path):   # pragma: no cover
         path = "../"+path
     download_dataset(dataset, path=path)

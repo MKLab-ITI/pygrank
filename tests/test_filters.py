@@ -81,6 +81,7 @@ def test_completion():
         pg.PageRank().rank(graph)
         pg.HeatKernel().rank(graph)
         pg.AbsorbingWalks().rank(graph)
+        pg.SymmetricAbsorbingRandomWalks().rank(graph)
         pg.HeatKernel().rank(graph)
         assert True
 

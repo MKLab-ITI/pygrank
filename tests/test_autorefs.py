@@ -42,7 +42,7 @@ def test_filter_citations():
 
 def test_explicit_citations():
     assert "unknown node ranking algorithm" == pg.NodeRanking().cite()
-    assert "with parameters tuned \cite{krasanakis2022autogf}" in pg.ParameterTuner(
+    assert "with parameters tuned \\cite{krasanakis2022autogf}" in pg.ParameterTuner(
         lambda params: pg.PageRank(params[0])).cite()
     assert "Postprocessor" in pg.Postprocessor().cite()
     assert pg.PageRank().cite() in pg.AlgorithmSelection().cite()
@@ -71,6 +71,8 @@ def test_explicit_citations():
     assert "tsioutsiouliklis2020fairness" in pg.AdHocFairness().cite()
     assert "rahman2019fairwalk" in pg.FairWalk(pg.PageRank()).cite()
     assert "krasanakis2020prioredit" in pg.FairPersonalizer(pg.PageRank()).cite()
+    assert "tsioutsiouliklis2021fairness" in pg.LFPR().cite()
+    assert "uniform" in pg.LFPR().cite()
 
 
 def test_postprocessor_citations():

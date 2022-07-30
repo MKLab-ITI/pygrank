@@ -25,14 +25,15 @@ All of them can be used through the code patterns presented at the library's [do
 19. [MaxDifference](#supervised-maxdifference)
 20. [Mistreatment](#supervised-mistreatment)
 21. [NDCG](#supervised-ndcg)
-22. [PearsonCorrelation](#supervised-pearsoncorrelation)
-23. [SpearmanCorrelation](#supervised-spearmancorrelation)
-24. [TNR](#supervised-tnr)
-25. [TPR](#supervised-tpr)
-26. [pRule](#supervised-prule)
-27. [Conductance](#unsupervised-conductance)
-28. [Density](#unsupervised-density)
-29. [Modularity](#unsupervised-modularity)
+22. [PPV](#supervised-ppv)
+23. [PearsonCorrelation](#supervised-pearsoncorrelation)
+24. [SpearmanCorrelation](#supervised-spearmancorrelation)
+25. [TNR](#supervised-tnr)
+26. [TPR](#supervised-tpr)
+27. [pRule](#supervised-prule)
+28. [Conductance](#unsupervised-conductance)
+29. [Density](#unsupervised-density)
+30. [Modularity](#unsupervised-modularity)
 
 ### <kbd>Measure</kbd> Time
 
@@ -313,6 +314,14 @@ Args:
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 
+### <kbd>Supervised</kbd> PPV
+
+Computes the positive predictive value (precision). The constructor initializes the supervised measure with desired graph signal outcomes. 
+
+Args: 
+ * *known_scores:* The desired graph signal outcomes. 
+ * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
+
 ### <kbd>Supervised</kbd> PearsonCorrelation
 
 Computes the Pearson correlation coefficient between given and known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
@@ -339,7 +348,7 @@ Args:
 
 ### <kbd>Supervised</kbd> TPR
 
-Computes the true positive rate. The constructor initializes the supervised measure with desired graph signal outcomes. 
+Computes the true positive rate (recall). The constructor initializes the supervised measure with desired graph signal outcomes. 
 
 Args: 
  * *known_scores:* The desired graph signal outcomes. 

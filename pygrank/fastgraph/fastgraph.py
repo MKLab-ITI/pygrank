@@ -43,9 +43,9 @@ class Graph:
     def __iter__(self):
         return self.node_map.keys().__iter__()
 
-    def to_scipy_sparse_matrix(self):
+    def to_scipy_sparse_array(self):
         return coo_matrix(([1.]*len(self.edge_row), (self.edge_row, self.edge_col)),
-                          shape=(len(self.node_map), len(self.node_map)), dtype=float).asformat("csr")
+                          shape=(len(self.node_map), len(self.node_map)), dtype=float)#.asformat("csr")
 
     def __len__(self):
         return len(self.node_map)

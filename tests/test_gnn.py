@@ -53,6 +53,7 @@ def test_appnp_tf():
             ])
             self.ranker = pg.PageRank(0.9, renormalize=True, assume_immutability=True, error_type="iters", max_iters=10)
             self.input_spec = None  # prevents some versions of tensorflow from checking call inputs
+            #self.input_spec = [None, self.input_spec]
 
         def call(self, inputs, training=False):
             graph, features = inputs
@@ -60,11 +61,10 @@ def test_appnp_tf():
             predict = self.ranker.propagate(graph, predict, graph_dropout=0.5 if training else 0)
             return tf.nn.softmax(predict, axis=1)
 
-    pg.load_backend('tensorflow')
-    model = APPNP(features.shape[1], labels.shape[1])
-    pg.gnn_train(model, graph, features, labels, training, validation, test=test, epochs=50)
-    assert float(pg.gnn_accuracy(labels, model([graph, features]), test)) >= 0.5
-    pg.load_backend('numpy')
+    with pg.Backend('tensorflow'):
+        model = APPNP(features.shape[1], labels.shape[1])
+        pg.gnn_train(model, graph, features, labels, training, validation, test=test, epochs=50)
+        assert float(pg.gnn_accuracy(labels, model([graph, features]), test)) >= 0.5
 
 
 def test_appnp_torch():
