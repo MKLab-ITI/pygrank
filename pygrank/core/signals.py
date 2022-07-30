@@ -145,18 +145,18 @@ class GraphSignal(MutableMapping):
         self.np = self.np / self.__compliant_value(other)
         return self
 
-    def __floordiv__(self, other):
-        return GraphSignal(self.graph, self.np // self.__compliant_value(other), self.node2id)
+    #def __floordiv__(self, other):
+    #    return GraphSignal(self.graph, self.np // self.__compliant_value(other), self.node2id)
 
-    def __ifloordiv__(self, other):
-        self.np = self.np // self.__compliant_value(other)
-        return self
+    #def __ifloordiv__(self, other):
+    #    self.np = self.np // self.__compliant_value(other)
+    #    return self
 
     def __rtruediv__(self, other):
         return GraphSignal(self.graph, self.__compliant_value(other) / self.np, self.node2id)
 
-    def __rfloordiv__(self, other):
-        return GraphSignal(self.graph, self.__compliant_value(other) // self.np, self.node2id)
+    #def __rfloordiv__(self, other):
+    #    return GraphSignal(self.graph, self.__compliant_value(other) // self.np, self.node2id)
 
     def __neg__(self):
         return GraphSignal(self.graph, -self.np, self.node2id)

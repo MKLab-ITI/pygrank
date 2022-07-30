@@ -31,7 +31,7 @@ def graph_dropout(M, dropout):
     if dropout == 0:
         return M
     # TODO: change based on future sparse matrix support: https://github.com/pytorch/pytorch/projects/24#card-59611437
-    return torch.sparse_coo_tensor(M.indices(), torch.nn.functional.dropout(M.values(), dropout), M.shape).coalescpe()
+    return torch.sparse_coo_tensor(M.indices(), torch.nn.functional.dropout(M.values(), dropout), M.shape)#.coalesce()
 
 
 def separate_cols(x):

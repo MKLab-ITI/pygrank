@@ -2,17 +2,22 @@ import warnings
 
 import matvec as mv
 import numpy as np
-from matvec import abs, exp, log, dot, max, min, mean, repeat
+from matvec import exp, log, dot, max, min, mean, repeat
 from scipy.sparse import eye
 
 
 # TODO: for full integration of this backend, add `matvec` to test_core.supported_backends
 
+def abs(x):
+    if isinstance(x, mv.Vector):
+        return mv.abs(x)
+    return np.sum(np.array(x))
+
 
 def sum(x):   # pragma: no cover
     if isinstance(x, mv.Vector) or isinstance(x, mv.Matrix):
         return mv.sum(x)
-    return np.array(x)
+    return np.sum(np.array(x))
 
 
 def ones(x):   # pragma: no cover
@@ -36,11 +41,13 @@ def graph_dropout(M, _):   # pragma: no cover
 
 
 def separate_cols(x):   # pragma: no cover
-    raise Exception("matvec does not support column separation")
+    return [mv.Vector(x[:, col]) for col in range(x.shape[1])]
+    #raise Exception("matvec does not support column separation")
 
 
 def combine_cols(cols):   # pragma: no cover
-    raise Exception("matvec does not support column combination")
+    return np.column_stack([col.np() for col in cols])
+    #raise Exception("matvec does not support column combination")
 
 
 def backend_name():   # pragma: no cover
@@ -67,6 +74,10 @@ def to_array(obj, copy_array=False):   # pragma: no cover
 def to_primitive(obj):   # pragma: no cover
     if isinstance(obj, mv.Vector) or isinstance(obj, mv.Matrix):
         return obj
+    if isinstance(obj, np.ndarray) and len(obj.shape) > 1:
+        return obj
+    if isinstance(obj, list) and isinstance(obj[0], list):
+        return np.array(obj)
     return mv.to_vector(obj)
 
 

@@ -22,7 +22,7 @@ def test_tautology():
     assert float(sum(u.np)) == len(graph)
 
 
-def test_seed_undersampling():
+def test_seed_top():
     _, graph, group = next(pg.load_datasets_one_community(["bigraph"]))
     for _ in supported_backends():
         training, evaluation = pg.split(list(group), training_samples=2)
@@ -34,8 +34,10 @@ def test_seed_undersampling():
         for measure in [pg.AUC, pg.NDCG]:
             #ranks = pg.PageRank(0.9, max_iters=1000).rank(graph, training)
             #base_result = measure(evaluation, list(original_training)).evaluate(ranks)
-            ranks = pg.Undersample(pg.Sweep(pg.PageRank(0.9, max_iters=1000)), 0.9).rank(graph, training)
-            undersampled_result = measure(evaluation, list(original_training)).evaluate(ranks)
+            ranks = pg.Top(pg.Sweep(pg.PageRank(0.9, max_iters=1000)), 0.9).rank(graph, training)
+            undersampled_result1 = measure(evaluation, list(original_training)).evaluate(ranks)
+            ranks = pg.Top(pg.Sweep(pg.PageRank(0.9, max_iters=1000)), 2).rank(graph, training)
+            undersampled_result2 = measure(evaluation, list(original_training)).evaluate(ranks)
             # TODO: research undersampling applications (this test is a placeholder)
 
 
@@ -152,7 +154,7 @@ def test_threshold():
     for _ in supported_backends():
         training, evaluation = pg.split(list(group), training_samples=0.5)
         algorithm = pg.PageRank()
-        cond1 = pg.Conductance().evaluate(pg.Threshold(pg.Sweep(algorithm)).rank(graph, {v: 1 for v in training}))
+        cond1 = pg.Conductance().evaluate(pg.Threshold(pg.Sweep(algorithm), "gap").rank(graph, {v: 1 for v in training}))
         cond2 = pg.Conductance().evaluate(pg.Threshold(0.3).transform(algorithm.rank(graph, {v: 1 for v in training}))) # try all api types
         cond3 = pg.Conductance().evaluate(pg.Threshold(1).transform(algorithm.rank(graph, {v: 1 for v in training})))  # should yield infinite conductance
         # TODO: find an algorithm other than gap to outperform 0.2 threshold too

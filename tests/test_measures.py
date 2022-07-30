@@ -108,8 +108,9 @@ def test_computations():
         assert float(pg.Cos([2, 0, 1])([-2, 0, -1])) == -1
         assert float(pg.Cos([0, 0, 0])([0, 0, 0])) == 0
         assert float(pg.Dot([1, 1, 1])([1, 1, 1])) == 3
-        assert float(pg.TPR([1, 0, 0, 0])([1, 1, 0, 0])) == 0.5
-        assert float(pg.TNR([0, 0, 0, 1])([1, 1, 0, 0])) == 0.5
+        assert float(pg.TPR([1, 0, 0, 0])([1, 1, 0, 0])) == 1
+        assert float(pg.PPV([1, 0, 0, 0])([1, 1, 0, 0])) == 0.5
+        assert float(pg.TNR([1, 0, 0, 1])([1, 1, 0, 0])) == 0.5
         assert float(pg.Euclidean([0, 0, 0, 1])([1, 1, 0, 0])) < float(pg.Euclidean([0, 0, 0, 1])([1, 1, 1, 0]))
 
 
