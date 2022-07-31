@@ -120,7 +120,7 @@ def test_signal_direct_operations():
         assert pg.sum(signal) == 12
         signal /= 2
         assert pg.sum(signal) == 6
-        signal /= 2 # //= 2
+        signal /= 2  # //= 2
         assert pg.sum(signal) == 3
         signal *= 4
         assert pg.sum(signal) == 12

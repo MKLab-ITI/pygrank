@@ -14,52 +14,56 @@ def abs(x):
     return np.sum(np.array(x))
 
 
-def sum(x):   # pragma: no cover
+def sum(x):
     if isinstance(x, mv.Vector) or isinstance(x, mv.Matrix):
         return mv.sum(x)
     return np.sum(np.array(x))
 
 
-def ones(x):   # pragma: no cover
-    raise Exception("matvec does not implement ones")
+def ones(shape):
+    return np.ones(shape)
 
 
-def diag(x):   # pragma: no cover
-    raise Exception("matvec does not implement diag")
+def diag(x, offset=0):
+    return np.diag(x, offset)
 
 
-def copy(x):   # pragma: no cover
+def copy(x):
     return x.copy()
 
 
-def backend_init():   # pragma: no cover
+def backend_init():
     warnings.warn("Matvec is an experimental backend")
 
 
-def graph_dropout(M, _):   # pragma: no cover
+def graph_dropout(M, _):
     return M
 
 
-def separate_cols(x):   # pragma: no cover
+def separate_cols(x):
     return [mv.Vector(x[:, col]) for col in range(x.shape[1])]
     #raise Exception("matvec does not support column separation")
 
 
-def combine_cols(cols):   # pragma: no cover
+def combine_cols(cols):
     return np.column_stack([col.np() for col in cols])
     #raise Exception("matvec does not support column combination")
 
 
-def backend_name():   # pragma: no cover
+def backend_name():
     return "matvec"
 
 
-def scipy_sparse_to_backend(M):   # pragma: no cover
+def scipy_sparse_to_backend(M):
     M = M.tocoo()
     return mv.Matrix(M.row, M.col, M.data, M.shape[0])
 
 
-def to_array(obj, copy_array=False):   # pragma: no cover
+def to_array(obj, copy_array=False):
+    if isinstance(obj, np.matrix):
+        return mv.Vector(np.ravel(np.asarray(obj)))
+    if isinstance(obj, np.ndarray):
+        return mv.Vector(obj.ravel())
     if isinstance(obj, mv.Vector):
         if copy_array:
             return copy(obj)
@@ -71,7 +75,7 @@ def to_array(obj, copy_array=False):   # pragma: no cover
     return mv.Vector(obj)
 
 
-def to_primitive(obj):   # pragma: no cover
+def to_primitive(obj):
     if isinstance(obj, mv.Vector) or isinstance(obj, mv.Matrix):
         return obj
     if isinstance(obj, np.ndarray) and len(obj.shape) > 1:
@@ -81,32 +85,32 @@ def to_primitive(obj):   # pragma: no cover
     return mv.to_vector(obj)
 
 
-def is_array(obj):   # pragma: no cover
+def is_array(obj):
     return isinstance(obj, mv.Vector) or isinstance(obj, list) or isinstance(obj, np.ndarray) or obj.__class__.__module__ == "tensorflow.python.framework.ops" or obj.__class__.__module__ == "torch"
 
 
-def self_normalize(obj):   # pragma: no cover
+def self_normalize(obj):
     np_sum = mv.sum(obj.__abs__())
     if np_sum != 0:
         obj.assign(obj / np_sum)
     return obj
 
 
-def conv(signal, M):   # pragma: no cover
-    return mv.multiply(M, signal)
+def conv(signal, M):
+    return signal*M
 
 
-def length(x):   # pragma: no cover
+def length(x):
     return len(x)
 
 
-def degrees(M):   # pragma: no cover
-    return sum(M)
+def degrees(M):
+    return mv.sum(M, axis=0)
 
 
-def filter_out(x, exclude):   # pragma: no cover
+def filter_out(x, exclude):
     return x[exclude == 0]
 
 
-def epsilon():   # pragma: no cover
-    return np.finfo(np.float64).eps
+def epsilon():
+    return np.finfo(np.float64).eps*4

@@ -26,6 +26,7 @@ jobs:
           pip install scipy
           pip install numpy
           pip install networkx
+          pip install matvec
           pip install wget
           pip install tensorflow-gpu
           pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116
@@ -35,7 +36,7 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       - name: Run tests
         run: |
-          pytest --cov=pygrank --cov-report=xml tests/test_autorefs.py tests/test_core.py tests/test_measures.py tests/test_filters.py tests/test_autotune.py tests/test_filter_optimization.py tests/test_gnn.py tests/test_postprocessing.py tests/test_benchmarks.py tests/test_fairness.py tests/test_preprocessor.py
+          pytest -x --cov=pygrank --cov-report=xml tests/test_autorefs.py tests/test_core.py tests/test_measures.py tests/test_filters.py tests/test_autotune.py tests/test_filter_optimization.py tests/test_gnn.py tests/test_postprocessing.py tests/test_benchmarks.py tests/test_fairness.py tests/test_preprocessor.py
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         with:

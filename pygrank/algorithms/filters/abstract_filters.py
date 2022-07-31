@@ -130,6 +130,8 @@ class RecursiveGraphFilter(GraphFilter):
 
     def _step(self, M, personalization, ranks, *args, **kwargs):
         ranks.np = self._formula(M, personalization, ranks, *args, **kwargs)
+        if isinstance(ranks.np, GraphSignal):
+            ranks.np = ranks.np.np
 
         if isinstance(self.use_quotient, Postprocessor):
             ranks.np = self.use_quotient.transform(ranks)

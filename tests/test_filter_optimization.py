@@ -50,7 +50,7 @@ def test_krylov_space():
             personalization.np = pg.conv(personalization.np, M)
             # print(pg.Mabs(personalization.np)(pg.krylov2original(krylov_base, krylov_result, int(krylov_dims))))
             assert pg.Mabs(personalization.np)(pg.krylov2original(krylov_base, krylov_result, int(krylov_dims))) <= error_bound
-            assert pg.krylov2original(krylov_base, krylov_result, int(krylov_dims)).shape == personalization.np.shape
+            assert pg.length(pg.krylov2original(krylov_base, krylov_result, int(krylov_dims))) == pg.length(personalization)
 
 
 def test_krylov_space_oversampling():
