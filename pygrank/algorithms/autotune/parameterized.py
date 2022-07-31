@@ -181,7 +181,7 @@ class ParameterTuner(Tuner):
 
     def references(self):
         desc = "parameters tuned \\cite{krasanakis2022autogf} to optimize "+self.measure(no_signal, no_signal).__class__.__name__\
-               +f" while withholding {1-self.fraction_of_training:.3f} of nodes for validation"
+               + f" while withholding {1-self.fraction_of_training:.3f} of nodes for validation"
         ret = self.ranker_generator([-42]).references()  # an invalid parameter value
         for i in range(len(ret)):
             if "-42" in ret[i]:

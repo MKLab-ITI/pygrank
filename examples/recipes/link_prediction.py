@@ -3,14 +3,13 @@ import networkx as nx
 import random
 import tqdm
 
-_, graph, group = next(pg.load_datasets_one_community(["citeseer"], graph_api=nx))
+_, graph, group = next(pg.load_datasets_one_community(["citeseer"]))
 algorithm = pg.SymmetricAbsorbingRandomWalks() >> pg.SeedOversampling("neighbors") >> pg.Sweep()
 
 tprs = list()
 ppvs = list()
 f1s = list()
-random.seed(0)
-for node in tqdm.tqdm(random.sample(list(graph), 200)):
+for node in tqdm.tqdm(list(graph)):
     #training, test = pg.split(pg.to_signal(graph, list(group)), 1.1)
     neighbors = list(graph.neighbors(node))
     if len(neighbors) < 3:

@@ -1,7 +1,7 @@
 from pygrank.fastgraph import fastgraph as nx
 import os
 import numpy as np
-from pygrank.core import to_signal
+from pygrank.core import to_signal, utils
 from pygrank.algorithms import call
 from pygrank.benchmarks.download import download_dataset
 from typing import Iterable, Union
@@ -14,10 +14,13 @@ def import_snap_format_dataset(dataset: str,
                                directed: bool = False,
                                min_group_size: float = 0.01,
                                max_group_number: int = 20,
-                               graph_api=nx):
+                               graph_api=nx,
+                               verbose=True):
     if not os.path.isdir(path):   # pragma: no cover
         path = "../"+path
     download_dataset(dataset, path=path)
+    if verbose:
+        utils.log(f"Loading {dataset} graph")
     G = graph_api.Graph(False) if directed else graph_api.Graph()
     groups = {}
     with open(path+'/'+dataset+'/'+pair_file, 'r', encoding='utf-8') as file:
@@ -28,6 +31,8 @@ def import_snap_format_dataset(dataset: str,
                     G.add_edge(splt[0], splt[1])
     if min_group_size < 1:
         min_group_size *= len(G)
+    if verbose:
+        utils.log(f"Loading {dataset} communities")
     if group_file is not None and os.path.isfile(path+'/'+dataset+'/'+group_file):
         with open(path+'/'+dataset+'/'+group_file, 'r', encoding='utf-8') as file:
             for line in file:
@@ -35,8 +40,12 @@ def import_snap_format_dataset(dataset: str,
                     group = [item for item in line[:-1].split() if len(item) > 0 and item in G]
                     if len(group) >= min_group_size:
                         groups[len(groups)] = group
+                        if verbose:
+                            utils.log(f"Loaded {dataset} communities {len(groups)}/{max_group_number}")
                         if len(groups) >= max_group_number:
                             break
+    if verbose:
+        utils.log()
     return G, groups
 
 

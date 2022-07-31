@@ -20,9 +20,9 @@ class Graph:
     def remove_edge(self, u, v):
         self._non_maksed_edge_num = None
         if self._adj is not None:
-            if u in self._adj:
+            if u in self._adj and v in self._adj[u]:
                 self._adj[u].remove(v)
-            if not self.directed and v in self._adj:
+            if not self.directed and v in self._adj and u in self._adj[v]:
                 self._adj[v].remove(u)
         u = self.node_map[u]
         v = self.node_map[v]
@@ -53,7 +53,7 @@ class Graph:
         if self._masked_out is not None:
             if u in self._masked_out and v in self._masked_out[u]:
                 self._masked_out[u].remove(v)
-            if not self.directed and v in self._masked_out and u in self._masked_out[u]:
+            if not self.directed and v in self._masked_out and u in self._masked_out[v]:
                 self._masked_out[v].remove(u)
         self.edge_row.append(u)
         self.edge_col.append(v)

@@ -6,7 +6,7 @@ Fast recommendation algorithms for large graphs based on link analysis.
 
 **License:** Apache Software License
 <br>**Author:** Emmanouil (Manios) Krasanakis
-<br>**Dependencies:** `networkx, numpy, scipy, sklearn, wget` (required) `tensorflow`, `torch`, `torch_sparse` (optional)
+<br>**Dependencies:** `networkx, numpy, scipy, sklearn, wget` (required) `tensorflow`, `torch`, `torch_sparse`, `matvec` (optional)
 <br><small>*Externally install optional dependencies to support respective backends.*</small>
 
 ![build](https://github.com/MKLab-ITI/pygrank/actions/workflows/tests.yml/badge.svg)
@@ -29,11 +29,11 @@ namely *tensorflow* or *pytorch*, either change the automatically created
 configuration file or run parts of your code within the following
 [context manager](https://book.pythontips.com/en/latest/context_managers.html)
 to override other configurations.
-Replace *torch* with other desired backend names:
+Replace *tensorflow* with other desired backend names:
 
 ```python
 import pygrank as pg
-with pg.Backend("torch"):
+with pg.Backend("tensorflow"):
     ... # run your pygrank code here
 ```
 
@@ -41,7 +41,7 @@ If you do nothing, everything runs on top of `numpy` (currently, this
 is faster for forward passes).
 The library's algorithms can be defined before contexts and only
 be called inside them. You can also use the simpler
-`pg.load_backend("torch")` to switch to a specific backend
+`pg.load_backend("tensorflow")` to switch to a specific backend
 if you want to avoid contexts.
 
 # :zap: Quickstart
@@ -62,8 +62,8 @@ print(algorithm.cite())
 
 The graph can be created with `networkx` or, for faster computations,
 with the library itself. Nodes can hold any 
-kind of object or data type and you don't need to bother with
-conversion to integer identifiers - the library does all this
+kind of object or data type. You don't need to bother with
+conversion to integer identifiers - the library does this
 internally and very fastly.
 
 The above snippet first defines a `preprocessor`, 
@@ -75,13 +75,13 @@ so that it is not recomputed every time we experiment with the
 same graphs.
 
 The snippet makes use of the library's 
-[chain operators](documentation/functional.md), for example
+[chain operators](documentation/functional.md)
 to wrap node ranking algorithms by various kinds of postprocessors
 with the `>>` operator
 (you can also put algorithms into each other's constructors
 if you are not a fan of functional programming).
 The chain starts from a pagerank graph filter with diffusion parameter
-0.85 - other types of filters and even automatically tuned ones
+0.85. Other types of filters and even automatically tuned ones
 can be run.
 
 Then, the algorithm is run as a callable,

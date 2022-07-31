@@ -2,6 +2,7 @@ import random
 from math import log
 from numpy.random import normal
 from random import random, choice
+from pygrank.core import utils
 import sys
 
 
@@ -34,35 +35,39 @@ def __add(weights, index, increment, max_val, min_val, coarse=0):
     return weights
 
 
-def nelder_mead(loss, max_vals, min_vals=None, weights=None, deviation_tol=1.E-6, parameter_tol: float = float('inf'), verbose=False, **kwargs):
+def nelder_mead(loss, max_vals, min_vals=None, weights=None, deviation_tol=1.E-6, parameter_tol: float = float('inf'), verbose=True, **kwargs):
     if min_vals is None:
         min_vals = [0]*len(max_vals)
     if weights is None:
         weights = [(min_val+max_val)/2 for min_val, max_val in zip(min_vals, max_vals)]
     import scipy.optimize
     import scipy.sparse
+    if verbose:
+        utils.log("Optimizing with Nelder-Mead")
     ret = scipy.optimize.minimize(loss,
                                   bounds=[(min_val, max_val) for min_val, max_val in zip(min_vals, max_vals)],
                                   method='Nelder-Mead',
                                   x0=weights, options={"fatol": deviation_tol, "xatol": parameter_tol})
     if verbose:
-        print(f"Evaluations {ret.nfev}")
+        utils.log()
     return ret.final_simplex[0][0]
 
 
-def lbfgsb(loss, max_vals, min_vals=None, weights=None, deviation_tol=1.E-6, verbose=False, **kwargs):
+def lbfgsb(loss, max_vals, min_vals=None, weights=None, deviation_tol=1.E-6, verbose=True, **kwargs):
     if min_vals is None:
         min_vals = [0]*len(max_vals)
     if weights is None:
         weights = [(min_val+max_val)/2 for min_val, max_val in zip(min_vals, max_vals)]
     import scipy.optimize
     import scipy.sparse
+    if verbose:
+        utils.log("Optimizing with LBFGSB")
     ret = scipy.optimize.minimize(loss,
                                   bounds=[(min_val, max_val) for min_val, max_val in zip(min_vals, max_vals)],
                                   method='L-BFGS-B',
                                   x0=weights, options={"ftol": deviation_tol})
     if verbose:
-        print(f"Evaluations {ret.nfev}")
+        utils.log()
     return ret.x
 
 
@@ -179,7 +184,7 @@ def optimize(loss,
                                                 1+int(range_search[curr_variable]/partitions))]
         else:
             raise Exception("Invalid partition strategy: either split or step expected")
-        loss_pairs = [(w,loss(w)) for w in candidate_weights if w is not None]
+        loss_pairs = [(w, loss(w)) for w in candidate_weights if w is not None]
         evals += len(loss_pairs)
         weights, weights_loss = min(loss_pairs, key=lambda pair: pair[1])
         prev_best_loss = best_loss
@@ -193,9 +198,7 @@ def optimize(loss,
             best_weights = weights
         range_deviations[curr_variable] = abs(prev_best_loss-best_loss)
         if verbose:
-            #print('Params', weights, '\t Loss', loss(weights), '+-', max(range_deviations), '\t Var',curr_variable, '\t Parameter max range', max(range_search))
-            sys.stdout.write(f"\rTuning evaluations {evals} loss {best_loss:.8f} +- {max(range_deviations):.8f}")
-            sys.stdout.flush()
+            utils.log(f"Tuning evaluations {evals} loss {best_loss:.8f} +- {max(range_deviations):.8f}")
 
         if max(range_deviations) <= deviation_tol and max(range_search) <= parameter_tol:
             break
@@ -210,8 +213,7 @@ def optimize(loss,
     #print("trained weights in", iter, "iterations", weights, "final loss", loss(weights))
     weights = best_weights
     if verbose:
-        sys.stdout.write("\r")
-        sys.stdout.flush()
+        utils.log()
     if depth > 1:
         return optimize(loss, max_vals, min_vals,
                         deviation_tol, divide_range, partitions, parameter_tol, depth-1, coarse,

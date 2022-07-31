@@ -60,6 +60,8 @@ def test_fastgraph():
         assert not graph.has_edge("E", "A")
         graph.add_edge("A", "E")
         assert graph.has_edge("A", "E")
+        graph.add_edge("Y", "Z")
+        assert graph.has_edge("Y", "Z")
 
 
 def test_signal_init():

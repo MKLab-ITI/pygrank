@@ -1,5 +1,11 @@
 from pygrank.core.utils.preprocessing import *
 import inspect
+import sys
+
+
+def log(text=""):
+    sys.stdout.write("\r"+text)
+    sys.stdout.flush()
 
 
 def call(method, kwargs, args=None):

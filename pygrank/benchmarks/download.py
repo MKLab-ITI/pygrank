@@ -5,6 +5,7 @@ import shutil
 import sys
 import os
 from pygrank.benchmarks import dataset_processors
+from pygrank.core import utils
 
 datasets = {
     "dblp": {"url": "https://snap.stanford.edu/data/com-DBLP.html",
@@ -78,7 +79,7 @@ def downloadable_small_datasets():
     return ["bigraph", "blockmodel", "citeseer", "eucore", "graph5", "graph9"]
 
 
-def download_dataset(dataset, path: str = "data"):   # pragma: no cover
+def download_dataset(dataset, path: str = "data", verbose=True):   # pragma: no cover
     dataset = dataset.lower()
     if dataset not in datasets:
         return
@@ -86,6 +87,8 @@ def download_dataset(dataset, path: str = "data"):   # pragma: no cover
     credentials = "REQUIRED CITATION: Please visit the url "+source["url"]\
                   + " for instructions on how to cite the dataset "+dataset+" in your research"
     print(credentials, file=sys.stderr)
+    if verbose:
+        utils.log("Downloading "+dataset)
     if not os.path.isdir(path):
         os.mkdir(path)
     download_path = path+"/"+dataset
@@ -212,4 +215,6 @@ def download_dataset(dataset, path: str = "data"):   # pragma: no cover
 
         if "remove" in source:
             shutil.rmtree(download_path+"/"+source["remove"])
+    if verbose:
+        utils.log()
     return credentials
