@@ -62,11 +62,11 @@ def extract_attributes(text):
     ret = ""
     in_attributes = False
     for line in text.split("\n"):
-        if not line.startswith(" * "):
+        if not line.strip().startswith("* "):
             in_attributes = False
         if in_attributes:
             ret += line+"\n"
-        if line == "Attributes: " or line == "Args: ":
+        if line.strip() == "Attributes:" or line.strip() == "Args:" or line.strip().endswith("args:"):
             in_attributes = True
     return ret
 
@@ -90,6 +90,7 @@ def combine_attributes(text, descriptions):
             to_add = extract_attributes(desc)
             if to_add not in ret:  # handles case of inherited constructors
                 ret += to_add
+
     return ret
 
 
@@ -134,11 +135,13 @@ def generate_filter_docs():
                     count += 1
                     text += str(count)+". ["+obj.__name__+"](#"+""+[cls.__name__ for cls in inspect.getmro(obj)][1].lower()+"-"+obj.__name__.lower()+")\n"
 
+    preprocessor_descriptions = [format(pygrank.preprocessor.__doc__), format(pygrank.algorithms.filters.ConvergenceManager.__init__.__doc__)]
+
     for abstr in base_descriptions:
         if abstract[abstr]:
             for obj in base_descriptions:
-                if not abstract[obj] and abstr == list(inspect.getmro(obj))[1]:
-                    text += combine_attributes(base_descriptions[obj], [base_descriptions.get(cls,"") for cls in inspect.getmro(obj)][1:])
+                if not abstract[obj] and abstr in inspect.getmro(obj):
+                    text += combine_attributes(base_descriptions[obj], ([base_descriptions.get(cls, "") for cls in inspect.getmro(obj)][1:])+preprocessor_descriptions)
 
     with open("documentation/graph_filters.md", "w") as file:
         file.write(text)

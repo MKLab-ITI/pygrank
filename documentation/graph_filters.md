@@ -4,18 +4,74 @@
 The following filters can be imported from the package `pygrank.algorithms`.
 Constructor details are provided, including arguments inherited from and passed to parent classes.
 All of them can be used through the code patterns presented at the library's [documentation](documentation.md#graph-filters). 
-1. [GenericGraphFilter](#closedformgraphfilter-genericgraphfilter)
-2. [HeatKernel](#closedformgraphfilter-heatkernel)
-3. [AbsorbingWalks](#recursivegraphfilter-absorbingwalks)
-4. [PageRank](#recursivegraphfilter-pagerank)
-5. [SymmetricAbsorbingRandomWalks](#recursivegraphfilter-symmetricabsorbingrandomwalks)
+1. [ImpulseGraphFilter](#graphfilter-impulsegraphfilter)
+2. [GenericGraphFilter](#closedformgraphfilter-genericgraphfilter)
+3. [HeatKernel](#closedformgraphfilter-heatkernel)
+4. [TwoHop](#closedformgraphfilter-twohop)
+5. [AbsorbingWalks](#recursivegraphfilter-absorbingwalks)
+6. [PageRank](#recursivegraphfilter-pagerank)
+7. [SymmetricAbsorbingRandomWalks](#recursivegraphfilter-symmetricabsorbingrandomwalks)
+
+### <kbd>RecursiveGraphFilter</kbd> AbsorbingWalks
+
+Implementation of partial absorbing random walks for Lambda = (1-alpha)/alpha diag(absorption vector). 
+To determine parameters based on symmetricity principles, please use *SymmetricAbsorbingRandomWalks*. The constructor initializes filter parameters. The filter can model PageRank for appropriate parameter values, 
+but is in principle a generalization that allows custom absorption rates per node (when not given, these are I). 
+
+Args: 
+ * *alpha:* Optional. (1-alpha)/alpha is the absorption rate of the random walk multiplied with individual node absorption rates. This is chosen to yield the same underlying meaning as PageRank (for which Lambda = alpha Diag(degrees) ) when the same parameter value alpha is chosen. Default is 1-1.E-6 per the respective publication. 
+ * *use_quotient:* Optional. If True (default) performs a L1 re-normalization of ranks after each iteration. This significantly speeds up the convergence speed of symmetric normalization (col normalization preserves the L1 norm during computations on its own). Can also pass Postprocessor instances to adjust node scores after each iteration with the Postprocessor.transform(ranks) method. Can pass False or None to ignore this functionality.
+ * *preprocessor:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *personalization_transform:* Optional. A Postprocessor whose `transform` method is used to transform the personalization before applying the graph filter. If None (default) a Tautology is used. 
+ * *preserve_norm:* Optional. If True (default) the input's norm is used to scale the output. For example, if *convergence* is L1, this effectively means that the sum of output values is equal to the sum of input values.
+ * *normalization:* Optional. The type of normalization can be "none", "col", "symmetric", "laplacian", "salsa", or "auto" (default). The last one selects the type of normalization between "col" and "symmetric", depending on whether the graph is directed or not respectively. Alternatively, this could be a callable, in which case it transforms a scipy sparse adjacency matrix to produce a normalized copy. 
+ * *weight:* Optional. The weight attribute (default is "weight") of *networkx* graph edges. This is ignored when *fastgraph* graphs are parsed, as these are unweighted. 
+ * *assume_immutability:* Optional. If True, the output is preprocessing further wrapped through a MethodHasher to avoid redundant calls. Default is False, as graph immutability needs be explicitly assumed but cannot be guaranteed. 
+ * *renormalize:* Optional. If True, the renormalization trick (self-loops) of graph neural networks is applied to ensure iteration stability by shrinking the graph's spectrum. Default is False. Can provide anything that can be cast to a float to regularize the renormalization. 
+ * *tol:* Numerical tolerance to determine the stopping point (algorithms stop if the "error" between consecutive iterations becomes less than this number). Default is 1.E-6 but for large graphs 1.E-9 often yields more robust convergence points. If the provided value is less than the numerical precision of the backend `pygrank.epsilon()` then it is snapped to that value. 
+ * *error_type:* Optional. How to calculate the "error" between consecutive iterations of graph signals. If "iters", convergence is reached at iteration *max_iters*-1 without throwing an exception. Default is `pygrank.Mabs`. 
+ * *max_iters:* Optional. The number of iterations algorithms can run for. If this number is exceeded, an exception is thrown. This could help manage computational resources. Default value is 100, and exceeding this value with graph filters often indicates that either graphs have large diameters or that algorithms of choice converge particularly slowly. 
+
+Example:
+
+```python 
+from pygrank.algorithms import AbsorbingWalks 
+algorithm = AbsorbingWalks(1-1.E-6, tol=1.E-9) # tol passed to the ConvergenceManager 
+graph, seed_nodes = ... 
+ranks = algorithm(graph, {v: 1 for v in seed_nodes}) 
+```
+
+
+Example (same outcome, explicit absorption rate definition):
+
+```python 
+from pygrank.algorithms import AbsorbingWalks 
+algorithm = AbsorbingWalks(1-1.E-6, tol=1.E-9) # tol passed to the ConvergenceManager 
+graph, seed_nodes = ... 
+ranks = algorithm(graph, {v: 1 for v in seed_nodes}, absorption={v: 1 for v in graph}) 
+```
 
 ### <kbd>ClosedFormGraphFilter</kbd> GenericGraphFilter
 
-Implements a graph filter with a specific vector of weight parameters. The constructor initializes the graph filter. 
+Defines a graph filter via its hop weight parameters. The constructor initializes the graph filter. 
 
 Args: 
  * *weights:* Optional. A list-like object with elements weights[n] proportional to the importance of propagating personalization graph signals n hops away. If None (default) then [0.9]*10 is used. 
+ * *krylov_dims:* Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space of the graph with degree equal to the provided dimensions. This considerably speeds up filtering but ends up providing an *approximation* of true graph filter outcomes. If None (default) filters are not computed through their projection the Krylov space, which may yield slower but exact computations. Otherwise, a numeric value equal to the number of latent dimensions is required. 
+ * *coefficient_type:* Optional. If "taylor" (default) provided coefficients are considered to define a Taylor expansion. If "chebyshev", they are considered to be the coefficients of a Chebyshev expansion, which provides more robust errors but require normalized personalization. These approaches are **not equivalent** for the same coefficient values; changing this argument could cause adhoc filters to not work as indented. 
+ * *optimization_dict:* Optional. If a dict the filter keeps intermediate values that can help it avoid most (if not all) matrix multiplication if it run again for the same graph signal. Setting this parameter to None (default) can save approximately **half the memory** the algorithm uses but slows down tuning iteration times to O(edges) instead of O(nodes). Note that the same dict needs to be potentially passed to multiple algorithms that take the same graph signal as input to see any improvement.
+ * *preprocessor:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *personalization_transform:* Optional. A Postprocessor whose `transform` method is used to transform the personalization before applying the graph filter. If None (default) a Tautology is used. 
+ * *preserve_norm:* Optional. If True (default) the input's norm is used to scale the output. For example, if *convergence* is L1, this effectively means that the sum of output values is equal to the sum of input values.
+ * *normalization:* Optional. The type of normalization can be "none", "col", "symmetric", "laplacian", "salsa", or "auto" (default). The last one selects the type of normalization between "col" and "symmetric", depending on whether the graph is directed or not respectively. Alternatively, this could be a callable, in which case it transforms a scipy sparse adjacency matrix to produce a normalized copy. 
+ * *weight:* Optional. The weight attribute (default is "weight") of *networkx* graph edges. This is ignored when *fastgraph* graphs are parsed, as these are unweighted. 
+ * *assume_immutability:* Optional. If True, the output is preprocessing further wrapped through a MethodHasher to avoid redundant calls. Default is False, as graph immutability needs be explicitly assumed but cannot be guaranteed. 
+ * *renormalize:* Optional. If True, the renormalization trick (self-loops) of graph neural networks is applied to ensure iteration stability by shrinking the graph's spectrum. Default is False. Can provide anything that can be cast to a float to regularize the renormalization. 
+ * *tol:* Numerical tolerance to determine the stopping point (algorithms stop if the "error" between consecutive iterations becomes less than this number). Default is 1.E-6 but for large graphs 1.E-9 often yields more robust convergence points. If the provided value is less than the numerical precision of the backend `pygrank.epsilon()` then it is snapped to that value. 
+ * *error_type:* Optional. How to calculate the "error" between consecutive iterations of graph signals. If "iters", convergence is reached at iteration *max_iters*-1 without throwing an exception. Default is `pygrank.Mabs`. 
+ * *max_iters:* Optional. The number of iterations algorithms can run for. If this number is exceeded, an exception is thrown. This could help manage computational resources. Default value is 100, and exceeding this value with graph filters often indicates that either graphs have large diameters or that algorithms of choice converge particularly slowly. 
 
 Example:
 
@@ -26,10 +82,24 @@ algorithm = GenericGraphFilter([0.5, 0.25, 0.125], tol=1.E-9) # tol passed to Co
 
 ### <kbd>ClosedFormGraphFilter</kbd> HeatKernel
 
-Heat kernel filter. The constructor initializes the HeatKernel filter parameters. 
+Heat kernel filter. The constructor initializes filter parameters. 
 
 Args: 
  * *t:* Optional. How many hops until the importance of new nodes starts decreasing. Default value is 5. 
+ * *krylov_dims:* Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space of the graph with degree equal to the provided dimensions. This considerably speeds up filtering but ends up providing an *approximation* of true graph filter outcomes. If None (default) filters are not computed through their projection the Krylov space, which may yield slower but exact computations. Otherwise, a numeric value equal to the number of latent dimensions is required. 
+ * *coefficient_type:* Optional. If "taylor" (default) provided coefficients are considered to define a Taylor expansion. If "chebyshev", they are considered to be the coefficients of a Chebyshev expansion, which provides more robust errors but require normalized personalization. These approaches are **not equivalent** for the same coefficient values; changing this argument could cause adhoc filters to not work as indented. 
+ * *optimization_dict:* Optional. If a dict the filter keeps intermediate values that can help it avoid most (if not all) matrix multiplication if it run again for the same graph signal. Setting this parameter to None (default) can save approximately **half the memory** the algorithm uses but slows down tuning iteration times to O(edges) instead of O(nodes). Note that the same dict needs to be potentially passed to multiple algorithms that take the same graph signal as input to see any improvement.
+ * *preprocessor:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *personalization_transform:* Optional. A Postprocessor whose `transform` method is used to transform the personalization before applying the graph filter. If None (default) a Tautology is used. 
+ * *preserve_norm:* Optional. If True (default) the input's norm is used to scale the output. For example, if *convergence* is L1, this effectively means that the sum of output values is equal to the sum of input values.
+ * *normalization:* Optional. The type of normalization can be "none", "col", "symmetric", "laplacian", "salsa", or "auto" (default). The last one selects the type of normalization between "col" and "symmetric", depending on whether the graph is directed or not respectively. Alternatively, this could be a callable, in which case it transforms a scipy sparse adjacency matrix to produce a normalized copy. 
+ * *weight:* Optional. The weight attribute (default is "weight") of *networkx* graph edges. This is ignored when *fastgraph* graphs are parsed, as these are unweighted. 
+ * *assume_immutability:* Optional. If True, the output is preprocessing further wrapped through a MethodHasher to avoid redundant calls. Default is False, as graph immutability needs be explicitly assumed but cannot be guaranteed. 
+ * *renormalize:* Optional. If True, the renormalization trick (self-loops) of graph neural networks is applied to ensure iteration stability by shrinking the graph's spectrum. Default is False. Can provide anything that can be cast to a float to regularize the renormalization. 
+ * *tol:* Numerical tolerance to determine the stopping point (algorithms stop if the "error" between consecutive iterations becomes less than this number). Default is 1.E-6 but for large graphs 1.E-9 often yields more robust convergence points. If the provided value is less than the numerical precision of the backend `pygrank.epsilon()` then it is snapped to that value. 
+ * *error_type:* Optional. How to calculate the "error" between consecutive iterations of graph signals. If "iters", convergence is reached at iteration *max_iters*-1 without throwing an exception. Default is `pygrank.Mabs`. 
+ * *max_iters:* Optional. The number of iterations algorithms can run for. If this number is exceeded, an exception is thrown. This could help manage computational resources. Default value is 100, and exceeding this value with graph filters often indicates that either graphs have large diameters or that algorithms of choice converge particularly slowly. 
 
 Example:
 
@@ -40,14 +110,182 @@ graph, seed_nodes = ...
 ranks = algorithm(graph, {v: 1 for v in seed_nodes}) 
 ```
 
+### <kbd>GraphFilter</kbd> ImpulseGraphFilter
+
+Defines a graph filter with a specific vector of impulse response parameters. The constructor initializes the graph filter. 
+
+Args: 
+ * *params:* Optional. A list-like object with elements weights[n] proportional to the impulse response when propagating graph signals at hop n. If None (default) then [0.9]*10 is used. 
+ * *preprocessor:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *personalization_transform:* Optional. A Postprocessor whose `transform` method is used to transform the personalization before applying the graph filter. If None (default) a Tautology is used. 
+ * *preserve_norm:* Optional. If True (default) the input's norm is used to scale the output. For example, if *convergence* is L1, this effectively means that the sum of output values is equal to the sum of input values.
+ * *normalization:* Optional. The type of normalization can be "none", "col", "symmetric", "laplacian", "salsa", or "auto" (default). The last one selects the type of normalization between "col" and "symmetric", depending on whether the graph is directed or not respectively. Alternatively, this could be a callable, in which case it transforms a scipy sparse adjacency matrix to produce a normalized copy. 
+ * *weight:* Optional. The weight attribute (default is "weight") of *networkx* graph edges. This is ignored when *fastgraph* graphs are parsed, as these are unweighted. 
+ * *assume_immutability:* Optional. If True, the output is preprocessing further wrapped through a MethodHasher to avoid redundant calls. Default is False, as graph immutability needs be explicitly assumed but cannot be guaranteed. 
+ * *renormalize:* Optional. If True, the renormalization trick (self-loops) of graph neural networks is applied to ensure iteration stability by shrinking the graph's spectrum. Default is False. Can provide anything that can be cast to a float to regularize the renormalization. 
+ * *tol:* Numerical tolerance to determine the stopping point (algorithms stop if the "error" between consecutive iterations becomes less than this number). Default is 1.E-6 but for large graphs 1.E-9 often yields more robust convergence points. If the provided value is less than the numerical precision of the backend `pygrank.epsilon()` then it is snapped to that value. 
+ * *error_type:* Optional. How to calculate the "error" between consecutive iterations of graph signals. If "iters", convergence is reached at iteration *max_iters*-1 without throwing an exception. Default is `pygrank.Mabs`. 
+ * *max_iters:* Optional. The number of iterations algorithms can run for. If this number is exceeded, an exception is thrown. This could help manage computational resources. Default value is 100, and exceeding this value with graph filters often indicates that either graphs have large diameters or that algorithms of choice converge particularly slowly. 
+
+Example:
+
+```python 
+from pygrank import GenericGraphFilter 
+algorithm = ImpulseGraphFilter([0.5, 0.5, 0.5], tol=1.E-9) # tol passed to ConvergenceManager 
+```
+
+### <kbd>RecursiveGraphFilter</kbd> PageRank
+
+A Personalized PageRank power method algorithm. The constructor initializes the PageRank scheme parameters. 
+
+Args: 
+ * *alpha:* Optional. 1-alpha is the bias towards the personalization. Default value is 0.85. 
+ * *use_quotient:* Optional. If True (default) performs a L1 re-normalization of ranks after each iteration. This significantly speeds up the convergence speed of symmetric normalization (col normalization preserves the L1 norm during computations on its own). Can also pass Postprocessor instances to adjust node scores after each iteration with the Postprocessor.transform(ranks) method. Can pass False or None to ignore this functionality.
+ * *preprocessor:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *personalization_transform:* Optional. A Postprocessor whose `transform` method is used to transform the personalization before applying the graph filter. If None (default) a Tautology is used. 
+ * *preserve_norm:* Optional. If True (default) the input's norm is used to scale the output. For example, if *convergence* is L1, this effectively means that the sum of output values is equal to the sum of input values.
+ * *normalization:* Optional. The type of normalization can be "none", "col", "symmetric", "laplacian", "salsa", or "auto" (default). The last one selects the type of normalization between "col" and "symmetric", depending on whether the graph is directed or not respectively. Alternatively, this could be a callable, in which case it transforms a scipy sparse adjacency matrix to produce a normalized copy. 
+ * *weight:* Optional. The weight attribute (default is "weight") of *networkx* graph edges. This is ignored when *fastgraph* graphs are parsed, as these are unweighted. 
+ * *assume_immutability:* Optional. If True, the output is preprocessing further wrapped through a MethodHasher to avoid redundant calls. Default is False, as graph immutability needs be explicitly assumed but cannot be guaranteed. 
+ * *renormalize:* Optional. If True, the renormalization trick (self-loops) of graph neural networks is applied to ensure iteration stability by shrinking the graph's spectrum. Default is False. Can provide anything that can be cast to a float to regularize the renormalization. 
+ * *tol:* Numerical tolerance to determine the stopping point (algorithms stop if the "error" between consecutive iterations becomes less than this number). Default is 1.E-6 but for large graphs 1.E-9 often yields more robust convergence points. If the provided value is less than the numerical precision of the backend `pygrank.epsilon()` then it is snapped to that value. 
+ * *error_type:* Optional. How to calculate the "error" between consecutive iterations of graph signals. If "iters", convergence is reached at iteration *max_iters*-1 without throwing an exception. Default is `pygrank.Mabs`. 
+ * *max_iters:* Optional. The number of iterations algorithms can run for. If this number is exceeded, an exception is thrown. This could help manage computational resources. Default value is 100, and exceeding this value with graph filters often indicates that either graphs have large diameters or that algorithms of choice converge particularly slowly. 
+
+Example:
+
+```python 
+import pygrank as pg 
+algorithm = pg.PageRank(alpha=0.99, tol=1.E-9) # tol passed to the ConvergenceManager 
+graph, seed_nodes = ... 
+ranks = algorithm(graph, {v: 1 for v in seed_nodes}) 
+```
+
+### <kbd>RecursiveGraphFilter</kbd> SymmetricAbsorbingRandomWalks
+
+Implementation of partial absorbing random walks for *Lambda = (1-alpha)/alpha diag(absorption vector)*. The constructor initializes the AbsorbingWalks filter parameters for appropriate parameter values. This can model PageRank 
+but is in principle a generalization that allows custom absorption rates per node (when not given, these are I). 
+
+Args: 
+ * *alpha:* Optional. (1-alpha)/alpha is the absorption rate of the random walk multiplied with individual node absorption rates. This is chosen to yield the same underlying meaning as PageRank (for which Lambda = alpha Diag(degrees) ) when the same parameter value alpha is chosen. Default is 0.5 to match the approach of [krasanakis2022fast], which uses absorption rate 1. Ideally, to set this parameter, refer to *AbsorbingWalks*. 
+ * *use_quotient:* Optional. If True (default) performs a L1 re-normalization of ranks after each iteration. This significantly speeds up the convergence speed of symmetric normalization (col normalization preserves the L1 norm during computations on its own). Can also pass Postprocessor instances to adjust node scores after each iteration with the Postprocessor.transform(ranks) method. Can pass False or None to ignore this functionality.
+ * *preprocessor:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *personalization_transform:* Optional. A Postprocessor whose `transform` method is used to transform the personalization before applying the graph filter. If None (default) a Tautology is used. 
+ * *preserve_norm:* Optional. If True (default) the input's norm is used to scale the output. For example, if *convergence* is L1, this effectively means that the sum of output values is equal to the sum of input values.
+ * *normalization:* Optional. The type of normalization can be "none", "col", "symmetric", "laplacian", "salsa", or "auto" (default). The last one selects the type of normalization between "col" and "symmetric", depending on whether the graph is directed or not respectively. Alternatively, this could be a callable, in which case it transforms a scipy sparse adjacency matrix to produce a normalized copy. 
+ * *weight:* Optional. The weight attribute (default is "weight") of *networkx* graph edges. This is ignored when *fastgraph* graphs are parsed, as these are unweighted. 
+ * *assume_immutability:* Optional. If True, the output is preprocessing further wrapped through a MethodHasher to avoid redundant calls. Default is False, as graph immutability needs be explicitly assumed but cannot be guaranteed. 
+ * *renormalize:* Optional. If True, the renormalization trick (self-loops) of graph neural networks is applied to ensure iteration stability by shrinking the graph's spectrum. Default is False. Can provide anything that can be cast to a float to regularize the renormalization. 
+ * *tol:* Numerical tolerance to determine the stopping point (algorithms stop if the "error" between consecutive iterations becomes less than this number). Default is 1.E-6 but for large graphs 1.E-9 often yields more robust convergence points. If the provided value is less than the numerical precision of the backend `pygrank.epsilon()` then it is snapped to that value. 
+ * *error_type:* Optional. How to calculate the "error" between consecutive iterations of graph signals. If "iters", convergence is reached at iteration *max_iters*-1 without throwing an exception. Default is `pygrank.Mabs`. 
+ * *max_iters:* Optional. The number of iterations algorithms can run for. If this number is exceeded, an exception is thrown. This could help manage computational resources. Default value is 100, and exceeding this value with graph filters often indicates that either graphs have large diameters or that algorithms of choice converge particularly slowly. 
+
+Example:
+
+```python 
+from pygrank.algorithms import AbsorbingWalks 
+algorithm = AbsorbingWalks(1-1.E-6, tol=1.E-9) 
+graph, seed_nodes = ... 
+ranks = algorithm(graph, {v: 1 for v in seed_nodes}) 
+```
+
+
+Example (same outcome, explicit absorption rate definition):
+
+```python 
+from pygrank.algorithms import AbsorbingWalks 
+algorithm = AbsorbingWalks(1-1.E-6, tol=1.E-9) 
+graph, seed_nodes = ... 
+ranks = algorithm(graph, {v: 1 for v in seed_nodes}, absorption={v: 1 for v in graph}) 
+```
+
+### <kbd>ClosedFormGraphFilter</kbd> TwoHop
+
+
+### <kbd>ClosedFormGraphFilter</kbd> GenericGraphFilter
+
+Defines a graph filter via its hop weight parameters. The constructor initializes the graph filter. 
+
+Args: 
+ * *weights:* Optional. A list-like object with elements weights[n] proportional to the importance of propagating personalization graph signals n hops away. If None (default) then [0.9]*10 is used. 
+ * *krylov_dims:* Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space of the graph with degree equal to the provided dimensions. This considerably speeds up filtering but ends up providing an *approximation* of true graph filter outcomes. If None (default) filters are not computed through their projection the Krylov space, which may yield slower but exact computations. Otherwise, a numeric value equal to the number of latent dimensions is required. 
+ * *coefficient_type:* Optional. If "taylor" (default) provided coefficients are considered to define a Taylor expansion. If "chebyshev", they are considered to be the coefficients of a Chebyshev expansion, which provides more robust errors but require normalized personalization. These approaches are **not equivalent** for the same coefficient values; changing this argument could cause adhoc filters to not work as indented. 
+ * *optimization_dict:* Optional. If a dict the filter keeps intermediate values that can help it avoid most (if not all) matrix multiplication if it run again for the same graph signal. Setting this parameter to None (default) can save approximately **half the memory** the algorithm uses but slows down tuning iteration times to O(edges) instead of O(nodes). Note that the same dict needs to be potentially passed to multiple algorithms that take the same graph signal as input to see any improvement.
+ * *preprocessor:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *personalization_transform:* Optional. A Postprocessor whose `transform` method is used to transform the personalization before applying the graph filter. If None (default) a Tautology is used. 
+ * *preserve_norm:* Optional. If True (default) the input's norm is used to scale the output. For example, if *convergence* is L1, this effectively means that the sum of output values is equal to the sum of input values.
+ * *normalization:* Optional. The type of normalization can be "none", "col", "symmetric", "laplacian", "salsa", or "auto" (default). The last one selects the type of normalization between "col" and "symmetric", depending on whether the graph is directed or not respectively. Alternatively, this could be a callable, in which case it transforms a scipy sparse adjacency matrix to produce a normalized copy. 
+ * *weight:* Optional. The weight attribute (default is "weight") of *networkx* graph edges. This is ignored when *fastgraph* graphs are parsed, as these are unweighted. 
+ * *assume_immutability:* Optional. If True, the output is preprocessing further wrapped through a MethodHasher to avoid redundant calls. Default is False, as graph immutability needs be explicitly assumed but cannot be guaranteed. 
+ * *renormalize:* Optional. If True, the renormalization trick (self-loops) of graph neural networks is applied to ensure iteration stability by shrinking the graph's spectrum. Default is False. Can provide anything that can be cast to a float to regularize the renormalization. 
+ * *tol:* Numerical tolerance to determine the stopping point (algorithms stop if the "error" between consecutive iterations becomes less than this number). Default is 1.E-6 but for large graphs 1.E-9 often yields more robust convergence points. If the provided value is less than the numerical precision of the backend `pygrank.epsilon()` then it is snapped to that value. 
+ * *error_type:* Optional. How to calculate the "error" between consecutive iterations of graph signals. If "iters", convergence is reached at iteration *max_iters*-1 without throwing an exception. Default is `pygrank.Mabs`. 
+ * *max_iters:* Optional. The number of iterations algorithms can run for. If this number is exceeded, an exception is thrown. This could help manage computational resources. Default value is 100, and exceeding this value with graph filters often indicates that either graphs have large diameters or that algorithms of choice converge particularly slowly. 
+
+Example:
+
+```python 
+from pygrank import GenericGraphFilter 
+algorithm = GenericGraphFilter([0.5, 0.25, 0.125], tol=1.E-9) # tol passed to ConvergenceManager 
+```
+
+### <kbd>ClosedFormGraphFilter</kbd> HeatKernel
+
+Heat kernel filter. The constructor initializes filter parameters. 
+
+Args: 
+ * *t:* Optional. How many hops until the importance of new nodes starts decreasing. Default value is 5. 
+ * *krylov_dims:* Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space of the graph with degree equal to the provided dimensions. This considerably speeds up filtering but ends up providing an *approximation* of true graph filter outcomes. If None (default) filters are not computed through their projection the Krylov space, which may yield slower but exact computations. Otherwise, a numeric value equal to the number of latent dimensions is required. 
+ * *coefficient_type:* Optional. If "taylor" (default) provided coefficients are considered to define a Taylor expansion. If "chebyshev", they are considered to be the coefficients of a Chebyshev expansion, which provides more robust errors but require normalized personalization. These approaches are **not equivalent** for the same coefficient values; changing this argument could cause adhoc filters to not work as indented. 
+ * *optimization_dict:* Optional. If a dict the filter keeps intermediate values that can help it avoid most (if not all) matrix multiplication if it run again for the same graph signal. Setting this parameter to None (default) can save approximately **half the memory** the algorithm uses but slows down tuning iteration times to O(edges) instead of O(nodes). Note that the same dict needs to be potentially passed to multiple algorithms that take the same graph signal as input to see any improvement.
+ * *preprocessor:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *personalization_transform:* Optional. A Postprocessor whose `transform` method is used to transform the personalization before applying the graph filter. If None (default) a Tautology is used. 
+ * *preserve_norm:* Optional. If True (default) the input's norm is used to scale the output. For example, if *convergence* is L1, this effectively means that the sum of output values is equal to the sum of input values.
+ * *normalization:* Optional. The type of normalization can be "none", "col", "symmetric", "laplacian", "salsa", or "auto" (default). The last one selects the type of normalization between "col" and "symmetric", depending on whether the graph is directed or not respectively. Alternatively, this could be a callable, in which case it transforms a scipy sparse adjacency matrix to produce a normalized copy. 
+ * *weight:* Optional. The weight attribute (default is "weight") of *networkx* graph edges. This is ignored when *fastgraph* graphs are parsed, as these are unweighted. 
+ * *assume_immutability:* Optional. If True, the output is preprocessing further wrapped through a MethodHasher to avoid redundant calls. Default is False, as graph immutability needs be explicitly assumed but cannot be guaranteed. 
+ * *renormalize:* Optional. If True, the renormalization trick (self-loops) of graph neural networks is applied to ensure iteration stability by shrinking the graph's spectrum. Default is False. Can provide anything that can be cast to a float to regularize the renormalization. 
+ * *tol:* Numerical tolerance to determine the stopping point (algorithms stop if the "error" between consecutive iterations becomes less than this number). Default is 1.E-6 but for large graphs 1.E-9 often yields more robust convergence points. If the provided value is less than the numerical precision of the backend `pygrank.epsilon()` then it is snapped to that value. 
+ * *error_type:* Optional. How to calculate the "error" between consecutive iterations of graph signals. If "iters", convergence is reached at iteration *max_iters*-1 without throwing an exception. Default is `pygrank.Mabs`. 
+ * *max_iters:* Optional. The number of iterations algorithms can run for. If this number is exceeded, an exception is thrown. This could help manage computational resources. Default value is 100, and exceeding this value with graph filters often indicates that either graphs have large diameters or that algorithms of choice converge particularly slowly. 
+
+Example:
+
+```python 
+from pygrank.algorithms import HeatKernel 
+algorithm = HeatKernel(t=3, tol=1.E-9) # tol passed to the ConvergenceManager 
+graph, seed_nodes = ... 
+ranks = algorithm(graph, {v: 1 for v in seed_nodes}) 
+```
+
+### <kbd>ClosedFormGraphFilter</kbd> TwoHop
+
+
 ### <kbd>RecursiveGraphFilter</kbd> AbsorbingWalks
 
 Implementation of partial absorbing random walks for Lambda = (1-alpha)/alpha diag(absorption vector). 
-To determine parameters based on symmetricity principles, please use *SymmetricAbsorbingRandomWalks*. The constructor initializes the AbsorbingWalks filter parameters. For appropriate parameter values. This can model PageRank 
-but is in principle a generalization that allows custom absorption rate per node (when not given, these are I). 
+To determine parameters based on symmetricity principles, please use *SymmetricAbsorbingRandomWalks*. The constructor initializes filter parameters. The filter can model PageRank for appropriate parameter values, 
+but is in principle a generalization that allows custom absorption rates per node (when not given, these are I). 
 
 Args: 
  * *alpha:* Optional. (1-alpha)/alpha is the absorption rate of the random walk multiplied with individual node absorption rates. This is chosen to yield the same underlying meaning as PageRank (for which Lambda = alpha Diag(degrees) ) when the same parameter value alpha is chosen. Default is 1-1.E-6 per the respective publication. 
+ * *use_quotient:* Optional. If True (default) performs a L1 re-normalization of ranks after each iteration. This significantly speeds up the convergence speed of symmetric normalization (col normalization preserves the L1 norm during computations on its own). Can also pass Postprocessor instances to adjust node scores after each iteration with the Postprocessor.transform(ranks) method. Can pass False or None to ignore this functionality.
+ * *preprocessor:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *personalization_transform:* Optional. A Postprocessor whose `transform` method is used to transform the personalization before applying the graph filter. If None (default) a Tautology is used. 
+ * *preserve_norm:* Optional. If True (default) the input's norm is used to scale the output. For example, if *convergence* is L1, this effectively means that the sum of output values is equal to the sum of input values.
+ * *normalization:* Optional. The type of normalization can be "none", "col", "symmetric", "laplacian", "salsa", or "auto" (default). The last one selects the type of normalization between "col" and "symmetric", depending on whether the graph is directed or not respectively. Alternatively, this could be a callable, in which case it transforms a scipy sparse adjacency matrix to produce a normalized copy. 
+ * *weight:* Optional. The weight attribute (default is "weight") of *networkx* graph edges. This is ignored when *fastgraph* graphs are parsed, as these are unweighted. 
+ * *assume_immutability:* Optional. If True, the output is preprocessing further wrapped through a MethodHasher to avoid redundant calls. Default is False, as graph immutability needs be explicitly assumed but cannot be guaranteed. 
+ * *renormalize:* Optional. If True, the renormalization trick (self-loops) of graph neural networks is applied to ensure iteration stability by shrinking the graph's spectrum. Default is False. Can provide anything that can be cast to a float to regularize the renormalization. 
+ * *tol:* Numerical tolerance to determine the stopping point (algorithms stop if the "error" between consecutive iterations becomes less than this number). Default is 1.E-6 but for large graphs 1.E-9 often yields more robust convergence points. If the provided value is less than the numerical precision of the backend `pygrank.epsilon()` then it is snapped to that value. 
+ * *error_type:* Optional. How to calculate the "error" between consecutive iterations of graph signals. If "iters", convergence is reached at iteration *max_iters*-1 without throwing an exception. Default is `pygrank.Mabs`. 
+ * *max_iters:* Optional. The number of iterations algorithms can run for. If this number is exceeded, an exception is thrown. This could help manage computational resources. Default value is 100, and exceeding this value with graph filters often indicates that either graphs have large diameters or that algorithms of choice converge particularly slowly. 
 
 Example:
 
@@ -74,6 +312,18 @@ A Personalized PageRank power method algorithm. The constructor initializes the 
 
 Args: 
  * *alpha:* Optional. 1-alpha is the bias towards the personalization. Default value is 0.85. 
+ * *use_quotient:* Optional. If True (default) performs a L1 re-normalization of ranks after each iteration. This significantly speeds up the convergence speed of symmetric normalization (col normalization preserves the L1 norm during computations on its own). Can also pass Postprocessor instances to adjust node scores after each iteration with the Postprocessor.transform(ranks) method. Can pass False or None to ignore this functionality.
+ * *preprocessor:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *personalization_transform:* Optional. A Postprocessor whose `transform` method is used to transform the personalization before applying the graph filter. If None (default) a Tautology is used. 
+ * *preserve_norm:* Optional. If True (default) the input's norm is used to scale the output. For example, if *convergence* is L1, this effectively means that the sum of output values is equal to the sum of input values.
+ * *normalization:* Optional. The type of normalization can be "none", "col", "symmetric", "laplacian", "salsa", or "auto" (default). The last one selects the type of normalization between "col" and "symmetric", depending on whether the graph is directed or not respectively. Alternatively, this could be a callable, in which case it transforms a scipy sparse adjacency matrix to produce a normalized copy. 
+ * *weight:* Optional. The weight attribute (default is "weight") of *networkx* graph edges. This is ignored when *fastgraph* graphs are parsed, as these are unweighted. 
+ * *assume_immutability:* Optional. If True, the output is preprocessing further wrapped through a MethodHasher to avoid redundant calls. Default is False, as graph immutability needs be explicitly assumed but cannot be guaranteed. 
+ * *renormalize:* Optional. If True, the renormalization trick (self-loops) of graph neural networks is applied to ensure iteration stability by shrinking the graph's spectrum. Default is False. Can provide anything that can be cast to a float to regularize the renormalization. 
+ * *tol:* Numerical tolerance to determine the stopping point (algorithms stop if the "error" between consecutive iterations becomes less than this number). Default is 1.E-6 but for large graphs 1.E-9 often yields more robust convergence points. If the provided value is less than the numerical precision of the backend `pygrank.epsilon()` then it is snapped to that value. 
+ * *error_type:* Optional. How to calculate the "error" between consecutive iterations of graph signals. If "iters", convergence is reached at iteration *max_iters*-1 without throwing an exception. Default is `pygrank.Mabs`. 
+ * *max_iters:* Optional. The number of iterations algorithms can run for. If this number is exceeded, an exception is thrown. This could help manage computational resources. Default value is 100, and exceeding this value with graph filters often indicates that either graphs have large diameters or that algorithms of choice converge particularly slowly. 
 
 Example:
 
@@ -91,6 +341,18 @@ but is in principle a generalization that allows custom absorption rates per nod
 
 Args: 
  * *alpha:* Optional. (1-alpha)/alpha is the absorption rate of the random walk multiplied with individual node absorption rates. This is chosen to yield the same underlying meaning as PageRank (for which Lambda = alpha Diag(degrees) ) when the same parameter value alpha is chosen. Default is 0.5 to match the approach of [krasanakis2022fast], which uses absorption rate 1. Ideally, to set this parameter, refer to *AbsorbingWalks*. 
+ * *use_quotient:* Optional. If True (default) performs a L1 re-normalization of ranks after each iteration. This significantly speeds up the convergence speed of symmetric normalization (col normalization preserves the L1 norm during computations on its own). Can also pass Postprocessor instances to adjust node scores after each iteration with the Postprocessor.transform(ranks) method. Can pass False or None to ignore this functionality.
+ * *preprocessor:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *personalization_transform:* Optional. A Postprocessor whose `transform` method is used to transform the personalization before applying the graph filter. If None (default) a Tautology is used. 
+ * *preserve_norm:* Optional. If True (default) the input's norm is used to scale the output. For example, if *convergence* is L1, this effectively means that the sum of output values is equal to the sum of input values.
+ * *normalization:* Optional. The type of normalization can be "none", "col", "symmetric", "laplacian", "salsa", or "auto" (default). The last one selects the type of normalization between "col" and "symmetric", depending on whether the graph is directed or not respectively. Alternatively, this could be a callable, in which case it transforms a scipy sparse adjacency matrix to produce a normalized copy. 
+ * *weight:* Optional. The weight attribute (default is "weight") of *networkx* graph edges. This is ignored when *fastgraph* graphs are parsed, as these are unweighted. 
+ * *assume_immutability:* Optional. If True, the output is preprocessing further wrapped through a MethodHasher to avoid redundant calls. Default is False, as graph immutability needs be explicitly assumed but cannot be guaranteed. 
+ * *renormalize:* Optional. If True, the renormalization trick (self-loops) of graph neural networks is applied to ensure iteration stability by shrinking the graph's spectrum. Default is False. Can provide anything that can be cast to a float to regularize the renormalization. 
+ * *tol:* Numerical tolerance to determine the stopping point (algorithms stop if the "error" between consecutive iterations becomes less than this number). Default is 1.E-6 but for large graphs 1.E-9 often yields more robust convergence points. If the provided value is less than the numerical precision of the backend `pygrank.epsilon()` then it is snapped to that value. 
+ * *error_type:* Optional. How to calculate the "error" between consecutive iterations of graph signals. If "iters", convergence is reached at iteration *max_iters*-1 without throwing an exception. Default is `pygrank.Mabs`. 
+ * *max_iters:* Optional. The number of iterations algorithms can run for. If this number is exceeded, an exception is thrown. This could help manage computational resources. Default value is 100, and exceeding this value with graph filters often indicates that either graphs have large diameters or that algorithms of choice converge particularly slowly. 
 
 Example:
 

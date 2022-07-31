@@ -11,19 +11,23 @@ def to_sparse_matrix(G, normalization="auto", weight="weight", renormalize=False
 
     Args:
         G: A networkx graph
-        normalization: Optional. The type of normalization can be "none", "col", "symmetric", "laplacian",
-            or "auto" (default). The last ine selects the type of normalization between "col" and "symmetric",
-            depending on whether the graph is directed or not respectively.
-        weight: Optional. The weight attribute of the graph'personalization edges.
-        renormalize: Optional. If True, the renormalization trick employed by graph neural networks to ensure iteration
-            stability by shrinking the spectrum is applied. Default is False.
+        normalization: Optional. The type of normalization can be "none", "col", "symmetric", "laplacian", "salsa",
+            or "auto" (default). The last one selects the type of normalization between "col" and "symmetric",
+            depending on whether the graph is directed or not respectively. Alternatively, this could be a callable,
+            in which case it transforms a scipy sparse adjacency matrix to produce a normalized copy.
+        weight: Optional. The weight attribute (default is "weight") of *networkx* graph edges. This is ignored when
+            *fastgraph* graphs are parsed, as these are unweighted.
+        renormalize: Optional. If True, the renormalization trick (self-loops) of graph neural networks is applied to
+            ensure iteration stability by shrinking the graph's spectrum. Default is False. Can provide anything that
+            can be cast to a float to regularize the renormalization.
     """
     normalization = normalization.lower() if isinstance(normalization, str) else normalization
     if normalization == "auto":
         normalization = "col" if G.is_directed() else "symmetric"
     M = G.to_scipy_sparse_array() if isinstance(G, fastgraph.Graph) else nx.to_scipy_sparse_matrix(G, weight=weight, dtype=float)
-    if renormalize:
-        M = M + scipy.sparse.eye(M.shape[0])*float(renormalize)
+    renormalize = float(renormalize)
+    if renormalize != 0:
+        M = M + scipy.sparse.eye(M.shape[0])*renormalize
     if normalization == "col":
         S = np.array(M.sum(axis=1)).flatten()
         S[S != 0] = 1.0 / S[S != 0]
@@ -38,6 +42,14 @@ def to_sparse_matrix(G, normalization="auto", weight="weight", renormalize=False
         Qright = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
         M = Qleft * M * Qright
         M = -M + scipy.sparse.eye(M.shape[0])
+    elif normalization == "salsa":
+        S = np.array(M.sum(axis=1)).flatten()
+        S[S != 0] = 1.0 / S[S != 0]
+        Qleft = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
+        S = np.array(np.sqrt(M.sum(axis=0))).flatten()
+        S[S != 0] = 1.0 / S[S != 0]
+        Qright = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
+        M = Qleft * M * Qright
     elif normalization == "symmetric":
         S = np.array(np.sqrt(M.sum(axis=1))).flatten()
         S[S != 0] = 1.0 / S[S != 0]
@@ -138,14 +150,18 @@ def preprocessor(normalization: str = "auto",
     """ Wrapper function that generates lambda expressions for the method to_sparse_matrix.
 
     Args:
-        normalization: Optional. The type of normalization can be "none", "col", "symmetric" or "auto" (default). The latter
-            selects the type of normalization depending on whether the graph is directed or not respectively.
-        assume_immutability: If True, then the output is further wrapped through a MethodHasher to avoid redundant
+        normalization: Optional. The type of normalization can be "none", "col", "symmetric", "laplacian", "salsa",
+            or "auto" (default). The last one selects the type of normalization between "col" and "symmetric",
+            depending on whether the graph is directed or not respectively. Alternatively, this could be a callable,
+            in which case it transforms a scipy sparse adjacency matrix to produce a normalized copy.
+        weight: Optional. The weight attribute (default is "weight") of *networkx* graph edges. This is ignored when
+            *fastgraph* graphs are parsed, as these are unweighted.
+        assume_immutability: Optional. If True, the output is preprocessing further wrapped
+            through a MethodHasher to avoid redundant
             calls. Default is False, as graph immutability needs be explicitly assumed but cannot be guaranteed.
-        G: A networkx graph
-        weight: Optional. The weight attribute of the graph'personalization edges.
-        renormalize: Optional. If True, the renormalization trick employed by graph neural networks to ensure iteration
-            stability by shrinking the spectrum is applied. Default is False.
+        renormalize: Optional. If True, the renormalization trick (self-loops) of graph neural networks is applied to
+            ensure iteration stability by shrinking the graph's spectrum. Default is False. Can provide anything that
+            can be cast to a float to regularize the renormalization.
     """
     if assume_immutability:
         ret = MethodHasher(preprocessor(assume_immutability=False,

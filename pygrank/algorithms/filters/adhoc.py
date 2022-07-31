@@ -1,6 +1,6 @@
 import warnings
 from pygrank.core import backend
-from pygrank.algorithms.filters.abstract_filters import RecursiveGraphFilter, ClosedFormGraphFilter
+from pygrank.algorithms.filters.abstract_filters import RecursiveGraphFilter, ClosedFormGraphFilter, GenericGraphFilter
 from pygrank.core import to_signal, NodeRanking, preprocessor as default_preprocessor
 from typing import Union, Optional
 
@@ -48,7 +48,7 @@ class HeatKernel(ClosedFormGraphFilter):
     def __init__(self,
                  t: float = 3,
                  *args, **kwargs):
-        """ Initializes the HeatKernel filter parameters.
+        """ Initializes filter parameters.
 
         Args:
             t: Optional. How many hops until the importance of new nodes starts decreasing. Default value is 5.
@@ -74,6 +74,16 @@ class HeatKernel(ClosedFormGraphFilter):
         return refs
 
 
+class TwoHop(ClosedFormGraphFilter):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def _coefficient(self, _):
+        if self.convergence.iteration > 3:
+            return 0
+        return float(self.convergence.iteration % 2 == 1)
+
+
 class AbsorbingWalks(RecursiveGraphFilter):
     """ Implementation of partial absorbing random walks for Lambda = (1-alpha)/alpha diag(absorption vector).
     To determine parameters based on symmetricity principles, please use *SymmetricAbsorbingRandomWalks*."""
@@ -81,8 +91,8 @@ class AbsorbingWalks(RecursiveGraphFilter):
     def __init__(self,
                  alpha: float = 1 - 1.E-6,
                  *args, **kwargs):
-        """ Initializes the AbsorbingWalks filter parameters. For appropriate parameter values. This can model PageRank
-        but is in principle a generalization that allows custom absorption rate per node (when not given, these are I).
+        """ Initializes filter parameters. The filter can model PageRank for appropriate parameter values,
+        but is in principle a generalization that allows custom absorption rates per node (when not given, these are I).
 
         Args:
             alpha: Optional. (1-alpha)/alpha is the absorption rate of the random walk multiplied with individual node

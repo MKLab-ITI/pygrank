@@ -9,6 +9,7 @@ All datasets can be imported with code patterns presented at the library's [docu
 | dblp | https://snap.stanford.edu/data/com-DBLP.html | :heavy_check_mark: | :heavy_check_mark: |  |
 | youtube | https://snap.stanford.edu/data/com-Youtube.html | :heavy_check_mark: | :heavy_check_mark: |  |
 | livejournal | https://snap.stanford.edu/data/com-LiveJournal.html | :heavy_check_mark: | :heavy_check_mark: |  |
+| friendster | https://snap.stanford.edu/data/com-Friendster.html | :heavy_check_mark: | :heavy_check_mark: |  |
 | orkut | https://snap.stanford.edu/data/com-Orkut.html | :heavy_check_mark: | :heavy_check_mark: |  |
 | eucore | https://snap.stanford.edu/data/email-Eu-core.html | :heavy_check_mark: | :heavy_check_mark: |  |
 | citeseer | https://linqs.soe.ucsc.edu/data | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |

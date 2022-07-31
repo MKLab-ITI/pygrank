@@ -267,8 +267,8 @@ class Top(Postprocessor):
 
     def _reference(self):
         if self.fraction_of_training > 1:
-            return "kept top "+str(int(self.fraction_of_training))+" ranks"
-        return f"kept top {self.fraction_of_training:.3f} ranks"
+            return "zero to all other than top "+str(int(self.fraction_of_training))+" ranks"
+        return f"zero to all other than top {self.fraction_of_training:.3f} of ranks"
 
 
 class Threshold(Postprocessor):
@@ -431,8 +431,8 @@ class LinearSweep(Postprocessor):
 
     def _reference(self):
         if self.uniform_ranker != self.ranker:
-            return "sweep ratio postprocessing \\cite{andersen2007local} where non-personalized ranking is performed with a "+self.uniform_ranker.cite()
-        return "sweep ratio postprocessing \\cite{andersen2007local}"
+            return "linear sweep ratio postprocessing \\cite{krasanakis2021pygrank} where non-personalized ranking is performed with a "+self.uniform_ranker.cite()
+        return "linear sweep ratio postprocessing \\cite{krasanakis2021pygrank}"
 
     def __lshift__(self, ranker):
         super().__lshift__(ranker)

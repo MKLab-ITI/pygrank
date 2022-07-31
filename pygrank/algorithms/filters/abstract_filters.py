@@ -93,7 +93,22 @@ class GraphFilter(NodeRanking):
 
 
 class ImpulseGraphFilter(GraphFilter):
-    def __init__(self, params, *args, **kwargs):
+    """Defines a graph filter with a specific vector of impulse response parameters."""
+
+    def __init__(self, params=None, *args, **kwargs):
+        """
+        Initializes the graph filter.
+
+        Args:
+            params: Optional. A list-like object with elements weights[n] proportional to the impulse response
+                when propagating graph signals at hop n. If None (default) then [0.9]*10 is used.
+
+        Example:
+            >>> from pygrank import GenericGraphFilter
+            >>> algorithm = ImpulseGraphFilter([0.5, 0.5, 0.5], tol=1.E-9) # tol passed to ConvergenceManager
+        """
+        if params is None:
+            params = [0.9]*10
         super().__init__(*args, **kwargs)
         self.params = params
 
@@ -273,3 +288,27 @@ class ClosedFormGraphFilter(GraphFilter):
 
     def _coefficient(self, previous_coefficient: float) -> float:
         raise Exception("Use a derived class of ClosedFormGraphFilter that implements the _coefficient method")
+
+
+class GenericGraphFilter(ClosedFormGraphFilter):
+    """Defines a graph filter via its hop weight parameters."""
+
+    def __init__(self, weights=None, **kwargs):
+        """
+        Initializes the graph filter.
+
+        Args:
+            weights: Optional. A list-like object with elements weights[n] proportional to the importance of propagating
+                personalization graph signals n hops away. If None (default) then [0.9]*10 is used.
+
+        Example:
+            >>> from pygrank import GenericGraphFilter
+            >>> algorithm = GenericGraphFilter([0.5, 0.25, 0.125], tol=1.E-9) # tol passed to ConvergenceManager
+        """
+        super(GenericGraphFilter, self).__init__(**kwargs)
+        self.weights = weights if weights is not None else [0.9]*10
+
+    def _coefficient(self, _):
+        if self.convergence.iteration > len(self.weights):
+            return 0
+        return self.weights[self.convergence.iteration-1]
