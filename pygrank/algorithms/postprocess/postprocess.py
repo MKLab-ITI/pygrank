@@ -266,7 +266,9 @@ class Top(Postprocessor):
         return {v: 1. if ranks[v] >= threshold else 0. for v in ranks.keys()}
 
     def _reference(self):
-        return str(self.fraction_of_training)+" undersampling"
+        if self.fraction_of_training > 1:
+            return "kept top "+str(int(self.fraction_of_training))+" ranks"
+        return f"kept top {self.fraction_of_training:.3f} ranks"
 
 
 class Threshold(Postprocessor):

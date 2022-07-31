@@ -49,6 +49,8 @@ def test_explicit_citations():
     assert "krasanakis2022autogf" in pg.ParameterTuner().cite()
     assert "ortega2018graph" in pg.ParameterTuner().cite()
     assert pg.HeatKernel().cite() in pg.SeedOversampling(pg.HeatKernel()).cite()
+    assert "2 " in pg.Top(2).cite()
+    assert ".500 " in pg.Top(.5).cite()
     assert pg.AbsorbingWalks().cite() in pg.BoostedSeedOversampling(pg.AbsorbingWalks()).cite()
     assert "krasanakis2018venuerank" in pg.BiasedKernel(converge_to_eigenvectors=True).cite()
     assert "yu2021chebyshev" in pg.HeatKernel(coefficient_type="chebyshev").cite()

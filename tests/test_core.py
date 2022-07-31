@@ -13,7 +13,7 @@ def supported_backends():
 def test_call_management():
     def test_func(x, y=0):
         return x+y
-    assert pg.call(test_func, {"x":1, "y": 2, "z": 3}) == 3
+    assert pg.call(test_func, {"x": 1, "y": 2, "z": 3}) == 3
     assert pg.call(test_func, {"y": 2, "z": 3}, [1]) == 3
     assert len(pg.remove_used_args(test_func, {"y": 2, "z": 3}, [1])) == 1
     with pytest.raises(Exception):
@@ -41,6 +41,25 @@ def test_separate_and_combine():
             assert pg.length(col) == 2
         new_table = pg.combine_cols(cols)
         assert pg.sum(pg.abs(table-new_table)) == 0
+
+
+def test_fastgraph():
+    for graph_api in [pg.fastgraph, nx]:
+        graph = next(pg.load_datasets_graph(["graph5"], graph_api=graph_api))
+        assert graph.has_edge("A", "B")
+        assert not graph.has_edge("A", "E")
+        graph.add_edge("A", "E")
+        assert graph.has_edge("A", "E")
+        assert graph.has_edge("E", "A")  # checks that undirected is the default mode
+        prev_count = graph.number_of_edges()
+        graph.remove_edge("A", "E")
+        assert graph.number_of_edges() == prev_count-1
+        sparse = graph.to_scipy_sparse_array() if isinstance(graph, pg.Graph) else nx.to_scipy_sparse_matrix(graph, weight="weight", dtype=float)
+        assert pg.sum(sparse) == 14
+        assert not graph.has_edge("A", "E")
+        assert not graph.has_edge("E", "A")
+        graph.add_edge("A", "E")
+        assert graph.has_edge("A", "E")
 
 
 def test_signal_init():

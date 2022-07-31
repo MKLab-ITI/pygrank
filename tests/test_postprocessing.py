@@ -36,7 +36,7 @@ def test_seed_top():
             #base_result = measure(evaluation, list(original_training)).evaluate(ranks)
             ranks = pg.Top(pg.Sweep(pg.PageRank(0.9, max_iters=1000)), 0.9).rank(graph, training)
             undersampled_result1 = measure(evaluation, list(original_training)).evaluate(ranks)
-            ranks = pg.Top(pg.Sweep(pg.PageRank(0.9, max_iters=1000)), 2).rank(graph, training)
+            ranks = pg.Top(2, pg.Sweep(pg.PageRank(0.9, max_iters=1000))).rank(graph, training)
             undersampled_result2 = measure(evaluation, list(original_training)).evaluate(ranks)
             # TODO: research undersampling applications (this test is a placeholder)
 
