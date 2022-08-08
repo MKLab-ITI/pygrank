@@ -2,9 +2,6 @@ import pygrank as pg
 import random
 
 _, graph, group = next(pg.load_datasets_one_community(["citeseer"]))
-#algorithm = pg.GenericGraphFilter([1, 1, 1], tol=None) & ~pg.GenericGraphFilter([1, 1], tol=None)  # two-hop
-#algorithm = pg.PageRank() >> pg.SeedOversampling("neighbors")
-
 algorithm = pg.SymmetricAbsorbingRandomWalks() >> pg.SeedOversampling("safe")
 
 tprs = list()

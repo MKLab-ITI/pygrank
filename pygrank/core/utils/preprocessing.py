@@ -11,7 +11,7 @@ def to_sparse_matrix(G, normalization="auto", weight="weight", renormalize=False
 
     Args:
         G: A networkx graph
-        normalization: Optional. The type of normalization can be "none", "col", "symmetric", "laplacian", "salsa",
+        normalization: Optional. The type of normalization can be "none", "col", "symmetric", "laplacian", "both",
             or "auto" (default). The last one selects the type of normalization between "col" and "symmetric",
             depending on whether the graph is directed or not respectively. Alternatively, this could be a callable,
             in which case it transforms a scipy sparse adjacency matrix to produce a normalized copy.
@@ -42,7 +42,7 @@ def to_sparse_matrix(G, normalization="auto", weight="weight", renormalize=False
         Qright = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
         M = Qleft * M * Qright
         M = -M + scipy.sparse.eye(M.shape[0])
-    elif normalization == "salsa":
+    elif normalization == "both":
         S = np.array(M.sum(axis=1)).flatten()
         S[S != 0] = 1.0 / S[S != 0]
         Qleft = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')

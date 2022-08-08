@@ -55,9 +55,8 @@ which applies a node ranking algorithm to personalization graph signal
 inputs before the main algorithm (although theoretically different,
 this ends up using filters as ype of postprocessor).
 
-For example, the following snippet follows a stochastic equivalent
-of twitter's WTF link prediction [gupta2013wtf] by applying node
-ranking with neighborhood inflation on inputs and running
+For example, the following snippet applies node
+ranking with neighborhood inflation on inputs and runs
 the SALSA algorithm (pagerank with "salsa" graph normalization)
 on the first outputted scores.
 

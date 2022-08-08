@@ -192,15 +192,6 @@ Additional publications introducing methods implemented in this package.
 }
 ```
 ```
-@inproceedings{gupta2013wtf,
-  title={Wtf: The who to follow service at twitter},
-  author={Gupta, Pankaj and Goel, Ashish and Lin, Jimmy and Sharma, Aneesh and Wang, Dong and Zadeh, Reza},
-  booktitle={Proceedings of the 22nd international conference on World Wide Web},
-  pages={505--514},
-  year={2013}
-}
-```
-```
 @inproceedings{wu2012learning,
   title={Learning with Partially Absorbing Random Walks.},
   author={Wu, Xiao-Ming and Li, Zhenguo and So, Anthony Man-Cho and Wright, John and Chang, Shih-Fu},
