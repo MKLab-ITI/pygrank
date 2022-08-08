@@ -79,6 +79,12 @@ class GraphFilter(NodeRanking):
     def references(self):
         return ["graph filter \\cite{ortega2018graph}"]
 
+    def cite(self):
+        ret = super().cite()
+        if isinstance(self.personalization_transform, Tautology) and self.personalization_transform.ranker is None:
+            return ret
+        return self.personalization_transform.cite() + "\n  passed to " + ret
+
     def __add__(self, other):
         if isinstance(other, ConvergenceManager):
             self.convergence = other
@@ -90,6 +96,12 @@ class GraphFilter(NodeRanking):
             print(other.__name__)
             raise Exception("Can only add convergence managers and preprocessors to graph filters")
         return self
+
+    def __lshift__(self, ranker):
+        if not isinstance(ranker, NodeRanking):
+            raise Exception("pygrank can only shift rankers into filters")
+        self.personalization_transform = ranker
+        return ranker
 
 
 class RecursiveGraphFilter(GraphFilter):

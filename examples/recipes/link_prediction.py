@@ -1,16 +1,15 @@
 import pygrank as pg
-import networkx as nx
 import random
-import tqdm
 
 _, graph, group = next(pg.load_datasets_one_community(["citeseer"]))
-algorithm = pg.SymmetricAbsorbingRandomWalks() >> pg.SeedOversampling("neighbors") >> pg.Sweep()
+#algorithm = pg.SymmetricAbsorbingRandomWalks() >> pg.SeedOversampling("neighbors") >> pg.Sweep()
+#algorithm = pg.GenericGraphFilter([1, 1, 1], tol=None) & ~pg.GenericGraphFilter([1, 1], tol=None)  # two-hop
+algorithm = pg.PageRank() >> pg.SeedOversampling("neighbors") >> pg.PageRank(normalization="salsa")
 
 tprs = list()
 ppvs = list()
 f1s = list()
-for node in tqdm.tqdm(list(graph)):
-    #training, test = pg.split(pg.to_signal(graph, list(group)), 1.1)
+for node in list(graph):
     neighbors = list(graph.neighbors(node))
     if len(neighbors) < 3:
         continue
@@ -26,5 +25,4 @@ for node in tqdm.tqdm(list(graph)):
     f1s.append(pg.safe_div(2*prec*rec, prec+rec))
     for neighbor in graph.neighbors(node):
         graph.add_edge(node, neighbor)
-
-print(f"f1 {sum(f1s) / len(f1s):.3f}\t prec {sum(ppvs) / len(ppvs):.3f}\t rec {sum(tprs)/len(tprs):.3f}\t")
+    print(f"\rf1 {sum(f1s) / len(f1s):.3f}\t prec {sum(ppvs) / len(ppvs):.3f}\t rec {sum(tprs)/len(tprs):.3f}\t", end="")

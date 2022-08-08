@@ -21,7 +21,7 @@ def import_snap_format_dataset(dataset: str,
     download_dataset(dataset, path=path)
     if verbose:
         utils.log(f"Loading {dataset} graph")
-    G = graph_api.Graph(False) if directed else graph_api.Graph()
+    G = (graph_api.DiGraph() if hasattr(graph_api, "DiGraph") else graph_api.Graph(False)) if directed else graph_api.Graph()
     groups = {}
     with open(path+'/'+dataset+'/'+pair_file, 'r', encoding='utf-8') as file:
         for line in file:

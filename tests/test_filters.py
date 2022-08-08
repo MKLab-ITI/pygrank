@@ -42,8 +42,9 @@ def test_pagerank_vs_networkx():
     for _ in supported_backends():
         ranker = pg.Normalize("sum", pg.PageRank(normalization='col', tol=1.E-9))
         test_result2 = nx.pagerank(graph, tol=1.E-9)
-        print(test_result2)
         test_result = ranker(graph)
+        print(test_result)
+        print(test_result2)
         # TODO: assert that 2.5*epsilon is indeed a valid limit
         assert pg.Mabs(test_result)(test_result2) < 2.5*pg.epsilon()
 
@@ -70,12 +71,24 @@ def test_custom_runs():
         assert pg.Mabs(ranks1)(ranks3) < 1.E-6
 
 
-def test_stream_run():
+def test_stream():
     graph = next(pg.load_datasets_graph(["graph9"]))
     for _ in supported_backends():
         ranks1 = pg.Normalize(pg.PageRank(0.85, tol=pg.epsilon(), max_iters=1000, use_quotient=False)).rank(graph, {"A": 1})
         ranks2 = pg.to_signal(graph, {"A": 1}) >> pg.PageRank(0.85, tol=pg.epsilon(), max_iters=1000) + pg.Tautology() >> pg.Normalize()
-        assert pg.Mabs(ranks1)(ranks2) < pg.epsilon()  # TODO: investigate why not exactly zero for matvec
+        assert pg.Mabs(ranks1)(ranks2) < pg.epsilon()
+
+
+def test_stream_diff():
+    graph = next(pg.load_datasets_graph(["graph9"]))
+    for _ in supported_backends():
+        ranks1 = pg.GenericGraphFilter([0, 0, 1], max_iters=4, error_type="iters") | pg.to_signal(graph, {"A": 1})
+        ranks2 = pg.GenericGraphFilter([1, 1, 1], tol=None) & ~pg.GenericGraphFilter([1, 1], tol=None) | pg.to_signal(graph, {"A": 1})
+        assert pg.Mabs(ranks1)(ranks2) < pg.epsilon()
+
+
+def test_filter_as_postprocessor():
+    assert isinstance(pg.HeatKernel() >> pg.PageRank(normalization="salsa"), pg.PageRank)
 
 
 def test_completion():

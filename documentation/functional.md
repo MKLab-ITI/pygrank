@@ -7,8 +7,11 @@ the *pygrank* library.
 ## Table of Contents
 1. [Table of Contents](#table-of-contents)
 2. [Chaining Postprocessors](#chaining-postprocessors)
-3. [Graph Signals in Chains](#graph-signals-in-chains)
-4. [Customizing Base Algorithms](#customizing-base-algorithms)
+3. [Chaining Personalization Preprocessing](#chaining-personalization-preprocessing)
+4. [Graph Signals in Chains](#graph-signals-in-chains)
+5. [Customizing Base Algorithms](#customizing-base-algorithms)
+6. [Algorithm Combinations](#algorithm-combinations)
+
 
 
 ## Chaining Postprocessors
@@ -44,6 +47,25 @@ This indicates that we start from the first algorithm and then
 wrap around it all subsequent postprocessors. All
 postprocessor constructors can in principle be defined without 
 a base algorithm, so the chain assigns those.
+
+## Chaining Personalization Preprocessing
+The same interface can be used interchangeably to assign values
+to the `personalization_transform` argument of graph filters, 
+which applies a node ranking algorithm to personalization graph signal
+inputs before the main algorithm (although theoretically different,
+this ends up using filters as ype of postprocessor).
+
+For example, the following snippet follows a stochastic equivalent
+of twitter's WTF link prediction [gupta2013wtf] by applying node
+ranking with neighborhood inflation on inputs and running
+the SALSA algorithm (pagerank with "salsa" graph normalization)
+on the first outputted scores.
+
+```python
+import pygrank as pg
+
+wtf_stochastic = pg.PageRank() >> pg.SeedOversampling("neighbors") >> pg.PageRank(normalization="salsa")
+```
 
 ## Graph Signals in Chains
 There are two ways to enter graph signals in chains: 
@@ -116,3 +138,34 @@ ranks = algorithm(graph, seeds)
 
 Notice that `+` has higher priority than `>>`, which means that 
 filters are adjusted before applying the chain and no parenthesis is needed.
+
+# Algorithm Combinations
+In addition to other functional operations, it is also possible to
+combine node ranking algorithms. Simple transformations, such as 
+multiplications of all ranking scores,
+can be performed with postprocessors. But there are two operations
+that are explicitly defined. First, algorithm output addition `&` applies
+the `+` operation between graph signal outputs. This symbol is chosen
+to obtain lower priority than `<<` so that the latter is performed
+first. Second, algorithm output negation `~` applies a minus sign to output
+signals. 
+
+Together, these symbols enable the operation pattern `alg1 & ~alg2` that
+induces differences between node ranking algorithms. This is particularly
+important when creating `pygrank.GenericGraphFilter` instances with 
+a zero at some parameters but numerical tolerance convergence criteria 
+(which would stop at the first zero parameter) instead of criteria that 
+stop at a fixed number of iterations.
+
+For example, thanks to algorithm linearity, 
+`pg.GenericGraphFilter([0, 0, 1])` to extract
+two-hop friend-of-friends [scellato2011exploiting]
+can instead be written as the difference between two filters with
+`tol=None` (that stops at exactly zero numerical deviation between
+consecutive graph signal propagation):
+
+```python
+import pygrank as pg
+
+two_hop = pg.GenericGraphFilter([1, 1, 1], tol=None) & ~pg.GenericGraphFilter([1, 1], tol=None)
+```

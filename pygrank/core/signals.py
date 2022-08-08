@@ -98,6 +98,9 @@ class GraphSignal(MutableMapping):
             return other.np
         return other
 
+    def __str__(self):
+        return "{"+(", ".join(repr(k)+": "+str(v) for k, v in self.items()))+"}"
+
     def __add__(self, other):
         return GraphSignal(self.graph, self.np + self.__compliant_value(other), self.node2id)
 
@@ -225,6 +228,45 @@ class NodeRanking(object):
                 ret += " and "
             ret += refs[-1]
         return ret
+
+    def __and__(self, other):
+        return Add(self, other)
+
+    def __invert__(self):
+        return Neg(self)
+
+    def __str__(self):
+        return self.cite()
+
+
+class Neg(NodeRanking):
+    def __init__(self, ranker):
+        self.ranker = ranker
+
+    def rank(self,
+             graph: GraphSignalGraph = None,
+             personalization: GraphSignalData = None,
+             *args, **kwargs) -> GraphSignal:
+        return -self.ranker.rank(graph, personalization, *args, **kwargs)
+
+    def cite(self):
+        return "negative of "+self.ranker.cite()
+
+
+class Add(NodeRanking):
+    def __init__(self, ranker1, ranker2):
+        self.ranker1 = ranker1
+        self.ranker2 = ranker2
+
+    def rank(self,
+             graph: GraphSignalGraph = None,
+             personalization: GraphSignalData = None,
+             *args, **kwargs) -> GraphSignal:
+        return self.ranker1.rank(graph, personalization, *args, **kwargs) + self.ranker2(graph, personalization, *args, **kwargs)
+
+    def cite(self):
+        return "Add "+self.ranker1.cite()+"\nand "+self.ranker2.cite()
+
 
 
 def to_signal(graph: GraphSignalGraph, obj: GraphSignalData) -> GraphSignal:

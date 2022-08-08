@@ -75,16 +75,6 @@ class HeatKernel(ClosedFormGraphFilter):
         return refs
 
 
-class TwoHop(ClosedFormGraphFilter):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def _coefficient(self, _):
-        if self.convergence.iteration > 3:
-            return 0
-        return float(self.convergence.iteration % 2 == 1)
-
-
 class AbsorbingWalks(RecursiveGraphFilter):
     """ Implementation of partial absorbing random walks for Lambda = (1-alpha)/alpha diag(absorption vector).
     To determine parameters based on symmetricity principles, please use *SymmetricAbsorbingRandomWalks*."""

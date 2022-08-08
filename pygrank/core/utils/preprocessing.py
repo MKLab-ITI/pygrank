@@ -157,8 +157,9 @@ def preprocessor(normalization: str = "auto",
         weight: Optional. The weight attribute (default is "weight") of *networkx* graph edges. This is ignored when
             *fastgraph* graphs are parsed, as these are unweighted.
         assume_immutability: Optional. If True, the output is preprocessing further wrapped
-            through a MethodHasher to avoid redundant
-            calls. Default is False, as graph immutability needs be explicitly assumed but cannot be guaranteed.
+            through a MethodHasher to avoid redundant calls. In this case, consider creating one
+            `pygrank.preprocessor` and passing it to all algorithms running on the same graphs.
+            Default is False, as graph immutability needs to be explicitly assumed but cannot be guaranteed.
         renormalize: Optional. If True, the renormalization trick (self-loops) of graph neural networks is applied to
             ensure iteration stability by shrinking the graph's spectrum. Default is False. Can provide anything that
             can be cast to a float to regularize the renormalization.
