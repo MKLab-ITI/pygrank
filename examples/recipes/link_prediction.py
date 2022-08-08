@@ -2,16 +2,17 @@ import pygrank as pg
 import random
 
 _, graph, group = next(pg.load_datasets_one_community(["citeseer"]))
-#algorithm = pg.SymmetricAbsorbingRandomWalks() >> pg.SeedOversampling("neighbors") >> pg.Sweep()
 #algorithm = pg.GenericGraphFilter([1, 1, 1], tol=None) & ~pg.GenericGraphFilter([1, 1], tol=None)  # two-hop
-algorithm = pg.PageRank() >> pg.SeedOversampling("neighbors") >> pg.PageRank(normalization="salsa")
+#algorithm = pg.PageRank() >> pg.SeedOversampling("neighbors")
+
+algorithm = pg.SymmetricAbsorbingRandomWalks() >> pg.SeedOversampling("safe")
 
 tprs = list()
 ppvs = list()
 f1s = list()
 for node in list(graph):
     neighbors = list(graph.neighbors(node))
-    if len(neighbors) < 3:
+    if len(neighbors) < 10:
         continue
     training = pg.to_signal(graph, {node: 1})
     test = pg.to_signal(graph, {neighbor: 1 for neighbor in neighbors})

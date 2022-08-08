@@ -66,6 +66,7 @@ def test_explicit_citations():
     assert "exp" in pg.Transformer(pg.PageRank()).cite()
     assert "0.5" in pg.Threshold(pg.PageRank(), 0.5).cite()
     assert "andersen2007local" in pg.Sweep(pg.PageRank()).cite()
+    assert "linear" in pg.LinearSweep(pg.PageRank()).cite()
     assert pg.HeatKernel().cite() in pg.Sweep(pg.PageRank(), pg.HeatKernel()).cite()
     assert "LFPRO" in pg.AdHocFairness("O").cite()
     assert "LFPRO" in pg.AdHocFairness(pg.PageRank(), "LFPRO").cite()

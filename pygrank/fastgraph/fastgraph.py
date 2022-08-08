@@ -99,6 +99,19 @@ class Graph:
         graph.edge_col = [u for u in self.edge_col]
         return graph
 
+    def subgraph(self, nodes):
+        graph = Graph(True)
+        for node in nodes:
+            graph.add_node(node)
+        nodes = set(nodes)
+        inverse_map = {v: u for u, v in self.node_map.items()}
+        for u, v in zip(self.edge_row, self.edge_col):
+            u, v = inverse_map[u], inverse_map[v]
+            if u in nodes and v in nodes:
+                graph.add_edge(u, v)
+        graph.directed = self.directed
+        return graph
+
     def __contains__(self, node):
         return node in self.node_map
 

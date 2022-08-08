@@ -141,12 +141,15 @@ def test_sweep_streaming():
     _, graph, group = next(pg.load_datasets_one_community(["bigraph"]))
     for _ in supported_backends():
         training, evaluation = pg.split(list(group), training_samples=0.1)
-        auc1 = pg.AUC({v: 1 for v in evaluation}, exclude=training).evaluate(pg.Sweep(pg.PageRank()).rank(graph, {v: 1 for v in training}))
+        auc1 = pg.AUC({v: 1 for v in evaluation}, exclude=training).evaluate((pg.PageRank() >> pg.Sweep()).rank(graph, {v: 1 for v in training}))
         auc2 = pg.AUC({v: 1 for v in evaluation}, exclude=training).evaluate(pg.PageRank().rank(graph, {v: 1 for v in training}))
         auc3 = pg.AUC({v: 1 for v in evaluation}, exclude=training).evaluate(
             pg.PageRank() >> pg.Transformer(pg.log) >> pg.LinearSweep() | pg.to_signal(graph, {v: 1 for v in training}))
         assert auc1 > auc2
-        assert auc1 == auc3
+        assert abs(auc1-auc3) < pg.epsilon()
+
+    with pytest.raises(Exception):
+        pg.Sweep() << "a"
 
 
 def test_threshold():
@@ -160,3 +163,14 @@ def test_threshold():
         # TODO: find an algorithm other than gap to outperform 0.2 threshold too
         assert cond1 <= cond2
         assert cond2 <= cond3
+
+
+def test_subgraph():
+    graph = next(pg.load_datasets_graph(["graph9"]))
+    signal1 = pg.to_signal(graph, {"A": 1, "B": 1, "C": 1, "D": 1, "E": 0.5})
+    assert "L" in signal1
+    signal2 = pg.Subgraph().rank(signal1)
+    assert signal2["E"] == 0.5
+    assert "L" not in signal2
+    signal3 = signal2 >> pg.Supergraph()
+    assert "L" in signal3

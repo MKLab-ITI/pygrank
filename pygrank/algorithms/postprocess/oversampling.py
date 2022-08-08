@@ -5,6 +5,7 @@ from pygrank.algorithms.postprocess.postprocess import Postprocessor
 from pygrank.measures import MaxDifference
 from typing import Optional, Union
 
+
 class SeedOversampling(Postprocessor):
     """Performs seed oversampling on a base ranker to improve the quality of predicted seeds."""
 

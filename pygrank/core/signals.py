@@ -285,6 +285,8 @@ def to_signal(graph: GraphSignalGraph, obj: GraphSignalData) -> GraphSignal:
             performed that these are signals on the same graph. If None, this argument induces a graph signal
             of ones.
     """
+    if obj is None and graph is None:
+        raise Exception("Cannot create signal from two None arguments")
     known_node2id = None
     if obj is None and isinstance(graph, GraphSignal):
         obj, graph = graph, obj

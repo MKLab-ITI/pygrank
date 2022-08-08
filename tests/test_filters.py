@@ -98,6 +98,7 @@ def test_completion():
     graph = next(pg.load_datasets_graph(["graph9"]))
     for _ in supported_backends():
         pg.PageRank().rank(graph)
+        pg.PageRank(normalization="salsa").rank(graph)
         pg.HeatKernel().rank(graph)
         pg.AbsorbingWalks().rank(graph)
         pg.SymmetricAbsorbingRandomWalks().rank(graph)
