@@ -1,6 +1,7 @@
 import warnings
 from pygrank.core import backend
-from pygrank.algorithms.filters.abstract_filters import RecursiveGraphFilter, ClosedFormGraphFilter, GenericGraphFilter
+from pygrank.algorithms.filters.abstract_filters import RecursiveGraphFilter
+from pygrank.algorithms.filters.low_pass import ClosedFormGraphFilter, LowPassRecursiveGraphFilter
 from pygrank.core import to_signal, NodeRanking, preprocessor as default_preprocessor
 from typing import Union, Optional
 

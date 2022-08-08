@@ -30,6 +30,7 @@ class ConvergenceManager:
                 consecutive iterations becomes less than this number). Default is 1.E-6 but for large graphs
                 1.E-9 often yields more robust convergence points. If the provided value is less than the
                 numerical precision of the backend `pygrank.epsilon()` then it is snapped to that value.
+                *None* tolerance will stop when consecutive iterations are exactly the same.
             error_type: Optional. How to calculate the "error" between consecutive iterations of graph signals.
                 If "iters", convergence is reached at iteration *max_iters*-1 without throwing an exception.
                 Default is `pygrank.Mabs`.
@@ -83,7 +84,7 @@ class ConvergenceManager:
     def _has_converged(self, prev_ranks: BackendPrimitive, ranks: BackendPrimitive) -> bool:
         if self.error_type == "iters":
             return False
-        return self.error_type(prev_ranks)(ranks) <= max(self.tol, backend.epsilon())
+        return self.error_type(prev_ranks)(ranks) <= 0 if self.tol is None else max(self.tol, backend.epsilon())
 
     def __str__(self):
         return str(self.iteration)+" iterations ("+str(self.elapsed_time)+" sec)"

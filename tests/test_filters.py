@@ -65,7 +65,9 @@ def test_custom_runs():
     for _ in supported_backends():
         ranks1 = pg.Normalize(pg.PageRank(0.85, tol=pg.epsilon(), max_iters=1000, use_quotient=False)).rank(graph, {"A": 1})
         ranks2 = pg.Normalize(pg.GenericGraphFilter([0.85**i*len(graph) for i in range(80)], tol=pg.epsilon())).rank(graph, {"A": 1})
+        ranks3 = pg.Normalize(pg.LowPassRecursiveGraphFilter([0.85 for _ in range(80)], tol=pg.epsilon())).rank(graph, {"A": 1})
         assert pg.Mabs(ranks1)(ranks2) < 1.E-6
+        assert pg.Mabs(ranks1)(ranks3) < 1.E-6
 
 
 def test_stream_run():

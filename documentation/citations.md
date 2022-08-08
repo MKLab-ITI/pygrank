@@ -28,6 +28,18 @@ personalized PageRank \cite{page1999pagerank} with restart probability 0.15 and 
 Publications that have supported development of various aspects of
 this library. These are presented in reverse chronological order.
 ```
+@article{krasanakis2022fast,
+  title={Fast Library Recommendation in Software Dependency Graphs with Symmetric Partially Absorbing Random Walks},
+  author={Krasanakis, Emmanouil and Symeonidis, Andreas},
+  journal={Future Internet},
+  volume={14},
+  number={5},
+  pages={124},
+  year={2022},
+  publisher={Multidisciplinary Digital Publishing Institute}
+}
+```
+```
 @article{krasanakis2020unsupervised,
   title={Unsupervised evaluation of multiple node ranks by reconstructing local structures},
   author={Krasanakis, Emmanouil and Papadopoulos, Symeon and Kompatsiaris, Yiannis},

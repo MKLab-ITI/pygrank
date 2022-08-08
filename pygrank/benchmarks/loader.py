@@ -103,6 +103,7 @@ def _preprocess_features(features: np.ndarray):
 
 def load_feature_dataset(dataset: str,
                          path: str = 'data',
+                         groups_no_labels = False,
                          **kwargs):
     """
     Imports a dataset comprising node features. Features and labels are organized as numpy matrix.
@@ -123,7 +124,7 @@ def load_feature_dataset(dataset: str,
     feature_dims = len(features[list(features.keys())[0]])
     features = np.array([features.get(v, [0] * feature_dims) for v in graph], dtype=np.float64)
     features = _preprocess_features(features)
-    labels = np.array([to_signal(graph, group).np for group in groups.values()], dtype=np.float64).transpose()
+    labels = groups if groups_no_labels else np.array([to_signal(graph, group).np for group in groups.values()], dtype=np.float64).transpose()
     return graph, features, labels
 
 

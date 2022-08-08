@@ -6,8 +6,9 @@ Fast recommendation algorithms for large graphs based on link analysis.
 
 **License:** Apache Software License
 <br>**Author:** Emmanouil (Manios) Krasanakis
-<br>**Dependencies:** `networkx, numpy, scipy, sklearn, wget` (required) `tensorflow`, `torch`, `torch_sparse`, `matvec` (optional)
-<br><small>*Externally install optional dependencies to support respective backends.*</small>
+<br>**Dependencies:** `networkx, numpy, scipy, sklearn, wget`
+<br>**Backends:** `tensorflow`, `torch`, `torch_sparse`, `matvec` (optional)
+<br><small>*Externally install backends before using them.*</small>
 
 ![build](https://github.com/MKLab-ITI/pygrank/actions/workflows/tests.yml/badge.svg)
 [![codecov](https://codecov.io/gh/MKLab-ITI/pygrank/branch/master/graph/badge.svg?token=RYZOT4UY8Q)](https://codecov.io/gh/MKLab-ITI/pygrank)
@@ -122,31 +123,34 @@ and testing of new algorithms.
 Some of the library's advantages are:
 1. **Compatibility** with [networkx](https://github.com/networkx/networkx), [tensorflow](https://www.tensorflow.org/) and [pytorch](https://pytorch.org/).
 2. **Datacentric** interfaces that do not require transformations to identifiers.
-3. **Large** graph support with sparse representations and fast algorithms.
+3. **Large** graph support with sparse data structures and fast scalable algorithms.
 4. **Seamless** pipelines, from graph preprocessing up to benchmarking and evaluation.
-5. **Modular** components to be combined and a chaining interface for complex combinations.
+5. **Modular** components to be combined and a functional chain interface for complex combinations.
 
 
 # :link: Material
-[Tutorials & Documentation](documentation/documentation.md)
+[Tutorials & Documentation](documentation/documentation.md) <br>
 [Functional Interface](documentation/functional.md)
 
 **Quick links**<br>
-[Measures](documentation/measures.md)<br>
-[Graph Filters](documentation/graph_filters.md)<br>
-[Postprocessors](documentation/postprocessors.md)<br>
-[Tuners](documentation/tuners.md)<br>
-[Downloadable Datasets](documentation/datasets.md)<br>
+[Measures](documentation/measures.md) <br>
+[Graph Filters](documentation/graph_filters.md) <br>
+[Postprocessors](documentation/postprocessors.md) <br>
+[Tuners](documentation/tuners.md) <br>
+[Downloadable Datasets](documentation/datasets.md) <br>
 
 **Backend resources**<br>
 [numpy](https://numpy.org/) (default, no additional installation) <br>
 [tensorflow](https://www.tensorflow.org/install) <br>
 [pytorch](https://pytorch.org/get-started/locally) <br>
-[torch_sparse](https://github.com/rusty1s/pytorch_sparse)
+[torch_sparse](https://github.com/rusty1s/pytorch_sparse) <br>
+[matvec](https://github.com/maniospas/matvec)
 
 # :fire: Features
 * Graph filters
+* Community detection
 * Overlapping community detection
+* Link prediction
 * Graph normalization
 * Convergence criteria
 * Postprocessing (e.g. fairness awareness)
