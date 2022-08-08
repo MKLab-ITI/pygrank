@@ -93,7 +93,6 @@ class GraphFilter(NodeRanking):
         elif isinstance(other, Postprocessor):
             self.use_quotient = other
         else:
-            print(other.__name__)
             raise Exception("Can only add convergence managers and preprocessors to graph filters")
         return self
 

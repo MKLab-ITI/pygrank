@@ -44,6 +44,7 @@ def test_explicit_citations():
     assert "unknown node ranking algorithm" == pg.NodeRanking().cite()
     assert "with parameters tuned \\cite{krasanakis2022autogf}" in pg.ParameterTuner(
         lambda params: pg.PageRank(params[0])).cite()
+    assert pg.HeatKernel(t=3).cite() in str(pg.HeatKernel(t=3) >> pg.PageRank())
     assert "Postprocessor" in pg.Postprocessor().cite()
     assert pg.PageRank().cite() in pg.AlgorithmSelection().cite()
     assert "krasanakis2022autogf" in pg.ParameterTuner().cite()

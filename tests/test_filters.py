@@ -1,4 +1,6 @@
 import networkx as nx
+import numpy as np
+
 import pygrank as pg
 import pytest
 from .test_core import supported_backends
@@ -38,10 +40,11 @@ def test_convergence_string_conversion():
 
 def test_pagerank_vs_networkx():
     graph = next(pg.load_datasets_graph(["graph9"], graph_api=nx))
+    graph = graph.to_directed()
     # graph_api needed so that nx.pagerank can perform internal computations
     for _ in supported_backends():
-        ranker = pg.Normalize("sum", pg.PageRank(normalization='col', tol=1.E-9))
-        test_result2 = nx.pagerank(graph, tol=1.E-9)
+        ranker = pg.Normalize("sum", pg.PageRank(normalization='col'))
+        test_result2 = nx.pagerank(graph)
         test_result = ranker(graph)
         print(test_result)
         print(test_result2)

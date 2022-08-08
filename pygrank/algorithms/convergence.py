@@ -84,7 +84,7 @@ class ConvergenceManager:
     def _has_converged(self, prev_ranks: BackendPrimitive, ranks: BackendPrimitive) -> bool:
         if self.error_type == "iters":
             return False
-        return self.error_type(prev_ranks)(ranks) <= 0 if self.tol is None else max(self.tol, backend.epsilon())
+        return self.error_type(prev_ranks)(ranks) <= (0 if self.tol is None else max(self.tol, backend.epsilon()))
 
     def __str__(self):
         return str(self.iteration)+" iterations ("+str(self.elapsed_time)+" sec)"

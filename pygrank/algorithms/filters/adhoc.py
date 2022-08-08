@@ -25,7 +25,8 @@ class PageRank(RecursiveGraphFilter):
         super().__init__(*args, **kwargs)
 
     def _start(self, M, personalization, ranks, *args, **kwargs):
-        # TODO: self.is_dangling = np.where(np.array(M.sum(axis=1)).flatten() == 0)[0]
+        #self.dangling_weights = backend.degrees(M)
+        #self.is_dangling = self.dangling_weights/backend.sum(self.dangling_weights)
         super()._start(M, personalization, ranks, *args, **kwargs)
 
     def _formula(self, M, personalization, ranks, *args, **kwargs):
@@ -33,7 +34,7 @@ class PageRank(RecursiveGraphFilter):
         return backend.conv(ranks, M) * self.alpha + personalization * (1 - self.alpha)
 
     def _end(self, M, personalization, ranks, *args, **kwargs):
-        # TODO: del self.is_dangling
+        #del self.is_dangling
         super()._end(M, personalization, ranks, *args, **kwargs)
 
     def references(self):

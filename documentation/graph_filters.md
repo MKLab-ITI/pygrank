@@ -9,9 +9,8 @@ All of them can be used through the code patterns presented at the library's [do
 3. [GenericGraphFilter](#closedformgraphfilter-genericgraphfilter)
 4. [HeatKernel](#closedformgraphfilter-heatkernel)
 5. [AbsorbingWalks](#recursivegraphfilter-absorbingwalks)
-6. [BiasedKernel](#recursivegraphfilter-biasedkernel)
-7. [PageRank](#recursivegraphfilter-pagerank)
-8. [SymmetricAbsorbingRandomWalks](#recursivegraphfilter-symmetricabsorbingrandomwalks)
+6. [PageRank](#recursivegraphfilter-pagerank)
+7. [SymmetricAbsorbingRandomWalks](#recursivegraphfilter-symmetricabsorbingrandomwalks)
 
 ### <kbd>RecursiveGraphFilter</kbd> AbsorbingWalks
 
@@ -52,10 +51,6 @@ algorithm = AbsorbingWalks(1-1.E-6, tol=1.E-9) # tol passed to the ConvergenceMa
 graph, seed_nodes = ... 
 ranks = algorithm(graph, {v: 1 for v in seed_nodes}, absorption={v: 1 for v in graph}) 
 ```
-
-### <kbd>RecursiveGraphFilter</kbd> BiasedKernel
-
-Heuristic kernel-like method that places emphasis on shorter random walks.
 
 ### <kbd>ClosedFormGraphFilter</kbd> GenericGraphFilter
 
@@ -329,10 +324,6 @@ algorithm = AbsorbingWalks(1-1.E-6, tol=1.E-9) # tol passed to the ConvergenceMa
 graph, seed_nodes = ... 
 ranks = algorithm(graph, {v: 1 for v in seed_nodes}, absorption={v: 1 for v in graph}) 
 ```
-
-### <kbd>RecursiveGraphFilter</kbd> BiasedKernel
-
-Heuristic kernel-like method that places emphasis on shorter random walks.
 
 ### <kbd>RecursiveGraphFilter</kbd> PageRank
 
