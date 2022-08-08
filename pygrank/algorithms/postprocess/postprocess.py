@@ -127,7 +127,7 @@ class Normalize(Postprocessor):
         ensure_used_args(kwargs)
         min_rank = 0
         if self.method == "range":
-            max_rank = float(backend.max(ranks.np))i
+            max_rank = float(backend.max(ranks.np))
             min_rank = float(backend.min(ranks.np))
         elif self.method == "max":
             max_rank = float(backend.max(ranks.np))

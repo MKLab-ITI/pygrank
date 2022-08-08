@@ -14,11 +14,13 @@ All of them can be used through the code patterns presented at the library's [do
 8. [Ordinals](#postprocessor-ordinals)
 9. [SeedOversampling](#postprocessor-seedoversampling)
 10. [Sequential](#postprocessor-sequential)
-11. [Sweep](#postprocessor-sweep)
-12. [Tautology](#postprocessor-tautology)
-13. [Threshold](#postprocessor-threshold)
-14. [Top](#postprocessor-top)
-15. [Transformer](#postprocessor-transformer)
+11. [Subgraph](#postprocessor-subgraph)
+12. [Supergraph](#postprocessor-supergraph)
+13. [Sweep](#postprocessor-sweep)
+14. [Tautology](#postprocessor-tautology)
+15. [Threshold](#postprocessor-threshold)
+16. [Top](#postprocessor-top)
+17. [Transformer](#postprocessor-transformer)
 
 ### <kbd>Postprocessor</kbd> AdHocFairness
 
@@ -208,6 +210,49 @@ ranks = algorithm.rank(graph, personalization={1 for v in seed_nodes})
 
 ### <kbd>Postprocessor</kbd> Sequential
 
+
+### <kbd>Postprocessor</kbd> Subgraph
+
+Extracts induced subgraphs for non-zero node scores and places those scores in new signals on it. The constructor initializes the postprocessor with a base ranker. 
+
+Args: 
+ * *ranker:* Optional. The base ranker instance. A Tautology() ranker is created if None (default) was specified. 
+
+Example:
+
+```python 
+import pygrank as pg 
+graph, personalization, algorithm = ... 
+algorithm = pg.Subgraph(pg.Top(algorithm, 10)) 
+top_10_subgraph = algorithm(graph, personalization).graph 
+```
+
+
+Example (same result):
+
+```python 
+import pygrank as pg 
+graph, personalization, algorithm = ... 
+algorithm = algorithm >> pg.Top(10) >> pg.Subgraph() 
+top_10_subgraph = algorithm(graph, personalization).graph 
+```
+
+### <kbd>Postprocessor</kbd> Supergraph
+
+Reverts to full graphs from which `Subgraph` departed. The constructor initializes the postprocessor with a base ranker. 
+
+Args: 
+ * *ranker:* Optional. The base ranker instance. A Tautology() ranker is created if None (default) was specified. 
+
+Example:
+
+```python 
+import pygrank as pg 
+graph, personalization, algorithm, test = ... 
+algorithm = algorithm >> pg.Top(10) >> pg.Threshold() >> pg.Subgraph() >> pg.PageRank() >> pg.Supergraph() 
+top_10_reranked = algorithm(graph, personalization)  # top 10 non-zeroes ranked in their induced subgraph 
+print(pg.AUC(pg.to_signal(graph, test))(top_10_reranked))  # supergraph has returned to the original graph 
+```
 
 ### <kbd>Postprocessor</kbd> Sweep
 
