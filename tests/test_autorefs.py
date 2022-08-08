@@ -77,6 +77,10 @@ def test_explicit_citations():
     assert "krasanakis2020prioredit" in pg.FairPersonalizer(pg.PageRank()).cite()
     assert "tsioutsiouliklis2021fairness" in pg.LFPR().cite()
     assert "uniform" in pg.LFPR().cite()
+    assert "subgraph" in pg.Subgraph().cite()
+    assert "containing graph" in pg.Supergraph().cite()
+    assert pg.PageRank().cite() in pg.Subgraph(pg.PageRank()).cite()
+    assert pg.PageRank().cite() in pg.Supergraph(pg.PageRank()).cite()
 
 
 def test_postprocessor_citations():

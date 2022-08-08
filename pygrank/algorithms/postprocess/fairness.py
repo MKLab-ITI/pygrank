@@ -207,11 +207,11 @@ class AdHocFairness(Postprocessor):
 
 
 class FairWalk(Postprocessor):
-    """Adjusting graph convolutions to perform fair random walking [rahman2019fairwalk].."""
+    """Adjusting graph convolutions to perform fair random walking [rahman2019fairwalk]."""
 
     def __init__(self, ranker):
         """ Initializes Fairwalk given a base ranker. **This explicitly assumes immutability** of graphs. If you edit
-         graphs also clear the dictionary where preprocessed graphs are inputted by calling *fairwalk.reweights.clear().*
+         graphs also clear the dictionary where preprocessed graphs are inputted by calling `pygrank.fairwalk.reweights.clear().`
 
         Args:
             ranker: Optional. The base ranker instance. If None (default), a Tautology() ranker is created.
