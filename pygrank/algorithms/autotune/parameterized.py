@@ -163,20 +163,12 @@ class ParameterTuner(Tuner):
                 best_params[i] = max(best_params[i], params[i])
                 best_means[i] += params[i]/self.cross_validate
                 best_squares[i] += params[i]**2/self.cross_validate
-        #best_params = best_means
-        #print(best_params)
-        #print(eval(best_params))
-        #print("means", best_means)
-        #print("stds", [(best_squares[i]-best_means[i]**2)**0.5 for i in range(len(best_params))])
         best_params = best_means
-        #if self.cross_validate > 1:
-        #    best_params = self.optimizer(eval, **self.optimize_args, weights=best_params)
 
         if self.tuning_backend is not None and self.tuning_backend != previous_backend:
             backend.load_backend(previous_backend)
             # TODO: make training back-propagate through tensorflow for combined_prediction==False (do this with a gather in the split method)
         self.last_params = best_params
-        #print(best_params)
         return self.ranker_generator(best_params), personalization if self.combined_prediction else internal_training
 
     def references(self):

@@ -40,17 +40,19 @@ class GraphSignal(MutableMapping):
         which handles non-instantiation semantics."""
 
         self.graph = graph
-        self.node2id = {v: i for i, v in enumerate(graph)} if node2id is None else node2id
+        self.node2id = ({i: i for i in range(graph.shape[0])} if hasattr(graph, "shape")
+                        else {v: i for i, v in enumerate(graph)}) if node2id is None else node2id
+        graph_len = graph.shape[0] if hasattr(graph, "shape") else len(graph)
         if backend.is_array(obj):
-            if backend.length(graph) != backend.length(obj):
+            if graph_len != backend.length(obj):
                 raise Exception("Graph signal array dimensions " + str(backend.length(obj)) +
                                 " should be equal to graph nodes " + str(len(graph)))
             self._np = backend.to_array(obj)
         elif obj is None:
-            self._np = backend.repeat(1.0, len(graph))
+            self._np = backend.repeat(1.0, graph_len)
         else:
             import numpy as np
-            self._np = np.repeat(0.0, len(graph))  # tensorflow does not initialize editing of eager tensors
+            self._np = np.repeat(0.0, graph_len)  # tensorflow does not initialize editing of eager tensors
             for key, value in obj.items():
                 self[key] = value
             self._np = backend.to_array(self._np)  # make all operations with numpy and then potentially switch to tensorflow
@@ -93,7 +95,7 @@ class GraphSignal(MutableMapping):
 
     def __compliant_value(self, other):
         if isinstance(other, GraphSignal):
-            if other.graph != self.graph:
+            if id(other.graph) != id(self.graph):
                 raise Exception("Can not operate between graph signals of different graphs")
             return other.np
         return other
@@ -268,7 +270,6 @@ class Add(NodeRanking):
         return "Add "+self.ranker1.cite()+"\nand "+self.ranker2.cite()
 
 
-
 def to_signal(graph: GraphSignalGraph, obj: GraphSignalData) -> GraphSignal:
     """
     Converts an object to a GraphSignal tied to an explicit or implicit reference to a graph. This method helps
@@ -277,11 +278,12 @@ def to_signal(graph: GraphSignalGraph, obj: GraphSignalData) -> GraphSignal:
     for accessing values with the speed provided by numpy arrays.
 
     Args:
-        graph: Either a graph or a GraphSignal, where in the second case it takes the value of the personalization's graph.
-            Prefer using a GraphSignal as reference, as this copies the personalization's node2id property without additional
-            memory or computations. If the graph is None, the second argument needs to be a GraphSignal.
+        graph: Either a graph, a GraphSignal, or the outcome of a `pygrank.preprocessor`,
+            If a GraphSignal is provided, its underlying graph is used in its place.
+            Prefer using this mode when possible, as it helps the method then copy the node2id property without
+            additional memory or computations. If the graph is None, the second argument needs to be a GraphSignal.
         obj: Either a numpy array or a hashmap between graph nodes and their values, in which cases the appropriate
-            GraphSignal contructor is called, or a GraphSignal in which case it is also returned and a check is
+            GraphSignal constructor is called, or a GraphSignal in which case it is also returned and a check is
             performed that these are signals on the same graph. If None, this argument induces a graph signal
             of ones.
     """
@@ -303,7 +305,7 @@ def to_signal(graph: GraphSignalGraph, obj: GraphSignalData) -> GraphSignal:
     if isinstance(obj, list) and len(obj) != len(graph):
         obj = {v: 1 for v in obj}
     if isinstance(obj, GraphSignal):
-        if graph != obj.graph:
+        if id(graph) != id(obj.graph):
             raise Exception("Graph signal tied to a different graph")
         return obj
     return GraphSignal(graph, obj, known_node2id)

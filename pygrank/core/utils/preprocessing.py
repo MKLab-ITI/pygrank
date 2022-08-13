@@ -29,11 +29,13 @@ def to_sparse_matrix(G,
                      normalization="auto",
                      weight="weight",
                      renormalize=False,
-                     reduction=backend.degrees):
+                     reduction=backend.degrees,
+                     reuse=False):
     """ Used to normalize a graph and produce a sparse matrix representation.
 
     Args:
-        G: A networkx or fastgraph graph
+        G: A networkx or fastgraph graph. If an object with a "shape" attribute is provided (which means that it
+            is backend matrix) then it is directly returned.
         normalization: Optional. The type of normalization can be "none", "col", "symmetric", "laplacian", "both",
             or "auto" (default). The last one selects the type of normalization between "col" and "symmetric",
             depending on whether the graph is directed or not respectively. Alternatively, this could be a callable,
@@ -45,7 +47,25 @@ def to_sparse_matrix(G,
             can be cast to a float to regularize the renormalization.
         reduction: Optional. Controls how degrees are calculated from a callable (e.g. `pygrank.eigdegree`
             for entropy-preserving transition matrices [li2011link]). Default is `pygrank.degrees`.
+        reuse: Optional. If True this enriches the backend primitives
+            holding the outcome of graph preprocessing with additional private metadata to enable their
+            usage as base graphs in other backends. This is not required for constructing GraphSignal instances with
+            the pattern `pygrank.to_signal(M, personalization_data)` where `M = pygrank.preprocessor(reuse=True)(graph)`.
+            But it is needed when the two commands are called in different backends.
+            If False (default), a lot of memory by not keeping pointers to all versions of adjacency matrices across
+            backends. Overall, prefer keeping this behavior switched off. Enabling or disabling reuse will not
+            affect whether code processing one graph fits in memory, as long as one of the two backends is "numpy".
     """
+    if hasattr(G, "__pygrank_preprocessed"):
+        if backend.backend_name() in G.__pygrank_preprocessed:
+            return G.__pygrank_preprocessed[backend.backend_name()]  # this is basically caching, but it's pretty safe for just passing adjacency matrices around
+        ret = backend.scipy_sparse_to_backend(G.__pygrank_preprocessed["numpy"])
+        if reuse:
+            ret.__pygrank_preprocessed = G.__pygrank_preprocessed
+            ret.__pygrank_preprocessed[backend.backend_name()] = ret
+        else:
+            ret.__pygrank_preprocessed = {backend.backend_name(): ret}
+        return ret
     with backend.Backend("numpy"):
         normalization = normalization.lower() if isinstance(normalization, str) else normalization
         if normalization == "auto":
@@ -90,7 +110,13 @@ def to_sparse_matrix(G,
             M = normalization(M)
         elif normalization != "none":
             raise Exception("Supported normalizations: none, col, symmetric, both, laplacian, auto")
-    return backend.scipy_sparse_to_backend(M)
+    ret = M if backend.backend_name() == "numpy" else backend.scipy_sparse_to_backend(M)
+    if reuse:
+        ret.__pygrank_preprocessed = {backend.backend_name(): ret, "numpy": M}
+        M.__pygrank_preprocessed = ret.__pygrank_preprocessed
+    else:
+        ret.__pygrank_preprocessed = {backend.backend_name(): ret}
+    return ret
 
 
 def assert_binary(ranks):
@@ -175,7 +201,8 @@ def preprocessor(normalization: str = "auto",
                  assume_immutability: bool = False,
                  weight: str = "weight",
                  renormalize: bool = False,
-                 reduction=backend.degrees):
+                 reduction=backend.degrees,
+                 reuse: bool = False):
     """ Wrapper function that generates lambda expressions for the method to_sparse_matrix.
 
     Args:
@@ -194,15 +221,24 @@ def preprocessor(normalization: str = "auto",
             can be cast to a float to regularize the renormalization.
         reduction: Optional. Controls how degrees are calculated from a callable (e.g. `pygrank.eigdegree`
             for entropy-preserving transition matrices [li2011link]). Default is `pygrank.degrees`.
+        reuse: Optional. If True this enriches the backend primitives
+            holding the outcome of graph preprocessing with additional private metadata to enable their
+            usage as base graphs in other backends. This is not required for constructing GraphSignal instances with
+            the pattern `pygrank.to_signal(M, personalization_data)` where `M = pygrank.preprocessor(reuse=True)(graph)`.
+            But it is needed when the two commands are called in different backends.
+            If False (default), a lot of memory by not keeping pointers to all versions of adjacency matrices across
+            backends. Overall, prefer keeping this behavior switched off. Enabling or disabling reuse will not
+            affect whether code processing one graph fits in memory, as long as one of the two backends is "numpy".
     """
     if assume_immutability:
         ret = MethodHasher(preprocessor(assume_immutability=False,
                                         normalization=normalization, weight=weight, renormalize=renormalize,
-                                        reduction=reduction))
+                                        reduction=reduction, reuse=reuse))
         ret.__name__ = "preprocess"
         return ret
 
     def preprocess(G):
-        return to_sparse_matrix(G, normalization=normalization, weight=weight, renormalize=renormalize, reduction=reduction)
+        return to_sparse_matrix(G, normalization=normalization, weight=weight, renormalize=renormalize,
+                                reduction=reduction, reuse=reuse)
 
     return preprocess

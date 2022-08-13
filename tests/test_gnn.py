@@ -39,32 +39,36 @@ def test_gnn_errors():
 
 
 def test_appnp_tf():
-    graph, features, labels = pg.load_feature_dataset('synthfeats')
-    training, test = pg.split(list(range(len(graph))), 0.8)
-    training, validation = pg.split(training, 1 - 0.2 / 0.8)
+    from tensorflow.keras.layers import Dropout, Dense
+    from tensorflow.keras.regularizers import L2
 
     class APPNP(tf.keras.Sequential):
         def __init__(self, num_inputs, num_outputs, hidden=64):
             super().__init__([
-                tf.keras.layers.Dropout(0.5, input_shape=(num_inputs,)),
-                tf.keras.layers.Dense(hidden, activation=tf.nn.relu, kernel_regularizer=tf.keras.regularizers.L2(1.E-5)),
-                tf.keras.layers.Dropout(0.5),
-                tf.keras.layers.Dense(num_outputs, activation=tf.nn.relu),
-            ])
-            self.ranker = pg.PageRank(0.9, renormalize=True, assume_immutability=True, error_type="iters", max_iters=10)
-            self.input_spec = None  # prevents some versions of tensorflow from checking call inputs
-            #self.input_spec = [None, self.input_spec]
+                Dropout(0.5, input_shape=(num_inputs,)),
+                Dense(hidden, activation="relu", kernel_regularizer=L2(1.E-5)),
+                Dropout(0.5),
+                Dense(num_outputs, activation="relu")])
+            self.ranker = pg.ParameterTuner(
+                lambda par: pg.GenericGraphFilter([par[0] ** i for i in range(int(10))],
+                                                  error_type="iters", max_iters=int(10)),
+                max_vals=[0.95], min_vals=[0.5], verbose=False,
+                measure=pg.Mabs, deviation_tol=0.1, tuning_backend="numpy")
 
-        def call(self, inputs, training=False):
-            graph, features = inputs
+        def call(self, features, graph, training=False):
             predict = super().call(features, training=training)
-            predict = self.ranker.propagate(graph, predict, graph_dropout=0.5 if training else 0)
-            return tf.nn.softmax(predict, axis=1)
+            propagate = self.ranker.propagate(graph, predict, graph_dropout=0.5 if training else 0)
+            return tf.nn.softmax(propagate, axis=1)
 
-    with pg.Backend('tensorflow'):
-        model = APPNP(features.shape[1], labels.shape[1])
-        pg.gnn_train(model, graph, features, labels, training, validation, test=test, epochs=50)
-        assert float(pg.gnn_accuracy(labels, model([graph, features]), test)) >= 0.5
+    graph, features, labels = pg.load_feature_dataset('synthfeats')
+    training, test = pg.split(list(range(len(graph))), 0.8)
+    training, validation = pg.split(training, 1 - 0.2 / 0.8)
+    model = APPNP(features.shape[1], labels.shape[1])
+    with pg.Backend('tensorflow'):  # pygrank computations in tensorflow backend
+        graph = pg.preprocessor(renormalize=True, reuse=True)(graph)  # reuse in different backends
+        pg.gnn_train(model, features, graph, labels, training, validation,
+                     optimizer=tf.optimizers.Adam(learning_rate=0.01), verbose=True, epochs=50)
+        assert float(pg.gnn_accuracy(labels, model(features, graph), test)) == 1.  # dataset is super-easy to predict
 
 
 def test_appnp_torch():
@@ -80,10 +84,13 @@ def test_appnp_torch():
             self.activation = torch.nn.ReLU()
             self.dropout = torch.nn.Dropout(0.5)
             self.num_outputs = num_outputs
-            self.ranker = pg.PageRank(0.9, renormalize=True, assume_immutability=True, error_type="iters", max_iters=10)
+            self.ranker = pg.ParameterTuner(
+                lambda par: pg.GenericGraphFilter([par[0] ** i for i in range(int(10))],
+                                                  error_type="iters", max_iters=int(10)),
+                max_vals=[0.95], min_vals=[0.5], verbose=False,
+                measure=pg.Mabs, deviation_tol=0.1, tuning_backend="numpy")
 
-        def forward(self, inputs, training=False):
-            graph, features = inputs
+        def forward(self, features, graph, training=False):
             predict = self.dropout(torch.FloatTensor(features))
             predict = self.dropout(self.activation(self.layer1(predict)))
             predict = self.activation(self.layer2(predict))
@@ -98,10 +105,11 @@ def test_appnp_torch():
         if isinstance(m, torch.nn.Linear):
             torch.nn.init.xavier_uniform_(m.weight)
             m.bias.data.fill_(0.01)
-    pg.load_backend('pytorch')
+
     model = AutotuneAPPNP(features.shape[1], labels.shape[1])
+    graph = pg.preprocessor(renormalize=True, reuse=True)(graph)
     model.apply(init_weights)
-    pg.gnn_train(model, graph, features, labels, training, validation, epochs=50, patience=2)
-    # TODO: higher numbers fail only on github actions - for local tests it is fine
-    #assert float(pg.gnn_accuracy(labels, model([graph, features]), test)) >= 0.15
-    pg.load_backend('numpy')
+    with pg.Backend('pytorch'):
+        pg.gnn_train(model, features, graph, labels, training, validation, epochs=50)
+        # TODO: investigate why this is not working as well as tf
+        #assert float(pg.gnn_accuracy(labels, model(features, graph), test)) == 0.5

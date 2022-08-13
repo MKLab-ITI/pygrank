@@ -40,7 +40,7 @@ def gnn_accuracy(labels, predictions, nodes):
     raise Exception("GNN accuracy is supported only for tensorflow and pytorch backends")
 
 
-def _gnn_train_tf(model, graph, features, labels, training, validation,
+def _gnn_train_tf(model, features, graph, labels, training, validation,
               optimizer=None,
               patience=100,
               epochs=2000,
@@ -54,12 +54,12 @@ def _gnn_train_tf(model, graph, features, labels, training, validation,
     remaining_patience = patience
     for epoch in range(epochs):
         with tf.GradientTape() as tape:
-            predictions = model([graph, features], training=True)
+            predictions = model(features, graph, training=True)
             loss = _gnn_cross_entropy_tf(labels, predictions, training)
             loss = loss + model.losses
         gradients = tape.gradient(loss, model.trainable_variables)
         optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-        predictions = model([graph, features], training=False)
+        predictions = model(features, graph, training=False)
         loss = _gnn_cross_entropy_tf(labels, predictions, validation)
         remaining_patience -= 1
         if loss < best_loss:
@@ -67,16 +67,16 @@ def _gnn_train_tf(model, graph, features, labels, training, validation,
             best_loss = loss
             best_params = [tf.identity(param) for param in model.trainable_variables]
             if verbose:   # pragma: no cover
-                print("Epoch", epoch, "loss", float(loss), "acc", _gnn_accuracy_tf(labels, predictions, test))
+                print("\rEpoch", epoch, "loss", float(loss), "acc", _gnn_accuracy_tf(labels, predictions, test), end="")
         if remaining_patience == 0:
-            if verbose:   # pragma: no cover
-                print("Patience run out at epoch", epoch)
             break
+    if verbose:
+        print()
     for variable, best_value in zip(model.trainable_variables, best_params):
         variable.assign(best_value)
 
 
-def _gnn_train_torch(model, graph, features, labels, training, validation,
+def _gnn_train_torch(model, features, graph, labels, training, validation,
               optimizer=None,
               patience=100,
               epochs=2000,
@@ -94,7 +94,7 @@ def _gnn_train_torch(model, graph, features, labels, training, validation,
     best_loss = float('inf')
     for epoch in range(epochs):
         optimizer.zero_grad()
-        predictions = model([graph, features], training=True)
+        predictions = model(features, graph, training=True)
         loss = _gnn_cross_entropy_torch(labels, predictions, training) + model.loss
         loss.backward()
         optimizer.step()
