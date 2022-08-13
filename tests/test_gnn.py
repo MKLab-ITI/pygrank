@@ -9,30 +9,30 @@ def test_gnn_errors():
     training, test = pg.split(list(range(len(graph))), 0.8)
     training, validation = pg.split(training, 1 - 0.2 / 0.8)
 
+    from tensorflow.keras.layers import Dropout, Dense
+    from tensorflow.keras.regularizers import L2
+
     class APPNP(tf.keras.Sequential):
         def __init__(self, num_inputs, num_outputs, hidden=64):
             super().__init__([
-                tf.keras.layers.Dropout(0.5, input_shape=(num_inputs,)),
-                tf.keras.layers.Dense(hidden, activation=tf.nn.relu,
-                                      kernel_regularizer=tf.keras.regularizers.L2(1.E-5)),
-                tf.keras.layers.Dropout(0.5),
-                tf.keras.layers.Dense(num_outputs, activation=tf.nn.relu),
-            ])
-            self.ranker = pg.PageRank(0.9, renormalize=True, assume_immutability=True, error_type="iters", max_iters=10)
-            self.input_spec = None  # prevents some versions of tensorflow from checking call inputs
+                Dropout(0.5, input_shape=(num_inputs,)),
+                Dense(hidden, activation="relu", kernel_regularizer=L2(1.E-5)),
+                Dropout(0.5),
+                Dense(num_outputs, activation="relu")])
+            self.ranker = pg.PageRank(0.9, renormalize=True, assume_immutability=True,
+                                      use_quotient=False, error_type="iters", max_iters=10)  # 10 iterations
 
-        def call(self, inputs, training=False):
-            graph, features = inputs
+        def call(self, features, graph, training=False):
             predict = super().call(features, training=training)
-            predict = self.ranker.propagate(graph, predict, graph_dropout=0.5 if training else 0)
-            return tf.nn.softmax(predict, axis=1)
+            propagate = self.ranker.propagate(graph, predict, graph_dropout=0.5 if training else 0)
+            return tf.nn.softmax(propagate, axis=1)
 
     model = APPNP(features.shape[1], labels.shape[1])
     with pytest.raises(Exception):
         pg.gnn_train(model, graph, features, labels, training, validation, test=test, epochs=2)
     pg.load_backend('tensorflow')
-    pg.gnn_train(model, graph, features, labels, training, validation, test=test, epochs=300, patience=2)
-    predictions = model([graph, features])
+    pg.gnn_train(model, features, graph, labels, training, validation, test=test, epochs=300, patience=2)
+    predictions = model(features, graph)
     pg.load_backend('numpy')
     with pytest.raises(Exception):
         pg.gnn_accuracy(labels, predictions, test)
@@ -65,7 +65,7 @@ def test_appnp_tf():
     training, validation = pg.split(training, 1 - 0.2 / 0.8)
     model = APPNP(features.shape[1], labels.shape[1])
     with pg.Backend('tensorflow'):  # pygrank computations in tensorflow backend
-        graph = pg.preprocessor(renormalize=True, reuse=True)(graph)  # reuse in different backends
+        graph = pg.preprocessor(renormalize=True, cors=True)(graph)  # cors = use in many backends
         pg.gnn_train(model, features, graph, labels, training, validation,
                      optimizer=tf.optimizers.Adam(learning_rate=0.01), verbose=True, epochs=50)
         assert float(pg.gnn_accuracy(labels, model(features, graph), test)) == 1.  # dataset is super-easy to predict
@@ -107,7 +107,7 @@ def test_appnp_torch():
             m.bias.data.fill_(0.01)
 
     model = AutotuneAPPNP(features.shape[1], labels.shape[1])
-    graph = pg.preprocessor(renormalize=True, reuse=True)(graph)
+    graph = pg.preprocessor(renormalize=True, cors=True)(graph)
     model.apply(init_weights)
     with pg.Backend('pytorch'):
         pg.gnn_train(model, features, graph, labels, training, validation, epochs=50)

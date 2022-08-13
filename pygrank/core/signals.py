@@ -39,9 +39,17 @@ class GraphSignal(MutableMapping):
         """Should **ALWAYS** instantiate graph signals with the method to_signal,
         which handles non-instantiation semantics."""
 
+        if node2id is not None:
+            self.node2id = node2id
+        elif hasattr(graph, "_pygrank_node2id"):  # obtained from preprocessing
+            self.node2id = graph._pygrank_node2id
+        elif hasattr(graph, "shape"):  # externally defined type
+            self.node2id = {i: i for i in range(graph.shape[0])}
+        else:  # this is the case where it is an actual graph
+            self.node2id = {v: i for i, v in enumerate(graph)}
         self.graph = graph
-        self.node2id = ({i: i for i in range(graph.shape[0])} if hasattr(graph, "shape")
-                        else {v: i for i, v in enumerate(graph)}) if node2id is None else node2id
+        #self.node2id = ({i: i for i in range(graph.shape[0])} if hasattr(graph, "shape")
+        #                else {v: i for i, v in enumerate(graph)}) if node2id is None else node2id
         graph_len = graph.shape[0] if hasattr(graph, "shape") else len(graph)
         if backend.is_array(obj):
             if graph_len != backend.length(obj):

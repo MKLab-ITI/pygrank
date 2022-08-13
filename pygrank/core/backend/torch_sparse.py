@@ -4,6 +4,13 @@ from torch import abs, exp, eye, clone as copy, log, ones
 import torch_sparse
 
 
+class TorchSparseGraphData:
+    def __init__(self, index, values, shape):
+        self.index = index
+        self.values = values
+        self.shape = shape
+
+
 def sum(x, axis=None):
     return torch.sum(x) if axis is None else torch.sum(x, dim=axis)
 
@@ -32,8 +39,8 @@ def graph_dropout(M, dropout):
     if dropout == 0:
         return M
     # TODO: change based on future sparse matrix support: https://github.com/pytorch/pytorch/projects/24#card-59611437
-    index, values = torch_sparse.coalesce(M["index"], torch.nn.functional.dropout(M["values"], dropout), M["shape"][0], M["shape"][1])
-    return {"index": index, "values": values, "shape": dims}
+    index, values = torch_sparse.coalesce(M.index, torch.nn.functional.dropout(M.values, dropout), M.shape[0], M.shape[1])
+    return TorchSparseGraphData(index, values, M.shape)
 
 
 def separate_cols(x):
@@ -62,7 +69,8 @@ def scipy_sparse_to_backend(M):
     coo = M.tocoo()
     index, values = torch_sparse.coalesce(torch.LongTensor(np.vstack((coo.col, coo.row))),
                                           torch.FloatTensor(coo.data), coo.shape[0], coo.shape[1])
-    return {"index": index, "values": values, "shape": coo.shape}
+    return TorchSparseGraphData(index, values, coo.shape)
+
 
 def to_array(obj, copy_array=False):
     if isinstance(obj, torch.Tensor):
@@ -90,7 +98,7 @@ def self_normalize(obj):
 
 def conv(signal, M):
     signal = torch.reshape(signal, (-1, 1))
-    return torch.ravel(torch_sparse.spmm(M["index"], M["values"], M["shape"][0], M["shape"][1], signal))
+    return torch.ravel(torch_sparse.spmm(M.index, M.values, M.shape[0], M.shape[1], signal))
 
 
 def length(x):
@@ -100,9 +108,9 @@ def length(x):
 
 
 def degrees(M):
-    signal = torch.reshape(torch.ones(M["shape"][0]), (-1, 1))
-    index, values = torch_sparse.transpose(M["index"], M["values"], M["shape"][0], M["shape"][1])
-    return torch.ravel(torch_sparse.spmm(index, values, M["shape"][1], M["shape"][0], signal))
+    signal = torch.reshape(torch.ones(M.shape[0]), (-1, 1))
+    index, values = torch_sparse.transpose(M.index, M.values, M.shape[0], M.shape[1])
+    return torch.ravel(torch_sparse.spmm(index, values, M.shape[1], M.shape[0], signal))
 
 
 def filter_out(x, exclude):

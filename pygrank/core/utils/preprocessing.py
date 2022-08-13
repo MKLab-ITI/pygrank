@@ -30,7 +30,7 @@ def to_sparse_matrix(G,
                      weight="weight",
                      renormalize=False,
                      reduction=backend.degrees,
-                     reuse=False):
+                     cors=False):
     """ Used to normalize a graph and produce a sparse matrix representation.
 
     Args:
@@ -47,24 +47,31 @@ def to_sparse_matrix(G,
             can be cast to a float to regularize the renormalization.
         reduction: Optional. Controls how degrees are calculated from a callable (e.g. `pygrank.eigdegree`
             for entropy-preserving transition matrices [li2011link]). Default is `pygrank.degrees`.
-        reuse: Optional. If True this enriches the backend primitives
-            holding the outcome of graph preprocessing with additional private metadata to enable their
-            usage as base graphs in other backends. This is not required for constructing GraphSignal instances with
-            the pattern `pygrank.to_signal(M, personalization_data)` where `M = pygrank.preprocessor(reuse=True)(graph)`.
-            But it is needed when the two commands are called in different backends.
-            If False (default), a lot of memory by not keeping pointers to all versions of adjacency matrices across
-            backends. Overall, prefer keeping this behavior switched off. Enabling or disabling reuse will not
-            affect whether code processing one graph fits in memory, as long as one of the two backends is "numpy".
+        cors: Optional.<details><summary>Cross-origin resource (shared between backends). Default is false.</summary>
+            If True, it enriches backend primitives
+            holding the outcome of graph preprocessing with additional private metadata that enable their
+            usage as base graphs when passing through other postprocessors in other backends.
+            This is not required when constructing GraphSignal instances with
+            the pattern `pygrank.to_signal(M, personalization_data)` where `M = pygrank.preprocessor(cors=True)(graph)`
+            but is mandarotry when the two commands are called in different backends. Note that *cors* objects are not
+            normalized again with other strategies in other preprocessors and compliance is not currently enforced.
+            There is **significant speedup** in using *cors* when frequently switching between backends for the
+            same graphs. Furthermore, after defining such instances, they can be used in place of base graphs.
+            If False (default), a lot of memory is saved by not keeping pointers to all versions of adjacency matrices
+            among backends that use them. Enabling *cors* and then visiting up to two backends out of which one is
+            "numpy", does not affect the maximum memory consumption by code processing one graph.
+            </details>
     """
     if hasattr(G, "__pygrank_preprocessed"):
         if backend.backend_name() in G.__pygrank_preprocessed:
             return G.__pygrank_preprocessed[backend.backend_name()]  # this is basically caching, but it's pretty safe for just passing adjacency matrices around
         ret = backend.scipy_sparse_to_backend(G.__pygrank_preprocessed["numpy"])
-        if reuse:
+        if cors:
             ret.__pygrank_preprocessed = G.__pygrank_preprocessed
             ret.__pygrank_preprocessed[backend.backend_name()] = ret
         else:
             ret.__pygrank_preprocessed = {backend.backend_name(): ret}
+        ret._pygrank_node2id = G._pygrank_node2id
         return ret
     with backend.Backend("numpy"):
         normalization = normalization.lower() if isinstance(normalization, str) else normalization
@@ -111,7 +118,8 @@ def to_sparse_matrix(G,
         elif normalization != "none":
             raise Exception("Supported normalizations: none, col, symmetric, both, laplacian, auto")
     ret = M if backend.backend_name() == "numpy" else backend.scipy_sparse_to_backend(M)
-    if reuse:
+    ret._pygrank_node2id = {v: i for i, v in enumerate(G)}
+    if cors:
         ret.__pygrank_preprocessed = {backend.backend_name(): ret, "numpy": M}
         M.__pygrank_preprocessed = ret.__pygrank_preprocessed
     else:
@@ -202,7 +210,7 @@ def preprocessor(normalization: str = "auto",
                  weight: str = "weight",
                  renormalize: bool = False,
                  reduction=backend.degrees,
-                 reuse: bool = False):
+                 cors: bool = False):
     """ Wrapper function that generates lambda expressions for the method to_sparse_matrix.
 
     Args:
@@ -212,7 +220,7 @@ def preprocessor(normalization: str = "auto",
             in which case it transforms a scipy sparse adjacency matrix to produce a normalized copy.
         weight: Optional. The weight attribute (default is "weight") of *networkx* graph edges. This is ignored when
             *fastgraph* graphs are parsed, as these are unweighted.
-        assume_immutability: Optional. If True, the output is preprocessing further wrapped
+        assume_immutability: Optional. If True, the output of preprocessing further wrapped
             through a MethodHasher to avoid redundant calls. In this case, consider creating one
             `pygrank.preprocessor` and passing it to all algorithms running on the same graphs.
             Default is False, as graph immutability needs to be explicitly assumed but cannot be guaranteed.
@@ -221,24 +229,32 @@ def preprocessor(normalization: str = "auto",
             can be cast to a float to regularize the renormalization.
         reduction: Optional. Controls how degrees are calculated from a callable (e.g. `pygrank.eigdegree`
             for entropy-preserving transition matrices [li2011link]). Default is `pygrank.degrees`.
-        reuse: Optional. If True this enriches the backend primitives
-            holding the outcome of graph preprocessing with additional private metadata to enable their
-            usage as base graphs in other backends. This is not required for constructing GraphSignal instances with
-            the pattern `pygrank.to_signal(M, personalization_data)` where `M = pygrank.preprocessor(reuse=True)(graph)`.
-            But it is needed when the two commands are called in different backends.
-            If False (default), a lot of memory by not keeping pointers to all versions of adjacency matrices across
-            backends. Overall, prefer keeping this behavior switched off. Enabling or disabling reuse will not
-            affect whether code processing one graph fits in memory, as long as one of the two backends is "numpy".
+        cors: Optional.Cross-origin resource (shared between backends). Default is False.
+            <details>
+            If True, it enriches backend primitives
+            holding the outcome of graph preprocessing with additional private metadata that enable their
+            usage as base graphs when passing through other postprocessors in other backends.
+            This is not required when constructing GraphSignal instances with
+            the pattern `pygrank.to_signal(M, personalization_data)` where `M = pygrank.preprocessor(cors=True)(graph)`
+            but is mandarotry when the two commands are called in different backends. Note that *cors* objects are not
+            normalized again with other strategies in other preprocessors and compliance is not currently enforced.
+            There may be speedups by using *cors* when frequently switching between backends for the
+            same graphs. Usage is demonstrated in [GNN examples](/examples/krasanakis2022pygrank/4.%20Autotune%20in%20APPNP.py) .
+            If False (default), a lot of memory is saved by not keeping pointers to all versions of adjacency matrices
+            among backends in which it is run. Overall, prefer keeping this behavior switched off. Enabling
+            *cors* and then visiting up to two backends out of which one is "numpy", does not affect the maximum
+            memory consumption by code processing one graph.
+            </details>
     """
     if assume_immutability:
         ret = MethodHasher(preprocessor(assume_immutability=False,
                                         normalization=normalization, weight=weight, renormalize=renormalize,
-                                        reduction=reduction, reuse=reuse))
+                                        reduction=reduction, cors=cors))
         ret.__name__ = "preprocess"
         return ret
 
     def preprocess(G):
         return to_sparse_matrix(G, normalization=normalization, weight=weight, renormalize=renormalize,
-                                reduction=reduction, reuse=reuse)
+                                reduction=reduction, cors=cors)
 
     return preprocess

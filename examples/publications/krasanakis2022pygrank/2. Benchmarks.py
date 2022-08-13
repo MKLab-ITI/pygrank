@@ -2,7 +2,7 @@ import pygrank as pg
 
 
 datasets = ["CiteSeer", "EUCore"]
-pre = pg.preprocessor(assume_immutability=True, normalization="symmetric")  # common preprocessor
+pre = pg.preprocessor(assume_immutability=True, normalization="symmetric")  # shared
 algs = {"ppr.85": pg.PageRank(.85, preprocessor=pre),
         "ppr.99": pg.PageRank(.99, preprocessor=pre, max_iters=1000),
         "hk3": pg.HeatKernel(3, preprocessor=pre),
