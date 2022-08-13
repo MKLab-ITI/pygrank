@@ -21,7 +21,8 @@ class ConvergenceManager:
     def __init__(self,
                  tol: float = 1.E-6,
                  error_type: Supervised = Mabs,
-                 max_iters: int = 100):
+                 max_iters: int = 100,
+                 iter_exception=Exception):
         """
         Initializes a convergence manager with a provided tolerance level, error type and number of iterations.
 
@@ -32,12 +33,17 @@ class ConvergenceManager:
                 numerical precision of the backend `pygrank.epsilon()` then it is snapped to that value.
                 *None* tolerance will stop when consecutive iterations are exactly the same.
             error_type: Optional. How to calculate the "error" between consecutive iterations of graph signals.
-                If "iters", convergence is reached at iteration *max_iters*-1 without throwing an exception.
-                Default is `pygrank.Mabs`.
+                If "iters", convergence is reached at iteration *max_iters*-1 without throwing an exception
+                and even if numerical convergence happens to occur earlier. Default is `pygrank.Mabs`.
             max_iters: Optional. The number of iterations algorithms can run for. If this number is exceeded,
                 an exception is thrown. This could help manage computational resources. Default value is 100,
                 and exceeding this value with graph filters often indicates that either graphs have large diameters
                 or that algorithms of choice converge particularly slowly.
+            iter_exception: Optional. The type of exception class to be thrown if max iterations are reached (when
+                *error_type* is not "iters"). If *None*, this quietly closes the iterations as if convergence
+                is reached. *Avoid* changing this argument for deployment-ready systems, as performing a fixed number
+                of iteration should be a preferred practice compared to stopping either there or at a fixed numerical
+                tolerance. Default is *Exception*.
         """
         self.tol = tol
         self.error_type = error_type
@@ -46,6 +52,7 @@ class ConvergenceManager:
         self.last_ranks = None
         self._start_time = None
         self.elapsed_time = None
+        self.iter_exception = iter_exception
 
     def start(self, restart_timer: bool = True):
         """
@@ -72,10 +79,10 @@ class ConvergenceManager:
         """
         self.iteration += 1
         if self.iteration >= self.max_iters:
-            if self.error_type == "iters":
+            if self.error_type == "iters" or self.iter_exception is None:
                 self.elapsed_time = time()-self._start_time
                 return True
-            raise Exception("Could not converge within "+str(self.max_iters)+" iterations")
+            raise self.iter_exception("Could not converge within "+str(self.max_iters)+" iterations")
         converged = False if self.last_ranks is None else self._has_converged(self.last_ranks, new_ranks)
         self.last_ranks = new_ranks
         self.elapsed_time = time()-self._start_time

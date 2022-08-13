@@ -269,6 +269,7 @@ class SymmetricAbsorbingRandomWalks(RecursiveGraphFilter):
     def __init__(self,
                  alpha: float = 0.5,
                  symmetric: bool = True,
+                 symmetric_reduction=backend.degrees,
                  *args, **kwargs):
         """ Initializes the AbsorbingWalks filter parameters for appropriate parameter values. This can model PageRank
         but is in principle a generalization that allows custom absorption rates per node (when not given, these are I).
@@ -279,6 +280,10 @@ class SymmetricAbsorbingRandomWalks(RecursiveGraphFilter):
                 same underlying meaning as PageRank (for which Lambda = alpha Diag(degrees) ) when the same parameter
                 value alpha is chosen. Default is 0.5 to match the approach of [krasanakis2022fast],
                 which uses absorption rate 1. Ideally, to set this parameter, refer to *AbsorbingWalks*.
+            symmetric_reduction: Optional. The strategy with which to calculate degrees from adjacency matrices.
+                Default is `pygrank.degrees`, but different callables (e.g. `pygrank.eigdegrees`)
+                can also be provided. When non-defaults ar used, this argument should be set to the
+                same value as the preprocessor's *reduction*.
 
         Example:
             >>> from pygrank.algorithms import AbsorbingWalks
@@ -296,9 +301,10 @@ class SymmetricAbsorbingRandomWalks(RecursiveGraphFilter):
         super().__init__(*args, **kwargs)
         self.alpha = alpha
         self.symmetric = symmetric
+        self.symmetric_reduction = symmetric_reduction
 
     def _start(self, M, personalization, ranks, absorption=None, **kwargs):
-        self.degrees = backend.degrees(M)
+        self.degrees = self.symmetric_reduction(M)
         if self.symmetric:
             self.absorption = (1+(1+4*self.degrees)**0.5)/2
         else:

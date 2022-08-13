@@ -6,11 +6,34 @@ from pygrank.fastgraph import fastgraph
 import uuid
 
 
-def to_sparse_matrix(G, normalization="auto", weight="weight", renormalize=False):
+def eigdegree(M):
+    """
+    Calculates the entropy-preserving eigenvalue degree to be used in matrix normalization.
+    Args:
+        M: the adjacency matrix
+    """
+    v = backend.repeat(1., M.shape[0])
+    from pygrank.algorithms import ConvergenceManager
+    convergence = ConvergenceManager(tol=backend.epsilon(), max_iters=1000)
+    convergence.start()
+    eig = 0
+    v = v / backend.dot(v, v)
+    while not convergence.has_converged(eig):
+        v = backend.conv(v, M)
+        v = backend.safe_div(v, backend.dot(v, v)**0.5)
+        eig = backend.dot(backend.conv(v, M), v)
+    return eig/(v*v)
+
+
+def to_sparse_matrix(G,
+                     normalization="auto",
+                     weight="weight",
+                     renormalize=False,
+                     reduction=backend.degrees):
     """ Used to normalize a graph and produce a sparse matrix representation.
 
     Args:
-        G: A networkx graph
+        G: A networkx or fastgraph graph
         normalization: Optional. The type of normalization can be "none", "col", "symmetric", "laplacian", "both",
             or "auto" (default). The last one selects the type of normalization between "col" and "symmetric",
             depending on whether the graph is directed or not respectively. Alternatively, this could be a callable,
@@ -20,48 +43,53 @@ def to_sparse_matrix(G, normalization="auto", weight="weight", renormalize=False
         renormalize: Optional. If True, the renormalization trick (self-loops) of graph neural networks is applied to
             ensure iteration stability by shrinking the graph's spectrum. Default is False. Can provide anything that
             can be cast to a float to regularize the renormalization.
+        reduction: Optional. Controls how degrees are calculated from a callable (e.g. `pygrank.eigdegree`
+            for entropy-preserving transition matrices [li2011link]). Default is `pygrank.degrees`.
     """
-    normalization = normalization.lower() if isinstance(normalization, str) else normalization
-    if normalization == "auto":
-        normalization = "col" if G.is_directed() else "symmetric"
-    M = G.to_scipy_sparse_array() if isinstance(G, fastgraph.Graph) else nx.to_scipy_sparse_matrix(G, weight=weight, dtype=float)
-    renormalize = float(renormalize)
-    if renormalize != 0:
-        M = M + scipy.sparse.eye(M.shape[0])*renormalize
-    if normalization == "col":
-        S = np.array(M.sum(axis=1)).flatten()
-        S[S != 0] = 1.0 / S[S != 0]
-        Q = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
-        M = Q * M
-    elif normalization == "laplacian":
-        S = np.array(np.sqrt(M.sum(axis=1))).flatten()
-        S[S != 0] = 1.0 / S[S != 0]
-        Qleft = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
-        S = np.array(np.sqrt(M.sum(axis=0))).flatten()
-        S[S != 0] = 1.0 / S[S != 0]
-        Qright = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
-        M = Qleft * M * Qright
-        M = -M + scipy.sparse.eye(M.shape[0])
-    elif normalization == "both":
-        S = np.array(M.sum(axis=1)).flatten()
-        S[S != 0] = 1.0 / S[S != 0]
-        Qleft = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
-        S = np.array(np.sqrt(M.sum(axis=0))).flatten()
-        S[S != 0] = 1.0 / S[S != 0]
-        Qright = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
-        M = Qleft * M * Qright
-    elif normalization == "symmetric":
-        S = np.array(np.sqrt(M.sum(axis=1))).flatten()
-        S[S != 0] = 1.0 / S[S != 0]
-        Qleft = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
-        S = np.array(np.sqrt(M.sum(axis=0))).flatten()
-        S[S != 0] = 1.0 / S[S != 0]
-        Qright = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
-        M = Qleft * M * Qright
-    elif callable(normalization):
-        M = normalization(M)
-    elif normalization != "none":
-        raise Exception("Supported normalizations: none, col, symmetric, auto")
+    with backend.Backend("numpy"):
+        normalization = normalization.lower() if isinstance(normalization, str) else normalization
+        if normalization == "auto":
+            normalization = "col" if G.is_directed() else "symmetric"
+        M = G.to_scipy_sparse_array() if isinstance(G, fastgraph.Graph) else nx.to_scipy_sparse_matrix(G, weight=weight, dtype=float)
+        renormalize = float(renormalize)
+        left_reduction = reduction #(lambda x: backend.degrees(x)) if reduction == "sum" else reduction
+        right_reduction = lambda x: left_reduction(x.T)
+        if renormalize != 0:
+            M = M + scipy.sparse.eye(M.shape[0])*renormalize
+        if normalization == "col":
+            S = np.array(left_reduction(M)).flatten()
+            S[S != 0] = 1.0 / S[S != 0]
+            Q = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
+            M = Q * M
+        elif normalization == "laplacian":
+            S = np.array(np.sqrt(left_reduction(M))).flatten()
+            S[S != 0] = 1.0 / S[S != 0]
+            Qleft = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
+            S = np.array(np.sqrt(right_reduction(M))).flatten()
+            S[S != 0] = 1.0 / S[S != 0]
+            Qright = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
+            M = Qleft * M * Qright
+            M = -M + scipy.sparse.eye(M.shape[0])
+        elif normalization == "both":
+            S = np.array(left_reduction(M)).flatten()
+            S[S != 0] = 1.0 / S[S != 0]
+            Qleft = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
+            S = np.array(right_reduction(M)).flatten()
+            S[S != 0] = 1.0 / S[S != 0]
+            Qright = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
+            M = Qleft * M * Qright
+        elif normalization == "symmetric":
+            S = np.array(np.sqrt(left_reduction(M))).flatten()
+            S[S != 0] = 1.0 / S[S != 0]
+            Qleft = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
+            S = np.array(np.sqrt(right_reduction(M))).flatten()
+            S[S != 0] = 1.0 / S[S != 0]
+            Qright = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
+            M = Qleft * M * Qright
+        elif callable(normalization):
+            M = normalization(M)
+        elif normalization != "none":
+            raise Exception("Supported normalizations: none, col, symmetric, both, laplacian, auto")
     return backend.scipy_sparse_to_backend(M)
 
 
@@ -146,7 +174,8 @@ class MethodHasher:
 def preprocessor(normalization: str = "auto",
                  assume_immutability: bool = False,
                  weight: str = "weight",
-                 renormalize: bool = False):
+                 renormalize: bool = False,
+                 reduction=backend.degrees):
     """ Wrapper function that generates lambda expressions for the method to_sparse_matrix.
 
     Args:
@@ -163,14 +192,17 @@ def preprocessor(normalization: str = "auto",
         renormalize: Optional. If True, the renormalization trick (self-loops) of graph neural networks is applied to
             ensure iteration stability by shrinking the graph's spectrum. Default is False. Can provide anything that
             can be cast to a float to regularize the renormalization.
+        reduction: Optional. Controls how degrees are calculated from a callable (e.g. `pygrank.eigdegree`
+            for entropy-preserving transition matrices [li2011link]). Default is `pygrank.degrees`.
     """
     if assume_immutability:
         ret = MethodHasher(preprocessor(assume_immutability=False,
-                                         normalization=normalization, weight=weight, renormalize=renormalize))
+                                        normalization=normalization, weight=weight, renormalize=renormalize,
+                                        reduction=reduction))
         ret.__name__ = "preprocess"
         return ret
 
     def preprocess(G):
-        return to_sparse_matrix(G, normalization=normalization, weight=weight, renormalize=renormalize)
+        return to_sparse_matrix(G, normalization=normalization, weight=weight, renormalize=renormalize, reduction=reduction)
 
     return preprocess

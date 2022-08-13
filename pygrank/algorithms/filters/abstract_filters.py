@@ -114,9 +114,10 @@ class RecursiveGraphFilter(GraphFilter):
         Args:
             use_quotient: Optional. If True (default) performs a L1 re-normalization of ranks after each iteration.
                 This significantly speeds up the convergence speed of symmetric normalization (col normalization
-                preserves the L1 norm during computations on its own). Can also pass Postprocessor instances
-                to adjust node scores after each iteration with the Postprocessor.transform(ranks) method.
-                Can pass False or None to ignore this functionality.
+                preserves the L1 norm during computations on its own). Provide `pygrank.Postprocessor` or other
+                callable instances to adjust node scores after each iteration.
+                Can pass False or None to ignore this functionality and make recursive filter outcome equal to
+                its expansion.
         """
         super().__init__(*args, **kwargs)
         self.use_quotient = use_quotient
@@ -128,7 +129,7 @@ class RecursiveGraphFilter(GraphFilter):
             ranks.np = ranks.np.np
 
         if isinstance(self.use_quotient, Postprocessor):
-            ranks.np = self.use_quotient.transform(ranks)
+            ranks.np = self.use_quotient(ranks)
         elif self.use_quotient:
             ranks.np = backend.safe_div(ranks, backend.sum(ranks))
         if self.converge_to_eigenvectors:

@@ -33,7 +33,7 @@ def test_filter_invalid_parameters():
 def test_convergence_string_conversion():
     # TODO: make convergence trackable from wrapping objects
     graph = next(pg.load_datasets_graph(["graph5"]))
-    ranker = pg.PageRank()
+    ranker = pg.PageRank() >> pg.Normalize()
     ranker(graph)
     assert str(ranker.convergence.iteration)+" iterations" in str(ranker.convergence)
 
@@ -70,6 +70,16 @@ def test_custom_runs():
         ranks1 = pg.Normalize(pg.PageRank(0.85, tol=pg.epsilon(), max_iters=1000, use_quotient=False)).rank(graph, {"A": 1})
         ranks2 = pg.Normalize(pg.GenericGraphFilter([0.85**i*len(graph) for i in range(80)], tol=pg.epsilon())).rank(graph, {"A": 1})
         ranks3 = pg.Normalize(pg.LowPassRecursiveGraphFilter([0.85 for _ in range(80)], tol=pg.epsilon())).rank(graph, {"A": 1})
+        assert pg.Mabs(ranks1)(ranks2) < 1.E-6
+        assert pg.Mabs(ranks1)(ranks3) < 1.E-6
+
+
+def test_custom_runs_with_reduction():
+    graph = next(pg.load_datasets_graph(["graph9"]))
+    for _ in supported_backends():
+        ranks1 = pg.Normalize(pg.PageRank(0.85, tol=pg.epsilon(), max_iters=1000, use_quotient=False, reduction=pg.eigdegree)).rank(graph, {"A": 1})
+        ranks2 = pg.Normalize(pg.GenericGraphFilter([0.85**i*len(graph) for i in range(80)], reduction=pg.eigdegree, tol=pg.epsilon())).rank(graph, {"A": 1})
+        ranks3 = pg.Normalize(pg.LowPassRecursiveGraphFilter([0.85 for _ in range(80)], reduction=pg.eigdegree, tol=pg.epsilon())).rank(graph, {"A": 1})
         assert pg.Mabs(ranks1)(ranks2) < 1.E-6
         assert pg.Mabs(ranks1)(ranks3) < 1.E-6
 

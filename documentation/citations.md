@@ -202,6 +202,15 @@ Additional publications introducing methods implemented in this package.
 }
 ```
 ```
+@inproceedings{li2011link,
+  title={Link prediction: the power of maximal entropy random walk},
+  author={Li, Rong-Hua and Yu, Jeffrey Xu and Liu, Jianquan},
+  booktitle={Proceedings of the 20th ACM international conference on Information and knowledge management},
+  pages={1147--1156},
+  year={2011}
+}
+```
+```
 @inproceedings{scellato2011exploiting,
   title={Exploiting place features in link prediction on location-based social networks},
   author={Scellato, Salvatore and Noulas, Anastasios and Mascolo, Cecilia},

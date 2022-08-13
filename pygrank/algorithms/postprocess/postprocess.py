@@ -37,6 +37,10 @@ class Postprocessor(NodeRanking):
         self.ranker = ranker
         return ranker
 
+    @property
+    def convergence(self):
+        return self.ranker.convergence
+
 
 class Tautology(Postprocessor):
     """ Returns ranks as-are.
@@ -95,8 +99,8 @@ class Normalize(Postprocessor):
     """ Normalizes ranks by dividing with their maximal value."""
 
     def __init__(self,
-                 ranker: Optional[Union[NodeRanking,str]] = None,
-                 method: Optional[Union[NodeRanking,str]] = "max"):
+                 ranker: Optional[Union[NodeRanking, str]] = None,
+                 method: Optional[Union[NodeRanking, str]] = "max"):
         """ Initializes the class with a base ranker instance. Args are automatically filled in and
         re-ordered if at least one is provided.
 
@@ -133,8 +137,10 @@ class Normalize(Postprocessor):
             max_rank = float(backend.max(ranks.np))
         elif self.method == "sum":
             max_rank = float(backend.sum(ranks.np))
+        elif self.method == "L2":
+            max_rank = float(backend.sum(ranks.np**2))**0.5
         else:
-            raise Exception("Can only normalize towards max or sum")
+            raise Exception("Can only normalize towards max, sum, range, or L2")
         if min_rank == max_rank:
             return ranks
         ret = (ranks.np-min_rank) / (max_rank-min_rank)
@@ -326,7 +332,7 @@ class Threshold(Postprocessor):
                         max_diff = diff
                         threshold = ranks[v]
                 prev_rank = ranks[v]
-        return {v: 1 if ranks[v] > threshold else 0 for v in ranks.keys()}
+        return {v: 1 for v in ranks.keys() if ranks[v] > threshold}
 
     def _reference(self):
         return str(self.threshold)+" threshold"

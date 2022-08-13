@@ -21,7 +21,7 @@ def import_snap_format_dataset(dataset: str,
     download_dataset(dataset, path=path)
     if verbose:
         utils.log(f"Loading {dataset} graph")
-    G = (graph_api.DiGraph() if hasattr(graph_api, "DiGraph") else graph_api.Graph(False)) if directed else graph_api.Graph()
+    G = (graph_api.DiGraph() if hasattr(graph_api, "DiGraph") else graph_api.Graph(directed)) if directed else graph_api.Graph()
     groups = {}
     with open(path+'/'+dataset+'/'+pair_file, 'r', encoding='utf-8') as file:
         for line in file:
@@ -85,7 +85,6 @@ def _preprocess_features(features: np.ndarray):
         The normalized feature matrix.
     """
 
-
     #r_inv = np.asarray(np.sum(features, axis=0), np.float64)
     #r_inv[r_inv != 0] = np.power(r_inv[r_inv != 0], -1)
     #features = features * r_inv
@@ -97,8 +96,6 @@ def _preprocess_features(features: np.ndarray):
     r_mat_inv = scipy.sparse.diags(r_inv)
     features = r_mat_inv.dot(features)
     return features
-
-
 
 
 def load_feature_dataset(dataset: str,
@@ -128,20 +125,24 @@ def load_feature_dataset(dataset: str,
     return graph, features, labels
 
 
-def load_datasets_multiple_communities(datasets: Iterable[str], **kwargs):
+def load_datasets_multiple_communities(datasets: Union[Iterable[str], str], **kwargs):
+    if isinstance(datasets, str):
+        datasets = [datasets]
     for dataset in datasets:
         graph, groups = import_snap_format_dataset(dataset, **kwargs)
         if len(groups) != 0:
             yield dataset, graph, groups
 
 
-def load_datasets_all_communities(datasets: Iterable[str], **kwargs):
+def load_datasets_all_communities(datasets: Union[Iterable[str], str], **kwargs):
+    if isinstance(datasets, str):
+        datasets = [datasets]
     for dataset, graph, groups in load_datasets_multiple_communities(datasets, **kwargs):
         for group_id, group in groups.items():
             yield dataset+str(group_id), graph, group
 
 
-def load_datasets_graph(datasets: Iterable[str], **kwargs):
+def load_datasets_graph(datasets: Union[Iterable[str], str], **kwargs):
     """
     Iterates through all available datasets that exhibit structural communities and loads them with
     *import_snap_format_dataset* for experiments.
@@ -166,7 +167,7 @@ def load_datasets_graph(datasets: Iterable[str], **kwargs):
         yield graph
 
 
-def load_datasets_one_community(datasets: Iterable[str], **kwargs):
+def load_datasets_one_community(datasets: Union[Iterable[str], str], **kwargs):
     """
     Iterates through all available datasets that exhibit structural communities and loads them with
     *import_snap_format_dataset* for experiments.
@@ -184,6 +185,8 @@ def load_datasets_one_community(datasets: Iterable[str], **kwargs):
         >>> for graph, group in pg.load_datasets_one_community(pg.downloadable_datasets()):
         >>>     ...
     """
+    if isinstance(datasets, str):
+        return next(load_datasets_one_community([datasets], **kwargs))
     datasets = [(dataset, 0) if len(dataset) != 2 else dataset for dataset in datasets]
     last_loaded_dataset = None
     for dataset, group_id in datasets:
