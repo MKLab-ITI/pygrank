@@ -18,11 +18,12 @@ Fast recommendation algorithms for large graphs based on link analysis.
 * Algorithm definition [chains](documentation/functional.md)
 * More [downloadable datasets](documentation/datasets.md)
 * New graph management for minimal memory consumption
+* Using preprocessor outcomes as graphs
 
 # :hammer_and_wrench: Installation
 `pygrank` is meant to work with Python 3.9 or later. The latest version can be installed with pip per:
 ```
-pip install pygrank
+pip install --upgrade pygrank
 ```
 
 To run the library on backpropagateable machine learning backends, 
@@ -99,7 +100,7 @@ Finally, the snippet prints a recommended citation for the algorithm.
 
 ### More examples
 
-[Showcase](documentation/showcase.md) <br>
+[Showcase code](documentation/showcase.md) <br>
 [See it in action](https://github.com/maniospas/pygrank-downstream) <br>
 
 
@@ -112,7 +113,7 @@ the importance of node ranking has drastically
 increased, as its ability to perform inductive learning by quickly
 spreading node information through edges has been theoretically and experimentally
 corroborated. For example, it can be used to make predictions based on few known
-node attributes or the outputs by feature-based machine learning models.
+node attributes or the outputs of feature-based machine learning models.
 
 `pygrank` is a collection of node ranking algorithms and practices that 
 support real-world conditions, such as large graphs and heterogeneous

@@ -239,7 +239,8 @@ def preprocessor(normalization: str = "auto",
             but is mandarotry when the two commands are called in different backends. Note that *cors* objects are not
             normalized again with other strategies in other preprocessors and compliance is not currently enforced.
             There may be speedups by using *cors* when frequently switching between backends for the
-            same graphs. Usage is demonstrated in [GNN examples](/examples/krasanakis2022pygrank/4.%20Autotune%20in%20APPNP.py) .
+            same graphs. Usage is demonstrated in
+            [GNN examples](/examples/publications/krasanakis2022pygrank/4.%20Autotune%20in%20APPNP.py) .
             If False (default), a lot of memory is saved by not keeping pointers to all versions of adjacency matrices
             among backends in which it is run. Overall, prefer keeping this behavior switched off. Enabling
             *cors* and then visiting up to two backends out of which one is "numpy", does not affect the maximum

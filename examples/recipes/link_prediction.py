@@ -1,6 +1,6 @@
 import pygrank as pg
 import random
-from tqdm import tqdm  # pip install tqdm (SimRank takes a while to conclude - this provides a progress)
+from tqdm import tqdm  # pip install tqdm (SimRank takes a while to conclude - this provides a progressbar
 import numpy as np
 
 
@@ -20,7 +20,6 @@ class CoSimRank(pg.Postprocessor):
                 S = S@A
                 err = pow*np.sum(np.abs(S))/len(S)
                 pow *= self.c
-                print(err)
                 self.known_ranks[ranks.graph].append({v: repr for v, repr in zip(ranks.graph, pg.separate_cols(S))})
                 if err < 1.E-6:
                     break
@@ -86,4 +85,5 @@ def evaluate(graph, algorithm):
 graph = next(pg.load_datasets_graph(["citeseer"]))
 evaluate(graph, pg.Tautology() >> CoSimRank())  # a variation of the very well-known SimRank implemented in this file
 evaluate(graph, pg.PageRank())
+evaluate(graph, pg.PageRank() >> CosRank())
 evaluate(graph, pg.SymmetricAbsorbingRandomWalks())
