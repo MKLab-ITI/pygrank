@@ -7,8 +7,16 @@ from pygrank.benchmarks.download import download_dataset
 from typing import Iterable, Union
 
 
+def _select_path(path, dataset):
+    paths = [path] if isinstance(path, str) else path
+    for p in paths:
+        if os.path.isdir(p) and os.path.isdir(os.path.join(p, dataset)):
+            return p
+    return paths[0]
+
+
 def import_snap_format_dataset(dataset: str,
-                               path: str = 'data',
+                               path: Union[Iterable[str], str] = (os.path.join(os.path.expanduser('~'), '.pygrank/data'), ".", "data"),
                                pair_file: str = 'pairs.txt',
                                group_file: str = 'groups.txt',
                                directed: bool = False,
@@ -16,8 +24,32 @@ def import_snap_format_dataset(dataset: str,
                                max_group_number: int = 20,
                                graph_api=nx,
                                verbose=True):
-    if not os.path.isdir(path):   # pragma: no cover
-        path = "../"+path
+    """
+    Imports a dataset of the SNAP format.
+    Args:
+        dataset: The name of the dataset to be loaded. If a name among 'dataset'
+        path: The dataset's path in which *dataset* is a folder, or a list of paths in which to search.
+            The first of these will be set as the preferred download location if the dataset is not
+            found and can be downloaded. Default is a list comprising the path where pygrank's settings file resides,
+            "." and "data".
+        pair_file: Optional. The rows of the file *[path]/[dataset]/pair_file* should contain pairs of ","-separated
+            node names. Default is "pairs.txt".
+        group_file: Optional. The rows of the file *[path]/[dataset]/pair_file* should contain lists of ","-separated
+            node names. Default is "groups.txt".
+        directed: Whether a directed or undirected graph should be returned. Default is False.
+        min_group_size: Optional. The minimum group length to be considered for inclusion in groups. Can be either a
+            number less than 1 to indicate group size as a fraction of the dataset or an integer to denote
+            Default is 0.01, meaning that groups comprising at least 1% of graph nodes are considered.
+        max_group_number: Limits the numbers of found groups to be up to that number. Default is 20.
+        graph_api: The library used to construct the graph. Either `networkx` or `pygrank.fastgraph` are supported.
+        verbose: Whether to show intermediate status for lengthy loading. These messages use carriage return
+            to eventually disappear. Default is True.
+
+    Returns:
+        graph: A graph of node relations.
+        groups: A dictionary whose values are lists of group node members.
+    """
+    path = _select_path(path, dataset)
     download_dataset(dataset, path=path)
     if verbose:
         utils.log(f"Loading {dataset} graph")
@@ -50,10 +82,9 @@ def import_snap_format_dataset(dataset: str,
 
 
 def _import_features(dataset: str,
-                     path: str = 'data',
+                     path: Union[Iterable[str], str] = (os.path.join(os.path.expanduser('~'), '.pygrank/data'), ".", "data"),
                      feature_file: str = 'features.txt'):
-    if not os.path.isdir(path):   # pragma: no cover
-        path = "../"+path
+    path = _select_path(path, dataset)
     features = dict()
     pos_dict = dict()
     feature_length = 0
@@ -99,7 +130,7 @@ def _preprocess_features(features: np.ndarray):
 
 
 def load_feature_dataset(dataset: str,
-                         path: str = 'data',
+                         path: Union[str, Iterable[str]] = (os.path.join(os.path.expanduser('~'), '.pygrank/data'), ".", "data"),
                          groups_no_labels = False,
                          **kwargs):
     """
@@ -107,9 +138,11 @@ def load_feature_dataset(dataset: str,
     This tries to automatically download the dataset first if not found.
 
     Args:
-        dataset: The dataset'personalization name. Corresponds to a folder name in which the dataset is stored.
-        path: The dataset'personalization path in which *dataset* is a folder. If path not found in the file system,
-            "../" is prepended. Default is "data".
+        dataset: The dataset's name. Corresponds to a folder name in which the dataset is stored.
+        path: The dataset's path in which *dataset* is a folder, or a list of paths in which to search.
+            The first of these will be set as the preferred download location if the dataset is not
+            found and can be downloaded. Default is a list comprising the path where pygrank's settings file resides,
+            "." and "data".
         kwargs: Optional. Additional arguments to pass to *import_snap_format_dataset*.
     Returns:
         graph: A graph of node relations. Nodes are indexed in the order the graph is traversed.

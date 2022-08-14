@@ -27,5 +27,5 @@ setuptools.setup(
      ],
     install_requires=[
               'sklearn', 'scipy', 'numpy', 'networkx', 'wget'
-      ],
+    ],
  )

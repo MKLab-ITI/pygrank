@@ -1,4 +1,4 @@
-from pygrank import backend
+from pygrank.core import backend, utils
 
 
 def _gnn_accuracy_tf(labels, predictions, nodes):
@@ -67,11 +67,11 @@ def _gnn_train_tf(model, features, graph, labels, training, validation,
             best_loss = loss
             best_params = [tf.identity(param) for param in model.trainable_variables]
             if verbose:   # pragma: no cover
-                print("\rEpoch", epoch, "loss", float(loss), "acc", _gnn_accuracy_tf(labels, predictions, test), end="")
+                utils.log(f"Epoch {epoch} loss {loss} acc {float(_gnn_accuracy_tf(labels, predictions, test)):.3f}")
         if remaining_patience == 0:
             break
     if verbose:
-        print()
+        utils.log()
     for variable, best_value in zip(model.trainable_variables, best_params):
         variable.assign(best_value)
 
@@ -105,13 +105,11 @@ def _gnn_train_torch(model, features, graph, labels, training, validation,
             best_loss = loss
             torch.save(model.state_dict(), "_pygrank_torch_state.pt")
             if verbose:   # pragma: no cover
-                print("Epoch", epoch, "loss", float(loss), "acc", _gnn_accuracy_torch(labels, predictions, test))
+                utils.log(f"Epoch {epoch} loss {loss} acc {float(_gnn_accuracy_torch(labels, predictions, test)):.3f}")
 
         if remaining_patience == 0:
-            if verbose:   # pragma: no cover
-                print("Patience run out at epoch", epoch)
             break
-
+    utils.log()
     model.load_state_dict(torch.load("_pygrank_torch_state.pt"))
     model.eval()
     import os

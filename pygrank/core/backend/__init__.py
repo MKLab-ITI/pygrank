@@ -108,7 +108,7 @@ def _notify_load(mod_name):
     print(f'The default pygrank backend has been set to "{mod_name}" ' +
           'by the file '
           + os.path.join(os.path.expanduser('~'), '.pygrank', 'config.json')
-          + '\nSet your preferred backend as one of ["numpy", "pytorch", "tensorflow"] '
+          + '\nSet your preferred backend as one of ["numpy", "pytorch", "tensorflow", "torch_sparse", "matvec"] '
             'and "reminder": false in that file to remove this message from future runs.',
           file=sys.stderr)
 

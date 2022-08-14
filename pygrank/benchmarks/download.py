@@ -82,7 +82,7 @@ def downloadable_small_datasets():
     return ["bigraph", "blockmodel", "citeseer", "eucore", "graph5", "graph9"]
 
 
-def download_dataset(dataset, path: str = "data", verbose=True):   # pragma: no cover
+def download_dataset(dataset, path: str = os.path.join(os.path.expanduser('~'), '.pygrank/data'), verbose=True):   # pragma: no cover
     dataset = dataset.lower()
     if dataset not in datasets:
         return
@@ -90,11 +90,12 @@ def download_dataset(dataset, path: str = "data", verbose=True):   # pragma: no 
     credentials = "REQUIRED CITATION: Please visit the url "+source["url"]\
                   + " for instructions on how to cite the dataset "+dataset+" in your research"
     print(credentials, file=sys.stderr)
+    sys.stderr.flush()
     if verbose:
-        utils.log("Downloading "+dataset)
+        utils.log("Downloading "+dataset+" into "+path)
     if not os.path.isdir(path):
         os.mkdir(path)
-    download_path = path+"/"+dataset
+    download_path = os.path.join(path, dataset)
     if not os.path.isdir(download_path):
         os.mkdir(download_path)
         if "all" in source:
