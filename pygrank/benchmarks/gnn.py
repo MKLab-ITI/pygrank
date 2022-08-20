@@ -43,7 +43,7 @@ def gnn_accuracy(labels, predictions, nodes):
 def _gnn_train_tf(model, features, graph, labels, training, validation,
               optimizer=None,
               patience=100,
-              epochs=2000,
+              epochs=10000,
               test=None,
               verbose=False):
     import tensorflow as tf
@@ -56,7 +56,7 @@ def _gnn_train_tf(model, features, graph, labels, training, validation,
         with tf.GradientTape() as tape:
             predictions = model(features, graph, training=True)
             loss = _gnn_cross_entropy_tf(labels, predictions, training)
-            loss = loss + model.losses
+            loss = loss + tf.reduce_sum(model.losses)
         gradients = tape.gradient(loss, model.trainable_variables)
         optimizer.apply_gradients(zip(gradients, model.trainable_variables))
         predictions = model(features, graph, training=False)
@@ -79,7 +79,7 @@ def _gnn_train_tf(model, features, graph, labels, training, validation,
 def _gnn_train_torch(model, features, graph, labels, training, validation,
               optimizer=None,
               patience=100,
-              epochs=2000,
+              epochs=10000,
               test=None,
               verbose=False):
     import torch
@@ -106,7 +106,6 @@ def _gnn_train_torch(model, features, graph, labels, training, validation,
             torch.save(model.state_dict(), "_pygrank_torch_state.pt")
             if verbose:   # pragma: no cover
                 utils.log(f"Epoch {epoch} loss {loss} acc {float(_gnn_accuracy_torch(labels, predictions, test)):.3f}")
-
         if remaining_patience == 0:
             break
     utils.log()

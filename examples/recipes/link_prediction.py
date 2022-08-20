@@ -1,54 +1,56 @@
 import pygrank as pg
 import random
-from tqdm import tqdm  # pip install tqdm (SimRank takes a while to conclude - this provides a progressbar
 import numpy as np
+import scipy.sparse
+from typing import Optional
 
 
 class CoSimRank(pg.Postprocessor):
-    def __init__(self, ranker=None, c=0.8):
-        super().__init__(ranker)
-        self.c = c
+    def __init__(self,
+                 ranker=None,
+                 weights=[0.5**i for i in range(3)],
+                 dims: int = 1024,
+                 sparsity: Optional[float] = None,
+                 beta: float = 1.,
+                 normalization: str = "symmetric",
+                 assume_immutability: bool = True):
+        super().__init__(pg.Tautology() if ranker is None else ranker)
         self.known_ranks = dict()
+        self.embeddigns = dict()
+        self.dims = dims
+        self.weights = weights
+        self.sparsity = sparsity
+        self.beta = beta
+        self.assume_immutability = assume_immutability
+        self.normalization = normalization
 
     def _transform(self, ranks: pg.GraphSignal, **kwargs):
-        if ranks.graph not in self.known_ranks:
-            A = pg.preprocessor(normalization="col")(ranks.graph)
-            S = np.eye(A.shape[0])
-            self.known_ranks[ranks.graph] = [{v: repr for v, repr in zip(ranks.graph, pg.separate_cols(S))}]
-            pow = 1
-            for _ in range(100):
-                S = S@A
-                err = pow*np.sum(np.abs(S))/len(S)
-                pow *= self.c
-                self.known_ranks[ranks.graph].append({v: repr for v, repr in zip(ranks.graph, pg.separate_cols(S))})
-                if err < 1.E-6:
-                    break
+        if ranks.graph not in self.known_ranks or not self.assume_immutability:
+            with pg.Backend("numpy"):
+                A = pg.preprocessor(normalization=self.normalization)(ranks.graph)
+                D = pg.degrees(pg.preprocessor(normalization="none")(ranks.graph))
+                s = pg.sum(D) ** 0.5 / 2 if self.sparsity is None else self.sparsity
+                D = (D/pg.max(D))**self.beta
+                S = scipy.sparse.random(self.dims, A.shape[0], density=1./s,
+                                        data_rvs=lambda l: np.random.choice([-1, 1], size=l), format="csc")
+                S = S@scipy.sparse.spdiags(D, 0, *A.shape)
+            self.embeddigns[ranks.graph] = pg.scipy_sparse_to_backend(S.T)
+            self.known_ranks[ranks.graph] = []  # we know that the first term is zero and avoid direct embedding comparison
+            for _ in range(len(self.weights)):
+                S = S @ A
+                self.known_ranks[ranks.graph].append(pg.scipy_sparse_to_backend(S))
         ret = 0
-        for v in ranks:
-            if ranks[v] != 0:
-                pow = 1
-                for known_ranks in self.known_ranks[ranks.graph]:
-                    ret = ret + pow * known_ranks[v]*ranks[v]
-                    pow *= self.c
+        on = pg.conv(ranks.np, self.embeddigns[ranks.graph])
+        for weight, S in zip(self.weights, self.known_ranks[ranks.graph]):
+            uv = pg.conv(on, S)
+            ret = ret + weight * uv
         return pg.to_signal(ranks, ret)
 
     def _reference(self):
-        return "SimRank"
-
-
-def cos(a, b):
-    return pg.dot(a,b)/(pg.dot(a, a)*pg.dot(b,b))**0.5
-
-
-class CosRank(pg.Postprocessor):
-    def __init__(self, ranker=None):
-        super().__init__(ranker)
-        self.known_ranks = dict()
-
-    def _transform(self, ranks: pg.GraphSignal, **kwargs):
-        if ranks.graph not in self.known_ranks:
-            self.known_ranks[ranks.graph] = {v: self.ranker(pg.to_signal(ranks, {v: 1})) for v in tqdm(list(ranks.graph))}
-        return {v: pg.dot(ranks, self.known_ranks[ranks.graph][v]) for v in ranks}
+        return "random graph embeddings \\cite{chen2019fast} with "\
+               + ("very sparse \\cite{li2006very}" if self.sparsity is None
+                  else str(int(self.sparse))+"-sparse \\cite{achlioptas2003database}")\
+               + " random projections"
 
 
 def evaluate(graph, algorithm):
@@ -83,7 +85,6 @@ def evaluate(graph, algorithm):
 
 
 graph = next(pg.load_datasets_graph(["citeseer"]))
-evaluate(graph, pg.Tautology() >> CoSimRank())  # a variation of the very well-known SimRank implemented in this file
+evaluate(graph, CoSimRank())
 evaluate(graph, pg.PageRank())
-evaluate(graph, pg.PageRank() >> CosRank())
 evaluate(graph, pg.SymmetricAbsorbingRandomWalks())

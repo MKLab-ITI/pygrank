@@ -74,7 +74,7 @@ def self_normalize(obj):
 
 
 def conv(signal, M):
-    return tf.reshape(tf.sparse.sparse_dense_matmul(M, tf.reshape(signal, (-1,1))), (-1,))
+    return tf.reshape(tf.sparse.sparse_dense_matmul(M, tf.reshape(signal, (-1, 1))), (-1,))
 
 
 def length(x):

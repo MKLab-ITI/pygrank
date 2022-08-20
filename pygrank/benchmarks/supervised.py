@@ -42,7 +42,7 @@ def benchmark(algorithms: Mapping[str, NodeRanking],
     else:
         yield [""] + [algorithm for algorithm in algorithms]
     seeds = [seed] if isinstance(seed, int) else seed
-    fraction_of_training = [fraction_of_training] if isinstance(fraction_of_training, float) else fraction_of_training
+    fraction_of_training = [fraction_of_training] if isinstance(fraction_of_training, float) or isinstance(fraction_of_training, int) else fraction_of_training
     for name, graph, group in datasets:
         for training_samples in fraction_of_training:
             for seed in seeds:

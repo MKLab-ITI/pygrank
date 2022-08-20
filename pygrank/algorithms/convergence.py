@@ -22,6 +22,7 @@ class ConvergenceManager:
                  tol: float = 1.E-6,
                  error_type: Supervised = Mabs,
                  max_iters: int = 100,
+                 end_modulo: int = 1,
                  iter_exception=Exception):
         """
         Initializes a convergence manager with a provided tolerance level, error type and number of iterations.
@@ -39,6 +40,8 @@ class ConvergenceManager:
                 an exception is thrown. This could help manage computational resources. Default value is 100,
                 and exceeding this value with graph filters often indicates that either graphs have large diameters
                 or that algorithms of choice converge particularly slowly.
+            end_modulo. Optional. Checks the convergence criteria every fixed number of iterations. For value of
+                1 (default), convergence is checked in every iteration, for value of 2 every second iteration, etc.
             iter_exception: Optional. The type of exception class to be thrown if max iterations are reached (when
                 *error_type* is not "iters"). If *None*, this quietly closes the iterations as if convergence
                 is reached. *Avoid* changing this argument for deployment-ready systems, as performing a fixed number
@@ -53,6 +56,7 @@ class ConvergenceManager:
         self._start_time = None
         self.elapsed_time = None
         self.iter_exception = iter_exception
+        self.end_modulo = end_modulo
 
     def start(self, restart_timer: bool = True):
         """
@@ -90,6 +94,8 @@ class ConvergenceManager:
 
     def _has_converged(self, prev_ranks: BackendPrimitive, ranks: BackendPrimitive) -> bool:
         if self.error_type == "iters":
+            return False
+        if self.iteration % self.end_modulo != 0:
             return False
         return self.error_type(prev_ranks)(ranks) <= (0 if self.tol is None else max(self.tol, backend.epsilon()))
 

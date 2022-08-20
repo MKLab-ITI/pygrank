@@ -13,14 +13,15 @@ All of them can be used through the code patterns presented at the library's [do
 7. [Normalize](#postprocessor-normalize)
 8. [Ordinals](#postprocessor-ordinals)
 9. [SeedOversampling](#postprocessor-seedoversampling)
-10. [Sequential](#postprocessor-sequential)
-11. [Subgraph](#postprocessor-subgraph)
-12. [Supergraph](#postprocessor-supergraph)
-13. [Sweep](#postprocessor-sweep)
-14. [Tautology](#postprocessor-tautology)
-15. [Threshold](#postprocessor-threshold)
-16. [Top](#postprocessor-top)
-17. [Transformer](#postprocessor-transformer)
+10. [SeparateNormalization](#postprocessor-separatenormalization)
+11. [Sequential](#postprocessor-sequential)
+12. [Subgraph](#postprocessor-subgraph)
+13. [Supergraph](#postprocessor-supergraph)
+14. [Sweep](#postprocessor-sweep)
+15. [Tautology](#postprocessor-tautology)
+16. [Threshold](#postprocessor-threshold)
+17. [Top](#postprocessor-top)
+18. [Transformer](#postprocessor-transformer)
 
 ### <kbd>Postprocessor</kbd> AdHocFairness
 
@@ -100,7 +101,7 @@ Args:
 Applies a sweep procedure that subtracts non-personalized ranks from personalized ones. The constructor initializes the sweep procedure. 
 
 Args: 
- * *ranker:* The base ranker instance. 
+ * *ranker:* Optional. The base ranker instance. 
  * *uniform_ranker:* Optional. The ranker instance used to perform non-personalized ranking. If None (default) the base ranker is used. 
 
 Example:
@@ -207,6 +208,15 @@ graph, seed_nodes = ...
 algorithm = pg.SeedOversampling(pg.PageRank(alpha=0.99)) 
 ranks = algorithm.rank(graph, personalization={1 for v in seed_nodes}) 
 ```
+
+### <kbd>Postprocessor</kbd> SeparateNormalization
+
+Performs different normalizations between two different groups of nodes. 
+Intended use is in implementing algorithms like HITS. The constructor initializes the postprocessor. 
+
+Args: 
+ * *separator:* A graph signal (preferred) or data structure convertible to one. Is meant to old binary node scores, but other values in the range [0,1] are interpolated. 
+ * *ranker:* Optional. The base ranker instance. If None (default) a Tautology ranker is used.
 
 ### <kbd>Postprocessor</kbd> Sequential
 

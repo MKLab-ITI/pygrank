@@ -81,6 +81,14 @@ def test_norm_maintain():
         assert abs(pg.sum(pg.abs(posterior)) - 2) < 2.5*pg.epsilon()
 
 
+def test_separate_normalization():
+    graph = next(pg.load_datasets_graph(["graph5"]))
+    for _ in supported_backends():
+        algorithm = pg.PageRank(preserve_norm=False) + pg.SeparateNormalization(["A", "B"])
+        ranks = algorithm(graph, {"A": 2})
+        assert abs(ranks["A"] + ranks["B"] - 1) < pg.epsilon()
+
+
 def test_sequential():
     graph = next(pg.load_datasets_graph(["graph5"]))
     for _ in supported_backends():

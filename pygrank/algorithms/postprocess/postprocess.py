@@ -38,6 +38,10 @@ class Postprocessor(NodeRanking):
         return ranker
 
     @property
+    def preprocessor(self):
+        return self.ranker.preprocessor
+
+    @property
     def convergence(self):
         return self.ranker.convergence
 
@@ -282,7 +286,8 @@ class Threshold(Postprocessor):
 
     def __init__(self,
                  ranker: Union[str, float, NodeRanking] = None,
-                 threshold: Union[str, float, NodeRanking] = 0):
+                 threshold: Union[str, float, NodeRanking] = 0,
+                 inclusive: bool = False):
         """ Initializes the Threshold postprocessing scheme. Args are automatically filled in and
         re-ordered if at least one is provided.
 
@@ -314,6 +319,7 @@ class Threshold(Postprocessor):
                 ranker = None
         super().__init__(Tautology() if ranker is None else ranker)
         self.threshold = threshold
+        self.inclusive = inclusive
 
     def _transform(self,
                    ranks: GraphSignal,
@@ -332,7 +338,9 @@ class Threshold(Postprocessor):
                         max_diff = diff
                         threshold = ranks[v]
                 prev_rank = ranks[v]
-        return {v: 1 for v in ranks.keys() if ranks[v] > threshold}
+        if self.inclusive:
+            return {v: 1. for v in ranks.keys() if ranks[v] >= threshold}
+        return {v: 1. for v in ranks.keys() if ranks[v] > threshold}
 
     def _reference(self):
         return str(self.threshold)+" threshold"
@@ -403,7 +411,7 @@ class LinearSweep(Postprocessor):
         Initializes the sweep procedure.
 
         Args:
-            ranker: The base ranker instance.
+            ranker: Optional. The base ranker instance.
             uniform_ranker: Optional. The ranker instance used to perform non-personalized ranking. If None (default)
                 the base ranker is used.
 
@@ -458,3 +466,34 @@ class Sequential(Postprocessor):
             if ranker != self.ranker:
                 ranks = ranker(ranks)
         return ranks
+
+
+class SeparateNormalization(Postprocessor):
+    """
+    Performs different normalizations between two different groups of nodes.
+    Intended use is in implementing algorithms like HITS.
+    """
+    def __init__(self,
+                 separator: GraphSignalData,
+                 ranker: NodeRanking = None,
+                 ):
+        """
+        Initializes the postprocessor.
+        Args:
+            separator: A graph signal (preferred) or data structure convertible to one.
+                Is meant to old binary node scores, but other values in the range [0,1] are interpolated.
+            ranker: Optional. The base ranker instance. If None (default) a Tautology ranker is used.
+        """
+        if isinstance(separator, NodeRanking):
+            separator, ranker = ranker, separator
+        super().__init__(Tautology() if ranker is None else ranker)
+        self.separator = separator
+
+    def _transform(self, ranks: GraphSignal, **kwargs):
+        separator = to_signal(ranks, self.separator)
+        ranksR = ranks * separator
+        ranksB = ranks * (1-separator)
+        mulR = backend.safe_div(1., backend.sum(ranksR))
+        mulB = backend.safe_div(1., backend.sum(ranksB))
+        return ranksR*mulR + ranksB*mulB
+

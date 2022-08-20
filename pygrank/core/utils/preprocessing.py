@@ -30,6 +30,7 @@ def to_sparse_matrix(G,
                      weight="weight",
                      renormalize=False,
                      reduction=backend.degrees,
+                     transform_adjacency = lambda x: x,
                      cors=False):
     """ Used to normalize a graph and produce a sparse matrix representation.
 
@@ -117,6 +118,7 @@ def to_sparse_matrix(G,
             M = normalization(M)
         elif normalization != "none":
             raise Exception("Supported normalizations: none, col, symmetric, both, laplacian, auto")
+    M = transform_adjacency(M)
     ret = M if backend.backend_name() == "numpy" else backend.scipy_sparse_to_backend(M)
     ret._pygrank_node2id = {v: i for i, v in enumerate(G)}
     if cors:
@@ -210,6 +212,7 @@ def preprocessor(normalization: str = "auto",
                  weight: str = "weight",
                  renormalize: bool = False,
                  reduction=backend.degrees,
+                 transform_adjacency=lambda x: x,
                  cors: bool = False):
     """ Wrapper function that generates lambda expressions for the method to_sparse_matrix.
 
@@ -250,12 +253,12 @@ def preprocessor(normalization: str = "auto",
     if assume_immutability:
         ret = MethodHasher(preprocessor(assume_immutability=False,
                                         normalization=normalization, weight=weight, renormalize=renormalize,
-                                        reduction=reduction, cors=cors))
+                                        reduction=reduction, cors=cors, transform_adjacency=transform_adjacency))
         ret.__name__ = "preprocess"
         return ret
 
     def preprocess(G):
         return to_sparse_matrix(G, normalization=normalization, weight=weight, renormalize=renormalize,
-                                reduction=reduction, cors=cors)
+                                reduction=reduction, cors=cors, transform_adjacency=transform_adjacency)
 
     return preprocess
