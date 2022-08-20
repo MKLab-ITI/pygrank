@@ -4,9 +4,9 @@ from .test_core import supported_backends
 
 
 def test_benchmark_print():
-    assert pg.benchmarks.utils._fraction2str(0.1) == ".10"
-    assert pg.benchmarks.utils._fraction2str(0.00001) == "0"
-    assert pg.benchmarks.utils._fraction2str(1) == "1.00"
+    assert pg.benchmarks.printers._fraction2str(0.1) == ".10"
+    assert pg.benchmarks.printers._fraction2str(0.00001) == "0"
+    assert pg.benchmarks.printers._fraction2str(1) == "1.00"
     loader = pg.load_datasets_one_community(["graph9", "bigraph"])
     console = pg.benchmark_print(pg.benchmark(pg.create_demo_filters(), loader),
                                  out=io.StringIO(""), err=None).getvalue()

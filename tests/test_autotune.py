@@ -163,7 +163,16 @@ def test_impulse_tuning():
     training, evaluation = pg.split(pg.to_signal(G, {v: 1 for v in group}), training_samples=0.1)
     auc1 = pg.AUC(evaluation, exclude=training)(pg.ParameterTuner(lambda params: pg.GenericGraphFilter(params)).rank(training))
     auc2 = pg.AUC(evaluation, exclude=training)(pg.ParameterTuner(lambda params: pg.ImpulseGraphFilter(params)).rank(training))
-    assert auc2 > auc1*0.9
+    assert auc2 > auc1*0.8
+
+
+def test_lowpass_tuning():
+    _, G, groups = next(pg.load_datasets_multiple_communities(["bigraph"]))
+    group = groups[0]
+    training, evaluation = pg.split(pg.to_signal(G, {v: 1 for v in group}), training_samples=0.1)
+    auc1 = pg.AUC(evaluation, exclude=training)(pg.ParameterTuner(lambda params: pg.GenericGraphFilter(params)).rank(training))
+    auc2 = pg.AUC(evaluation, exclude=training)(pg.ParameterTuner(lambda params: pg.LowPassRecursiveGraphFilter(params)).rank(training))
+    assert auc2 > auc1*0.8
 
 
 def test_hoptuner_arnoldi_backends():

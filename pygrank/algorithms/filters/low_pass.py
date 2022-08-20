@@ -68,7 +68,7 @@ class LowPassRecursiveGraphFilter(GraphFilter):
         Args:
             params: Optional. A list-like object with elements weights[n] proportional to the impulse response
                 when propagating graph signals at hop n. If None (default) then [0.9]*10 is used. This is
-                 equivalent to pygrank.PageRank(0.9, use_quotient=False, max_iters=10)
+                equivalent to pygrank.PageRank(0.9, use_quotient=False, max_iters=10)
 
         Example:
             >>> from pygrank import LowPassRecursiveGraphFilter
