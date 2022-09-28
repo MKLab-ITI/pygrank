@@ -5,7 +5,7 @@ import pytest
 
 
 def supported_backends():
-    for backend in ["matvec", "pytorch", "tensorflow", "torch_sparse", "numpy"]:
+    for backend in ["matvec", "pytorch", "tensorflow", "torch_sparse", "sparse_dot_mkl", "numpy"]:
         pg.load_backend(backend)
         yield backend
 
@@ -62,6 +62,12 @@ def test_fastgraph():
         assert graph.has_edge("A", "E")
         graph.add_edge("Y", "Z")
         assert graph.has_edge("Y", "Z")
+
+
+def test_wrapgraph():
+    graph = next(pg.load_datasets_graph(["graph5"], graph_api=nx))
+    adj = pg.preprocessor(normalization="none")(graph)
+    assert pg.sum(pg.abs(pg.PageRank(normalization="symmetric")(graph).np-pg.PageRank(normalization="symmetric")(pg.AdjacencyWrapper(adj)).np)) == 0
 
 
 def test_signal_init():

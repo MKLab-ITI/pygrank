@@ -109,7 +109,7 @@ Example:
 ```python 
 import pygrank as pg 
 graph, personalization, algorithm = ... 
-algorithm = pg.LinearSweep(algorithm) # divides node scores by uniform ranker'personalization non-personalized outcome 
+algorithm = pg.LinearSweep(algorithm) # subtracts from node scores a uniform ranker's non-personalized outcome 
 ranks = algorithm.rank(graph, personalization 
 ```
 
@@ -215,7 +215,7 @@ Performs different normalizations between two different groups of nodes.
 Intended use is in implementing algorithms like HITS. The constructor initializes the postprocessor. 
 
 Args: 
- * *separator:* A graph signal (preferred) or data structure convertible to one. Is meant to old binary node scores, but other values in the range [0,1] are interpolated. 
+ * *separator:* A graph signal (preferred) or data structure convertible to one. Is meant to hold binary node scores, but other values in the range [0,1] are allowed and interpolated. 
  * *ranker:* Optional. The base ranker instance. If None (default) a Tautology ranker is used.
 
 ### <kbd>Postprocessor</kbd> Sequential
@@ -277,7 +277,7 @@ Example:
 ```python 
 import pygrank as pg 
 graph, personalization, algorithm = ... 
-algorithm = pg.Sweep(algorithm) # divides node scores by uniform ranker'personalization non-personalized outcome 
+algorithm = pg.Sweep(algorithm) # divides node scores by a uniform ranker's non-personalized outcome 
 ranks = algorithm.rank(graph, personalization 
 ```
 

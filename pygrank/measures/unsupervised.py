@@ -60,7 +60,7 @@ class Conductance(Unsupervised):
     If scores assume binary values, E[.] becomes set size and this calculates the induced subgraph Conductance.
     """
 
-    def __init__(self, graph: GraphSignalGraph = None, max_rank: float = 1, autofix=False, **kwargs):
+    def __init__(self, graph: GraphSignalGraph = None, max_rank: float = 1, autofix=False, cut_ratio_only=False, **kwargs):
         """ Initializes the Conductance measure.
 
         Args:
@@ -85,6 +85,7 @@ class Conductance(Unsupervised):
         """
         self.max_rank = max_rank
         self.autofix = autofix
+        self.cut_ratio_only = cut_ratio_only
         super().__init__(graph, **kwargs)
 
     def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
@@ -99,6 +100,8 @@ class Conductance(Unsupervised):
                 raise Exception("Normalize scores to be <= " + str(self.max_rank) + " for non-negative conductance")
         neighbors = backend.conv(scores, adjacency)
         internal_edges = backend.dot(neighbors, scores)
+        if not self.cut_ratio_only:
+            internal_edges = min(internal_edges, backend.dot(backend.conv(self.max_rank-scores, adjacency), self.max_rank-scores))
         external_edges = backend.dot(neighbors, self.max_rank-scores)
         if not graph.is_directed():
             external_edges += backend.dot(scores, backend.conv(self.max_rank-scores, adjacency))
@@ -128,7 +131,7 @@ class Density(Unsupervised):
             >>> import pygrank as pg
             >>> graph, seed_nodes, algorithm = ...
             >>> scores = algorithm.rank(graph, seed_nodes)
-            >>> conductance = pg.Density().evaluate(scores)
+            >>> density = pg.Density().evaluate(scores)
         """
         super().__init__(graph, **kwargs)
 
@@ -152,7 +155,7 @@ class Modularity(Unsupervised):
                  max_rank: float = 1,
                  max_positive_samples: int = 2000,
                  seed: int = 0,
-                 progress = lambda x: x):
+                 progress=lambda x: x):
         """ Initializes the Modularity measure with a sampling strategy that speeds up normal computations.
 
         Args:

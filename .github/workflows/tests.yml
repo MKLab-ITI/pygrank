@@ -27,6 +27,8 @@ jobs:
           pip install numpy
           pip install networkx
           pip install matvec
+          pip install mkl
+          pip install sparse_dot_mkl
           pip install wget
           pip install tensorflow-gpu
           pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116

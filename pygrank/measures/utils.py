@@ -36,6 +36,11 @@ class Measure(object):
             return self
         return dummy_constructor
 
+    def as_immutable_method(self):
+        def dummy_constructor(*args, **kwargs):
+            return self
+        return dummy_constructor
+
 
 def split(groups: Union[GraphSignalData, Mapping[str, GraphSignalData]],
           training_samples: float = 0.8,

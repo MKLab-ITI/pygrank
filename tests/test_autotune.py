@@ -1,5 +1,6 @@
 import pygrank as pg
 import pytest
+from .test_core import supported_backends
 
 
 def test_optimizer_errors():
@@ -107,6 +108,21 @@ def test_autotune():
     auc2 = pg.AUC(evaluation, exclude=training)(pg.HeatKernel().rank(training))
     auc3 = pg.AUC(evaluation, exclude=training)(pg.ParameterTuner(optimization_dict=dict()).rank(training))
     assert min(auc1, auc2) <= auc3 and max(auc1, auc2)*0.9 <= auc3
+
+""" 
+# This is a local test that requires the amazon graph to compute. Cannot deploy to github actions.
+def test_backend_run_times():
+    from timeit import default_timer as time
+    _, G, groups = next(pg.load_datasets_multiple_communities(["amazon"]))
+    group = groups[0]
+    training, evaluation = pg.split(pg.to_signal(G, {v: 1 for v in group}), training_samples=0.5)
+    for backend in supported_backends():
+        if "torch" in backend or "tensor" in backend:
+            continue
+        tic = time()
+        pg.PageRank(tol=1.E-9)(G, training)
+        print(backend, time()-tic)
+"""
 
 
 def test_autotune_manual():

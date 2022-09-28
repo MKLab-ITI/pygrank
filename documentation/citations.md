@@ -1,8 +1,10 @@
 <center><h1>:notebook: Citations</h1></center>
+
 Several research outcomes have been implemented and integrated in `pygrank`.
 In addition to this package, please cite related publications, for example
 by modifying automatically generated descriptions (see below). 
-
+<br>
+<br>
 Do not forget to also cite dataset sources! Related instructions
 can be accessed [here](datasets.md).
 

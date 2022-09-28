@@ -421,7 +421,7 @@ Example:
 import pygrank as pg 
 graph, seed_nodes, algorithm = ... 
 scores = algorithm.rank(graph, seed_nodes) 
-conductance = pg.Density().evaluate(scores) 
+density = pg.Density().evaluate(scores) 
 ```
 
 ### <kbd>Unsupervised</kbd> Modularity

@@ -163,16 +163,16 @@ class ClosedFormGraphFilter(GraphFilter):
             krylov_dims: Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space
                 of the graph with degree equal to the provided dimensions. This considerably speeds up filtering
                 but ends up providing an *approximation* of true graph filter outcomes.
-                If None (default) filters are not computed through their projection
-                the Krylov space, which may yield slower but exact computations. Otherwise, a numeric value
-                equal to the number of latent dimensions is required.
-            coefficient_type: Optional. If "taylor" (default) provided coefficients are considered
+                If None (default) filters are computed in the node space, which can be slower but
+                yields exact computations. Otherwise, a numeric value
+                equal to the number of latent Krylov space dimensions is required.
+            coefficient_type: Optional. If "taylor" (default), provided coefficients are considered
                 to define a Taylor expansion. If "chebyshev", they are considered to be the coefficients of a Chebyshev
                 expansion, which provides more robust errors but require normalized personalization. These approaches
                 are **not equivalent** for the same coefficient values; changing this argument could cause adhoc
                 filters to not work as indented.
-            optimization_dict: Optional. If a dict the filter keeps intermediate values that can help it
-                avoid most (if not all) matrix multiplication if it run again for the same graph signal. Setting this
+            optimization_dict: Optional. If it is a dict, the filter keeps intermediate values that can help it
+                avoid most (if not all) matrix multiplication when run again for the same graph signal. Setting this
                 parameter to None (default) can save approximately **half the memory** the algorithm uses but
                 slows down tuning iteration times to O(edges) instead of O(nodes). Note that the same dict needs to
                 be potentially passed to multiple algorithms that take the same graph signal as input to see any

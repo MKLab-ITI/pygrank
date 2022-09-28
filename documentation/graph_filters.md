@@ -9,8 +9,9 @@ All of them can be used through the code patterns presented at the library's [do
 3. [GenericGraphFilter](#closedformgraphfilter-genericgraphfilter)
 4. [HeatKernel](#closedformgraphfilter-heatkernel)
 5. [AbsorbingWalks](#recursivegraphfilter-absorbingwalks)
-6. [PageRank](#recursivegraphfilter-pagerank)
-7. [SymmetricAbsorbingRandomWalks](#recursivegraphfilter-symmetricabsorbingrandomwalks)
+6. [DijkstraRank](#recursivegraphfilter-dijkstrarank)
+7. [PageRank](#recursivegraphfilter-pagerank)
+8. [SymmetricAbsorbingRandomWalks](#recursivegraphfilter-symmetricabsorbingrandomwalks)
 
 ### <kbd>RecursiveGraphFilter</kbd> AbsorbingWalks
 
@@ -55,15 +56,19 @@ graph, seed_nodes = ...
 ranks = algorithm(graph, {v: 1 for v in seed_nodes}, absorption={v: 1 for v in graph}) 
 ```
 
+### <kbd>RecursiveGraphFilter</kbd> DijkstraRank
+
+A ranking algorithm that assigns node ranks loosely increasing with the minimum distance from a seed.
+
 ### <kbd>ClosedFormGraphFilter</kbd> GenericGraphFilter
 
 Defines a graph filter via its hop weight parameters. The constructor initializes the graph filter. 
 
 Args: 
  * *weights:* Optional. A list-like object with elements weights[n] proportional to the importance of propagating personalization graph signals n hops away. If None (default) then [0.9]*10 is used. 
- * *krylov_dims:* Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space of the graph with degree equal to the provided dimensions. This considerably speeds up filtering but ends up providing an *approximation* of true graph filter outcomes. If None (default) filters are not computed through their projection the Krylov space, which may yield slower but exact computations. Otherwise, a numeric value equal to the number of latent dimensions is required. 
- * *coefficient_type:* Optional. If "taylor" (default) provided coefficients are considered to define a Taylor expansion. If "chebyshev", they are considered to be the coefficients of a Chebyshev expansion, which provides more robust errors but require normalized personalization. These approaches are **not equivalent** for the same coefficient values; changing this argument could cause adhoc filters to not work as indented. 
- * *optimization_dict:* Optional. If a dict the filter keeps intermediate values that can help it avoid most (if not all) matrix multiplication if it run again for the same graph signal. Setting this parameter to None (default) can save approximately **half the memory** the algorithm uses but slows down tuning iteration times to O(edges) instead of O(nodes). Note that the same dict needs to be potentially passed to multiple algorithms that take the same graph signal as input to see any improvement.
+ * *krylov_dims:* Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space of the graph with degree equal to the provided dimensions. This considerably speeds up filtering but ends up providing an *approximation* of true graph filter outcomes. If None (default) filters are computed in the node space, which can be slower but yields exact computations. Otherwise, a numeric value equal to the number of latent Krylov space dimensions is required. 
+ * *coefficient_type:* Optional. If "taylor" (default), provided coefficients are considered to define a Taylor expansion. If "chebyshev", they are considered to be the coefficients of a Chebyshev expansion, which provides more robust errors but require normalized personalization. These approaches are **not equivalent** for the same coefficient values; changing this argument could cause adhoc filters to not work as indented. 
+ * *optimization_dict:* Optional. If it is a dict, the filter keeps intermediate values that can help it avoid most (if not all) matrix multiplication when run again for the same graph signal. Setting this parameter to None (default) can save approximately **half the memory** the algorithm uses but slows down tuning iteration times to O(edges) instead of O(nodes). Note that the same dict needs to be potentially passed to multiple algorithms that take the same graph signal as input to see any improvement.
  * *preprocessor:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
  * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
  * *personalization_transform:* Optional. A Postprocessor whose `transform` method is used to transform the personalization before applying the graph filter. If None (default) a Tautology is used. 
@@ -92,9 +97,9 @@ Heat kernel filter. The constructor initializes filter parameters.
 
 Args: 
  * *t:* Optional. How many hops until the importance of new nodes starts decreasing. Default value is 5. 
- * *krylov_dims:* Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space of the graph with degree equal to the provided dimensions. This considerably speeds up filtering but ends up providing an *approximation* of true graph filter outcomes. If None (default) filters are not computed through their projection the Krylov space, which may yield slower but exact computations. Otherwise, a numeric value equal to the number of latent dimensions is required. 
- * *coefficient_type:* Optional. If "taylor" (default) provided coefficients are considered to define a Taylor expansion. If "chebyshev", they are considered to be the coefficients of a Chebyshev expansion, which provides more robust errors but require normalized personalization. These approaches are **not equivalent** for the same coefficient values; changing this argument could cause adhoc filters to not work as indented. 
- * *optimization_dict:* Optional. If a dict the filter keeps intermediate values that can help it avoid most (if not all) matrix multiplication if it run again for the same graph signal. Setting this parameter to None (default) can save approximately **half the memory** the algorithm uses but slows down tuning iteration times to O(edges) instead of O(nodes). Note that the same dict needs to be potentially passed to multiple algorithms that take the same graph signal as input to see any improvement.
+ * *krylov_dims:* Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space of the graph with degree equal to the provided dimensions. This considerably speeds up filtering but ends up providing an *approximation* of true graph filter outcomes. If None (default) filters are computed in the node space, which can be slower but yields exact computations. Otherwise, a numeric value equal to the number of latent Krylov space dimensions is required. 
+ * *coefficient_type:* Optional. If "taylor" (default), provided coefficients are considered to define a Taylor expansion. If "chebyshev", they are considered to be the coefficients of a Chebyshev expansion, which provides more robust errors but require normalized personalization. These approaches are **not equivalent** for the same coefficient values; changing this argument could cause adhoc filters to not work as indented. 
+ * *optimization_dict:* Optional. If it is a dict, the filter keeps intermediate values that can help it avoid most (if not all) matrix multiplication when run again for the same graph signal. Setting this parameter to None (default) can save approximately **half the memory** the algorithm uses but slows down tuning iteration times to O(edges) instead of O(nodes). Note that the same dict needs to be potentially passed to multiple algorithms that take the same graph signal as input to see any improvement.
  * *preprocessor:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
  * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
  * *personalization_transform:* Optional. A Postprocessor whose `transform` method is used to transform the personalization before applying the graph filter. If None (default) a Tautology is used. 
@@ -254,9 +259,9 @@ Defines a graph filter via its hop weight parameters. The constructor initialize
 
 Args: 
  * *weights:* Optional. A list-like object with elements weights[n] proportional to the importance of propagating personalization graph signals n hops away. If None (default) then [0.9]*10 is used. 
- * *krylov_dims:* Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space of the graph with degree equal to the provided dimensions. This considerably speeds up filtering but ends up providing an *approximation* of true graph filter outcomes. If None (default) filters are not computed through their projection the Krylov space, which may yield slower but exact computations. Otherwise, a numeric value equal to the number of latent dimensions is required. 
- * *coefficient_type:* Optional. If "taylor" (default) provided coefficients are considered to define a Taylor expansion. If "chebyshev", they are considered to be the coefficients of a Chebyshev expansion, which provides more robust errors but require normalized personalization. These approaches are **not equivalent** for the same coefficient values; changing this argument could cause adhoc filters to not work as indented. 
- * *optimization_dict:* Optional. If a dict the filter keeps intermediate values that can help it avoid most (if not all) matrix multiplication if it run again for the same graph signal. Setting this parameter to None (default) can save approximately **half the memory** the algorithm uses but slows down tuning iteration times to O(edges) instead of O(nodes). Note that the same dict needs to be potentially passed to multiple algorithms that take the same graph signal as input to see any improvement.
+ * *krylov_dims:* Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space of the graph with degree equal to the provided dimensions. This considerably speeds up filtering but ends up providing an *approximation* of true graph filter outcomes. If None (default) filters are computed in the node space, which can be slower but yields exact computations. Otherwise, a numeric value equal to the number of latent Krylov space dimensions is required. 
+ * *coefficient_type:* Optional. If "taylor" (default), provided coefficients are considered to define a Taylor expansion. If "chebyshev", they are considered to be the coefficients of a Chebyshev expansion, which provides more robust errors but require normalized personalization. These approaches are **not equivalent** for the same coefficient values; changing this argument could cause adhoc filters to not work as indented. 
+ * *optimization_dict:* Optional. If it is a dict, the filter keeps intermediate values that can help it avoid most (if not all) matrix multiplication when run again for the same graph signal. Setting this parameter to None (default) can save approximately **half the memory** the algorithm uses but slows down tuning iteration times to O(edges) instead of O(nodes). Note that the same dict needs to be potentially passed to multiple algorithms that take the same graph signal as input to see any improvement.
  * *preprocessor:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
  * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
  * *personalization_transform:* Optional. A Postprocessor whose `transform` method is used to transform the personalization before applying the graph filter. If None (default) a Tautology is used. 
@@ -285,9 +290,9 @@ Heat kernel filter. The constructor initializes filter parameters.
 
 Args: 
  * *t:* Optional. How many hops until the importance of new nodes starts decreasing. Default value is 5. 
- * *krylov_dims:* Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space of the graph with degree equal to the provided dimensions. This considerably speeds up filtering but ends up providing an *approximation* of true graph filter outcomes. If None (default) filters are not computed through their projection the Krylov space, which may yield slower but exact computations. Otherwise, a numeric value equal to the number of latent dimensions is required. 
- * *coefficient_type:* Optional. If "taylor" (default) provided coefficients are considered to define a Taylor expansion. If "chebyshev", they are considered to be the coefficients of a Chebyshev expansion, which provides more robust errors but require normalized personalization. These approaches are **not equivalent** for the same coefficient values; changing this argument could cause adhoc filters to not work as indented. 
- * *optimization_dict:* Optional. If a dict the filter keeps intermediate values that can help it avoid most (if not all) matrix multiplication if it run again for the same graph signal. Setting this parameter to None (default) can save approximately **half the memory** the algorithm uses but slows down tuning iteration times to O(edges) instead of O(nodes). Note that the same dict needs to be potentially passed to multiple algorithms that take the same graph signal as input to see any improvement.
+ * *krylov_dims:* Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space of the graph with degree equal to the provided dimensions. This considerably speeds up filtering but ends up providing an *approximation* of true graph filter outcomes. If None (default) filters are computed in the node space, which can be slower but yields exact computations. Otherwise, a numeric value equal to the number of latent Krylov space dimensions is required. 
+ * *coefficient_type:* Optional. If "taylor" (default), provided coefficients are considered to define a Taylor expansion. If "chebyshev", they are considered to be the coefficients of a Chebyshev expansion, which provides more robust errors but require normalized personalization. These approaches are **not equivalent** for the same coefficient values; changing this argument could cause adhoc filters to not work as indented. 
+ * *optimization_dict:* Optional. If it is a dict, the filter keeps intermediate values that can help it avoid most (if not all) matrix multiplication when run again for the same graph signal. Setting this parameter to None (default) can save approximately **half the memory** the algorithm uses but slows down tuning iteration times to O(edges) instead of O(nodes). Note that the same dict needs to be potentially passed to multiple algorithms that take the same graph signal as input to see any improvement.
  * *preprocessor:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
  * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
  * *personalization_transform:* Optional. A Postprocessor whose `transform` method is used to transform the personalization before applying the graph filter. If None (default) a Tautology is used. 
@@ -354,6 +359,10 @@ algorithm = AbsorbingWalks(1-1.E-6, tol=1.E-9) # tol passed to the ConvergenceMa
 graph, seed_nodes = ... 
 ranks = algorithm(graph, {v: 1 for v in seed_nodes}, absorption={v: 1 for v in graph}) 
 ```
+
+### <kbd>RecursiveGraphFilter</kbd> DijkstraRank
+
+A ranking algorithm that assigns node ranks loosely increasing with the minimum distance from a seed.
 
 ### <kbd>RecursiveGraphFilter</kbd> PageRank
 

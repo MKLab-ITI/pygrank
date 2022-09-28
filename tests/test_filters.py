@@ -46,8 +46,6 @@ def test_pagerank_vs_networkx():
         ranker = pg.Normalize("sum", pg.PageRank(normalization='col'))
         test_result2 = nx.pagerank(graph)
         test_result = ranker(graph)
-        print(test_result)
-        print(test_result2)
         # TODO: assert that 2.5*epsilon is indeed a valid limit
         assert pg.Mabs(test_result)(test_result2) < 2.5*pg.epsilon()
 

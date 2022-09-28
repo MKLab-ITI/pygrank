@@ -29,7 +29,7 @@ class Backend:
 
 
 def load_backend(mod_name):
-    if mod_name not in ['pytorch', 'numpy', 'tensorflow', 'torch_sparse', 'matvec']:
+    if mod_name not in ['pytorch', 'numpy', 'tensorflow', 'torch_sparse', 'matvec', 'sparse_dot_mkl']:
         raise Exception("Unsupported backend "+mod_name)
     if mod_name in _imported_mods:
         mod = _imported_mods[mod_name]
@@ -79,7 +79,7 @@ def get_backend_preference():  # pragma: no cover
             mod_name = config_dict.get('backend', '').lower()
             remind_where_to_find = (config_dict.get('reminder', 'true').lower() == 'true')
 
-    if mod_name not in ['tensorflow', 'numpy', 'pytorch', 'torch_sparse']:
+    if mod_name not in ['tensorflow', 'numpy', 'pytorch', 'torch_sparse', 'sparse_dot_mkl']:
         print("pygrank backend "
               + ("not found." if mod_name is not None or mod_name == "None" else str(mod_name)+" is not valid. "
                 + "Automatically setting \"numpy\" as the backend of choice."),
@@ -108,7 +108,7 @@ def _notify_load(mod_name):
     print(f'The default pygrank backend has been set to "{mod_name}" ' +
           'by the file '
           + os.path.join(os.path.expanduser('~'), '.pygrank', 'config.json')
-          + '\nSet your preferred backend as one of ["numpy", "pytorch", "tensorflow", "torch_sparse", "matvec"] '
+          + '\nSet your preferred backend as one of ["numpy", "pytorch", "tensorflow", "torch_sparse", "matvec", "sparse_dot_mkl"] '
             'and "reminder": false in that file to remove this message from future runs.',
           file=sys.stderr)
 

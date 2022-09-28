@@ -5,12 +5,11 @@ This functional interface builds upon concepts presented in the
 the *pygrank* library.
 
 ## Table of Contents
-1. [Table of Contents](#table-of-contents)
-2. [Chaining Postprocessors](#chaining-postprocessors)
-3. [Chaining Personalization Preprocessing](#chaining-personalization-preprocessing)
-4. [Graph Signals in Chains](#graph-signals-in-chains)
-5. [Customizing Base Algorithms](#customizing-base-algorithms)
-6. [Algorithm Combinations](#algorithm-combinations)
+1. [Chaining Postprocessors](#chaining-postprocessors)
+2. [Chaining Personalization Preprocessing](#chaining-personalization-preprocessing)
+3. [Graph Signals in Chains](#graph-signals-in-chains)
+4. [Customizing Base Algorithms](#customizing-base-algorithms)
+5. [Algorithm Combinations](#algorithm-combinations)
 
 
 
@@ -78,7 +77,7 @@ but here we focus on chain notation capabilities.
 Of the two options, the first is much more intuitive and allows
 signals to simply be parsed by algorithms. For example,
 given a graph and a list of seed nodes, you can write the 
-following snippet to normalized a pagerank algorithm's
+following snippet to normalize a pagerank algorithm's
 output:
 
 ```python
@@ -123,7 +122,7 @@ These are automatically integrated if they reside on the right hand of
 graph filters with the `+` operator. For example, the following applies
 a postprocessor to the pagerank filter and also sets the quotient
 strategy (the output signal transform after each step) to a tautology,
-which is equivalent to addint `use_quotient=False` in the filter's 
+which is equivalent to adding `use_quotient=False` in the filter's 
 constructor:
 
 ```python

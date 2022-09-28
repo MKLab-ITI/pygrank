@@ -100,8 +100,9 @@ Finally, the snippet prints a recommended citation for the algorithm.
 
 ### More examples
 
-[Showcase code](documentation/showcase.md) <br>
-[See it in action](https://github.com/maniospas/pygrank-downstream) <br>
+[Simple example](documentation/showcase.md) <br>
+[Big data FAQ](documentation/tips.md) <br>
+[Downstream tasks](https://github.com/maniospas/pygrank-downstream) <br>
 
 
 # :brain: Overview
