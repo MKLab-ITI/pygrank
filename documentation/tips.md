@@ -48,7 +48,7 @@ algorithms.
 ### My graph is already a scipy sparse matrix.
 Note that node ranking algorithms and graph signals
 typically require graphs. However, sometimes
-it is more computationally efficient to constuct
+it is more computationally efficient to construct
 and move around sparse scipy adjacency matrices, 
 for example to avoid additional memory allocations.
 
@@ -61,7 +61,7 @@ import pygrank as pg
 adj = ...  # a square sparse scipy array
 graph = pg.AdjacencyWrapper(adj, directed=True)
 ```
-In this case, the graph's nodes are consider to be
+In this case, the graph's nodes are considered to be
 the numerical values *0,1,..,adj.shape[0]-1*.
 The *directed* argument in the constructor only
 affects the type of *"auto"* normalization in

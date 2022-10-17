@@ -1,6 +1,7 @@
 import numpy as np
 from numpy import abs, sum, exp, log, copy, repeat, min, max, dot, mean, diag, ones
 from scipy.sparse import eye
+import warnings
 import os
 if "MKL_NUM_THREADS" not in os.environ:
     os.environ["MKL_NUM_THREADS"] = str(os.cpu_count())
@@ -12,7 +13,7 @@ def backend_init():
 
 
 def graph_dropout(M, _):
-    return M.to_csr()
+    return M
 
 
 def separate_cols(x):
@@ -24,7 +25,7 @@ def combine_cols(cols):
 
 
 def backend_name():
-    return "numpy"
+    return "sparse_dot_mkl"
 
 
 def scipy_sparse_to_backend(M):
@@ -60,9 +61,23 @@ def self_normalize(obj):
         obj = obj / np_sum
     return obj
 
+__pygrank_sparse_dot_mkl_warning = False
+
 
 def conv(signal, M):
-    return sparse_dot_mkl.dot_product_mkl(signal, M)
+    global __pygrank_sparse_dot_mkl_warning
+    if __pygrank_sparse_dot_mkl_warning:
+        return signal * M
+    try:
+        return sparse_dot_mkl.dot_product_mkl(signal, M)
+    except Exception as e:
+        if not __pygrank_sparse_dot_mkl_warning:
+            __pygrank_sparse_dot_mkl_warning = True
+            warnings.warn("sparse_dot_mkl failed to link for sparse matrix multiplication.\n"
+                          "Please check your environment setup."
+                          "Falling back to numpy implementation for this backend.")
+            warnings.warn(str(e))
+        return signal * M
 
 
 def length(x):

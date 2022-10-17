@@ -1,6 +1,6 @@
 import pygrank as pg
 
-pg.load_backend("numpy")
+pg.load_backend("sparse_dot_mkl")
 
 datasets = ["amazon", "citeseer", "maven"]
 datasets = ["citeseer"]

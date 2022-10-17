@@ -119,7 +119,7 @@ def to_sparse_matrix(G,
         elif normalization != "none":
             raise Exception("Supported normalizations: none, col, symmetric, both, laplacian, auto")
     M = transform_adjacency(M)
-    ret = M if backend.backend_name() == "numpy" else backend.scipy_sparse_to_backend(M)
+    ret = M if backend.backend_name() == "numpy" or backend.backend_name() == "sparse_dot_mkl" else backend.scipy_sparse_to_backend(M)
     ret._pygrank_node2id = {v: i for i, v in enumerate(G)}
     if cors:
         ret.__pygrank_preprocessed = {backend.backend_name(): ret, "numpy": M}

@@ -55,7 +55,7 @@ class Conductance(Unsupervised):
     Assumes a fuzzy set of subgraphs whose nodes are included with probability proportional to their scores,
     as per the formulation of [krasanakis2019linkauc] and calculates E[outgoing edges] / E[internal edges] of
     the fuzzy rank subgraph. To avoid potential optimization towards filling the whole graph, the measure is
-    evaluated to infinity if either denomator *or* the nominator is zero (this means that whole connected components
+    evaluated to infinity if either denominator *or* the nominator is zero (this means that whole connected components
     should not be extracted).
     If scores assume binary values, E[.] becomes set size and this calculates the induced subgraph Conductance.
     """

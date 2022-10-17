@@ -22,7 +22,6 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          sudo apt install intel-basekit
           pip install sklearn
           pip install scipy
           pip install numpy
