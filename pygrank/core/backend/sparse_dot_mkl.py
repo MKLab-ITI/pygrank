@@ -13,7 +13,7 @@ try:
 except Exception as e:
     __pygrank_sparse_dot_mkl_warning = True
     warnings.warn("sparse_dot_mkl could not be imported.\n"
-                  "Please check your environment setup."
+                  "Please check your environment setup.\n"
                   "Falling back to numpy implementation for this backend.")
     warnings.warn(str(e))
 
@@ -82,7 +82,7 @@ def conv(signal, M):
         if not __pygrank_sparse_dot_mkl_warning:
             __pygrank_sparse_dot_mkl_warning = True
             warnings.warn("sparse_dot_mkl failed to link for sparse matrix multiplication.\n"
-                          "Please check your environment setup."
+                          "Please check your environment setup.\n"
                           "Falling back to numpy implementation for this backend.")
             warnings.warn(str(e))
         return signal * M
