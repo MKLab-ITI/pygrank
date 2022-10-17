@@ -5,7 +5,17 @@ import warnings
 import os
 if "MKL_NUM_THREADS" not in os.environ:
     os.environ["MKL_NUM_THREADS"] = str(os.cpu_count())
-import sparse_dot_mkl
+
+
+__pygrank_sparse_dot_mkl_warning = False
+try:
+    import sparse_dot_mkl
+except Exception as e:
+    __pygrank_sparse_dot_mkl_warning = True
+    warnings.warn("sparse_dot_mkl could not be imported.\n"
+                  "Please check your environment setup."
+                  "Falling back to numpy implementation for this backend.")
+    warnings.warn(str(e))
 
 
 def backend_init():
@@ -60,8 +70,6 @@ def self_normalize(obj):
     if np_sum != 0:
         obj = obj / np_sum
     return obj
-
-__pygrank_sparse_dot_mkl_warning = False
 
 
 def conv(signal, M):
