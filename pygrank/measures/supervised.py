@@ -276,15 +276,15 @@ class L2Disparity(Supervised):
         p2 = backend.dot(scores, 1-sensitive)
         s = backend.sum(sensitive)
         n = backend.length(sensitive)
-        p1 = backend.safe_div(p1, s)
-        p2 = backend.safe_div(p2, n-s)
+        p1 = backend.safe_div(p1, s/float(n))
+        p2 = backend.safe_div(p2, 1.-s/float(n))
         #if p1 <= p2*self.target_pRule:
         #    p2 *= self.target_pRule
         #elif p2 <= p1*self.target_pRule:
         #    p1 *= self.target_pRule
         #else:
         #    return 0
-        return (p1-p2)**2*n
+        return backend.abs(p1-p2)**2
 
 
 class MannWhitneyParity(Supervised):

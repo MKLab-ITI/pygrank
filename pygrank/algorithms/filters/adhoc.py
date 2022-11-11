@@ -197,15 +197,18 @@ class LFPR(RecursiveGraphFilter):
         phi = self.phi
         outR = backend.conv(sensitive.np, M)
         outB = backend.conv(1. - sensitive.np, M)
-        case1 = outR < phi * (outR + outB)
+        case1 = outR < (phi * (outR + outB))
         case2 = (1 - case1) * (outR != 0)
         case3 = (1 - case1) * (1 - case2)
+        case1 = case1.astype(bool)
+        case2 = case2.astype(bool)
+        case3 = case3.astype(bool)
         d = backend.repeat(0, backend.length(outR))
         d[case1] = (1 - phi) / outB[case1]
         d[case2] = phi / outR[case2]
         d[case3] = 1
         Q = scipy.sparse.spdiags(d, 0, *M.shape)
-        M = M + Q * M
+        M = M + Q @ M
         self.outR = outR
         self.outB = outB
         return M
@@ -227,6 +230,9 @@ class LFPR(RecursiveGraphFilter):
         case1 = outR < phi * (outR + outB)
         case2 = (1 - case1) * (outR != 0)
         case3 = (1 - case1) * (1 - case2)
+        case1 = case1.astype(bool)
+        case2 = case2.astype(bool)
+        case3 = case3.astype(bool)
         dR[case1] = phi - (1 - phi) / outB[case1] * outR[case1]
         dR[case3] = phi
         dB[case2] = (1 - phi) - phi / outR[case2] * outB[case2]
@@ -240,6 +246,7 @@ class LFPR(RecursiveGraphFilter):
             original_ranks = 1
         elif self.redistributor == "original":
             original_ranks = PageRank(alpha=self.alpha,
+                                      tol=self.convergence.tol,
                                       preprocessor=default_preprocessor(assume_immutability=False, normalization="col"),
                                       convergence=self.convergence)(personalization).np
         else:

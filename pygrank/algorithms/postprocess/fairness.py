@@ -1,7 +1,7 @@
 import pygrank
-from pygrank.algorithms.autotune import nelder_mead
+from pygrank.algorithms.autotune import nelder_mead, optimize
 from pygrank.algorithms.postprocess.postprocess import Tautology, Normalize, Postprocessor
-from pygrank.measures import pRule, Mabs, Supervised, AM, Mistreatment, TPR, TNR, Parity
+from pygrank.measures import pRule, Mabs, Supervised, AM, Mistreatment, TPR, TNR, Parity, MannWhitneyParity
 from pygrank.core import GraphSignal, to_signal, backend, BackendPrimitive, NodeRanking, GraphSignalGraph, GraphSignalData
 from typing import List, Optional, Union, Callable
 
@@ -99,6 +99,8 @@ class FairPersonalizer(Postprocessor):
         graph = personalization.graph
         if self.parity_type == "impact":
             fairness_measure = pRule(sensitive, exclude=training)
+        elif self.parity_type == "U":
+            fairness_measure = MannWhitneyParity(sensitive, exclude=training)
         elif self.parity_type == "TPR":
             fairness_measure = Mistreatment(validation, sensitive, exclude=training, measure=TPR)
         elif self.parity_type == "TNR":
@@ -120,13 +122,13 @@ class FairPersonalizer(Postprocessor):
             # original_ranks = original_ranks.np / backend.max(original_ranks.np)
             error = self.error_type(original_ranks, training)
             error_value = error(fair_ranks)
-            return - self.retain_rank_weight * error_value * error.best_direction() \
-                   - self.pRule_weight * min(self.target_pRule, fairness_loss) - 0.1 * fairness_loss
+            return + self.retain_rank_weight * error_value * error.best_direction() \
+                   - self.pRule_weight * min(self.target_pRule, fairness_loss) #- 0.1 * fairness_loss
 
-        optimal_params = nelder_mead(loss,
-                                  max_vals=[1, 1, 3, 3] * self.parameter_buckets + [self.max_residual],
-                                  min_vals=[0, 0, -3, -3]*self.parameter_buckets+[0],
-                                  deviation_tol=1.E-8, parameter_tol=1.E-8)
+        optimal_params = optimize(loss,
+                                  max_vals=[1, 1, 5, 5] * self.parameter_buckets + [self.max_residual],
+                                  min_vals=[0, 0, -5, -5] * self.parameter_buckets+[0],
+                                  deviation_tol=1.E-5, divide_range=2, partitions=10)
         optimal_personalization = self.__culep(personalization, sensitive, original_ranks, optimal_params)
         return self.ranker.rank(graph, optimal_personalization, *args, **kwargs)
 
