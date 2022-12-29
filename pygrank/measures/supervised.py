@@ -54,6 +54,16 @@ class Supervised(Measure):
         return ret
 
 
+class Utility:
+    def __init__(self, measure: Supervised, transform=lambda x: x):
+        self.measure = measure
+        self.transform = transform
+        self.__name__ = measure.__name__+" Utility"
+
+    def __call__(self, known_scores: GraphSignalData, exclude: GraphSignalData, *args, **kwargs):
+        return self.measure(self.transform(exclude), exclude, *args, **kwargs)
+
+
 class NDCG(Supervised):
     """Provides evaluation of NDCG@k score between given and known scores."""
 
@@ -101,6 +111,22 @@ class MSQ(Supervised):
     def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
         known_scores, scores = self.to_numpy(scores)
         return backend.sum((known_scores-scores)*(known_scores-scores)) / backend.length(scores)
+
+
+class MSQRT(Supervised):
+    """Computes the mean absolute error between scores and known scores."""
+
+    def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
+        known_scores, scores = self.to_numpy(scores)
+        return (backend.sum((known_scores-scores)*(known_scores-scores)) / backend.length(scores))**0.5
+
+
+class L1(Supervised):
+    """Computes the L1 norm on the difference between scores and known scores."""
+
+    def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
+        known_scores, scores = self.to_numpy(scores)
+        return backend.sum(backend.abs(known_scores - scores))
 
 
 class L2(Supervised):

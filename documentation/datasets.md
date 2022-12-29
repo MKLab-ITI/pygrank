@@ -13,6 +13,9 @@ All datasets can be imported with code patterns presented at the library's [docu
 | orkut | https://snap.stanford.edu/data/com-Orkut.html | :heavy_check_mark: | :heavy_check_mark: |  |
 | eucore | https://snap.stanford.edu/data/email-Eu-core.html | :heavy_check_mark: | :heavy_check_mark: |  |
 | citeseer | https://linqs.soe.ucsc.edu/data | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| pokec | https://snap.stanford.edu/data/soc-Pokec.html | :heavy_check_mark: | :heavy_check_mark: |  |
+| polblogs | http://www-personal.umich.edu/~mejn/netdata | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| polbooks | http://www-personal.umich.edu/~mejn/netdata | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 | maven | https://zenodo.org/record/1489120 | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 | amazon | https://snap.stanford.edu/data/amazon-meta.html | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 | graph5 | https://github.com/maniospas/pygrank-datasets | :heavy_check_mark: |  |  |

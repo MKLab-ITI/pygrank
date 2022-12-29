@@ -1,7 +1,12 @@
 from pygrank.core import backend, GraphSignalData, BackendPrimitive
 from pygrank.measures.utils import Measure
 from typing import Iterable, Tuple, Optional
-from math import log, exp
+from math import log, exp, isinf
+
+
+def _differentiable_hinge(x, gamma=30):
+    # doi:10.1088/1742-6596/1743/1/012025, pp. 4
+    return x+backend.log(1+backend.exp(-x*gamma))/gamma
 
 
 class MeasureCombination(Measure):
@@ -11,7 +16,8 @@ class MeasureCombination(Measure):
     def __init__(self,
                  measures: Optional[Iterable[Measure]] = None,
                  weights: Optional[Iterable[float]] = None,
-                 thresholds: Optional[Iterable[Tuple[float]]] = None):
+                 thresholds: Optional[Iterable[Tuple[float]]] = None,
+                 differentiable=False):
         """
         Instantiates a combination of several measures. More measures with their own weights and threhsolded range
         can be added with the `add(measure, weight=1, min_val=-inf, max_val=inf)` method.
@@ -24,6 +30,8 @@ class MeasureCombination(Measure):
                 weighted by 1.
             thresholds: Optional. A tuple of [min_val, max_val] with which to bound measure outcomes. If None
                 (default) provided measures
+            differentiable: Optional. If True, a differentiable hinge loss is used to approximate max and min.
+                Default is False.
 
         Example:
             >>> import pygrank as pg
@@ -44,6 +52,7 @@ class MeasureCombination(Measure):
         self.measures = list() if measures is None else measures
         self.weights = [1. for _ in self.measures] if weights is None else weights
         self.thresholds = [(0., 1.) for _ in self.measures] if thresholds is None else thresholds
+        self.differentiable = differentiable
 
     def add(self,
             measure: Measure,
@@ -58,6 +67,17 @@ class MeasureCombination(Measure):
     def _total_weight(self):
         return backend.sum(backend.abs(backend.to_array(self.weights)))
 
+    def max(self, x, constant):
+        if self.differentiable and not isinf(constant):
+            # TODO: check if this exact expression is mathematically correct (min has been checked)
+            return _differentiable_hinge(x-constant)+constant
+        return max(x, constant)
+
+    def min(self, x, constant):
+        if self.differentiable and not isinf(constant):
+            return constant-_differentiable_hinge(constant-x)
+        return min(x, constant)
+
 
 class AM(MeasureCombination):
     """Combines several measures through their arithmetic mean."""
@@ -67,7 +87,7 @@ class AM(MeasureCombination):
         for i in range(len(self.measures)):
             if self.weights[i] != 0:
                 measure_evaluation = self.measures[i].evaluate(scores)
-                evaluation = min(max(measure_evaluation, self.thresholds[i][0]), self.thresholds[i][1])
+                evaluation = self.min(self.max(measure_evaluation, self.thresholds[i][0]), self.thresholds[i][1])
                 result += self.weights[i]*evaluation
         return result / self._total_weight()
 
@@ -81,7 +101,7 @@ class Disparity(MeasureCombination):
         for i in range(len(self.measures)):
             if self.weights[i] != 0:
                 evaluation = self.measures[i].evaluate(scores)
-                evaluation = min(max(evaluation, self.thresholds[i][0]), self.thresholds[i][1])
+                evaluation = self.min(self.max(evaluation, self.thresholds[i][0]), self.thresholds[i][1])
                 result += (self.weights[i]*mult)*evaluation
             mult *= -1
         return result if result > 0 else -result

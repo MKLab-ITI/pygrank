@@ -179,7 +179,7 @@ class AdHocFairness(Postprocessor):
 
     def _transform(self, ranks: GraphSignal, sensitive: GraphSignal):
         sensitive = to_signal(ranks, sensitive)
-        phi = sum(sensitive.values())/len(ranks)
+        phi = backend.sum(sensitive)/backend.length(sensitive)
         if self.method == "O" or self.method == "LFPRO":
             ranks = Normalize("sum").transform(ranks)
             sumR = sum(ranks[v] * sensitive.get(v, 0) for v in ranks)
@@ -193,12 +193,13 @@ class AdHocFairness(Postprocessor):
                 red = self.__distribute(1-phi - sumB, ranks, {v: sensitive.get(v, 0) for v in ranks})
                 ranks = {v: red.get(v, ranks[v] + (1-phi - sumB) / numB) for v in ranks}
         elif self.method == "B" or self.method == "mult":
-            sumR = sum(ranks[v]*sensitive.get(v, 0) for v in ranks)
-            sumB = sum(ranks[v]*(1-sensitive.get(v, 0)) for v in ranks)
+            sumR = backend.sum(ranks*sensitive)
+            sumB = backend.sum(ranks*(1-sensitive))
             sum_total = sumR + sumB
-            sumR /= sum_total
-            sumB /= sum_total
-            ranks = {v: ranks[v]*(phi*sensitive.get(v, 0)/sumR+(1-phi)*(1-sensitive.get(v, 0))/sumB) for v in ranks}
+            sumR = backend.safe_div(sumR, sum_total)
+            sumB = backend.safe_div(sumB, sum_total)
+            ranks = ranks*sensitive*backend.safe_div(phi, sumR) + ranks*(1-sensitive)*backend.safe_div(1-phi, sumB)
+            #ranks = {v: ranks[v]*(phi*sensitive.get(v, 0)/sumR+(1-phi)*(1-sensitive.get(v, 0))/sumB) for v in ranks}
         else:
             raise Exception("Invalid fairness postprocessing method "+self.method)
         return ranks

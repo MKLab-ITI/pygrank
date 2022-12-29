@@ -31,6 +31,18 @@ datasets = {
                  "pairs": "citeseer/citeseer.cites",
                  "features": "citeseer/citeseer.content",
                  "remove": "citeseer/"},
+    "pokec": {"url": "https://snap.stanford.edu/data/soc-Pokec.html",
+               "pairs": "https://snap.stanford.edu/data/soc-pokec-relationships.txt.gz",
+               "groups": "https://snap.stanford.edu/data/soc-pokec-profiles.txt.gz",
+               "script": dataset_processors.pokec_processor},
+    "polblogs": {"url": "http://www-personal.umich.edu/~mejn/netdata",
+                 "all": "http://www-personal.umich.edu/~mejn/netdata/polblogs.zip",
+                 "script": dataset_processors.gml_processor
+                },
+    "polbooks": {"url": "http://www-personal.umich.edu/~mejn/netdata",
+                 "all": "http://www-personal.umich.edu/~mejn/netdata/polbooks.zip",
+                 "script": dataset_processors.gml_processor
+                },
     "maven": {"url": "https://zenodo.org/record/1489120",
               "all": "https://zenodo.org/record/1489120/files/maven-data.csv.tar.xz",
               "pairs": "maven-data.csv/links_all.csv",
@@ -96,22 +108,27 @@ def download_dataset(dataset, path: str = os.path.join(os.path.expanduser('~'), 
     if not os.path.isdir(path):
         os.mkdir(path)
     download_path = os.path.join(path, dataset)
-    if not os.path.isdir(download_path):
-        os.mkdir(download_path)
+    if not os.path.exists(download_path+"/pairs.txt") or not os.path.exists(download_path+"/groups.txt"):
+        if not os.path.isdir(download_path):
+            os.mkdir(download_path)
         if "all" in source:
             all_path = download_path+"/all."+source["all"].split(".")[-1]
-            wget.download(source["all"], all_path)
-            try:
-                tarfile.open(all_path, 'r').extractall(download_path+"/")
-            except tarfile.ReadError:
-                with gzip.open(all_path, 'rb') as f_in:
-                    with open(download_path+"/all.txt", 'wb') as f_out:
-                        shutil.copyfileobj(f_in, f_out)
-            os.remove(all_path)
-        if "script" in source:
-            source["script"](path)
+            if not os.path.exists(all_path):
+                wget.download(source["all"], all_path)
+            if all_path.endswith(".zip"):
+                import zipfile
+                with zipfile.ZipFile(all_path, 'r') as zip_ref:
+                    zip_ref.extractall(download_path+"/")
+                os.remove(all_path)
+            else:
+                try:
+                    tarfile.open(all_path, 'r').extractall(download_path+"/")
+                except tarfile.ReadError:
+                    with gzip.open(all_path, 'rb') as f_in:
+                        with open(download_path+"/all.txt", 'wb') as f_out:
+                            shutil.copyfileobj(f_in, f_out)
 
-        if "pairs" in source:
+        if "pairs" in source and not os.path.exists(download_path+"/pairs.txt"):
             if source["pairs"].startswith("http"):
                 pairs_path = download_path+"/pairs."+source["pairs"].split(".")[-1]
                 wget.download(source["pairs"], pairs_path)
@@ -189,7 +206,7 @@ def download_dataset(dataset, path: str = os.path.join(os.path.expanduser('~'), 
             else:
                 shutil.move(download_path+"/"+source["features"], download_path+"/features.txt")
 
-        if "groups" in source:
+        if "groups" in source and not os.path.exists(download_path+'/groups.txt') and not os.path.exists(download_path+'/groups.txt.debug'):
             groups_path = download_path+"/groups."+source["groups"].split(".")[-1]
             wget.download(source["groups"], groups_path)
             if groups_path.split(".")[-1] not in ["txt", "csv"]:
@@ -217,8 +234,12 @@ def download_dataset(dataset, path: str = os.path.join(os.path.expanduser('~'), 
                 for group in groups.values():
                     file.write((" ".join(group))+"\n")
 
+        if "script" in source:
+            source["script"](download_path)
+
         if "remove" in source:
             shutil.rmtree(download_path+"/"+source["remove"])
+
     if verbose:
         utils.log()
     return credentials

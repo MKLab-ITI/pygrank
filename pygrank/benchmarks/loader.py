@@ -21,7 +21,9 @@ def import_snap_format_dataset(dataset: str,
                                group_file: str = 'groups.txt',
                                directed: bool = False,
                                min_group_size: float = 0.01,
+                               min_group_id: int = 0,
                                max_group_number: int = 20,
+                               prepend_all_nodes: bool = False,
                                graph_api=nx,
                                verbose=True):
     """
@@ -55,6 +57,8 @@ def import_snap_format_dataset(dataset: str,
         utils.log(f"Loading {dataset} graph")
     G = (graph_api.DiGraph() if hasattr(graph_api, "DiGraph") else graph_api.Graph(directed)) if directed else graph_api.Graph()
     groups = {}
+    if prepend_all_nodes:
+        groups[0] = list(G)
     with open(path+'/'+dataset+'/'+pair_file, 'r', encoding='utf-8') as file:
         for line in file:
             if len(line) != 0 and line[0] != '#':
@@ -71,6 +75,9 @@ def import_snap_format_dataset(dataset: str,
                 if line[0] != '#':
                     group = [item for item in line[:-1].split() if len(item) > 0 and item in G]
                     if len(group) >= min_group_size:
+                        if min_group_id > 0:
+                            min_group_id -= 1
+                            continue
                         groups[len(groups)] = group
                         if verbose:
                             utils.log(f"Loaded {dataset} communities {len(groups)}/{max_group_number}")

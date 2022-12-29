@@ -197,18 +197,12 @@ class LFPR(RecursiveGraphFilter):
         phi = self.phi
         outR = backend.conv(sensitive.np, M)
         outB = backend.conv(1. - sensitive.np, M)
-        case1 = outR < (phi * (outR + outB))
-        case2 = (1 - case1) * (outR != 0)
-        case3 = (1 - case1) * (1 - case2)
-        case1 = case1.astype(bool)
-        case2 = case2.astype(bool)
-        case3 = case3.astype(bool)
-        d = backend.repeat(0, backend.length(outR))
-        d[case1] = (1 - phi) / outB[case1]
-        d[case2] = phi / outR[case2]
-        d[case3] = 1
+        case1 = (outR < (phi * (outR + outB)))
+        case2 = ((1 - case1) * (outR != 0))
+        case3 = ((1 - case1) * (1 - case2))
+        d = case1*backend.safe_inv(outB)*(1-phi) + case2*backend.safe_inv(outR)*phi + case3
         Q = scipy.sparse.spdiags(d, 0, *M.shape)
-        M = M + Q @ M
+        M = Q @ M
         self.outR = outR
         self.outB = outB
         return M
@@ -216,32 +210,21 @@ class LFPR(RecursiveGraphFilter):
     def _prepare_graph(self, graph, sensitive, *args, **kwargs):
         sensitive = to_signal(graph, sensitive)
         self.sensitive = sensitive
-        self.phi = backend.sum(sensitive.np) / backend.length(sensitive.np) * self.target_prule
+        self.phi = backend.sum(sensitive) / backend.length(sensitive) * self.target_prule
         return graph
 
     def _start(self, M, personalization, ranks, sensitive, *args, **kwargs):
         sensitive = to_signal(ranks, sensitive)
         outR = self.outR  # backend.conv(sensitive.np, M)
         outB = self.outB  # backend.conv(1.-sensitive.np, M)
-        phi = backend.sum(sensitive.np) / backend.length(sensitive.np) * self.target_prule
-        dR = backend.repeat(0., len(sensitive.graph))
-        dB = backend.repeat(0., len(sensitive.graph))
-
-        case1 = outR < phi * (outR + outB)
+        phi = backend.sum(sensitive) / backend.length(sensitive) * self.target_prule
+        case1 = outR < (phi * (outR + outB))
         case2 = (1 - case1) * (outR != 0)
         case3 = (1 - case1) * (1 - case2)
-        case1 = case1.astype(bool)
-        case2 = case2.astype(bool)
-        case3 = case3.astype(bool)
-        dR[case1] = phi - (1 - phi) / outB[case1] * outR[case1]
-        dR[case3] = phi
-        dB[case2] = (1 - phi) - phi / outR[case2] * outB[case2]
-        dB[case3] = 1 - phi
 
-        personalization.np = backend.safe_div(sensitive.np * personalization.np, backend.sum(sensitive.np)) * self.target_prule \
-                             + backend.safe_div(personalization.np * (1 - sensitive.np), backend.sum(1 - sensitive.np))
-        personalization.np = backend.safe_div(personalization.np, backend.sum(personalization.np))
-        L = sensitive.np
+        dR = case1*(phi - (1 - phi) * backend.safe_inv(outB) * outR) + case3*phi
+        dB = case2*((1 - phi) - phi * backend.safe_inv(outR) * outB) + case3*(1-phi)
+
         if self.redistributor is None or self.redistributor == "uniform":
             original_ranks = 1
         elif self.redistributor == "original":
@@ -254,8 +237,8 @@ class LFPR(RecursiveGraphFilter):
 
         self.dR = dR
         self.dB = dB
-        self.xR = backend.safe_div(original_ranks * L, backend.sum(original_ranks * L))
-        self.xB = backend.safe_div(original_ranks * (1 - L), backend.sum(original_ranks * (1 - L)))
+        self.xR = backend.safe_div(original_ranks * sensitive.np, backend.sum(original_ranks * sensitive.np))
+        self.xB = backend.safe_div(original_ranks * (1 - sensitive.np), backend.sum(original_ranks * (1 - sensitive.np)))
         super()._start(M, personalization, ranks, *args, **kwargs)
 
     def _formula(self, M, personalization, ranks, sensitive, *args, **kwargs):
@@ -265,6 +248,7 @@ class LFPR(RecursiveGraphFilter):
                 1 - self.alpha)
 
     def _end(self, M, personalization, ranks, *args, **kwargs):
+        ranks.np = ranks.np - personalization.np*(1-self.alpha)
         del self.xR
         del self.xB
         del self.dR

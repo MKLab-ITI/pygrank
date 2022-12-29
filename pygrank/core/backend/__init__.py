@@ -2,6 +2,9 @@ import importlib
 import sys
 import os
 import json
+
+import numpy as np
+
 from pygrank.core.backend.specification import *
 
 
@@ -12,6 +15,12 @@ def safe_div(nom, denom, default=0):
     if denom == 0:
         return default
     return nom / denom
+
+
+def safe_inv(x):
+    y = np.copy(x)
+    y[x != 0] = 1. / x[x != 0]
+    return y
 
 
 class Backend:

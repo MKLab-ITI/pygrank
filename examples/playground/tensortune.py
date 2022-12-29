@@ -3,7 +3,6 @@ import pygrank as pg
 from typing import Optional, Union
 
 
-
 class CustomLoss(pg.Supervised):
     """Computes the L2 norm on the difference between scores and known scores."""
 
@@ -13,73 +12,126 @@ class CustomLoss(pg.Supervised):
         return ret
 
 
+class Noise(tf.keras.layers.Layer):
+    def __init__(self, error, **kwargs):
+        self.supports_masking = True
+        self.error = error
+        #self.uses_learning_phase = True
+        super(Noise, self).__init__(**kwargs)
+        self.noise = None
+
+    def call(self, x, mask=None):
+        if x.shape[0] is None:
+            return x
+        if self.noise is None:
+            self.noise = tf.random.uniform(shape=tf.keras.backend.shape(x), minval=1-self.error, maxval=1+self.error)
+        #noise_x = x*self.noise
+        #return tf.keras.backend.in_train_phase(noise_x, x)
+        return x*self.noise
+
+    def get_config(self):
+        config = {'error': self.error}
+        base_config = super(Noise, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
+
+
 class Tensortune(pg.Postprocessor):
-    def __init__(self, ranker, pretrainer=None, model=None, postprocessor=pg.Tautology, gnn=True, robustness=0.05):
+    def __init__(self, ranker,
+                 pretrainer=None,
+                 model=None,
+                 postprocessor=pg.Tautology,
+                 gnn=True,
+                 zero_mabs=1,
+                 robustness=0.0001):
         self.ranker = ranker
         self.pretrainer = pretrainer
         self._model = model
         self.postprocessor = postprocessor
         self.robustness = robustness
         self.gnn = gnn
+        self.zero_mabs = zero_mabs
+        self._noise = None
 
     def model(self):
         #if self._model is None:
         model = tf.keras.models.Sequential()
         model.add(tf.keras.Input(shape=(3,)))
-        dims = 8
+        dims = 4
 
         class CustomSerializer(tf.keras.initializers.Initializer):
             def __call__(self, shape, dtype=None, **kwargs):
                 return tf.concat([tf.constant(1, shape=(1, shape[1]),  dtype=dtype),
-                                  tf.random.normal(shape=(shape[0]-1, shape[1]), dtype=dtype)*0.01], axis=0)
+                                  tf.random.normal(shape=(shape[0]-1, shape[1]), dtype=dtype)*0.00], axis=0)
 
         model.add(tf.keras.layers.Dense(dims,
                                         kernel_initializer=CustomSerializer(),
+                                        activation="relu",
                                         #kernel_regularizer=tf.keras.regularizers.L2(0.0005)
                                         ))
-        for _ in range(2):
+        for _ in range(self.depth):
             model.add(tf.keras.layers.Dense(dims,
                                             kernel_initializer=CustomSerializer(),
+                                            activation="relu",
                                             #kernel_regularizer=tf.keras.regularizers.L2(0.00001)
                                             ))
         model.add(tf.keras.layers.Dense(1,
                                         kernel_initializer=CustomSerializer(),
-                                        #kernel_regularizer=tf.keras.regularizers.L2(0.00001),
-                                        activation='relu'))
+                                        activation=lambda x: tf.abs(x),
+                                        #kernel_regularizer=tf.keras.regularizers.L2(0.00001)
+                                        ))
+        #model.add(Noise(self.robustness))
+
         self._model = model
         self._model.compile()
         return self._model
 
     def train_model(self, graph, personalization, sensitive, *args, **kwargs):
+        self._noise = None
         original_personalization = personalization
         original_ranks = self.postprocessor(self.ranker)(graph, personalization, *args, **kwargs)
         prev_convergence = self.ranker.convergence
         self.ranker.convergence = pg.ConvergenceManager(error_type="iters", max_iters=prev_convergence.iteration)
         #self.ranker = pg.PageRank(0.9, error_type="iters", max_iters=10) # ablation study
         #pretrained_ranks = None if self.pretrainer is None else self.pretrainer(graph, personalization, *args, sensitive=sensitive, **kwargs)
-        training_objective = pg.AM()\
-            .add(pg.Mabs(tf.cast(original_ranks.np, tf.float32)), weight=1)\
-            .add(pg.pRule(tf.cast(sensitive.np, tf.float32), exclude=tf.cast(personalization.np, tf.float32)),
-                 max_val=0.8, weight=-10)
+
+        if self.zero_mabs is None:
+            training_objective = pg.AM(differentiable=False)\
+                .add(pg.MSQRT(tf.cast(original_ranks.np, tf.float32)), weight=1)\
+                .add(pg.pRule(tf.cast(sensitive.np, tf.float32), exclude=tf.cast(personalization.np, tf.float32)),
+                     max_val=float('inf'), weight=-10)
+        else:
+            training_objective = pg.AM(differentiable=True)\
+                .add(pg.Mabs(tf.zeros(original_ranks.np.shape, tf.float32)), weight=float(self.zero_mabs))\
+                .add(pg.Mabs(tf.cast(original_ranks.np, tf.float32)), weight=1)\
+                .add(pg.pRule(tf.cast(sensitive.np, tf.float32), exclude=tf.cast(personalization.np, tf.float32)),
+                     max_val=float('inf'), weight=-1)
+
+        max_patience = 100
+        repeats = 5
+        self.depth = 1
         model = self.model()
         with pg.Backend("tensorflow"):
             features = tf.concat([tf.reshape(personalization.np, (-1, 1)),
                                   tf.reshape(original_ranks.np, (-1, 1)),
                                   tf.reshape(sensitive.np, (-1, 1))
                                   ], axis=1)
+
             best_loss = float('inf')
             best_ranks = None
-            optimizer = tf.keras.optimizers.RMSprop(learning_rate=0.001)
+            optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)#, clipnorm=0.1)
 
-            patience = 100
-            repeats = 5
+            patience = max_patience
             best_repeat_loss = float('inf')
-            for epoch in range(2000):
+            #noise = None
+            for epoch in range(10000):
                 with tf.GradientTape() as tape:
                     feats = model(features)
                     personalization = pg.to_signal(personalization, feats)
                     ranks = self.ranker(graph, personalization, *args, **kwargs)
-                    loss = training_objective(ranks) + tf.reduce_sum(model.losses)
+                    #if noise is None:
+                    #    noise = tf.random.uniform(minval=1-self.robustness, maxval=1+self.robustness, shape=ranks.np.shape)
+                    #ranks = ranks*noise
+                    loss = training_objective(ranks) #+ tf.reduce_sum(model.losses)
                 grads = tape.gradient(loss, model.trainable_variables)
                 optimizer.apply_gradients(zip(grads, model.trainable_variables))
                 personalization = pg.to_signal(personalization, feats)
@@ -87,15 +139,18 @@ class Tensortune(pg.Postprocessor):
                     ranks = self.ranker(graph, personalization, *args, **kwargs)
                 else:
                     ranks = personalization
+                #ranks = ranks*noise
                 validation_loss = training_objective(ranks)
-                if validation_loss <= best_loss:
-                    patience = 100
-                    best_ranks = ranks
+                if validation_loss <= best_loss:#-prev_convergence.tol:
+                    patience = max_patience
+                    if validation_loss <= best_repeat_loss:
+                        best_ranks = ranks
                     best_loss = validation_loss
                     print("\r"
-                          "repeats left", repeats,
+                          #"repeats left", repeats,
                           "epoch", epoch,
-                          "deviation", float(pg.KLDivergence(tf.cast(original_ranks.np, tf.float32))(ranks)),
+                          "depth", self.depth,
+                          "deviation", float(pg.Mabs(tf.cast(original_ranks.np, tf.float32))(ranks)),
                           "prule", float(pg.pRule(tf.cast(sensitive.np, tf.float32),
                                                   exclude=tf.cast(original_personalization.np, tf.float32))(ranks)), end="")
 
@@ -105,19 +160,16 @@ class Tensortune(pg.Postprocessor):
                     if repeats == 0 or best_loss >= best_repeat_loss:
                         break
                     best_repeat_loss = min(best_loss, best_repeat_loss)
-                    patience = 100
-                    best_loss = float('inf')
+                    patience = max_patience
+                    self.depth += 1
                     model = self.model()
-                    features = tf.concat([tf.reshape(personalization.np, (-1, 1)),
-                                          tf.reshape(original_ranks.np, (-1, 1)),
-                                          tf.reshape(sensitive.np, (-1, 1))
-                                          ], axis=1)
+                    best_loss = float('inf')
+                    #features = tf.concat([tf.reshape(personalization.np, (-1, 1)),
+                    #                      tf.reshape(original_ranks.np, (-1, 1)),
+                    #                      tf.reshape(sensitive.np, (-1, 1))
+                    #                      ], axis=1)
         print("\r", end="")
 
-        #print("epoch", epoch,
-        #      "deviation", float(pg.KLDivergence(tf.cast(original_ranks.np, tf.float32))(ranks)),
-        #      "prule", float(pg.pRule(tf.cast(sensitive.np, tf.float32),
-        #                              exclude=tf.cast(original_personalization.np, tf.float32))(ranks)))
         self.ranker.convergence = prev_convergence
         return best_ranks
 
@@ -128,7 +180,7 @@ class Tensortune(pg.Postprocessor):
         #    pretrain_tuner.train_model(graph, personalization, sensitive, *args, **kwargs)
         return self.train_model(graph, personalization, sensitive, *args, **kwargs)
 
-
+"""
 class TensortuneOutputs(pg.Postprocessor):
     def __init__(self, ranker, base_ranker=None):
         self.ranker = ranker
@@ -161,3 +213,4 @@ class TensortuneOutputs(pg.Postprocessor):
                 if patience == 0:
                     break
         return best_ranks
+"""

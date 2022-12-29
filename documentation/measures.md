@@ -16,24 +16,26 @@ All of them can be used through the code patterns presented at the library's [do
 10. [Dot](#supervised-dot)
 11. [Euclidean](#supervised-euclidean)
 12. [KLDivergence](#supervised-kldivergence)
-13. [L2](#supervised-l2)
-14. [L2Disparity](#supervised-l2disparity)
-15. [MKLDivergence](#supervised-mkldivergence)
-16. [MSQ](#supervised-msq)
-17. [Mabs](#supervised-mabs)
-18. [MannWhitneyParity](#supervised-mannwhitneyparity)
-19. [MaxDifference](#supervised-maxdifference)
-20. [Mistreatment](#supervised-mistreatment)
-21. [NDCG](#supervised-ndcg)
-22. [PPV](#supervised-ppv)
-23. [PearsonCorrelation](#supervised-pearsoncorrelation)
-24. [SpearmanCorrelation](#supervised-spearmancorrelation)
-25. [TNR](#supervised-tnr)
-26. [TPR](#supervised-tpr)
-27. [pRule](#supervised-prule)
-28. [Conductance](#unsupervised-conductance)
-29. [Density](#unsupervised-density)
-30. [Modularity](#unsupervised-modularity)
+13. [L1](#supervised-l1)
+14. [L2](#supervised-l2)
+15. [L2Disparity](#supervised-l2disparity)
+16. [MKLDivergence](#supervised-mkldivergence)
+17. [MSQ](#supervised-msq)
+18. [MSQRT](#supervised-msqrt)
+19. [Mabs](#supervised-mabs)
+20. [MannWhitneyParity](#supervised-mannwhitneyparity)
+21. [MaxDifference](#supervised-maxdifference)
+22. [Mistreatment](#supervised-mistreatment)
+23. [NDCG](#supervised-ndcg)
+24. [PPV](#supervised-ppv)
+25. [PearsonCorrelation](#supervised-pearsoncorrelation)
+26. [SpearmanCorrelation](#supervised-spearmancorrelation)
+27. [TNR](#supervised-tnr)
+28. [TPR](#supervised-tpr)
+29. [pRule](#supervised-prule)
+30. [Conductance](#unsupervised-conductance)
+31. [Density](#unsupervised-density)
+32. [Modularity](#unsupervised-modularity)
 
 ### <kbd>Measure</kbd> Time
 
@@ -49,6 +51,7 @@ Args:
  * *measures:* Optional. An iterable of measures to combine. If None (default) no new measure is added. 
  * *weights:* Optional. A iterable of floats with which to weight the measures provided by the previous argument. The concept of weighting depends on how measures are aggregated, but it corresponds to an importance value placed on each measure. If None (default), provided measures are all weighted by 1. 
  * *thresholds:* Optional. A tuple of [min_val, max_val] with which to bound measure outcomes. If None (default) provided measures 
+ * *differentiable:* Optional. If True, a differentiable hinge loss is used to approximate max and min. Default is False. 
 
 Example:
 
@@ -83,6 +86,7 @@ Args:
  * *measures:* Optional. An iterable of measures to combine. If None (default) no new measure is added. 
  * *weights:* Optional. A iterable of floats with which to weight the measures provided by the previous argument. The concept of weighting depends on how measures are aggregated, but it corresponds to an importance value placed on each measure. If None (default), provided measures are all weighted by 1. 
  * *thresholds:* Optional. A tuple of [min_val, max_val] with which to bound measure outcomes. If None (default) provided measures 
+ * *differentiable:* Optional. If True, a differentiable hinge loss is used to approximate max and min. Default is False. 
 
 Example:
 
@@ -116,6 +120,7 @@ Args:
  * *measures:* Optional. An iterable of measures to combine. If None (default) no new measure is added. 
  * *weights:* Optional. A iterable of floats with which to weight the measures provided by the previous argument. The concept of weighting depends on how measures are aggregated, but it corresponds to an importance value placed on each measure. If None (default), provided measures are all weighted by 1. 
  * *thresholds:* Optional. A tuple of [min_val, max_val] with which to bound measure outcomes. If None (default) provided measures 
+ * *differentiable:* Optional. If True, a differentiable hinge loss is used to approximate max and min. Default is False. 
 
 Example:
 
@@ -150,6 +155,7 @@ Args:
  * *measures:* Optional. An iterable of measures to combine. If None (default) no new measure is added. 
  * *weights:* Optional. A iterable of floats with which to weight the measures provided by the previous argument. The concept of weighting depends on how measures are aggregated, but it corresponds to an importance value placed on each measure. If None (default), provided measures are all weighted by 1. 
  * *thresholds:* Optional. A tuple of [min_val, max_val] with which to bound measure outcomes. If None (default) provided measures 
+ * *differentiable:* Optional. If True, a differentiable hinge loss is used to approximate max and min. Default is False. 
 
 Example:
 
@@ -230,6 +236,14 @@ Args:
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 
+### <kbd>Supervised</kbd> L1
+
+Computes the L1 norm on the difference between scores and known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
+
+Args: 
+ * *known_scores:* The desired graph signal outcomes. 
+ * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
+
 ### <kbd>Supervised</kbd> L2
 
 Computes the L2 norm on the difference between scores and known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
@@ -250,6 +264,14 @@ Args:
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 
 ### <kbd>Supervised</kbd> MSQ
+
+Computes the mean absolute error between scores and known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
+
+Args: 
+ * *known_scores:* The desired graph signal outcomes. 
+ * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
+
+### <kbd>Supervised</kbd> MSQRT
 
 Computes the mean absolute error between scores and known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
 

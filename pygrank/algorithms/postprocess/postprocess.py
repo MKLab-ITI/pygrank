@@ -45,6 +45,10 @@ class Postprocessor(NodeRanking):
     def convergence(self):
         return self.ranker.convergence
 
+    @convergence.setter
+    def convergence(self, value):
+        self.ranker.convergence = value
+
 
 class Tautology(Postprocessor):
     """ Returns ranks as-are.

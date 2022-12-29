@@ -14,6 +14,8 @@ def _fraction2str(num, decimals=2):
     """
     if isinstance(num, str):
         return num
+    if math.isnan(num):
+        return "NaN"
     mult = math.pow(10, decimals)
     if num < 0.5/mult:
         return "0"

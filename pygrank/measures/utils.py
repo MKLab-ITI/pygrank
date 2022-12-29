@@ -28,17 +28,20 @@ class Measure(object):
             self.known_scores = known_scores
             self.exclude = exclude
             return self
+        dummy_constructor.__name__ = self.__class__.__name__
         return dummy_constructor
 
     def as_unsupervised_method(self):
         def dummy_constructor(graph=None):
             self.graph = graph
             return self
+        dummy_constructor.__name__ = self.__class__.__name__
         return dummy_constructor
 
     def as_immutable_method(self):
         def dummy_constructor(*args, **kwargs):
             return self
+        dummy_constructor.__name__ = self.__class__.__name__
         return dummy_constructor
 
 
