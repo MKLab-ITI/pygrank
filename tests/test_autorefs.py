@@ -56,7 +56,7 @@ def test_explicit_citations():
     assert "krasanakis2018venuerank" in pg.BiasedKernel(converge_to_eigenvectors=True).cite()
     assert "yu2021chebyshev" in pg.HeatKernel(coefficient_type="chebyshev").cite()
     assert "susnjara2015accelerated" in pg.HeatKernel(krylov_dims=5).cite()
-    assert "krasanakis2021pygrank" in pg.GenericGraphFilter(optimization_dict=dict()).cite()
+    assert "krasanakis2022pygrank" in pg.GenericGraphFilter(optimization_dict=dict()).cite()
     assert "tautology" in pg.Tautology().cite()
     assert pg.PageRank().cite() == pg.Tautology(pg.PageRank()).cite()
     assert "mabs" in pg.MabsMaintain(pg.PageRank()).cite()

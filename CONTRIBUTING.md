@@ -18,11 +18,13 @@ The typical workflow for `pygrank` contributions comprises the following steps:
 6. **Create a pull request** from the fork back to the original master branch.
 
 You can use any (virtual) environment to edit the local clone,
-such as conda or the one provided by PyCharm.
+such as conda or venv (provided by PyCharm).
 The environment should come with Python 3.9 or later installed.
 Make sure that both base library dependencies 
-`networkx, numpy, scipy, sklearn, wget`, as well as`tensorflow` and `torch` (to support
-unit testing for the respective pipelines)
+`networkx`, `numpy`, `scipy`, `sklearn` (scikit-learn), `wget`, 
+as well as `tensorflow`, `torch`, `matvec`, `torch-sparse`
+(the last three needed support
+unit testing for the respective backends)
 are installed and upgraded to their latest versions.
 
 # :hammer_and_wrench: Architecture

@@ -185,7 +185,7 @@ algorithm = LowPassRecursiveGraphFilter([0.9]*10, tol=None)  # tol=None runs all
 A Personalized PageRank power method algorithm. The constructor initializes the PageRank scheme parameters. 
 
 Args: 
- * *alpha:* Optional. 1-alpha is the bias towards the personalization. Default value is 0.85. 
+ * *alpha:* Optional. 1-alpha is the bias towards the personalization. Default alpha value is 0.85 for historyical reasons. However, in large graphs it is often preferred to set this argument to 0.9. 
  * *use_quotient:* Optional. If True (default) performs a L1 re-normalization of ranks after each iteration. This significantly speeds up the convergence speed of symmetric normalization (col normalization preserves the L1 norm during computations on its own). Provide `pygrank.Postprocessor` or other callable instances to adjust node scores after each iteration. Can pass False or None to ignore this functionality and make recursive filter outcome equal to its expansion.
  * *preprocessor:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
  * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
@@ -368,7 +368,7 @@ A ranking algorithm that assigns node ranks loosely increasing with the minimum 
 A Personalized PageRank power method algorithm. The constructor initializes the PageRank scheme parameters. 
 
 Args: 
- * *alpha:* Optional. 1-alpha is the bias towards the personalization. Default value is 0.85. 
+ * *alpha:* Optional. 1-alpha is the bias towards the personalization. Default alpha value is 0.85 for historyical reasons. However, in large graphs it is often preferred to set this argument to 0.9. 
  * *use_quotient:* Optional. If True (default) performs a L1 re-normalization of ranks after each iteration. This significantly speeds up the convergence speed of symmetric normalization (col normalization preserves the L1 norm during computations on its own). Provide `pygrank.Postprocessor` or other callable instances to adjust node scores after each iteration. Can pass False or None to ignore this functionality and make recursive filter outcome equal to its expansion.
  * *preprocessor:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
  * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 

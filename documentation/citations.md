@@ -29,6 +29,18 @@ personalized PageRank \cite{page1999pagerank} with restart probability 0.15 and 
 ## Publications
 Publications that have supported development of various aspects of
 this library. These are presented in reverse chronological order.
+
+```
+@article{krasanakis2022pygrank,
+  author       = {Emmanouil Krasanakis, Symeon Papadopoulos, Ioannis Kompatsiaris, Andreas Symeonidis},
+  title        = {pygrank: A Python Package for Graph Node Ranking},
+  journal      = {SoftwareX},
+  year         = 2022,
+  month        = oct,
+  doi          = {10.1016/j.softx.2022.101227},
+  url          = {https://doi.org/10.1016/j.softx.2022.101227}
+}
+```
 ```
 @article{krasanakis2022fast,
   title={Fast Library Recommendation in Software Dependency Graphs with Symmetric Partially Absorbing Random Walks},
@@ -114,17 +126,6 @@ this library. These are presented in reverse chronological order.
   author={Krasanakis, Emmanouil and Papadopoulos, Symeon and Kompatsiaris, Ioannis and Symeonidis, Andreas},
   journal={arXiv:2108.12397},	
   year={2021}
-}
-```
-
-```
-@misc{krasanakis2021pygrank,
-      title={pygrank: A Python Package for Graph Node Ranking}, 
-      author={Emmanouil Krasanakis, Symeon Papadopoulos, Ioannis Kompatsiaris, Andreas Symeonidis},
-      year={2021},
-      eprint={2110.09274},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG}
 }
 ```
 

@@ -6,19 +6,16 @@ Fast recommendation algorithms for large graphs based on link analysis.
 
 **License:** Apache Software License
 <br>**Author:** Emmanouil (Manios) Krasanakis
-<br>**Dependencies:** `networkx, numpy, scipy, sklearn, wget`
-<br>**Backends:** `tensorflow`, `torch`, `torch_sparse`, `matvec` (optional)
+<br>**Dependencies:** `networkx`, `numpy`, `scipy`, `sklearn`, `wget`
+<br>**Backends (optional):** `tensorflow`, `torch`, `torch_sparse`, `matvec` 
 <br><small>*Externally install backends before using them.*</small>
 
 ![build](https://github.com/MKLab-ITI/pygrank/actions/workflows/tests.yml/badge.svg)
 [![codecov](https://codecov.io/gh/MKLab-ITI/pygrank/branch/master/graph/badge.svg?token=RYZOT4UY8Q)](https://codecov.io/gh/MKLab-ITI/pygrank)
 [![Downloads](https://static.pepy.tech/personalized-badge/pygrank?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads)](https://pepy.tech/project/pygrank)
 
-# :rocket: New features (after 0.2.7)
-* Algorithm definition [chains](documentation/functional.md)
-* More [downloadable datasets](documentation/datasets.md)
-* New graph management for minimal memory consumption
-* Using preprocessor outcomes as graphs
+# :rocket: New features (after 0.2.10)
+* More [datasets](documentation/datasets.md)
 
 # :hammer_and_wrench: Installation
 `pygrank` is meant to work with Python 3.9 or later. The latest version can be installed with pip per:
@@ -107,7 +104,8 @@ Finally, the snippet prints a recommended citation for the algorithm.
 
 # :brain: Overview
 Analyzing graph edges (links) between graph nodes can help rank/score
-them based on proximity to structural or attribute-based communities of known example members.
+nodes based on proximity to structural or attribute-based communities 
+of known example members.
 With the introduction of graph signal processing and
 [decoupled graph neural networks](https://dl.acm.org/doi/abs/10.1145/3442381.3449927) 
 the importance of node ranking has drastically 
@@ -123,12 +121,12 @@ ready-to-use tools that simplify deployment of theoretical advancements
 and testing of new algorithms.
 
 Some of the library's advantages are:
-1. **Compatibility** with [networkx](https://github.com/networkx/networkx), [tensorflow](https://www.tensorflow.org/) and [pytorch](https://pytorch.org/).
+1. **Compatibility** with [networkx](https://github.com/networkx/networkx), plain [numpy](https://numpy.org), [tensorflow](https://www.tensorflow.org), [pytorch](https://pytorch.org), [matvec](https://github.com/maniospas/matvec).
 2. **Datacentric** interfaces that do not require transformations to identifiers.
-3. **Large** graph support with sparse data structures and fast scalable algorithms.
-4. **Seamless** pipelines, from graph preprocessing up to benchmarking and evaluation.
+3. **Large** graph support with sparse data structures and scalable algorithms.
+4. **Seamless** pipelines (e.g., operation [chains](documentation/functional.md)), from graph preprocessing up to benchmarking and evaluation.
 5. **Modular** components to be combined and a functional chain interface for complex combinations.
-
+6. **Fast** running time with highly optimized operations
 
 # :link: Material
 [Tutorials & Documentation](documentation/documentation.md) <br>
@@ -169,7 +167,7 @@ If so, make sure to **follow the pull checklist** described in the guidelines.
 # :notebook: Citation
 If `pygrank` has been useful in your research and you would like to cite it in a scientific publication, please refer to the following paper:
 ```
-@article{emmanouil_krasanakis_2022_7229677,
+@article{krasanakis2022pygrank,
   author       = {Emmanouil Krasanakis, Symeon Papadopoulos, Ioannis Kompatsiaris, Andreas Symeonidis},
   title        = {pygrank: A Python Package for Graph Node Ranking},
   journal      = {SoftwareX},

@@ -190,7 +190,7 @@ class ClosedFormGraphFilter(GraphFilter):
         if self.krylov_dims is not None:
             refs.append("Lanczos acceleration \\cite{susnjara2015accelerated} in the"+str(self.krylov_dims)+"-dimensional Krylov space")
         if self.optimization_dict is not None:
-            refs.append("dictionary-based hashing \\cite{krasanakis2021pygrank}")
+            refs.append("dictionary-based hashing \\cite{krasanakis2022pygrank}")
         return refs
 
     def _start(self, M, personalization, ranks, *args, **kwargs):

@@ -449,8 +449,8 @@ class LinearSweep(Postprocessor):
 
     def _reference(self):
         if self.uniform_ranker != self.ranker:
-            return "linear sweep ratio postprocessing \\cite{krasanakis2021pygrank} where non-personalized ranking is performed with a "+self.uniform_ranker.cite()
-        return "linear sweep ratio postprocessing \\cite{krasanakis2021pygrank}"
+            return "linear sweep ratio postprocessing \\cite{krasanakis2022pygrank} where non-personalized ranking is performed with a "+self.uniform_ranker.cite()
+        return "linear sweep ratio postprocessing \\cite{krasanakis2022pygrank}"
 
     def __lshift__(self, ranker):
         super().__lshift__(ranker)

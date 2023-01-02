@@ -119,7 +119,7 @@ command:
 
 ```python
 print(tuned_ranker.cite())
-# graph filter \cite{ortega2018graph} with dictionary-based hashing \cite{krasanakis2021pygrank}, max normalization and parameters tuned \cite{krasanakis2022autogf} to optimize AUC while withholding 0.100 of nodes for validation
+# graph filter \cite{ortega2018graph} with dictionary-based hashing \cite{krasanakis2022pygrank}, max normalization and parameters tuned \cite{krasanakis2022autogf} to optimize AUC while withholding 0.100 of nodes for validation
 ```
 Bibtex entries corresponding to the citations can be found 
 [here](documentation/citations.md).
