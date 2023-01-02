@@ -2,7 +2,7 @@
 
 Fast node ranking algorithms on large graphs.
 <br>
-<small>Node score diffusion · Recommendation and ranking · Community structure · Link prediction · Graph signal processing</small>
+<sup><sub>Node score diffusion · Recommendation and ranking · Community structure · Link prediction · Graph signal processing</sub></sup>
 <br>
 <br>
 
@@ -10,7 +10,7 @@ Fast node ranking algorithms on large graphs.
 <br>**Author:** Emmanouil (Manios) Krasanakis
 <br>**Dependencies:** `networkx`, `numpy`, `scipy`, `sklearn`, `wget`
 <br>**Backends (optional):** `tensorflow`, `torch`, `torch_sparse`, `matvec` 
-<br><small>*Externally install backends before using them.*</small>
+<br><sup><sub>*Externally install backends before using them.*</sub></sup>
 
 ![build](https://github.com/MKLab-ITI/pygrank/actions/workflows/tests.yml/badge.svg)
 [![codecov](https://codecov.io/gh/MKLab-ITI/pygrank/branch/master/graph/badge.svg?token=RYZOT4UY8Q)](https://codecov.io/gh/MKLab-ITI/pygrank)
