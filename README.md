@@ -1,6 +1,8 @@
 ![pygrank](documentation/pygrank.png)
 
-Fast recommendation algorithms for large graphs based on link analysis.
+Fast node ranking algorithms on large graphs.
+<br>
+<small>Node score diffusion · Recommendation and ranking · Community structure · Link prediction · Graph signal processing</small>
 <br>
 <br>
 
@@ -23,12 +25,12 @@ Fast recommendation algorithms for large graphs based on link analysis.
 pip install --upgrade pygrank
 ```
 
-To run the library on backpropagateable machine learning backends, 
-namely *tensorflow* or *pytorch*, either change the automatically created
-configuration file or run parts of your code within the following
+To run the library on backpropagateable backends, 
+either change the automatically created
+configuration file (follow the instructions in the stderr console)
+or run parts of your code within a
 [context manager](https://book.pythontips.com/en/latest/context_managers.html)
-to override other configurations.
-Replace *tensorflow* with other desired backend names:
+to override other configurations like this:
 
 ```python
 import pygrank as pg
@@ -36,16 +38,13 @@ with pg.Backend("tensorflow"):
     ... # run your pygrank code here
 ```
 
-If you do nothing, everything runs on top of `numpy` (currently, this
-is faster for forward passes).
-The library's algorithms can be defined before contexts and only
-be called inside them. You can also use the simpler
-`pg.load_backend("tensorflow")` to switch to a specific backend
-if you want to avoid contexts.
+Otherwise, everything runs on top of `numpy` (this
+is faster for forward passes). Node ranking algorithms 
+can be defined outside contexts.
 
 # :zap: Quickstart
-Before looking at the library's details, we show a fully functional
-pipeline that can rank the importance of a node in relation to 
+Before looking at details, here is fully functional
+pipeline that scores the importance of a node in relation to 
 a list of "seed" nodes within a graph's structure:
 
 ```python
@@ -60,33 +59,29 @@ print(algorithm.cite())
 ```
 
 The graph can be created with `networkx` or, for faster computations,
-with the library itself. Nodes can hold any 
-kind of object or data type. You don't need to bother with
-conversion to integer identifiers - the library does this
-internally and very fastly.
+with the `pygrank.fastgraph` module. Nodes can hold any 
+kind of object or data type (you don't need to convert them to integers).
 
 The above snippet first defines a `preprocessor`, 
-which controls how graph adjacency matrices will be normalized 
-by related algorithms. In this case, a symmetric normalization
-takes place (which is ideal for undirected graphs) and we also
-assume graph immutability to hash the preprocessor's outcome
-so that it is not recomputed every time we experiment with the
-same graphs.
+which typically controls how graph adjacency matrices are normalized.
+In this case, a symmetric normalization
+is applied (which is ideal for undirected graphs) and we also
+assume graph immutability, i.e., that it will not change in the future.
+When this assumption is declared, the preprocessor hashes a lot of
+computations to considerably speed up experiments or autotuning.
 
-The snippet makes use of the library's 
-[chain operators](documentation/functional.md)
+The snippet uses the [chain operator](documentation/functional.md) >>
 to wrap node ranking algorithms by various kinds of postprocessors
-with the `>>` operator
 (you can also put algorithms into each other's constructors
 if you are not a fan of functional programming).
 The chain starts from a pagerank graph filter with diffusion parameter
-0.85. Other types of filters and even automatically tuned ones
-can be run.
+0.85. Other types of filters and even automatically tuned ones can
+be declared.
 
-Then, the algorithm is run as a callable,
+The full algorithm is run as a callable,
 producing a map between nodes and values 
 (in graph signal processing, such maps are called graph signals)
-and we print the value of a particular node. Graph signals can
+and the value of a particular node is printed. Graph signals can
 also be created and directly parsed by algorithms, for example per:
 ```
 signal = pg.to_signal(graph, {v: 1. for v in seeds})
@@ -149,11 +144,10 @@ Some of the library's advantages are:
 # :fire: Features
 * Graph filters
 * Community detection
-* Overlapping community detection
 * Link prediction
 * Graph normalization
 * Convergence criteria
-* Postprocessing (e.g. fairness awareness)
+* Postprocessing (e.g., fairness awareness)
 * Evaluation measures
 * Benchmarks
 * Autotuning
