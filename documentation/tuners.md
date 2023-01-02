@@ -9,7 +9,9 @@ All of them can be used through the code patterns presented at the library's [do
 3. [ParameterTuner](#tuner-parametertuner)
 
 ### <kbd>Tuner</kbd> AlgorithmSelection
- The constructor instantiates the tuning mechanism. 
+
+Selects the best among a list of node ranking algorithms by randomly masking the personalization and trying 
+to reconstruct the masked portion. The constructor instantiates the tuning mechanism. 
 
 Args: 
  * *rankers:* An iterable of node ranking algorithms to chose from. Try to make them share a preprocessor for more efficient computations. If None (default), the filters obtained from pygrank.benchmark.create_demo_filters().values() are used instead. 
@@ -42,7 +44,7 @@ ranks = tuner.rank(graph, personalization)
 
 Tunes a GenericGraphFilter specific measure by splitting the personalization 
 in training and test sets and measuring the similarity of hops at given number of steps 
-away. The constructor instantiates the tuning mechanism. 
+away. <br>:warning: **This is an experimental approach.**<br> The constructor instantiates the tuning mechanism. 
 
 Args: 
  * *ranker_generator:* A callable that constructs a ranker based on a list of parameters. If None (default) then a pygrank.algorithms.learnable.GenericGraphFilter is constructed with automatic normalization and assuming immutability (this is the most common setting). These parameters can be overriden and other ones can be passed to the algorithm'personalization constructor simply by including them in kwargs. 
@@ -64,7 +66,7 @@ ranks = tuner.rank(graph, personalization)
 ### <kbd>Tuner</kbd> ParameterTuner
 
 Tunes a parameterized version of node ranking algorithms under a specific measure by splitting the personalization 
-in training and test sets. The constructor instantiates the tuning mechanism. 
+in training and test sets. The tuning mechanism is fully described in [krasanakis2022autogf]. The constructor instantiates the tuning mechanism. 
 
 Args: 
  * *ranker_generator:* A callable that constructs a ranker based on a list of parameters. If None (default) then a pygrank.algorithms.learnable.GenericGraphFilter is constructed with automatic normalization and assuming immutability (this is the most common setting). These parameters can be overriden and other ones can be passed to the algorithm'personalization constructor by including them in kwargs. 

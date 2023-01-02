@@ -40,8 +40,11 @@ class Tensortune(pg.Postprocessor):
                  pretrainer=None,
                  model=None,
                  postprocessor=pg.Tautology,
+                 fix_personalization=False,
                  gnn=True,
                  zero_mabs=1,
+                 fairness_weight=1,
+                 max_fairness=float('inf'),
                  robustness=0.0001):
         self.ranker = ranker
         self.pretrainer = pretrainer
@@ -50,6 +53,9 @@ class Tensortune(pg.Postprocessor):
         self.robustness = robustness
         self.gnn = gnn
         self.zero_mabs = zero_mabs
+        self.fix_personalization = fix_personalization
+        self.fairness_weight = fairness_weight
+        self.max_fairness = max_fairness
         self._noise = None
 
     def model(self):
@@ -97,17 +103,17 @@ class Tensortune(pg.Postprocessor):
         if self.zero_mabs is None:
             training_objective = pg.AM(differentiable=False)\
                 .add(pg.MSQRT(tf.cast(original_ranks.np, tf.float32)), weight=1)\
-                .add(pg.pRule(tf.cast(sensitive.np, tf.float32), exclude=tf.cast(personalization.np, tf.float32)),
-                     max_val=float('inf'), weight=-10)
+                .add(pg.pRule(tf.cast(sensitive.np, tf.float32), exclude=None if self.fix_personalization else tf.cast(personalization.np, tf.float32)),
+                     max_val=self.max_fairness, weight=-self.fairness_weight)
         else:
             training_objective = pg.AM(differentiable=True)\
                 .add(pg.Mabs(tf.zeros(original_ranks.np.shape, tf.float32)), weight=float(self.zero_mabs))\
-                .add(pg.Mabs(tf.cast(original_ranks.np, tf.float32)), weight=1)\
-                .add(pg.pRule(tf.cast(sensitive.np, tf.float32), exclude=tf.cast(personalization.np, tf.float32)),
-                     max_val=float('inf'), weight=-1)
+                .add(pg.Mabs(tf.cast(original_ranks.np, tf.float32), exclude=None if self.fix_personalization else tf.cast(personalization.np, tf.float32)), weight=1)\
+                .add(pg.pRule(tf.cast(sensitive.np, tf.float32), exclude=None if self.fix_personalization else tf.cast(personalization.np, tf.float32)),
+                     max_val=self.max_fairness, weight=-self.fairness_weight)
 
         max_patience = 100
-        repeats = 5
+        repeats = 10
         self.depth = 1
         model = self.model()
         with pg.Backend("tensorflow"):
@@ -150,9 +156,9 @@ class Tensortune(pg.Postprocessor):
                           #"repeats left", repeats,
                           "epoch", epoch,
                           "depth", self.depth,
-                          "deviation", float(pg.Mabs(tf.cast(original_ranks.np, tf.float32))(ranks)),
+                          "mabs", float(pg.Mabs(tf.cast(original_ranks.np, tf.float32))(ranks)),
                           "prule", float(pg.pRule(tf.cast(sensitive.np, tf.float32),
-                                                  exclude=tf.cast(original_personalization.np, tf.float32))(ranks)), end="")
+                                                  exclude=None if self.fix_personalization else tf.cast(original_personalization.np, tf.float32))(ranks)), end="")
 
                 patience -= 1
                 if patience == 0:
