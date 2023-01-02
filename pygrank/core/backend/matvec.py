@@ -6,7 +6,9 @@ from matvec import dot, max, min, mean, repeat
 from scipy.sparse import eye
 
 
-# TODO: for full integration of this backend, add `matvec` to test_core.supported_backends
+def cast(x):
+    return x
+
 
 def exp(x):
     if isinstance(x, mv.Vector):

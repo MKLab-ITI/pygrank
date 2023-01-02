@@ -11,6 +11,10 @@ class TorchSparseGraphData:
         self.shape = shape
 
 
+def cast(x):
+    return x.float()
+
+
 def sum(x, axis=None):
     return torch.sum(x) if axis is None else torch.sum(x, dim=axis)
 

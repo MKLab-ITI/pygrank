@@ -78,6 +78,10 @@ def to_primitive(obj: object) -> BackendPrimitive:  # pragma: no cover
     pass
 
 
+def cast(obj: BackendPrimitive) -> BackendPrimitive:   # pragma: no cover
+    pass
+
+
 def is_array(obj: object) -> bool:  # pragma: no cover
     pass
 

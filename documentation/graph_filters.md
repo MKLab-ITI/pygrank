@@ -16,7 +16,7 @@ All of them can be used through the code patterns presented at the library's [do
 ### <kbd>RecursiveGraphFilter</kbd> AbsorbingWalks
 
 Implementation of partial absorbing random walks for Lambda = (1-alpha)/alpha diag(absorption vector). 
-To determine parameters based on symmetricity principles, please use *SymmetricAbsorbingRandomWalks*. The constructor initializes filter parameters. The filter can model PageRank for appropriate parameter values, 
+To determine parameters based on symmetricity principles, use *SymmetricAbsorbingRandomWalks*. The constructor initializes filter parameters. The filter can model PageRank for appropriate parameter values, 
 but is in principle a generalization that allows custom absorption rates per node (when not given, these are I). 
 
 Args: 
@@ -157,7 +157,7 @@ algorithm = ImpulseGraphFilter([0.5, 0.5, 0.5], tol=None)  # tol=None runs all i
 Defines a low-pass graph filter with specific yet changing recursive terms. The constructor initializes the graph filter. 
 
 Args: 
- * *params:* Optional. A list-like object with elements weights[n] proportional to the impulse response when propagating graph signals at hop n. If None (default) then [0.9]*10 is used. This is equivalent to pygrank.PageRank(0.9, use_quotient=False, max_iters=10) 
+ * *params:* Optional. A list-like object with elements weights[n] proportional to the impulse response when propagating graph signals at hop n. If None (default) then [0.9]*10 is used. This is equivalent to pygrank.PageRank(0.9, use_quotient=False, max_iters=11, error_type="iters") 
  * *preprocessor:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
  * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
  * *personalization_transform:* Optional. A Postprocessor whose `transform` method is used to transform the personalization before applying the graph filter. If None (default) a Tautology is used. 
@@ -213,8 +213,7 @@ ranks = algorithm(graph, {v: 1 for v in seed_nodes})
 
 ### <kbd>RecursiveGraphFilter</kbd> SymmetricAbsorbingRandomWalks
 
-Implementation of partial absorbing random walks for *Lambda = (1-alpha)/alpha diag(absorption vector)*. The constructor initializes the AbsorbingWalks filter parameters for appropriate parameter values. This can model PageRank 
-but is in principle a generalization that allows custom absorption rates per node (when not given, these are I). 
+Implementation of partial absorbing random walks for *Lambda = (1-alpha)/alpha diag(absorption vector)*. The constructor initializes the symmetric random walk strategy for appropriate parameter values. 
 
 Args: 
  * *alpha:* Optional. (1-alpha)/alpha is the absorption rate of the random walk multiplied with individual node absorption rates. This is chosen to yield the same underlying meaning as PageRank (for which Lambda = alpha Diag(degrees) ) when the same parameter value alpha is chosen. Default is 0.5 to match the approach of [krasanakis2022fast], which uses absorption rate 1. Ideally, to set this parameter, refer to *AbsorbingWalks*. 
@@ -320,7 +319,7 @@ ranks = algorithm(graph, {v: 1 for v in seed_nodes})
 ### <kbd>RecursiveGraphFilter</kbd> AbsorbingWalks
 
 Implementation of partial absorbing random walks for Lambda = (1-alpha)/alpha diag(absorption vector). 
-To determine parameters based on symmetricity principles, please use *SymmetricAbsorbingRandomWalks*. The constructor initializes filter parameters. The filter can model PageRank for appropriate parameter values, 
+To determine parameters based on symmetricity principles, use *SymmetricAbsorbingRandomWalks*. The constructor initializes filter parameters. The filter can model PageRank for appropriate parameter values, 
 but is in principle a generalization that allows custom absorption rates per node (when not given, these are I). 
 
 Args: 
@@ -397,8 +396,7 @@ ranks = algorithm(graph, {v: 1 for v in seed_nodes})
 
 ### <kbd>RecursiveGraphFilter</kbd> SymmetricAbsorbingRandomWalks
 
-Implementation of partial absorbing random walks for *Lambda = (1-alpha)/alpha diag(absorption vector)*. The constructor initializes the AbsorbingWalks filter parameters for appropriate parameter values. This can model PageRank 
-but is in principle a generalization that allows custom absorption rates per node (when not given, these are I). 
+Implementation of partial absorbing random walks for *Lambda = (1-alpha)/alpha diag(absorption vector)*. The constructor initializes the symmetric random walk strategy for appropriate parameter values. 
 
 Args: 
  * *alpha:* Optional. (1-alpha)/alpha is the absorption rate of the random walk multiplied with individual node absorption rates. This is chosen to yield the same underlying meaning as PageRank (for which Lambda = alpha Diag(degrees) ) when the same parameter value alpha is chosen. Default is 0.5 to match the approach of [krasanakis2022fast], which uses absorption rate 1. Ideally, to set this parameter, refer to *AbsorbingWalks*. 

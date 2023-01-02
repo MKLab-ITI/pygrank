@@ -79,6 +79,7 @@ def test_explicit_citations():
     assert "uniform" in pg.LFPR().cite()
     assert "subgraph" in pg.Subgraph().cite()
     assert "containing graph" in pg.Supergraph().cite()
+    assert "krasanakis2022fast" in pg.SymmetricAbsorbingRandomWalks().cite()
     assert pg.PageRank().cite() in pg.Subgraph(pg.PageRank()).cite()
     assert pg.PageRank().cite() in pg.Supergraph(pg.PageRank()).cite()
 

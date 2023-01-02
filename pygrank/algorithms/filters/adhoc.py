@@ -53,9 +53,8 @@ class DijkstraRank(RecursiveGraphFilter):
     def _formula(self, M, personalization, ranks, *args, **kwargs):
         prev_ranks = ranks
         ranks = backend.conv(ranks, M)*self.degradation
-        for v in ranks:
-            if ranks[v] < prev_ranks[v]:
-                ranks[v] = prev_ranks[v]
+        choice = backend.cast(ranks.np > prev_ranks.np)
+        ranks.np = choice*ranks.np + (1-choice)*prev_ranks.np
         return ranks
 
 
@@ -93,7 +92,7 @@ class HeatKernel(ClosedFormGraphFilter):
 
 class AbsorbingWalks(RecursiveGraphFilter):
     """ Implementation of partial absorbing random walks for Lambda = (1-alpha)/alpha diag(absorption vector).
-    To determine parameters based on symmetricity principles, please use *SymmetricAbsorbingRandomWalks*."""
+    To determine parameters based on symmetricity principles, use *SymmetricAbsorbingRandomWalks*."""
 
     def __init__(self,
                  alpha: float = 1 - 1.E-6,
@@ -274,10 +273,8 @@ class SymmetricAbsorbingRandomWalks(RecursiveGraphFilter):
 
     def __init__(self,
                  alpha: float = 0.5,
-                 symmetric: bool = True,
                  *args, **kwargs):
-        """ Initializes the AbsorbingWalks filter parameters for appropriate parameter values. This can model PageRank
-        but is in principle a generalization that allows custom absorption rates per node (when not given, these are I).
+        """ Initializes the symmetric random walk strategy for appropriate parameter values.
 
         Args:
             alpha: Optional. (1-alpha)/alpha is the absorption rate of the random walk multiplied with individual node
@@ -301,14 +298,10 @@ class SymmetricAbsorbingRandomWalks(RecursiveGraphFilter):
 
         super().__init__(*args, **kwargs)
         self.alpha = alpha
-        self.symmetric = symmetric
 
-    def _start(self, M, personalization, ranks, absorption=None, **kwargs):
+    def _start(self, M, personalization, ranks, **kwargs):
         self.degrees = backend.degrees(M)
-        if self.symmetric:
-            self.absorption = (1+(1+4*self.degrees)**0.5)/2
-        else:
-            self.absorption = to_signal(personalization.graph, absorption).np * (1 - self.alpha) / self.alpha
+        self.absorption = (1+(1+4*self.degrees)**0.5)/2
         self.personalization_skew = self.absorption / (self.absorption + self.degrees)
         self.sqrt_degrees = (self.degrees / (self.absorption + self.degrees))
         self.sqrt_degrees_left = 1./self.absorption
@@ -322,9 +315,7 @@ class SymmetricAbsorbingRandomWalks(RecursiveGraphFilter):
         del self.personalization_skew
 
     def _formula(self, M, personalization, ranks, *args, **kwargs):
-        ret = backend.conv(ranks*self.sqrt_degrees_left, M) * self.sqrt_degrees \
-               + personalization * self.personalization_skew
-        return ret
+        return backend.conv(ranks*self.sqrt_degrees_left, M) * self.sqrt_degrees + personalization * self.personalization_skew
 
     def references(self):
         refs = super().references()

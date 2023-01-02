@@ -111,6 +111,7 @@ def test_completion():
         pg.AbsorbingWalks().rank(graph)
         pg.SymmetricAbsorbingRandomWalks().rank(graph)
         pg.HeatKernel().rank(graph)
+        pg.DijkstraRank().rank(graph, {"A": 1})
         assert True
 
 
@@ -153,6 +154,15 @@ def test_absorbing_vs_pagerank():
     for _ in supported_backends():
         pagerank_result = pg.PageRank(normalization='col').rank(graph, personalization)
         absorbing_result = pg.AbsorbingWalks(0.85, normalization='col', max_iters=1000).rank(graph, personalization)
+        assert pg.Mabs(pagerank_result)(absorbing_result) < pg.epsilon()
+
+
+def test_lowpass_vs_pagerank():
+    graph = next(pg.load_datasets_graph(["graph9"]))
+    personalization = {"A": 1, "B": 1}
+    for _ in supported_backends():
+        pagerank_result = pg.PageRank(0.9, use_quotient=False, max_iters=11, error_type="iters").rank(graph, personalization)
+        absorbing_result = pg.LowPassRecursiveGraphFilter().rank(graph, personalization)
         assert pg.Mabs(pagerank_result)(absorbing_result) < pg.epsilon()
 
 

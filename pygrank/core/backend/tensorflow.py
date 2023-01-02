@@ -3,6 +3,10 @@ import numpy as np
 from tensorflow import abs, reduce_sum as sum, eye, exp, identity as copy, reduce_min as min, reduce_max as max, reduce_mean as mean, ones
 
 
+def cast(x):
+    return tf.cast(x, dtype=tf.float32)
+
+
 def backend_init():
     # print('Enabling float32 in keras backend')
     tf.keras.backend.set_floatx('float32')

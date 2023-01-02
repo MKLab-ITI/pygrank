@@ -3,6 +3,10 @@ from numpy import abs, sum, exp, log, copy, repeat, min, max, dot, mean, diag, o
 from scipy.sparse import eye
 
 
+def cast(x):
+    return x
+
+
 def backend_init():
     pass
 

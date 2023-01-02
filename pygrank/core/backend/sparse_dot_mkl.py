@@ -18,6 +18,10 @@ except Exception as e:
     warnings.warn(str(e))
 
 
+def cast(x):
+    return x
+
+
 def backend_init():
     pass
 

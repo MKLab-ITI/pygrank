@@ -54,6 +54,7 @@ def test_fair_heuristics():
         "FairB": lambda G, p, s: pg.Normalize()(pg.AdHocFairness("B").transform(H.rank(G, p), sensitive=s)),
         "LFPRN": lambda G, p, s: pg.Normalize()(pg.LFPR().rank(G, p, sensitive=s)),
         "LFPRP": lambda G, p, s: pg.Normalize()(pg.LFPR(redistributor="original").rank(G, p, sensitive=s)),
+        "LFPRHK": lambda G, p, s: pg.Normalize()(pg.LFPR(redistributor=pg.HeatKernel()).rank(G, p, sensitive=s)),
         "FairWalk": lambda G, p, s: pg.FairWalk(H).rank(G, p, sensitive=s)
     }
     import networkx as nx

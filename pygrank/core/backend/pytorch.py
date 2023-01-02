@@ -3,6 +3,10 @@ import numpy as np
 from torch import abs, eye, clone as copy, ones, log, exp
 
 
+def cast(x):
+    return x.float()
+
+
 def sum(x, axis=None):
     return torch.sum(x) if axis is None else torch.sum(x, dim=axis)
 

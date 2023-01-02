@@ -16,88 +16,90 @@ def test_optimizer_errors():
 
 
 def test_optimizer_verbose():
-    import sys, io
-    prev_stdout = sys.stdout
-    sys.stdout = io.StringIO("")
-    pg.optimize(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4, max_vals=[5, 5], parameter_tol=1.E-8, verbose=True)
-    output = sys.stdout.getvalue()
-    sys.stdout = prev_stdout
-    assert len(output) > 0
+    for optimizer in [pg.optimize, pg.nelder_mead, pg.lbfgsb]:
+        import sys, io
+        prev_stdout = sys.stdout
+        sys.stdout = io.StringIO("")
+        optimizer(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4, max_vals=[5, 5], min_vals=[5, 5], parameter_tol=1.E-8, verbose=True)
+        assert(len(sys.stdout.getvalue()) <= 30)  # assert that empty range finishes immediately
+        optimizer(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4, max_vals=[5, 5], parameter_tol=1.E-8, verbose=True)
+        output = sys.stdout.getvalue()
+        sys.stdout = prev_stdout
+        assert len(output) > 30  # assert that things get indeed printed
 
 
 def test_optimizer():
     # https://en.wikipedia.org/wiki/Test_functions_for_optimization
 
-    for optimizer in [pg.optimize, pg.nelder_mead]:
-        # a simple function
-        p = pg.optimize(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4, max_vals=[5, 5], parameter_tol=1.E-8, verbose=False)
-        assert abs(p[0]-2) < 1.E-6
-        assert abs(p[1]-1) < 1.E-6
+    # a simple function
+    p = pg.optimize(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4, max_vals=[5, 5], parameter_tol=1.E-8, verbose=False)
+    assert abs(p[0]-2) < 1.E-6
+    assert abs(p[1]-1) < 1.E-6
 
-        # a simple function
-        p = pg.optimize(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4, max_vals=[5, 5], parameter_tol=1.E-8, verbose=False,
-                        partition_strategy="step", partitions=0.01)
-        assert abs(p[0]-2) < 1.E-6
-        assert abs(p[1]-1) < 1.E-6
+    # a simple function
+    p = pg.optimize(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4, max_vals=[5, 5], parameter_tol=1.E-8, verbose=False,
+                    partition_strategy="step", partitions=0.01)
+    assert abs(p[0]-2) < 1.E-6
+    assert abs(p[1]-1) < 1.E-6
 
-        # a simple function
-        p = pg.optimize(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4, max_vals=[5, 5], parameter_tol=1.E-8, verbose=False,
-                        partition_strategy="step", partitions=0.01, randomize=True)
-        assert abs(p[0]-2) < 1.E-6
-        assert abs(p[1]-1) < 1.E-6
+    # a simple function
+    p = pg.optimize(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4, max_vals=[5, 5], parameter_tol=1.E-8, verbose=False,
+                    partition_strategy="step", partitions=0.01, randomize=True)
+    assert abs(p[0]-2) < 1.E-6
+    assert abs(p[1]-1) < 1.E-6
 
-        # a simple function with redundant inputs and tol instead of parameter tolerance
-        p = pg.optimize(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4,
-                        max_vals=[5, 5, 5], min_vals=[0, 0, 5], deviation_tol=1.E-6, shrink_strategy="shrinking", verbose=False)
-        assert abs(p[0]-2) < 1.E-1
-        assert abs(p[1]-1) < 1.E-1
-        # TODO: check why shrinking is not as good
+    # a simple function with redundant inputs and tol instead of parameter tolerance
+    p = pg.optimize(loss=lambda p: (p[0]-2)**2+(p[1]-1)**4,
+                    max_vals=[5, 5, 5], min_vals=[0, 0, 5], deviation_tol=1.E-6, shrink_strategy="shrinking", verbose=False)
+    assert abs(p[0]-2) < 1.E-1
+    assert abs(p[1]-1) < 1.E-1
+    # TODO: check why shrinking is not as good
 
-        # Beale function
-        beale = lambda p: (1.5-p[0]+p[0]*p[1])**2+(2.25-p[0]+p[0]*p[1]**2)**2+(2.625-p[0]+p[0]*p[1]**3)**2
-        p = pg.optimize(loss=beale,
-                        max_vals=[4.5, 4.5], min_vals=[-4.5, -4.5], parameter_tol=1.E-8, verbose=False)
-        assert abs(p[0]-3) < 1.E-6
-        assert abs(p[1]-0.5) < 1.E-6
+    # Beale function
+    beale = lambda p: (1.5-p[0]+p[0]*p[1])**2+(2.25-p[0]+p[0]*p[1]**2)**2+(2.625-p[0]+p[0]*p[1]**3)**2
+    p = pg.optimize(loss=beale,
+                    max_vals=[4.5, 4.5], min_vals=[-4.5, -4.5], parameter_tol=1.E-8, verbose=False)
+    assert abs(p[0]-3) < 1.E-6
+    assert abs(p[1]-0.5) < 1.E-6
 
-        # noisy Beale function
-        from random import random, seed
-        seed(0)
-        noisy_beale = lambda p: (1.5 - p[0] + p[0] * p[1]) ** 2 + (2.25 - p[0] + p[0] * p[1] ** 2) ** 2 + (
-                    2.625 - p[0] + p[0] * p[1] ** 3) ** 2 + random()
-        p = pg.optimize(loss=noisy_beale,
-                        validation_loss=beale,
-                        max_vals=[4.5, 4.5], min_vals=[-4.5, -4.5], parameter_tol=1.E-8, verbose=False)
-        assert abs(p[0] - 3) < .1
-        assert abs(p[1] - 0.5) < .1
+    # noisy Beale function
+    from random import random, seed
+    seed(0)
+    noisy_beale = lambda p: (1.5 - p[0] + p[0] * p[1]) ** 2 + (2.25 - p[0] + p[0] * p[1] ** 2) ** 2 + (
+                2.625 - p[0] + p[0] * p[1] ** 3) ** 2 + random()
+    p = pg.optimize(loss=noisy_beale,
+                    validation_loss=beale,
+                    max_vals=[4.5, 4.5], min_vals=[-4.5, -4.5], parameter_tol=1.E-8, verbose=False)
+    assert abs(p[0] - 3) < .1
+    assert abs(p[1] - 0.5) < .1
 
-        # Beale function with nelder mead
-        p = pg.nelder_mead(loss=beale,
-                        max_vals=[4.5, 4.5], min_vals=[-4.5, -4.5], parameter_tol=1.E-8, verbose=False)
-        assert abs(p[0] - 3) < 1.E-6
-        assert abs(p[1] - 0.5) < 1.E-6
+    # Beale function with nelder mead
+    p = pg.nelder_mead(loss=beale,
+                    max_vals=[4.5, 4.5], min_vals=[-4.5, -4.5], parameter_tol=1.E-8, verbose=False)
+    assert abs(p[0] - 3) < 1.E-6
+    assert abs(p[1] - 0.5) < 1.E-6
 
-        # Beale function with lbfgsb
-        p = pg.lbfgsb(loss=beale,
-                        max_vals=[4.5, 4.5], min_vals=[-4.5, -4.5], parameter_tol=1.E-8, verbose=False)
-        assert abs(p[0] - 3) < 1.E-6
-        assert abs(p[1] - 0.5) < 1.E-6
+    # Beale function with lbfgsb
+    p = pg.lbfgsb(loss=beale,
+                    max_vals=[4.5, 4.5], min_vals=[-4.5, -4.5], parameter_tol=1.E-8, verbose=False)
+    assert abs(p[0] - 3) < 1.E-6
+    assert abs(p[1] - 0.5) < 1.E-6
 
-        # Beale function
-        p = pg.optimize(loss=beale,
-                        max_vals=[4.5, 4.5], min_vals=[-4.5, -4.5], parameter_tol=1.E-8, verbose=False)
+    # Beale function
+    p = pg.optimize(loss=beale,
+                    max_vals=[4.5, 4.5], min_vals=[-4.5, -4.5], parameter_tol=1.E-8, verbose=False)
 
-        # Booth function
-        p = pg.optimize(loss=lambda p: (p[0]+2*p[1]-7)**2+(2*p[0]+p[1]-5)**2,
-                        max_vals=[10, 10], min_vals=[-10, -10], parameter_tol=1.E-6, verbose=False)
-        assert abs(p[0] - 1) < 1.E-6
-        assert abs(p[1] - 3) < 1.E-6
+    # Booth function
+    p = pg.optimize(loss=lambda p: (p[0]+2*p[1]-7)**2+(2*p[0]+p[1]-5)**2,
+                    max_vals=[10, 10], min_vals=[-10, -10], parameter_tol=1.E-6, verbose=False)
+    assert abs(p[0] - 1) < 1.E-6
+    assert abs(p[1] - 3) < 1.E-6
 
-        # Beale function with depth instead of small divide range
-        p = pg.optimize(loss=lambda p: (1.5-p[0]+p[0]*p[1])**2+(2.25-p[0]+p[0]*p[1]**2)**2+(2.625-p[0]+p[0]*p[1]**3)**2,
-                        max_vals=[4.5, 4.5], min_vals=[-4.5, -4.5], parameter_tol=1.E-8, divide_range=2, depth=100, verbose=False)
-        assert abs(p[0] - 3) < 1.E-6
-        assert abs(p[1] - 0.5) < 1.E-6
+    # Beale function with depth instead of small divide range
+    p = pg.optimize(loss=lambda p: (1.5-p[0]+p[0]*p[1])**2+(2.25-p[0]+p[0]*p[1]**2)**2+(2.625-p[0]+p[0]*p[1]**3)**2,
+                    max_vals=[4.5, 4.5], min_vals=[-4.5, -4.5], parameter_tol=1.E-8, divide_range=2, depth=100, verbose=False)
+    assert abs(p[0] - 3) < 1.E-6
+    assert abs(p[1] - 0.5) < 1.E-6
 
 
 def test_autotune():
@@ -163,12 +165,12 @@ def test_hoptuner_explicit_algorithm():
     assert abs(auc1-auc2) < 0.005
 
 
-def test_hoptuner_autorgression():
+def test_hoptuner_autoregression():
     _, G, groups = next(pg.load_datasets_multiple_communities(["bigraph"]))
     group = groups[0]
     training, evaluation = pg.split(pg.to_signal(G, {v: 1 for v in group}), training_samples=0.01)
-    auc1 = pg.AUC(evaluation, exclude=training)(pg.HopTuner(measure=pg.AUC).rank(training))
-    auc3 = pg.AUC(evaluation, exclude=training)(pg.HopTuner(measure=pg.AUC, autoregression=5).rank(training))
+    auc1 = pg.AUC(evaluation, exclude=training)(pg.HopTuner(measure=pg.AUC, basis="krylov").rank(training))
+    auc3 = pg.AUC(evaluation, exclude=training)(pg.HopTuner(measure=pg.AUC, autoregression=5, tunable_offset=pg.AUC, basis="krylov").rank(training))
     assert auc3 > auc1*0.9
     # TODO: add a stricter test once a publication of HopTuner finds best method
 

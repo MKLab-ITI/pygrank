@@ -46,7 +46,6 @@ class ParameterTuner(Tuner):
                  cross_validate: int = 1,
                  combined_prediction: bool = True,
                  tuning_backend: str = None,
-                 pre_diffuse: Optional[NodeRanking] = None,
                  optimizer=optimize,
                  **kwargs):
         """
@@ -109,7 +108,6 @@ class ParameterTuner(Tuner):
         self.optimize_args = {kwarg: kwargs.get(kwarg, val) for kwarg, val in default_tuning_optimization.items()}
         self.combined_prediction = combined_prediction
         self.tuning_backend = tuning_backend
-        self.pre_diffuse = pre_diffuse
         self.cross_validate = cross_validate
         self.optimizer = optimizer
 
@@ -131,9 +129,6 @@ class ParameterTuner(Tuner):
             for seed, fraction in enumerate(fraction_of_training):
                 training, validation = split(backend_personalization, fraction, seed0+seed)
                 internal_training = training
-                if self.pre_diffuse is not None:
-                    internal_training = self.pre_diffuse(internal_training)
-                    validation = self.pre_diffuse(validation)
                 internal_training_list.append(internal_training)
                 validation_list.append(validation)
 
