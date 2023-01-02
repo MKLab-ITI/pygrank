@@ -20,7 +20,7 @@ Fast node ranking algorithms on large graphs.
 * More [datasets](documentation/datasets.md)
 
 # :hammer_and_wrench: Installation
-`pygrank` is meant to work with Python 3.9 or later. The latest version can be installed with pip per:
+`pygrank` works with Python 3.9 or later. The latest version can be installed with pip per:
 ```
 pip install --upgrade pygrank
 ```
