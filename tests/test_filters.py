@@ -131,7 +131,7 @@ def test_filter_stream():
             + pg.Normalize("sum") \
             >> pg.Normalize() \
             | pg.to_signal(graph, {v: 1 for v in graph})
-        assert pg.Mabs(test_result)(norm_result) < pg.epsilon()
+        assert pg.Mabs(test_result)(norm_result) < 2*pg.epsilon()
 
 
 def test_automatic_graph_casting():

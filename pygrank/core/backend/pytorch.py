@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from torch import abs, exp, eye, clone as copy, log, ones
+from torch import abs, eye, clone as copy, ones, log, exp
 
 
 def sum(x, axis=None):
@@ -67,10 +67,12 @@ def to_array(obj, copy_array=False):
             if copy_array:
                 return torch.clone(obj)
             return obj
-    return torch.ravel(torch.FloatTensor(np.array([v for v in obj])))
+    return torch.ravel(torch.FloatTensor(np.array([v for v in obj], dtype=np.float32)))
 
 
 def to_primitive(obj):
+    if isinstance(obj, float):
+        return torch.tensor(obj, dtype=torch.float32)
     return torch.FloatTensor(obj)
 
 

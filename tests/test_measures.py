@@ -95,8 +95,10 @@ def test_best_direction():
     assert pg.TNR([1, 2, 3]).best_direction() == 1
     assert pg.Mabs([1, 2, 3]).best_direction() == -1
     assert pg.MSQ([1, 2, 3]).best_direction() == -1
+    assert pg.MSQRT([1, 2, 3]).best_direction() == -1
     assert pg.Euclidean([1, 2, 3]).best_direction() == -1
     assert pg.L2([1, 2, 3]).best_direction() == -1
+    assert pg.L1([1, 2, 3]).best_direction() == -1
 
 
 def test_computations():
@@ -112,6 +114,8 @@ def test_computations():
         assert float(pg.PPV([1, 0, 0, 0])([1, 1, 0, 0])) == 0.5
         assert float(pg.TNR([1, 0, 0, 1])([1, 1, 0, 0])) == 0.5
         assert float(pg.Euclidean([0, 0, 0, 1])([1, 1, 0, 0])) < float(pg.Euclidean([0, 0, 0, 1])([1, 1, 1, 0]))
+        assert float(pg.L1([0, 0, 0, 1])([1, 1, 0, 0])) < float(pg.L1([0, 0, 0, 1])([1, 1, 1, 0]))
+        assert float(pg.L2([0, 0, 0, 1])([1, 1, 0, 0])) < float(pg.L2([0, 0, 0, 1])([1, 1, 1, 0]))
 
 
 def test_aggregated():
@@ -126,6 +130,9 @@ def test_aggregated():
         assert abs(float(pg.Disparity().add(pg.AUC(y1), max_val=0.5).add(pg.AUC(y2), min_val=0.9).evaluate(y3))-0.4) < epsilon
         assert abs(float(pg.Disparity().add(pg.AUC(y1), max_val=0.5).add(pg.AUC(y2), min_val=0.9).evaluate(y3))
                    + float(pg.Parity().add(pg.AUC(y1), max_val=0.5).add(pg.AUC(y2), min_val=0.9).evaluate(y3)-1)) < epsilon
+        # the following should have low precision due to the approximation of the hinge loss
+        assert abs(float(pg.GM(differentiable=True).add(pg.AUC(y1), max_val=0.5).add(pg.AUC(y2), min_val=0.9).evaluate(y3)) - 0.45**0.5) < 1.E-3
+        assert abs(float(pg.AM(differentiable=True).add(pg.AUC(y1), max_val=0.5).add(pg.AUC(y2), min_val=0.9).evaluate(y3)) - 0.7) < 1.E-3
 
 
 def test_remove_edges():

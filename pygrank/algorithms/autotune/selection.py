@@ -8,6 +8,8 @@ import numpy as np
 
 
 class AlgorithmSelection(Tuner):
+    """Selects the best among a list of node ranking algorithms by randomly masking the personalization and trying
+    to reconstruct the masked portion."""
     def __init__(self, rankers: Iterable[NodeRanking] = None,
                  measure: Callable[[GraphSignal, GraphSignal], Measure] = AUC,
                  fraction_of_training: Union[Iterable[float], float] = 0.9,

@@ -2,11 +2,23 @@ import warnings
 
 import matvec as mv
 import numpy as np
-from matvec import exp, log, dot, max, min, mean, repeat
+from matvec import dot, max, min, mean, repeat
 from scipy.sparse import eye
 
 
 # TODO: for full integration of this backend, add `matvec` to test_core.supported_backends
+
+def exp(x):
+    if isinstance(x, mv.Vector):
+        return mv.exp(x)
+    return np.exp(np.array(x))
+
+
+def log(x):
+    if isinstance(x, mv.Vector):
+        return mv.log(x)
+    return np.log(np.array(x))
+
 
 def abs(x):
     if isinstance(x, mv.Vector):
@@ -82,6 +94,8 @@ def to_primitive(obj):
         return obj
     if isinstance(obj, list) and isinstance(obj[0], list):
         return np.array(obj)
+    if isinstance(obj, float):
+        return obj
     return mv.to_vector(obj)
 
 

@@ -82,6 +82,8 @@ def to_array(obj, copy_array=False):
 
 
 def to_primitive(obj):
+    if isinstance(obj, float):
+        return torch.tensor(obj, dtype=torch.float32)
     return torch.FloatTensor(obj)
 
 

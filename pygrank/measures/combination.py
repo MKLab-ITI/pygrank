@@ -1,11 +1,12 @@
 from pygrank.core import backend, GraphSignalData, BackendPrimitive
 from pygrank.measures.utils import Measure
 from typing import Iterable, Tuple, Optional
-from math import log, exp, isinf
+from math import isinf
 
 
 def _differentiable_hinge(x, gamma=30):
     # doi:10.1088/1742-6596/1743/1/012025, pp. 4
+    x = backend.to_primitive(x)
     return x+backend.log(1+backend.exp(-x*gamma))/gamma
 
 
@@ -116,7 +117,7 @@ class Parity(MeasureCombination):
         for i in range(len(self.measures)):
             if self.weights[i] != 0:
                 evaluation = self.measures[i](scores)
-                evaluation = min(max(evaluation, self.thresholds[i][0]), self.thresholds[i][1])
+                evaluation = self.min(self.max(evaluation, self.thresholds[i][0]), self.thresholds[i][1])
                 result += (self.weights[i]*mult)*evaluation
             mult *= -1
         return 1-(result if result > 0 else -result)
@@ -130,6 +131,6 @@ class GM(MeasureCombination):
         for i in range(len(self.measures)):
             if self.weights[i] != 0:
                 evaluation = self.measures[i](scores)
-                evaluation = min(max(evaluation, self.thresholds[i][0]), self.thresholds[i][1])
-                result += self.weights[i]*log(max(backend.epsilon(), evaluation))
-        return exp(result / self._total_weight())
+                evaluation = self.min(self.max(evaluation, self.thresholds[i][0]), self.thresholds[i][1])
+                result += self.weights[i]*backend.log(backend.to_primitive(self.max(backend.epsilon(), evaluation)))
+        return backend.exp(result / self._total_weight())

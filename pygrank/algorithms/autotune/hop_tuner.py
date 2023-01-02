@@ -15,7 +15,7 @@ class HopTuner(Tuner):
     """
     Tunes a GenericGraphFilter specific measure by splitting the personalization
     in training and test sets and measuring the similarity of hops at given number of steps
-    away.
+    away. <br>:warning: **This is an experimental approach.**<br>
     """
     def __init__(self, ranker_generator: Callable[[list], NodeRanking] = None,
                  measure: Callable[[GraphSignal, GraphSignal], Supervised] = Cos,

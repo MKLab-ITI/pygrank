@@ -88,6 +88,7 @@ def optimize(loss,
              validation_loss=None):
     """
     Implements a coordinate descent algorithm for optimizing the argument vector of the given loss function.
+    A simplified version for default parameters has been published in [krasanakis2022autogf].
     Arguments:
         loss: The loss function. Could be an expression of the form `lambda p: f(p)' where f takes a list as an argument.
         max_vals: Optional. The maximum value for each parameter to search for. Helps determine the number of parameters.

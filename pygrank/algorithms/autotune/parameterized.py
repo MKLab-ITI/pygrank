@@ -38,7 +38,7 @@ class SelfClearDict(dict):
 class ParameterTuner(Tuner):
     """
     Tunes a parameterized version of node ranking algorithms under a specific measure by splitting the personalization
-    in training and test sets.
+    in training and test sets. The tuning mechanism is fully described in [krasanakis2022autogf].
     """
     def __init__(self, ranker_generator: Callable[[list], NodeRanking] = None,
                  measure: Callable[[GraphSignal, GraphSignal], Measure] = AUC,

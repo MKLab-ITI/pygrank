@@ -3,16 +3,17 @@ from typing import Callable, Mapping, Any
 from pygrank import Utility
 from pygrank.core import to_signal, GraphSignal, NodeRanking
 from pygrank.measures.utils import split
-from pygrank.measures import AUC, Measure, Time
+from pygrank.measures import AUC, Measure, Time, Unsupervised
 from timeit import default_timer as time
-from typing import Union, Iterable, Optional
+from typing import Union, List, Iterable, Optional
 import networkx as nx
 import collections
+from inspect import isclass
 
 
 def benchmark(algorithms: Mapping[str, NodeRanking],
               datasets: Any,
-              metric: Union[Callable[[nx.Graph], Measure], Callable[[GraphSignal, GraphSignal], Measure]] = AUC,
+              metrics: Union[Union[Callable[[nx.Graph], Measure], Callable[[GraphSignal, GraphSignal], Measure]], List[Union[Callable[[nx.Graph], Measure], Callable[[GraphSignal, GraphSignal], Measure]]]] = AUC,
               fraction_of_training: Union[float, Iterable[float]] = 0.5,
               sensitive: Optional[Union[Callable[[nx.Graph], Measure], Callable[[GraphSignal, GraphSignal], Measure]]] = None,
               seed: Union[int, Iterable[int]] = 0):
@@ -38,9 +39,14 @@ def benchmark(algorithms: Mapping[str, NodeRanking],
         >>> datasets = ...
         >>> pg.benchmark_print(pg.benchmark(algorithms, datasets))
     """
-    if sensitive is not None:
-        yield [""] + [algorithm for algorithm in algorithms for suffix in [metric.__name__, sensitive.__name__]]
-        yield [""] + [suffix for algorithm in algorithms for suffix in [metric.__name__, sensitive.__name__]]
+    if not isinstance(metrics, list):
+        metrics = [metrics]
+    if sensitive is not None or len(metrics) > 1:
+        yield [""] + [algorithm for algorithm in algorithms for suffix in [metric.__name__ for metric in metrics]+[sensitive.__name__]]
+        yield [""] + [suffix for algorithm in algorithms for suffix in [metric.__name__ for metric in metrics]+[sensitive.__name__]]
+    elif len(metrics) > 1:
+        yield [""] + [algorithm for algorithm in algorithms for suffix in [metric.__name__ for metric in metrics]]
+        yield [""] + [suffix for algorithm in algorithms for suffix in [metric.__name__ for metric in metrics]]
     else:
         yield [""] + [algorithm for algorithm in algorithms]
     seeds = [seed] if isinstance(seed, int) else seed
@@ -71,16 +77,17 @@ def benchmark(algorithms: Mapping[str, NodeRanking],
                         rank = lambda algorithm: algorithm(training)
                 dataset_results = [name]
                 for algorithm in algorithms.values():
-                    if metric == Time:
-                        tic = time()
-                        predictions = rank(algorithm)
-                        dataset_results.append(time()-tic)
-                    else:
-                        predictions = rank(algorithm)
-                        #try:
-                        dataset_results.append(metric(evaluation, training if training_samples != 1 else None)(predictions))
-                        #except:
-                        #    dataset_results.append(metric(graph)(predictions))
+                    for metric in metrics:
+                        if metric == Time:
+                            tic = time()
+                            predictions = rank(algorithm)
+                            dataset_results.append(time()-tic)
+                        else:
+                            predictions = rank(algorithm)
+                            if (hasattr(metric, "__code__") and metric.__code__.co_argcount == 1) or (isclass(metric) and issubclass(metric, Unsupervised)):
+                                dataset_results.append(metric(graph)(predictions))
+                            else:
+                                dataset_results.append(metric(evaluation, training if training_samples != 1 else None)(predictions))
                     if sensitive is not None:
                         try:
                             dataset_results.append(sensitive(sensitive_signal, training if training_samples != 1 else None)(predictions))
