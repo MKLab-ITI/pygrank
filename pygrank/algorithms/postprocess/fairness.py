@@ -1,5 +1,6 @@
 import pygrank
 from pygrank.algorithms.autotune import nelder_mead, optimize
+from pygrank.algorithms.convergence import ConvergenceManager
 from pygrank.algorithms.postprocess.postprocess import Tautology, Normalize, Postprocessor
 from pygrank.measures import pRule, Mabs, Supervised, AM, Mistreatment, TPR, TNR, Parity, MannWhitneyParity
 from pygrank.core import GraphSignal, to_signal, backend, BackendPrimitive, NodeRanking, GraphSignalGraph, GraphSignalData
@@ -19,9 +20,10 @@ class FairPersonalizer(Postprocessor):
                  pRule_weight: float = 1,
                  error_type: Callable[[GraphSignalData, GraphSignalData], Supervised] = Mabs,
                  parameter_buckets: int = 1,
-                 max_residual: float = 1,
+                 max_residual: float = 0,
                  error_skewing: bool = False,
-                 parity_type: str = "impact"):
+                 parity_type: str = "impact",
+                 fix_personalization: bool = True):
         """
         Instantiates a personalization editing scheme that trains towards optimizing
         retain_rank_weight*error_type(original scores, editing-induced scores)
@@ -71,6 +73,7 @@ class FairPersonalizer(Postprocessor):
         self.max_residual = max_residual
         self.error_skewing = error_skewing
         self.parity_type = parity_type
+        self.fix_personalization = fix_personalization
 
     def __culep(self,
                 personalization: BackendPrimitive,
@@ -98,21 +101,24 @@ class FairPersonalizer(Postprocessor):
         training, validation = None, None #split(personalization, 1)
         graph = personalization.graph
         if self.parity_type == "impact":
-            fairness_measure = pRule(sensitive, exclude=training)
+            fairness_measure = pRule(sensitive, exclude=training if not self.fix_personalization else None)
         elif self.parity_type == "U":
-            fairness_measure = MannWhitneyParity(sensitive, exclude=training)
+            fairness_measure = MannWhitneyParity(sensitive, exclude=training if not self.fix_personalization else None)
         elif self.parity_type == "TPR":
-            fairness_measure = Mistreatment(validation, sensitive, exclude=training, measure=TPR)
+            fairness_measure = Mistreatment(validation, sensitive, exclude=training if not self.fix_personalization else None, measure=TPR)
         elif self.parity_type == "TNR":
-            fairness_measure = Mistreatment(validation, sensitive, exclude=training, measure=TNR)
+            fairness_measure = Mistreatment(validation, sensitive, exclude=training if not self.fix_personalization else None, measure=TNR)
         elif self.parity_type == "mistreatment":
-            fairness_measure = AM([Mistreatment(validation, sensitive, exclude=training, measure=TPR),
-                                   Mistreatment(personalization, sensitive, exclude=training, measure=TNR)])
+            fairness_measure = AM([Mistreatment(validation, sensitive, exclude=training if not self.fix_personalization else None, measure=TPR),
+                                   Mistreatment(personalization, sensitive, exclude=training if not self.fix_personalization else None, measure=TNR)])
         else:
             raise Exception("Invalid parity type "+self.parity_type+": expected impact, TPR, TNR or mistreatment")
         training = personalization
         sensitive, personalization = pRule(sensitive).to_numpy(personalization)
         original_ranks = self.ranker.rank(graph, personalization, *args, **kwargs)
+
+        prev_convergence = self.ranker.convergence
+        self.ranker.convergence = ConvergenceManager(error_type="iters", max_iters=prev_convergence.iteration)
 
         def loss(params):
             fair_pers = self.__culep(training.np, sensitive, original_ranks, params)
@@ -120,17 +126,19 @@ class FairPersonalizer(Postprocessor):
             fairness_loss = fairness_measure(fair_ranks)
             # ranks = ranks.np / backend.max(ranks.np)
             # original_ranks = original_ranks.np / backend.max(original_ranks.np)
-            error = self.error_type(original_ranks, training)
-            error_value = error(fair_ranks)
-            return + self.retain_rank_weight * error_value * error.best_direction() \
+            error = self.error_type(original_ranks, exclude=training if not self.fix_personalization else None)
+            error_value = error(fair_ranks)#error(fair_ranks/backend.max(fair_ranks)*backend.max(original_ranks))
+            return - self.retain_rank_weight * error_value * error.best_direction() \
                    - self.pRule_weight * min(self.target_pRule, fairness_loss) #- 0.1 * fairness_loss
 
         optimal_params = optimize(loss,
                                   max_vals=[1, 1, 5, 5] * self.parameter_buckets + [self.max_residual],
                                   min_vals=[0, 0, -5, -5] * self.parameter_buckets+[0],
-                                  deviation_tol=1.E-5, divide_range=2, partitions=10)
+                                  deviation_tol=1.E-6, divide_range=2, partitions=10)
         optimal_personalization = self.__culep(personalization, sensitive, original_ranks, optimal_params)
-        return self.ranker.rank(graph, optimal_personalization, *args, **kwargs)
+        ranks = self.ranker.rank(graph, optimal_personalization, *args, **kwargs)
+        self.ranker.convergence = prev_convergence
+        return ranks
 
     def _reference(self):
         return "fair prior editing \\cite{krasanakis2020prioredit} for disparate "+self.parity_type+" mitigation"
@@ -144,7 +152,7 @@ class AdHocFairness(Postprocessor):
     def __init__(self,
                  ranker: Optional[Union[NodeRanking,str]] = None,
                  method: Optional[Union[NodeRanking,str]] = "O",
-                 eps: float = 1.E-12):
+                 eps: float = 1.E-12,):
         """
         Initializes the fairness-aware postprocessor.
 
@@ -182,10 +190,10 @@ class AdHocFairness(Postprocessor):
         phi = backend.sum(sensitive)/backend.length(sensitive)
         if self.method == "O" or self.method == "LFPRO":
             ranks = Normalize("sum").transform(ranks)
-            sumR = sum(ranks[v] * sensitive.get(v, 0) for v in ranks)
-            sumB = sum(ranks[v] * (1 - sensitive.get(v, 0)) for v in ranks)
-            numR = sum(sensitive.values())
-            numB = len(ranks) - numR
+            sumR = backend.sum(ranks * sensitive)
+            sumB = backend.sum(ranks*(1-sensitive))
+            numR = backend.sum(sensitive)
+            numB = backend.length(ranks) - numR
             if sumR < phi:
                 red = self.__distribute(phi - sumR, ranks, {v: 1 - sensitive.get(v, 0) for v in ranks})
                 ranks = {v: red.get(v, ranks[v] + (phi - sumR) / numR) for v in ranks}

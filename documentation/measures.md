@@ -11,31 +11,33 @@ All of them can be used through the code patterns presented at the library's [do
 5. [Parity](#measurecombination-parity)
 6. [AUC](#supervised-auc)
 7. [Accuracy](#supervised-accuracy)
-8. [Cos](#supervised-cos)
-9. [CrossEntropy](#supervised-crossentropy)
-10. [Dot](#supervised-dot)
-11. [Euclidean](#supervised-euclidean)
-12. [KLDivergence](#supervised-kldivergence)
-13. [L1](#supervised-l1)
-14. [L2](#supervised-l2)
-15. [L2Disparity](#supervised-l2disparity)
-16. [MKLDivergence](#supervised-mkldivergence)
-17. [MSQ](#supervised-msq)
-18. [MSQRT](#supervised-msqrt)
-19. [Mabs](#supervised-mabs)
-20. [MannWhitneyParity](#supervised-mannwhitneyparity)
-21. [MaxDifference](#supervised-maxdifference)
-22. [Mistreatment](#supervised-mistreatment)
-23. [NDCG](#supervised-ndcg)
-24. [PPV](#supervised-ppv)
-25. [PearsonCorrelation](#supervised-pearsoncorrelation)
-26. [SpearmanCorrelation](#supervised-spearmancorrelation)
-27. [TNR](#supervised-tnr)
-28. [TPR](#supervised-tpr)
-29. [pRule](#supervised-prule)
-30. [Conductance](#unsupervised-conductance)
-31. [Density](#unsupervised-density)
-32. [Modularity](#unsupervised-modularity)
+8. [BinaryCrossEntropy](#supervised-binarycrossentropy)
+9. [Cos](#supervised-cos)
+10. [CrossEntropy](#supervised-crossentropy)
+11. [Dot](#supervised-dot)
+12. [Euclidean](#supervised-euclidean)
+13. [KLDivergence](#supervised-kldivergence)
+14. [L1](#supervised-l1)
+15. [L2](#supervised-l2)
+16. [L2Disparity](#supervised-l2disparity)
+17. [MKLDivergence](#supervised-mkldivergence)
+18. [MSQ](#supervised-msq)
+19. [MSQRT](#supervised-msqrt)
+20. [Mabs](#supervised-mabs)
+21. [MannWhitneyParity](#supervised-mannwhitneyparity)
+22. [MaxDifference](#supervised-maxdifference)
+23. [Mistreatment](#supervised-mistreatment)
+24. [NDCG](#supervised-ndcg)
+25. [PPV](#supervised-ppv)
+26. [PearsonCorrelation](#supervised-pearsoncorrelation)
+27. [RMabs](#supervised-rmabs)
+28. [SpearmanCorrelation](#supervised-spearmancorrelation)
+29. [TNR](#supervised-tnr)
+30. [TPR](#supervised-tpr)
+31. [pRule](#supervised-prule)
+32. [Conductance](#unsupervised-conductance)
+33. [Density](#unsupervised-density)
+34. [Modularity](#unsupervised-modularity)
 
 ### <kbd>Measure</kbd> Time
 
@@ -196,6 +198,14 @@ Args:
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 
+### <kbd>Supervised</kbd> BinaryCrossEntropy
+
+Computes a cross-entropy loss of given vs known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
+
+Args: 
+ * *known_scores:* The desired graph signal outcomes. 
+ * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
+
 ### <kbd>Supervised</kbd> Cos
 
 Computes the cosine similarity between given and known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
@@ -206,7 +216,7 @@ Args:
 
 ### <kbd>Supervised</kbd> CrossEntropy
 
-Computes a cross-entropy loss of given vs known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
+Computes the KL-divergence of given vs known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
 
 Args: 
  * *known_scores:* The desired graph signal outcomes. 
@@ -347,6 +357,14 @@ Args:
 ### <kbd>Supervised</kbd> PearsonCorrelation
 
 Computes the Pearson correlation coefficient between given and known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
+
+Args: 
+ * *known_scores:* The desired graph signal outcomes. 
+ * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to ommit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
+
+### <kbd>Supervised</kbd> RMabs
+
+Computes the mean absolute error between scores and known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
 
 Args: 
  * *known_scores:* The desired graph signal outcomes. 

@@ -173,6 +173,7 @@ class LFPR(RecursiveGraphFilter):
                  alpha: float = 0.85,
                  redistributor: Optional[Union[str, NodeRanking]] = None,
                  target_prule: float = 1,
+                 fix_personalization: bool = True,
                  *args, **kwargs):
         """
         Initializes the locally fair random walk filter's parameters.
@@ -190,6 +191,7 @@ class LFPR(RecursiveGraphFilter):
         kwargs["preprocessor"] = default_preprocessor(assume_immutability=False, normalization=self.normalization)
         self.target_prule = target_prule
         self.redistributor = redistributor
+        self.fix_personalization = fix_personalization
         super().__init__(*args, **kwargs)
 
     def normalization(self, M):
@@ -208,10 +210,17 @@ class LFPR(RecursiveGraphFilter):
         self.outB = outB
         return M
 
-    def _prepare_graph(self, graph, sensitive, *args, **kwargs):
-        sensitive = to_signal(graph, sensitive)
+    def _prepare_graph(self, graph, personalization, sensitive, *args, **kwargs):
+        personalization = to_signal(graph, personalization)
+        sensitive = to_signal(personalization, sensitive)
         self.sensitive = sensitive
         self.phi = backend.sum(sensitive) / backend.length(sensitive) * self.target_prule
+        """if self.fix_personalization:
+            self.personalization_residual_sensitive = backend.sum(personalization*sensitive)
+            self.personalization_residual_non_sensitive = backend.sum(personalization*sensitive)
+        else:
+            self.personalization_residual_sensitive = 0
+            self.personalization_residual_non_sensitive = 0"""
         return graph
 
     def _start(self, M, personalization, ranks, sensitive, *args, **kwargs):
@@ -243,8 +252,13 @@ class LFPR(RecursiveGraphFilter):
         super()._start(M, personalization, ranks, *args, **kwargs)
 
     def _formula(self, M, personalization, ranks, sensitive, *args, **kwargs):
-        deltaR = backend.sum(ranks * self.dR)
-        deltaB = backend.sum(ranks * self.dB)
+        deltaR = backend.sum(ranks * self.dR)# - self.personalization_residual_sensitive
+        deltaB = backend.sum(ranks * self.dB)# - self.personalization_residual_non_sensitive
+        """ TODO: see if this is able to remove personalization removal from the end
+        if deltaR < 0 or deltaB < 0:
+            mm = backend.min(deltaR, deltaB)
+            deltaR = deltaR - mm
+            deltaB = deltaB - mm"""
         return (backend.conv(ranks, M) + deltaR * self.xR + deltaB * self.xB) * self.alpha + personalization * (
                 1 - self.alpha)
 

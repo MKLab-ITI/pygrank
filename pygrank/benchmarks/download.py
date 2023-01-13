@@ -31,6 +31,12 @@ datasets = {
                  "pairs": "citeseer/citeseer.cites",
                  "features": "citeseer/citeseer.content",
                  "remove": "citeseer/"},
+    "highschool": {"url": "http://www.sociopatterns.org/datasets/high-school-contact-and-friendship-networks",
+        "pairs": "http://www.sociopatterns.org/wp-content/uploads/2015/07/Facebook-known-pairs_data_2013.csv.gz",
+        "features": "http://www.sociopatterns.org/wp-content/uploads/2015/09/metadata_2013.txt",
+        "pair_process": lambda row: None if "0" in row[2] else [row[0], row[1]],
+        "features_to_groups": lambda line: line
+    },
     "pokec": {"url": "https://snap.stanford.edu/data/soc-Pokec.html",
                "pairs": "https://snap.stanford.edu/data/soc-pokec-relationships.txt.gz",
                "groups": "https://snap.stanford.edu/data/soc-pokec-profiles.txt.gz",
@@ -168,31 +174,60 @@ def download_dataset(dataset, path: str = os.path.join(os.path.expanduser('~'), 
                         file.write(" ".join(group)+"\n")
 
         if "features" in source and "groups" not in source:
-            features_path = download_path+"/"+source["features"]
+            if source["features"].startswith("http"):
+                features_path = download_path+"/features."+source["features"].split(".")[-1]
+                wget.download(source["features"], features_path)
+                if source["features"].split(".")[-1] not in ["txt", "csv"]:
+                    with gzip.open(features_path, 'rb') as f_in:
+                        with open(download_path+"/features.txt", 'wb') as f_out:
+                            shutil.copyfileobj(f_in, f_out)
+                    os.remove(features_path)
+                    features_path = download_path+"/features.txt"
+            else:
+                features_path = download_path+"/"+source["features"]
             groups = dict()
             features = dict()
-            with open(features_path) as features_file:
-                for line in features_file:
-                    line = line[:-1].split()
-                    if "feature_process" in source:
-                        line = source["feature_process"](line)
+            if "features_to_groups" in source:
+                with open(features_path) as features_file:
+                    for line in features_file:
+                        line = line[:-1].split()
+                        line = source["features_to_groups"](line)
                         if line is None:
                             continue
-                    node_id = line[0]
-                    group = line[-1]
-                    if group not in groups:
-                        groups[group] = list()
-                    groups[group].append(node_id)
-                    features[node_id] = [val.strip() for val in line[1:-1]]
+                        node_id = line[0]
+                        for group in line[1:]:
+                            if group not in groups:
+                                groups[group] = list()
+                            groups[group].append(node_id)
+                os.remove(features_path)
+                with open(download_path+"/info.txt", "w") as file:
+                    file.write("Group names:"+",".join(list(groups)))
+            else:
+                with open(features_path) as features_file:
+                    for line in features_file:
+                        line = line[:-1].split()
+                        if "feature_process" in source:
+                            line = source["feature_process"](line)
+                            if line is None:
+                                continue
+                        node_id = line[0]
+                        group = line[-1]
+                        if group not in groups:
+                            groups[group] = list()
+                        groups[group].append(node_id)
+                        features[node_id] = [val.strip() for val in line[1:-1]]
+                with open(download_path+"/info.txt", "w") as file:
+                    file.write("Group names:"+",".join(list(groups)))
             groups = {group: nodes for group, nodes in groups.items() if len(nodes) > 1}
             with open(download_path+'/groups.txt', 'w', encoding='utf-8') as file:
                 for g in groups.values():
                     for uid in g:
                         file.write(str(uid) + '\t')
                     file.write('\n')
-            with open(download_path+'/features.txt', 'w', encoding='utf-8') as file:
-                for p in features:
-                    file.write(str(p) + '\t' + '\t'.join(features[p]) + '\n')
+            if "features_to_groups" not in source:
+                with open(download_path+'/features.txt', 'w', encoding='utf-8') as file:
+                    for p in features:
+                        file.write(str(p) + '\t' + '\t'.join(features[p]) + '\n')
 
         if "features" in source and "groups" in source:
             if source["features"].startswith("http"):

@@ -30,45 +30,59 @@ For a brief overview of common terms found in this document
 please refer to the [glossary](glossary.md).
 
 # Architecture
-`pygrank` is designed with a hierarchical architecture, where the roles
-of source code components are clearly separated. At the core of the package
-lies the concept of graph signals, which wrap machine learning primitives
-(i.e. arrays, tensors) to be propagated through graphs.
-These primitives are manipulated through an abstracted backend.
+`pygrank` has a clear separation of responsibilities between its 
+different components. At the core of the package is the concept of 
+*graph signals*, which represent machine learning data (like arrays and tensors) 
+as they move through graphs. The package also has an abstracted 
+backend that allows the manipulation of these signals under different
+machine learning frameworks.
 
-A separate module defines measures that can assess the outcome of prediction tasks on
-graphs. These include both supervised and unsupervised measures,
-as well as ways to combine many of them (e.g. AUC and pRule) 
-o quantify the efficacy of multiclass predictions.
+The `measures` module is responsible for defining different 
+ways to evaluate the performance of prediction tasks on graphs. 
+These methods include both supervised and unsupervised measures, 
+and ways to combine multiple measures to get a better overall 
+understanding of performance.
 
-Perhaps the most important module is the one defining node ranking algorithms on graphs.
-The base of all algorithms are graph filters, which diffuse node scores to their neighbors.
-The outcome of filtering can be postprocessed 
-towards various objectives through transformations or by applying iterative
-schemes that edit algorithm inputs. A particularly useful part of the module
-is the ability to automatically tune parameters on-the-fly towards optimizing given measures
-in a computationally efficient manner. We refer to this practice as *autotune*.
+The `algorithms` modules defines different algorithms for 
+ranking nodes on graphs. These algorithms all rely on 
+*graph filters*, which diffuse the scores of individual 
+nodes to the neighbors that are connected to them. 
+The output of these filters can then be transformed or 
+processed further to achieve different goals. A particularly 
+useful feature of this module is its ability to automatically 
+adjust certain filter parameters on-the-fly in order to optimize 
+performance according to certain measures. This is referred to as *autotune*.
 
-Finally, a separate module is used to support benchmarking experiments that compare
-various node ranking algorithms.
+Finally, the `benchmarks` module  supports experiments that 
+compare different node ranking algorithms against each other.
 
 ![architecture](architecture.png)
 
 # Graph Signals
-Graph signals are ways to organize numerical values corresponding to  nodes. 
-Signals are inputted in and returned by ranking algorithms. For ease of use,
-ranking algorithms can also use maps of node values (e.g.  `{'A': 3, 'C': 2}`),
-numpy arrays (e.g. `np.array([3, 0, 2, 0])` or primitives of the currently enabled 
-backend. In this case, the graph also needs to be the passed to the inputs and
-algorithms perform internal conversions into graph signal representations.
-If inputs are lists, arrays or tensors, value order corresponds to
-the order in which *networkx* traverses graph nodes. 
+In `pygrank`, a *graph signal* is a way to organize numerical values 
+that correspond to the nodes in a graph. These signals are used as 
+inputs and outputs of node ranking algorithms. To make it easier to use 
+the package, algorithms also accept other ways of representing 
+signal data, such as maps of node values (e.g., `{'A': 3, 'C': 2}`)
+that assume all other missing elements to represent zero values, 
+numpy arrays (e.g., `np.array([3, 0, 2, 0])`), or other formats that 
+are supported by the backend in use.  The output of node ranking algorithms
+will always be in the form of the graph signal datatype.
+
+When using other forms of data to identify signals, 
+the graph itself also needs to be passed in the algorithms and they
+will perform conversions to graph signal representations internally. 
+If the input is a list, array, or tensor, the order of the values 
+corresponds to the order in which the `networkx` package traverses 
+the nodes in the graph. By convention, a signal of ones is understood 
+if `None` is provided as signal data.
 
 ### Defining and Manipulating Graph Signals
-As an example, let us create a simple graph
-and assign to nodes 'A' and 'C' the values *3* and *2* respectively,
-where all other nodes are assigned zeroes.
-To create a graph signal holding this information we can write:
+
+As an example, we create a simple graph that includes nodes
+'A' and 'C' with values of 3 and 2 respectively.
+To create a graph signal with these values and 0 for other nodes
+is done with the following code:
 
 ```python
 import pygrank as pg
@@ -83,19 +97,17 @@ print(signal['A'], signal['B'])
 # 3.0 0.0
 ```
 
-If is possible to directly access graph signal values as objects of the
-respective backend through a `signal.np` attribute. For example, if the
-default *numpy* backend is used, this attribute holds a numpy array.
-Although it will hold different primitives, depending on the loaded backend, 
-these can manipulated through available backend operations. Importantly,
-the attribute is wrapped so that it is automatically converted to primitives
-of loaded backends. Take care to not break backpropagation pipelines by
-switching backends and setting new signal values.
+Signal values can be accessed 
+through the `signal.np` attribute, which hold `numpy` arrays by default. 
+The attribute can hold different types of data depending on the *current*
+backend being used. Avoid breaking any
+pipelines used for backpropagation by manipulating signal values in
+backends other than the ones they were first defined in.
 
 ![graph signal](graph_signal.png)
 
-Continuing from the previous example,
-in the following code we divide a graph signal's elements with their sum.
+Continuing from the previous example, in the following code
+we normalize a graph signal's elements by dividing them with their sum.
 Value changes are reflected by signal access.
 
 ```python
@@ -106,61 +118,37 @@ print([(k,v) for k,v in signal.items()])
 # [('A', 0.6), ('B', 0.0), ('C', 0.4), ('D', 0.0), ('E', 0.0)]
 ```
 
-For comprehensibility purposes, arithmetic and backend operations
-are directly applicable to signals, in which case their `np` attributes are
-implied to be used. For instance, the previous example could be
-rewritten as:
+Arithmetic and backend operations
+are also directly applicable to signals, by implying the `np` attribute. 
+For instance, the previous code snippet can be rewritten as:
 
 ```python
-signal.np = signal / pg.sum(signal)
+signal = signal / pg.sum(signal)
 print([(k,v) for k,v in signal.items()])
 # [('A', 0.6), ('B', 0.0), ('C', 0.4), ('D', 0.0), ('E', 0.0)]
 ```
 
 
-### Implicit Use of Signals
-For ease of use, the package can directly parse
-dictionaries that map nodes to values. For example, in the dictionary
-`{'A':0.6,'C':0.4}` omitted nodes correspond to zeroes. It can also parse
-numpy arrays or tensorflow tensors with the same number of elements as graph nodes.
-For example, a parsable array would be
-`numpy.ndarray([node_scores.get(v, 0) for v in G])`, where `G`
-is the networkx graph passed to node ranking algorithms.
-When either of these two conventions is used,
-node ranking algorithms automatically convert them to graph signals.
-
-At the same time, the outputs of node ranking algorithms are always graph signals.
-This datatype implements the same methods as a dictionary and can
-be used interchangeably, whereas access to a numpy array storing
-corresponding node values can be obtained through the object attribute
-`signal.np`.
-
 # Graph Filters
-Graph filters are ways to diffuse graph signals through graphs by sending
-node values to neighbors and aggregating them there. This process
-effectively ends up with new graph signals. The original graph signals,
-often called *personalization* usually hold values proportional to the probabilities
-that nodes exhibit a property of interest (e.g. are members of an attribute-based
-or structural communities) and zero when they either do not exhibit that
-property at all or it is unknown if they do so. Then, the resulting scores 
-provide an improved estimatation for all nodes proportional to the probability
-that they also exhibit the property of interest.
+Graph filters are tools that spread the node values stored in graph signals
+through graphs by sending them to neighboring nodes and combining them there. 
+This process produces new graph signals. The original graph signal values,
+also called the *personalization*, often
+indicate the likelihood that nodes have a certain property, such as being members 
+of a structural or metadata community. Graph filters refine these 
+initial estimates by providing improved probability scores for all nodes.
 
-Based on this understanding, the following figure demonstrates a typical
-node recommendation pipeline using `pygrank`. This starts from a known
-personalization signal,
-applies graph filters, potentially alters their outcome with
-postprocessing mechanisms and eventually arrives at new node scores. 
-In this pipeline, filters effectively smooth out the
+The following figure demonstrates a typical
+node recommendation pipeline using `pygrank` that employs graph filters. 
+This starts from a known personalization,
+applies filters, potentially alters their outcome with
+postprocessors, and eventually arrives at new node values. 
+If filters are low-pass (they reduce graph eigenvalues), they smooth out the
 personalization through the graph's structure.
 
 ![pipeline](pipeline.png)
 
-The structural importance of nodes according to the filters used corresponds
-to their scores if a signal of equal values (e.g. ones) is provided as input. By
-convention, a signal of ones is understood if `None` is provided.
-
-### Passing Graph Signals through Filters
+### Passing graph signals through filters
 Let us first define an personalized PageRank algorithm, which is graph filter
 performing random walk with restart in the graph. If the personalization is
 binary (i.e. all nodes have initial scores either 0 or 1) then this algorithm
@@ -231,7 +219,7 @@ print(list(scores.items()))
 ```
 
 
-### Graph Diffusion Principles
+### Graph diffusion principles
 The main principle
 lies in recognizing that propagating a graph signal's vector (i.e. numpy array)
 representation *p* one hop away in the graph is performed through the operation
@@ -248,7 +236,11 @@ yields the following graph signal processing operation:
 
 where *H(M)* is called a *graph filter*.
 
-### List of Filters
+### List of filters
+An exhaustive list of ready-to-use graph filters can be
+found [here](graph_filters.md). After initialization with the appropriate
+parameters, these can be used interchangeably in the above example.
+
 `pygrank` provides several graph filters. Their usage pattern consists
 of instantiating them as algorithms `alg` and then calling them with 
 `alg(graph, personalization)` or the alternative `alg(pg.to_signal(graph, personalization))`
@@ -263,11 +255,7 @@ multiple times. Still, we recognize this as the same procedure, since
 it maintains the base use case of wrapping around a base filter to improve
 its outcome.
 
-An exhaustive list of ready-to-use graph filters can be
-found [here](graph_filters.md). After initialization with the appropriate
-parameters, these can be used interchangeably in the above example.
-
-### Convergence Criteria
+### Convergence criteria
 All graph filter constructors have a `convergence` argument that
 indicates an object to help determine their convergence criteria, such as type of
 error and tolerance for numerical convergence. If no such argument is passed
@@ -300,7 +288,7 @@ a post-processing step has been added throught the wrapping expression
 ``ordered_ranker = pg.Ordinals(ordered_ranker)`` to output rank order. 
 
 
-### Graph Preprocessing and Normalization
+### Graph preprocessing and normalization
 Graph filters all use the same default graph normalization scheme
 that performs symmetric (i.e. Laplacian-like) normalization 
 for undirected graphs and column-wise normalization that
@@ -401,7 +389,7 @@ Postprocessors wrap base graph filters to affect their outcome. Usage
 of node ranking algorithms remains the same as for the original graph
 filters.
 
-### Wrapping Postprocessors around Graph Filters
+### Wrapping postprocessors around graph filters
 Let us consider a simple scenario where we want the graph signal outputted
 by a filter to always be normalized so that its largest node score is one. For
 this, we will consider the graph `G`, signal `signal` and filter `algorithm`,
@@ -466,7 +454,11 @@ scores3 = pg.Normalize("max").transform(algorithm(graph, signal))
 ```
 
 
-### Types of Postprocessors
+### Types of postprocessors
+An exhaustive list of ready-to-use postprocessors can be
+found [here](postprocessors.md). After initialization with the appropriate
+parameters, these can be used interchangeably in the above examples.
+
 There are many ways graph filter posteriors can be processed to provide
 more meaningful data. Of the simpler ones are normalization constraints,
 for example to set the maximal or the sum of posterior node values to
@@ -480,10 +472,6 @@ seed oversampling postprocessors, which aim to augment node scores
 by providing more example nodes, and for fairness-aware posteriors,
 which aim to make node scores adhere to some fairness constraint, 
 such as disparate impact.
-
-An exhaustive list of ready-to-use postprocessors can be
-found [here](postprocessors.md). After initialization with the appropriate
-parameters, these can be used interchangeably in the above examples.
 
 :warning: Fairness-aware postprocessors always require an additional **keyword**
 argument `sensitive=...` to be passed to their *rank* or *transform* methods. 
@@ -503,23 +491,20 @@ Multiple measures can also be aggregated through the `pygrank.AM` and
 `pygrank.GM` classes, which respectively perform arithmetic and geometric
 averaging of measure outcomes.
 
-### List of Measures
+### List of measures
 An exhaustive list of measures can be
 found [here](measures.md). After initialization with the appropriate
 parameters, these can be used interchangeably in the above example.
 
 ### Datasets
-`pygrank` provides a variety of datasets. Most of these are retrieved from
-the [SNAP](https://snap.stanford.edu/) 
-and [LINQS](https://linqs.soe.ucsc.edu/data)
-repositories by automatically downloading and importing them,
-but synthetically generated datasets have also been
+`pygrank` provides a variety of datasets to be automatically downloaded
+and imported, but synthetically generated datasets have also been
 [generated for pygrank](https://github.com/maniospas/pygrank-datasets).
 To help researchers provide appropriate citations,
 we provide messages in the error console pointing to respective sources.
 Researchers can also add their own datasets by placing them in the loading
 directory (usually a `data` directory in their project, alongside automatically
-downloaded datasets). Please visited the repository of datasets
+downloaded datasets). Please visit the repository of datasets
 [generated for pygrank](https://github.com/maniospas/pygrank-datasets) for
 a description of conventions needed to create new datasets - these follow
 the pairs.txt and groups.txt conventions of the SNAP repository.
@@ -656,12 +641,12 @@ scores_tuned = pg.ParameterTuner(algorithm_from_params,
                                      measure=pg.NDCG).tune(personalization)
 ```
 
-### List of Tuners
+### List of tuners
 An exhaustive list of ready-to-use tuners can be found [here](tuners.md).
 After initialization with the appropriate
 parameters, these can be used interchangeably in the above example.
 
-### Tuning Speedup with Optimization Dictionaries
+### Tuning speedup with optimization dictionaries
 Graph convolutions are the most computationally-intensive operations
 node ranking algorithms employ, as their running time scales linearly with the 
 number of network edges (instead of nodes). However, when tuners
@@ -715,7 +700,7 @@ for tuning.
 
 # Applications
 
-### Algorithm Selection for Overlapping Community Recommendation
+### Algorithm selection for overlapping community recommendation
 `pygrank` provides the capability of automatically selecting the best algorithm among a list
 of candidate ones. This can be achieved either with supervised measures (typically AUC)
 for which a validation subset of nodes is withheld to determine the best algorithm
@@ -765,7 +750,7 @@ supervised one. On the other hand, for more nodes in the training seeds (such as
 10% of total community members) supervised evaluation is the better one.
 
 
-### Node Classification with Graph Neural Networks
+### Node classification with graph neural networks
 To support Graph Neural Network architectures, `pygrank` provides a mechanism
 for propagating latent representations through graph filters. This takes as
 input backend primitives organized into matrices, applies the graph filter on

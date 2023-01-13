@@ -106,6 +106,14 @@ class Mabs(Supervised):
         return backend.sum(backend.abs(known_scores-scores)) / backend.length(scores)
 
 
+class RMabs(Supervised):
+    """Computes the mean absolute error between scores and known scores."""
+
+    def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
+        known_scores, scores = self.to_numpy(scores)
+        return backend.sum(backend.abs(known_scores-scores))/backend.sum(backend.abs(known_scores))
+
+
 class MSQ(Supervised):
     """Computes the mean absolute error between scores and known scores."""
 
@@ -146,7 +154,7 @@ class Euclidean(Supervised):
         return backend.sum((known_scores - scores) * (known_scores - scores))**0.5
 
 
-class CrossEntropy(Supervised):
+class BinaryCrossEntropy(Supervised):
     """Computes a cross-entropy loss of given vs known scores."""
 
     def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
@@ -158,15 +166,24 @@ class CrossEntropy(Supervised):
         return ret
 
 
+class CrossEntropy(Supervised):
+    """Computes the KL-divergence of given vs known scores."""
+
+    def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
+        known_scores, scores = self.to_numpy(scores, normalization=False)
+        ret = -backend.sum(scores*backend.log(known_scores))
+        return ret
+
+
 class KLDivergence(Supervised):
     """Computes the KL-divergence of given vs known scores."""
 
     def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
         known_scores, scores = self.to_numpy(scores, normalization=True)
         eps = backend.epsilon()
-        known_scores = known_scores - backend.min(known_scores) + eps
+        known_scores = known_scores + eps
         known_scores = backend.safe_div(known_scores, backend.sum(known_scores))
-        scores = scores - backend.min(scores) + eps
+        scores = scores + eps
         scores = backend.safe_div(scores, backend.sum(scores))
         ratio = scores / known_scores
         ret = backend.sum(scores*backend.log(ratio))
@@ -179,9 +196,9 @@ class MKLDivergence(Supervised):
     def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
         known_scores, scores = self.to_numpy(scores, normalization=True)
         eps = backend.epsilon()
-        known_scores = known_scores - backend.min(known_scores) + eps
+        known_scores = known_scores + eps
         known_scores = known_scores / backend.sum(known_scores)
-        scores = scores - backend.min(scores) + eps
+        scores = scores + eps
         scores = scores / backend.sum(scores)
         ratio = scores / known_scores
         ret = -backend.sum(scores*backend.log(ratio))
@@ -287,6 +304,8 @@ class pRule(Supervised):
         s = backend.sum(sensitive)
         p1 = backend.safe_div(p1, s)
         p2 = backend.safe_div(p2, backend.length(sensitive)-s)
+        p1 = backend.abs(p1)
+        p2 = backend.abs(p2)
         if p1 <= p2:  # this implementation is derivable
             return p1 / p2
         return p2 / p1

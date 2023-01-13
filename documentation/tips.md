@@ -16,9 +16,9 @@ import pygrank as pg
 
 algorithm = pg.PageRank(alpha=0.9, tol=1.E-9, max_iters=1000)
 ```
-For historical reasons (e.g. compatibility with `networkx`), 
+For compatibility with `networkx` and other historical practices, 
 these are not the default parameters values.
-But they tend to work well in big graphs. A little explanation on 
+However, they tend to work well in big graphs. A little explanation on 
 the choices:
 - Personalized PageRank is equivalent to stochastic random
 walks with average length *1/(1-alpha)* hops away from
@@ -27,14 +27,16 @@ seed nodes.
 numerical tolerance to make sure that your numer of seeds
 divided by your number of nodes is not immediately
 smaller than that.
-- Higher diffusion parameters (*alpha*) and
-lower numerical tolerances drastically increase the number of
+- Higher diffusion parameters *alpha* and
+lower numerical tolerances increase the number of
 iterations it takes for recursive graph filters to converge.
 Thus, a higher cap to the computational limit should be
 placed to make sure that this is not exceeded before 
-convergence. (Note: Never run algorithms with computational
-limits higher than your allocated computational budget, 
-as a last failsafe against unforeseen algorithmic properties.)
+convergence.
+
+:warning: As a last failsafe against unforeseen convergence properties,
+make sure that you run algorithms 
+with computational limits within allocated budget.
 
 ### My communities do not comprise enough members.
 Try to increase the receptive field of node ranking algorithms,

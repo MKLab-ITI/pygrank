@@ -4,13 +4,12 @@ Fast node ranking algorithms on large graphs.
 <br>
 <sup><sub>Node score diffusion · Recommendation and ranking · Community structure · Link prediction · Graph signal processing</sub></sup>
 <br>
-<br>
 
 **License:** Apache Software License
 <br>**Author:** Emmanouil (Manios) Krasanakis
-<br>**Dependencies:** `networkx`, `numpy`, `scipy`, `sklearn`, `wget`
-<br>**Backends (optional):** `tensorflow`, `torch`, `torch_sparse`, `matvec` 
-<br><sup><sub>*Externally install backends before using them.*</sub></sup>
+<br>**Dependencies:** `networkx`,`numpy`,`scipy`,`sklearn`,`wget`
+<br>**Backends (optional):** `numpy`,`tensorflow`,`pytorch`,`torch_sparse`,`matvec` 
+<br><sup><sub>*Externally install non-numpy backends before using them.*</sub></sup>
 
 ![build](https://github.com/MKLab-ITI/pygrank/actions/workflows/tests.yml/badge.svg)
 [![codecov](https://codecov.io/gh/MKLab-ITI/pygrank/branch/master/graph/badge.svg?token=RYZOT4UY8Q)](https://codecov.io/gh/MKLab-ITI/pygrank)
@@ -62,27 +61,26 @@ The graph can be created with `networkx` or, for faster computations,
 with the `pygrank.fastgraph` module. Nodes can hold any 
 kind of object or data type (you don't need to convert them to integers).
 
-The above snippet first defines a `preprocessor`, 
-which typically controls how graph adjacency matrices are normalized.
+The above snippet starts by defining a `preprocessor`, 
+which controls how graph adjacency matrices are normalized.
 In this case, a symmetric normalization
 is applied (which is ideal for undirected graphs) and we also
 assume graph immutability, i.e., that it will not change in the future.
 When this assumption is declared, the preprocessor hashes a lot of
 computations to considerably speed up experiments or autotuning.
 
-The snippet uses the [chain operator](documentation/functional.md) >>
-to wrap node ranking algorithms by various kinds of postprocessors
-(you can also put algorithms into each other's constructors
-if you are not a fan of functional programming).
+The snippet uses the [chain operator](documentation/functional.md)
+to wrap node ranking algorithms by various kinds of postprocessors.
+You can also put algorithms into each other's constructors
+if you are not a fan of functional programming.
 The chain starts from a pagerank graph filter with diffusion parameter
-0.85. Other types of filters and even automatically tuned ones can
-be declared.
+0.85. Other filters can be declared, including automatically tuned ones.
 
-The full algorithm is run as a callable,
-producing a map between nodes and values 
+The produced algorithm is run as a callable,
+yielding a map between nodes and values 
 (in graph signal processing, such maps are called graph signals)
-and the value of a particular node is printed. Graph signals can
-also be created and directly parsed by algorithms, for example per:
+and the value of a node is printed. Graph signals can
+also be created and directly parsed by algorithms, for example as:
 ```
 signal = pg.to_signal(graph, {v: 1. for v in seeds})
 ranks = algorithm(signal)
@@ -98,22 +96,26 @@ Finally, the snippet prints a recommended citation for the algorithm.
 
 
 # :brain: Overview
-Analyzing graph edges (links) between graph nodes can help rank/score
-nodes based on proximity to structural or attribute-based communities 
-of known example members.
-With the introduction of graph signal processing and
-[decoupled graph neural networks](https://dl.acm.org/doi/abs/10.1145/3442381.3449927) 
-the importance of node ranking has drastically 
-increased, as its ability to perform inductive learning by quickly
-spreading node information through edges has been theoretically and experimentally
-corroborated. For example, it can be used to make predictions based on few known
-node attributes or the outputs of feature-based machine learning models.
+Analyzing graph edges (links) between graph nodes can help 
+rank or score nodes based on proximity to structural or 
+attribute-based communities given known example members. 
+With the introduction of graph signal processing and 
+[decoupled graph neural networks](https://dl.acm.org/doi/abs/10.1145/3442381.3449927),
+the importance of node ranking has drastically increased,
+as its ability to perform induction by quickly 
+spreading node information through edges has 
+been theoretically and experimentally corroborated. 
+For example, it can be used to make predictions based on 
+a few known node attributes or based on the outputs of 
+feature-based machine learning models.
 
-`pygrank` is a collection of node ranking algorithms and practices that 
-support real-world conditions, such as large graphs and heterogeneous
-preprocessing and postprocessing requirements. Thus, it provides
-ready-to-use tools that simplify deployment of theoretical advancements
-and testing of new algorithms.
+`pygrank` is a collection of node ranking algorithms 
+and practices that support real-world conditions, 
+such as large graphs and heterogeneous preprocessing 
+and postprocessing requirements. Thus, it provides 
+ready-to-use tools that simplify the deployment of 
+theoretical advancements and testing of new algorithms.
+
 
 Some of the library's advantages are:
 1. **Compatibility** with [networkx](https://github.com/networkx/networkx), plain [numpy](https://numpy.org), [tensorflow](https://www.tensorflow.org), [pytorch](https://pytorch.org), [matvec](https://github.com/maniospas/matvec).

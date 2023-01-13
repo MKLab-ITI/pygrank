@@ -8,7 +8,7 @@ class CustomLoss(pg.Supervised):
 
     def evaluate(self, scores: pg.GraphSignalData) -> pg.BackendPrimitive:
         known_scores, scores = self.to_numpy(scores)
-        ret = pg.max(tf.nn.softmax((known_scores-scores)**2))
+        ret = pg.log(pg.max(tf.nn.softmax((known_scores-scores)**2)))
         return ret
 
 
@@ -42,8 +42,9 @@ class Tensortune(pg.Postprocessor):
                  postprocessor=pg.Tautology,
                  fix_personalization=False,
                  gnn=True,
-                 zero_mabs=1,
+                 zero_mabs=.01,
                  fairness_weight=1,
+                 dims=5,
                  max_fairness=float('inf'),
                  robustness=0.0001):
         self.ranker = ranker
@@ -57,35 +58,35 @@ class Tensortune(pg.Postprocessor):
         self.fairness_weight = fairness_weight
         self.max_fairness = max_fairness
         self._noise = None
+        self.dims = dims
 
     def model(self):
         #if self._model is None:
         model = tf.keras.models.Sequential()
         model.add(tf.keras.Input(shape=(3,)))
-        dims = 4
+        dims = self.dims
 
         class CustomSerializer(tf.keras.initializers.Initializer):
             def __call__(self, shape, dtype=None, **kwargs):
                 return tf.concat([tf.constant(1, shape=(1, shape[1]),  dtype=dtype),
-                                  tf.random.normal(shape=(shape[0]-1, shape[1]), dtype=dtype)*0.00], axis=0)
+                                  tf.zeros(shape=(shape[0]-1, shape[1]), dtype=dtype)], axis=0)
 
         model.add(tf.keras.layers.Dense(dims,
                                         kernel_initializer=CustomSerializer(),
                                         activation="relu",
                                         #kernel_regularizer=tf.keras.regularizers.L2(0.0005)
                                         ))
-        for _ in range(self.depth):
+        for _ in range(self.depth*5):
             model.add(tf.keras.layers.Dense(dims,
                                             kernel_initializer=CustomSerializer(),
                                             activation="relu",
                                             #kernel_regularizer=tf.keras.regularizers.L2(0.00001)
                                             ))
+
         model.add(tf.keras.layers.Dense(1,
                                         kernel_initializer=CustomSerializer(),
-                                        activation=lambda x: tf.abs(x),
                                         #kernel_regularizer=tf.keras.regularizers.L2(0.00001)
                                         ))
-        #model.add(Noise(self.robustness))
 
         self._model = model
         self._model.compile()
@@ -108,12 +109,11 @@ class Tensortune(pg.Postprocessor):
         else:
             training_objective = pg.AM(differentiable=True)\
                 .add(pg.Mabs(tf.zeros(original_ranks.np.shape, tf.float32)), weight=float(self.zero_mabs))\
-                .add(pg.Mabs(tf.cast(original_ranks.np, tf.float32), exclude=None if self.fix_personalization else tf.cast(personalization.np, tf.float32)), weight=1)\
+                .add(pg.RMabs(tf.cast(original_ranks.np, tf.float32), exclude=None if self.fix_personalization else tf.cast(personalization.np, tf.float32)), weight=1)\
                 .add(pg.pRule(tf.cast(sensitive.np, tf.float32), exclude=None if self.fix_personalization else tf.cast(personalization.np, tf.float32)),
                      max_val=self.max_fairness, weight=-self.fairness_weight)
 
-        max_patience = 100
-        repeats = 10
+        max_patience = 300
         self.depth = 1
         model = self.model()
         with pg.Backend("tensorflow"):
@@ -124,7 +124,8 @@ class Tensortune(pg.Postprocessor):
 
             best_loss = float('inf')
             best_ranks = None
-            optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)#, clipnorm=0.1)
+            from examples.fairness.bounded_adam import AdamBounded
+            optimizer = AdamBounded(learning_rate=0.001)
 
             patience = max_patience
             best_repeat_loss = float('inf')
@@ -162,10 +163,10 @@ class Tensortune(pg.Postprocessor):
 
                 patience -= 1
                 if patience == 0:
-                    repeats -= 1
-                    if repeats == 0 or best_loss >= best_repeat_loss:
+                    #repeats -= 1
+                    if best_loss >= best_repeat_loss:
                         break
-                    best_repeat_loss = min(best_loss, best_repeat_loss)
+                    best_repeat_loss = best_loss
                     patience = max_patience
                     self.depth += 1
                     model = self.model()

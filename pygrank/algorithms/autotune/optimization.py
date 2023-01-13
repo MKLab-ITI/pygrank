@@ -22,16 +22,6 @@ def __add(weights, index, increment, max_val, min_val, coarse=0):
     weights[index] = min(max_val, max(min_val, weights[index]+increment))
     if coarse != 0:
         weights[index] = round(weights[index]/coarse)*coarse
-    #if increment != 0 and (weights[index] == min_val or weights[index] == max_val):
-    #    return None
-    # normalize weights
-    """
-    min_weight = min(0, min(weights))
-    if min_weight!=0:
-        weights = [weight-min_weight for weight in weights]
-    sum_weights = sum(weights)
-    weights = [weight/sum_weights for weight in weights]
-    """
     return weights
 
 

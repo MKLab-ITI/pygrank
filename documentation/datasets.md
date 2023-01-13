@@ -13,6 +13,7 @@ All datasets can be imported with code patterns presented at the library's [docu
 | orkut | https://snap.stanford.edu/data/com-Orkut.html | :heavy_check_mark: | :heavy_check_mark: |  |
 | eucore | https://snap.stanford.edu/data/email-Eu-core.html | :heavy_check_mark: | :heavy_check_mark: |  |
 | citeseer | https://linqs.soe.ucsc.edu/data | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| highschool | http://www.sociopatterns.org/datasets/high-school-contact-and-friendship-networks | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 | pokec | https://snap.stanford.edu/data/soc-Pokec.html | :heavy_check_mark: | :heavy_check_mark: |  |
 | polblogs | http://www-personal.umich.edu/~mejn/netdata | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 | polbooks | http://www-personal.umich.edu/~mejn/netdata | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
