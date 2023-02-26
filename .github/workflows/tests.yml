@@ -30,7 +30,7 @@ jobs:
           pip install mkl
           pip install sparse_dot_mkl
           pip install wget
-          pip install tensorflow-gpu
+          pip install tensorflow
           pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu117
           pip install torch-scatter torch-sparse -f https://data.pyg.org/whl/torch-1.13.0+cu117.html
           pip install pytest
