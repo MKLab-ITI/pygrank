@@ -8,10 +8,11 @@ All of them can be used through the code patterns presented at the library's [do
 2. [LowPassRecursiveGraphFilter](#graphfilter-lowpassrecursivegraphfilter)
 3. [GenericGraphFilter](#closedformgraphfilter-genericgraphfilter)
 4. [HeatKernel](#closedformgraphfilter-heatkernel)
-5. [AbsorbingWalks](#recursivegraphfilter-absorbingwalks)
-6. [DijkstraRank](#recursivegraphfilter-dijkstrarank)
-7. [PageRank](#recursivegraphfilter-pagerank)
-8. [SymmetricAbsorbingRandomWalks](#recursivegraphfilter-symmetricabsorbingrandomwalks)
+5. [PageRankClosed](#closedformgraphfilter-pagerankclosed)
+6. [AbsorbingWalks](#recursivegraphfilter-absorbingwalks)
+7. [DijkstraRank](#recursivegraphfilter-dijkstrarank)
+8. [PageRank](#recursivegraphfilter-pagerank)
+9. [SymmetricAbsorbingRandomWalks](#recursivegraphfilter-symmetricabsorbingrandomwalks)
 
 ### <kbd>RecursiveGraphFilter</kbd> AbsorbingWalks
 
@@ -211,6 +212,39 @@ graph, seed_nodes = ...
 ranks = algorithm(graph, {v: 1 for v in seed_nodes}) 
 ```
 
+### <kbd>ClosedFormGraphFilter</kbd> PageRankClosed
+
+PageRank closed filter. The constructor initializes the PageRank scheme parameters. 
+
+Args: 
+ * *alpha:* Optional. 1-alpha is the bias towards the personalization. Default alpha value is 0.85 for historyical reasons. However, in large graphs it is often preferred to set this argument to 0.9. 
+ * *krylov_dims:* Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space of the graph with degree equal to the provided dimensions. This considerably speeds up filtering but ends up providing an *approximation* of true graph filter outcomes. If None (default) filters are computed in the node space, which can be slower but yields exact computations. Otherwise, a numeric value equal to the number of latent Krylov space dimensions is required. 
+ * *coefficient_type:* Optional. If "taylor" (default), provided coefficients are considered to define a Taylor expansion. If "chebyshev", they are considered to be the coefficients of a Chebyshev expansion, which provides more robust errors but require normalized personalization. These approaches are **not equivalent** for the same coefficient values; changing this argument could cause adhoc filters to not work as indented. 
+ * *optimization_dict:* Optional. If it is a dict, the filter keeps intermediate values that can help it avoid most (if not all) matrix multiplication when run again for the same graph signal. Setting this parameter to None (default) can save approximately **half the memory** the algorithm uses but slows down tuning iteration times to O(edges) instead of O(nodes). Note that the same dict needs to be potentially passed to multiple algorithms that take the same graph signal as input to see any improvement.
+ * *preprocessor:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *personalization_transform:* Optional. A Postprocessor whose `transform` method is used to transform the personalization before applying the graph filter. If None (default) a Tautology is used. 
+ * *preserve_norm:* Optional. If True (default) the input's norm is used to scale the output. For example, if *convergence* is L1, this effectively means that the sum of output values is equal to the sum of input values.
+ * *normalization:* Optional. The type of normalization can be "none", "col", "symmetric", "laplacian", "salsa", or "auto" (default). The last one selects the type of normalization between "col" and "symmetric", depending on whether the graph is directed or not respectively. Alternatively, this could be a callable, in which case it transforms a scipy sparse adjacency matrix to produce a normalized copy. 
+ * *weight:* Optional. The weight attribute (default is "weight") of *networkx* graph edges. This is ignored when *fastgraph* graphs are parsed, as these are unweighted. 
+ * *assume_immutability:* Optional. If True, the output of preprocessing further wrapped through a MethodHasher to avoid redundant calls. In this case, consider creating one `pygrank.preprocessor` and passing it to all algorithms running on the same graphs. Default is False, as graph immutability needs to be explicitly assumed but cannot be guaranteed. 
+ * *renormalize:* Optional. If True, the renormalization trick (self-loops) of graph neural networks is applied to ensure iteration stability by shrinking the graph's spectrum. Default is False. Can provide anything that can be cast to a float to regularize the renormalization. 
+ * *reduction:* Optional. Controls how degrees are calculated from a callable (e.g. `pygrank.eigdegree` for entropy-preserving transition matrices [li2011link]). Default is `pygrank.degrees`. 
+ * *cors:* Optional.Cross-origin resource (shared between backends). Default is False. <details> If True, it enriches backend primitives holding the outcome of graph preprocessing with additional private metadata that enable their usage as base graphs when passing through other postprocessors in other backends. This is not required when constructing GraphSignal instances with the pattern `pygrank.to_signal(M, personalization_data)` where `M = pygrank.preprocessor(cors=True)(graph)` but is mandarotry when the two commands are called in different backends. Note that *cors* objects are not normalized again with other strategies in other preprocessors and compliance is not currently enforced. There may be speedups by using *cors* when frequently switching between backends for the same graphs. Usage is demonstrated in [GNN examples](/examples/publications/krasanakis2022pygrank/4.%20Autotune%20in%20APPNP.py) . If False (default), a lot of memory is saved by not keeping pointers to all versions of adjacency matrices among backends in which it is run. Overall, prefer keeping this behavior switched off. Enabling *cors* and then visiting up to two backends out of which one is "numpy", does not affect the maximum memory consumption by code processing one graph. </details> 
+ * *tol:* Numerical tolerance to determine the stopping point (algorithms stop if the "error" between consecutive iterations becomes less than this number). Default is 1.E-6 but for large graphs 1.E-9 often yields more robust convergence points. If the provided value is less than the numerical precision of the backend `pygrank.epsilon()` then it is snapped to that value. *None* tolerance will stop when consecutive iterations are exactly the same. 
+ * *error_type:* Optional. How to calculate the "error" between consecutive iterations of graph signals. If "iters", convergence is reached at iteration *max_iters*-1 without throwing an exception and even if numerical convergence happens to occur earlier. Default is `pygrank.Mabs`. 
+ * *max_iters:* Optional. The number of iterations algorithms can run for. If this number is exceeded, an exception is thrown. This could help manage computational resources. Default value is 100, and exceeding this value with graph filters often indicates that either graphs have large diameters or that algorithms of choice converge particularly slowly. end_modulo. Optional. Checks the convergence criteria every fixed number of iterations. For value of 1 (default), convergence is checked in every iteration, for value of 2 every second iteration, etc. 
+ * *iter_exception:* Optional. The type of exception class to be thrown if max iterations are reached (when *error_type* is not "iters"). If *None*, this quietly closes the iterations as if convergence is reached. *Avoid* changing this argument for deployment-ready systems, as performing a fixed number of iteration should be a preferred practice compared to stopping either there or at a fixed numerical tolerance. Default is *Exception*. 
+
+Example:
+
+```python 
+import pygrank as pg 
+algorithm = pg.PageRankClosed(alpha=0.99, tol=1.E-9) # tol passed to the ConvergenceManager 
+graph, seed_nodes = ... 
+ranks = algorithm(graph, {v: 1 for v in seed_nodes}) 
+```
+
 ### <kbd>RecursiveGraphFilter</kbd> SymmetricAbsorbingRandomWalks
 
 Implementation of partial absorbing random walks for *Lambda = (1-alpha)/alpha diag(absorption vector)*. The constructor initializes the symmetric random walk strategy for appropriate parameter values. 
@@ -312,6 +346,39 @@ Example:
 ```python 
 from pygrank.algorithms import HeatKernel 
 algorithm = HeatKernel(t=3, tol=1.E-9) # tol passed to the ConvergenceManager 
+graph, seed_nodes = ... 
+ranks = algorithm(graph, {v: 1 for v in seed_nodes}) 
+```
+
+### <kbd>ClosedFormGraphFilter</kbd> PageRankClosed
+
+PageRank closed filter. The constructor initializes the PageRank scheme parameters. 
+
+Args: 
+ * *alpha:* Optional. 1-alpha is the bias towards the personalization. Default alpha value is 0.85 for historyical reasons. However, in large graphs it is often preferred to set this argument to 0.9. 
+ * *krylov_dims:* Optional. Performs the Lanczos method to estimate filter outcome in the Krylov space of the graph with degree equal to the provided dimensions. This considerably speeds up filtering but ends up providing an *approximation* of true graph filter outcomes. If None (default) filters are computed in the node space, which can be slower but yields exact computations. Otherwise, a numeric value equal to the number of latent Krylov space dimensions is required. 
+ * *coefficient_type:* Optional. If "taylor" (default), provided coefficients are considered to define a Taylor expansion. If "chebyshev", they are considered to be the coefficients of a Chebyshev expansion, which provides more robust errors but require normalized personalization. These approaches are **not equivalent** for the same coefficient values; changing this argument could cause adhoc filters to not work as indented. 
+ * *optimization_dict:* Optional. If it is a dict, the filter keeps intermediate values that can help it avoid most (if not all) matrix multiplication when run again for the same graph signal. Setting this parameter to None (default) can save approximately **half the memory** the algorithm uses but slows down tuning iteration times to O(edges) instead of O(nodes). Note that the same dict needs to be potentially passed to multiple algorithms that take the same graph signal as input to see any improvement.
+ * *preprocessor:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *convergence:* Optional. The ConvergenceManager that determines when iterations stop. If None (default), a ConvergenceManager is used with keyword arguments automatically extracted from the ones passed to this constructor. 
+ * *personalization_transform:* Optional. A Postprocessor whose `transform` method is used to transform the personalization before applying the graph filter. If None (default) a Tautology is used. 
+ * *preserve_norm:* Optional. If True (default) the input's norm is used to scale the output. For example, if *convergence* is L1, this effectively means that the sum of output values is equal to the sum of input values.
+ * *normalization:* Optional. The type of normalization can be "none", "col", "symmetric", "laplacian", "salsa", or "auto" (default). The last one selects the type of normalization between "col" and "symmetric", depending on whether the graph is directed or not respectively. Alternatively, this could be a callable, in which case it transforms a scipy sparse adjacency matrix to produce a normalized copy. 
+ * *weight:* Optional. The weight attribute (default is "weight") of *networkx* graph edges. This is ignored when *fastgraph* graphs are parsed, as these are unweighted. 
+ * *assume_immutability:* Optional. If True, the output of preprocessing further wrapped through a MethodHasher to avoid redundant calls. In this case, consider creating one `pygrank.preprocessor` and passing it to all algorithms running on the same graphs. Default is False, as graph immutability needs to be explicitly assumed but cannot be guaranteed. 
+ * *renormalize:* Optional. If True, the renormalization trick (self-loops) of graph neural networks is applied to ensure iteration stability by shrinking the graph's spectrum. Default is False. Can provide anything that can be cast to a float to regularize the renormalization. 
+ * *reduction:* Optional. Controls how degrees are calculated from a callable (e.g. `pygrank.eigdegree` for entropy-preserving transition matrices [li2011link]). Default is `pygrank.degrees`. 
+ * *cors:* Optional.Cross-origin resource (shared between backends). Default is False. <details> If True, it enriches backend primitives holding the outcome of graph preprocessing with additional private metadata that enable their usage as base graphs when passing through other postprocessors in other backends. This is not required when constructing GraphSignal instances with the pattern `pygrank.to_signal(M, personalization_data)` where `M = pygrank.preprocessor(cors=True)(graph)` but is mandarotry when the two commands are called in different backends. Note that *cors* objects are not normalized again with other strategies in other preprocessors and compliance is not currently enforced. There may be speedups by using *cors* when frequently switching between backends for the same graphs. Usage is demonstrated in [GNN examples](/examples/publications/krasanakis2022pygrank/4.%20Autotune%20in%20APPNP.py) . If False (default), a lot of memory is saved by not keeping pointers to all versions of adjacency matrices among backends in which it is run. Overall, prefer keeping this behavior switched off. Enabling *cors* and then visiting up to two backends out of which one is "numpy", does not affect the maximum memory consumption by code processing one graph. </details> 
+ * *tol:* Numerical tolerance to determine the stopping point (algorithms stop if the "error" between consecutive iterations becomes less than this number). Default is 1.E-6 but for large graphs 1.E-9 often yields more robust convergence points. If the provided value is less than the numerical precision of the backend `pygrank.epsilon()` then it is snapped to that value. *None* tolerance will stop when consecutive iterations are exactly the same. 
+ * *error_type:* Optional. How to calculate the "error" between consecutive iterations of graph signals. If "iters", convergence is reached at iteration *max_iters*-1 without throwing an exception and even if numerical convergence happens to occur earlier. Default is `pygrank.Mabs`. 
+ * *max_iters:* Optional. The number of iterations algorithms can run for. If this number is exceeded, an exception is thrown. This could help manage computational resources. Default value is 100, and exceeding this value with graph filters often indicates that either graphs have large diameters or that algorithms of choice converge particularly slowly. end_modulo. Optional. Checks the convergence criteria every fixed number of iterations. For value of 1 (default), convergence is checked in every iteration, for value of 2 every second iteration, etc. 
+ * *iter_exception:* Optional. The type of exception class to be thrown if max iterations are reached (when *error_type* is not "iters"). If *None*, this quietly closes the iterations as if convergence is reached. *Avoid* changing this argument for deployment-ready systems, as performing a fixed number of iteration should be a preferred practice compared to stopping either there or at a fixed numerical tolerance. Default is *Exception*. 
+
+Example:
+
+```python 
+import pygrank as pg 
+algorithm = pg.PageRankClosed(alpha=0.99, tol=1.E-9) # tol passed to the ConvergenceManager 
 graph, seed_nodes = ... 
 ranks = algorithm(graph, {v: 1 for v in seed_nodes}) 
 ```

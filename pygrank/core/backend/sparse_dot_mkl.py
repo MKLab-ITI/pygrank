@@ -79,7 +79,7 @@ def self_normalize(obj):
 def conv(signal, M):
     global __pygrank_sparse_dot_mkl_warning
     if __pygrank_sparse_dot_mkl_warning:
-        return signal * M
+        return signal @ M
     try:
         return sparse_dot_mkl.dot_product_mkl(signal, M)
     except Exception as e:
@@ -89,7 +89,7 @@ def conv(signal, M):
                           "Please check your environment setup.\n"
                           "Falling back to numpy implementation for this backend.")
             warnings.warn(str(e))
-        return signal * M
+        return signal @ M
 
 
 def length(x):

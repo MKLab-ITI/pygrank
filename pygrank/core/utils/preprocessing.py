@@ -6,6 +6,28 @@ from pygrank.fastgraph import fastgraph
 import uuid
 
 
+class Adjacency:
+    """This class is used to wrap ndarrays and matrix primitives so that, although they are originally immotable,
+    they can be enriched with backend resource switching.
+    """
+    def __init__(self, array):
+        self.array = array
+        if hasattr(array, "shape"):
+            self.shape = array.shape
+
+    def _np(self):
+        return self.array
+
+    def sum(self, axis=None):
+        return self.array.sum(axis)
+
+    def tocoo(self):
+        return self.array.tocoo()
+
+    def __len__(self):
+        return len(self.array)
+
+
 def eigdegree(M):
     """
     Calculates the entropy-preserving eigenvalue degree to be used in matrix normalization.
@@ -78,54 +100,55 @@ def to_sparse_matrix(G,
         normalization = normalization.lower() if isinstance(normalization, str) else normalization
         if normalization == "auto":
             normalization = "col" if G.is_directed() else "symmetric"
-        M = G.to_scipy_sparse_array() if isinstance(G, fastgraph.Graph) else nx.to_scipy_sparse_matrix(G, weight=weight, dtype=float)
+        M = G.to_scipy_sparse_array() if isinstance(G, fastgraph.Graph) else nx.to_scipy_sparse_array(G, weight=weight, dtype=float)
         renormalize = float(renormalize)
         left_reduction = reduction #(lambda x: backend.degrees(x)) if reduction == "sum" else reduction
         right_reduction = lambda x: left_reduction(x.T)
         if renormalize != 0:
-            M = M + scipy.sparse.eye(M.shape[0])*renormalize
+            M = M + scipy.sparse.eye(M.shape[0]).tocsr()*renormalize
         if normalization == "col":
             S = np.array(left_reduction(M)).flatten()
             S[S != 0] = 1.0 / S[S != 0]
-            Q = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
-            M = Q * M
+            Q = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr').tocsr()
+            M = Q @ M
         elif normalization == "laplacian":
             S = np.array(np.sqrt(left_reduction(M))).flatten()
             S[S != 0] = 1.0 / S[S != 0]
-            Qleft = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
+            Qleft = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr').tocsr()
             S = np.array(np.sqrt(right_reduction(M))).flatten()
             S[S != 0] = 1.0 / S[S != 0]
-            Qright = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
-            M = Qleft * M * Qright
-            M = -M + scipy.sparse.eye(M.shape[0])
+            Qright = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr').tocsr()
+            M = Qleft @ M @ Qright
+            M = -M + scipy.sparse.eye(M.shape[0]).tocsr()
         elif normalization == "both":
             S = np.array(left_reduction(M)).flatten()
             S[S != 0] = 1.0 / S[S != 0]
-            Qleft = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
+            Qleft = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr').tocsr()
             S = np.array(right_reduction(M)).flatten()
             S[S != 0] = 1.0 / S[S != 0]
-            Qright = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
-            M = Qleft * M * Qright
+            Qright = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr').tocsr()
+            M = Qleft @ M @ Qright
         elif normalization == "symmetric":
             S = np.array(np.sqrt(left_reduction(M))).flatten()
             S[S != 0] = 1.0 / S[S != 0]
-            Qleft = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
+            Qleft = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr').tocsr()
             S = np.array(np.sqrt(right_reduction(M))).flatten()
             S[S != 0] = 1.0 / S[S != 0]
-            Qright = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr')
-            M = Qleft * M * Qright
+            Qright = scipy.sparse.spdiags(S.T, 0, *M.shape, format='csr').tocsr()
+            M = Qleft @ M @ Qright
         elif callable(normalization):
             M = normalization(M)
         elif normalization != "none":
             raise Exception("Supported normalizations: none, col, symmetric, both, laplacian, auto")
     M = transform_adjacency(M)
     ret = M if backend.backend_name() == "numpy" or backend.backend_name() == "sparse_dot_mkl" else backend.scipy_sparse_to_backend(M)
-    ret._pygrank_node2id = {v: i for i, v in enumerate(G)}
+    ret = Adjacency(ret)
     if cors:
-        ret.__pygrank_preprocessed = {backend.backend_name(): ret, "numpy": M}
-        M.__pygrank_preprocessed = ret.__pygrank_preprocessed
+        ret.__pygrank_preprocessed = {backend.backend_name(): ret, "numpy": Adjacency(M)}
+        ret.__pygrank_preprocessed["numpy"].__pygrank_preprocessed = ret.__pygrank_preprocessed
     else:
         ret.__pygrank_preprocessed = {backend.backend_name(): ret}
+    ret._pygrank_node2id = {v: i for i, v in enumerate(G)}
     return ret
 
 

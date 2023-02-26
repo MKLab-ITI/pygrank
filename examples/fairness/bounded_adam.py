@@ -60,7 +60,7 @@ class AdamBounded(optimizer.Optimizer):
         alpha_t = tf.sqrt(1 - beta2_power) / (1 - beta1_power)
 
         g_t = (m_t*alpha_t) / (tf.sqrt(v_t) + self.epsilon)
-        g_t = tf.clip_by_value(g_t, -1, 1)
-        g_t = tf.where(tf.abs(g_t) < tf.abs(grad), grad, g_t)
+        #g_t = tf.clip_by_value(g_t, -1, 1)
+        g_t = tf.where(tf.abs(g_t) < tf.abs(grad)*0.01, grad*0.01, g_t)
         var_update = state_ops.assign_sub(var, lr_t * g_t)
         return control_flow_ops.group(*[var_update, v_t, m_t])

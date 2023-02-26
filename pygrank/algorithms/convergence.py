@@ -3,6 +3,7 @@ from scipy.stats import norm
 from timeit import default_timer as time
 from pygrank.measures import Supervised, Mabs
 from pygrank.core import backend, BackendPrimitive
+from typing import Union
 
 
 class ConvergenceManager:
@@ -20,7 +21,7 @@ class ConvergenceManager:
 
     def __init__(self,
                  tol: float = 1.E-6,
-                 error_type: Supervised = Mabs,
+                 error_type: Union[Supervised, str] = Mabs,
                  max_iters: int = 100,
                  end_modulo: int = 1,
                  iter_exception=Exception):

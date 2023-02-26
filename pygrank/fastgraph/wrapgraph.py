@@ -3,6 +3,8 @@ from pygrank.fastgraph.fastgraph import Graph
 
 class AdjacencyWrapper(Graph):
     def __init__(self, adj, directed=True):
+        if hasattr(adj, "array"):
+            adj = adj.array
         self.adj = adj
         self.num_nodes = adj.shape[0]
         self.directed = directed

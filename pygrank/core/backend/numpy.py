@@ -62,7 +62,7 @@ def self_normalize(obj):
 
 
 def conv(signal, M):
-    return signal * M
+    return signal @ M
 
 
 def length(x):

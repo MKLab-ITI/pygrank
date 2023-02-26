@@ -4,10 +4,11 @@ from typing import Iterable, Tuple, Optional
 from math import isinf
 
 
-def _differentiable_hinge(x, gamma=300):
+def _differentiable_hinge(x, gamma=30):
     # doi:10.1088/1742-6596/1743/1/012025, pp. 4
     x = backend.to_primitive(x)
-    return x+backend.log(1+backend.exp(-x*gamma))/gamma
+    ret = x+backend.log(1+backend.exp(-x*gamma))/gamma
+    return ret
 
 
 class MeasureCombination(Measure):

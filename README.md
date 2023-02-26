@@ -37,9 +37,9 @@ with pg.Backend("tensorflow"):
     ... # run your pygrank code here
 ```
 
-Otherwise, everything runs on top of `numpy` (this
-is faster for forward passes). Node ranking algorithms 
-can be defined outside contexts.
+Otherwise, everything runs on top of `numpy`, which
+is faster for forward passes. Node ranking algorithms 
+can be defined outside contexts and run inside.
 
 # :zap: Quickstart
 Before looking at details, here is fully functional
@@ -90,7 +90,7 @@ Finally, the snippet prints a recommended citation for the algorithm.
 
 ### More examples
 
-[Simple example](documentation/showcase.md) <br>
+[Showcase](documentation/showcase.md) <br>
 [Big data FAQ](documentation/tips.md) <br>
 [Downstream tasks](https://github.com/maniospas/pygrank-downstream) <br>
 

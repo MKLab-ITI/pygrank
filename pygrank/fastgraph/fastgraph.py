@@ -1,4 +1,4 @@
-from scipy.sparse import coo_matrix
+from scipy.sparse import coo_array
 
 
 class Graph:
@@ -72,10 +72,10 @@ class Graph:
 
     def to_scipy_sparse_array(self):
         if self._masked_out:
-            return coo_matrix(([0 if u in self._masked_out and v in self._masked_out[u] else 1 for u, v in zip(self.edge_row, self.edge_col)], (self.edge_row, self.edge_col)),
-                              shape=(len(self.node_map), len(self.node_map)), dtype=float)#.asformat("csr")
-        return coo_matrix(([1.]*len(self.edge_row), (self.edge_row, self.edge_col)),
-                          shape=(len(self.node_map), len(self.node_map)), dtype=float)#.asformat("csr")
+            return coo_array(([0 if u in self._masked_out and v in self._masked_out[u] else 1 for u, v in zip(self.edge_row, self.edge_col)], (self.edge_row, self.edge_col)),
+                              shape=(len(self.node_map), len(self.node_map)), dtype=float).tocsr()#.asformat("csr")
+        return coo_array(([1.]*len(self.edge_row), (self.edge_row, self.edge_col)),
+                          shape=(len(self.node_map), len(self.node_map)), dtype=float).tocsr()#.asformat("csr")
 
     def __len__(self):
         return len(self.node_map)

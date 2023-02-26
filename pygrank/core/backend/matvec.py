@@ -47,7 +47,7 @@ def copy(x):
 
 
 def backend_init():
-    warnings.warn("Matvec is an experimental backend")
+    pass#warnings.warn("Matvec is an experimental backend")
 
 
 def graph_dropout(M, _):

@@ -59,14 +59,22 @@ def load_backend(mod_name):
                     def converter(method):
                         if method.__name__ == "conv":
                             def conv(x, M):
+                                if hasattr(M, "array"):
+                                    M = M.array
                                 from pygrank import to_signal
                                 if x.__class__.__name__ == "GraphSignal":
                                     return to_signal(x, method(x.np, M))
                                 return method(x, M)
                             return conv
+                        def compatible(arg):
+                            if arg.__class__.__name__ == "GraphSignal":
+                                return arg.np
+                            if hasattr(arg, "array"):
+                                return arg.array
+                            return arg
                         def converted(*args, **kwargs):
-                            args = [arg.np if arg.__class__.__name__ == "GraphSignal" else arg for arg in args]
-                            kwargs = {key: arg.np if arg.__class__.__name__ == "GraphSignal" else arg for key, arg in kwargs.items()}
+                            args = [compatible(arg) for arg in args]
+                            kwargs = {key: compatible(arg) for key, arg in kwargs.items()}
                             return method(*args, **kwargs)
                         converted.__name__ = method.__name__
                         return converted

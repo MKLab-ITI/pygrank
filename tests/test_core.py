@@ -54,7 +54,7 @@ def test_fastgraph():
         prev_count = graph.number_of_edges()
         graph.remove_edge("A", "E")
         assert graph.number_of_edges() == prev_count-1
-        sparse = graph.to_scipy_sparse_array() if isinstance(graph, pg.Graph) else nx.to_scipy_sparse_matrix(graph, weight="weight", dtype=float)
+        sparse = graph.to_scipy_sparse_array() if isinstance(graph, pg.Graph) else nx.to_scipy_sparse_array(graph, weight="weight", dtype=float)
         assert pg.sum(sparse) == 14
         assert not graph.has_edge("A", "E")
         assert not graph.has_edge("E", "A")

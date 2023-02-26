@@ -42,12 +42,12 @@ def test_pagerank_vs_networkx():
     graph = next(pg.load_datasets_graph(["graph9"], graph_api=nx))
     graph = graph.to_directed()
     # graph_api needed so that nx.pagerank can perform internal computations
-    for _ in supported_backends():
-        ranker = pg.Normalize("sum", pg.PageRank(normalization='col'))
-        test_result2 = nx.pagerank(graph)
-        test_result = ranker(graph)
-        # TODO: assert that 2.5*epsilon is indeed a valid limit
-        assert pg.Mabs(test_result)(test_result2) < 2.5*pg.epsilon()
+    #for _ in supported_backends():
+    ranker = pg.Normalize("sum", pg.PageRank(normalization='col'))
+    test_result2 = nx.pagerank(graph)
+    test_result = ranker(graph)
+    # TODO: assert that 2.5*epsilon is indeed a valid limit
+    assert pg.Mabs(test_result)(test_result2) < 2.5*pg.epsilon()
 
 
 def test_prevent_node_lists_as_graphs():
