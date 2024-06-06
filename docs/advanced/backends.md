@@ -5,6 +5,7 @@
 
 
 **Backend resources**<br>
+
 [numpy](https://numpy.org/) (default, no additional installation) <br>
 [tensorflow](https://www.tensorflow.org/install) <br>
 [pytorch](https://pytorch.org/get-started/locally) <br>

@@ -35,7 +35,7 @@ class Adjacency:
         return self._array.tocoo()
 
     def __len__(self):
-        return len(self._array)
+        return self._array.shape[0]
 
 
 def eigdegree(M):
@@ -89,7 +89,7 @@ def to_sparse_matrix(
             usage as base graphs when passing through other postprocessors in other backends.
             This is not required when constructing GraphSignal instances with
             the pattern `pygrank.to_signal(M, personalization_data)` where `M = pygrank.preprocessor(cors=True)(graph)`
-            but is mandarotry when the two commands are called in different backends. Note that *cors* objects are not
+            but is mandaTory when the two commands are called in different backends. Note that *cors* objects are not
             normalized again with other strategies in other preprocessors and compliance is not currently enforced.
             There is **significant speedup** in using *cors* when frequently switching between backends for the
             same graphs. Furthermore, after defining such instances, they can be used in place of base graphs.
@@ -302,15 +302,13 @@ def preprocessor(
             <details>
             If True, it enriches backend primitives
             holding the outcome of graph preprocessing with additional private metadata that enable their
-            usage as base graphs when passing through other postprocessors in other backends.
+            usage as base graphs when passing through other preprocessors in other backends.
             This is not required when constructing GraphSignal instances with
             the pattern `pygrank.to_signal(M, personalization_data)` where `M = pygrank.preprocessor(cors=True)(graph)`
-            but is mandarotry when the two commands are called in different backends. Note that *cors* objects are not
+            but is mandatory when the two commands are called in different backends. Note that *cors* objects are not
             normalized again with other strategies in other preprocessors and compliance is not currently enforced.
             There may be speedups by using *cors* when frequently switching between backends for the
-            same graphs. Usage is demonstrated in
-            [GNN examples](/examples/publications/krasanakis2022pygrank/4.%20Autotune%20in%20APPNP.py) .
-            If False (default), a lot of memory is saved by not keeping pointers to all versions of adjacency matrices
+            same graphs. If False (default), a lot of memory is saved by not keeping pointers to all versions of adjacency matrices
             among backends in which it is run. Overall, prefer keeping this behavior switched off. Enabling
             *cors* and then visiting up to two backends out of which one is "numpy", does not affect the maximum
             memory consumption by code processing one graph.

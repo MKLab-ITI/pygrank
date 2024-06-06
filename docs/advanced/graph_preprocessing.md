@@ -1,5 +1,7 @@
 # Graph Preprocessing
 
+## Normalization
+
 Graph filters all use the same default graph normalization scheme
 that performs symmetric (i.e. Laplacian-like) normalization 
 for undirected graphs and column-wise normalization that
@@ -68,6 +70,8 @@ ranks1 = algorithm(graph, personalization1)
 ranks2 = algorithm(graph, personalization2) # does not re-compute the normalization
 ```
 
+## Caching
+
 Sometimes, many different algorithms are applied on the
 same graph. In this case, to prevent each one
 from recomputing the hashing already calculated by others,
@@ -109,3 +113,134 @@ ranks2 = algorithm2(graph, personalization2) # does not re-compute the normaliza
     before the first `rank(...)` call to make sure that that call
     does not also perform the first normalization whose outcome will
     be hashed and immediately retrieved by subsequent calls.
+
+
+## Cross-origin resources
+
+Preprocessing admits a *cors* argument that toggles
+an optimization for huge speedups when
+constantly switching between backends at the
+cost of additional memory and badly-defined behavior.
+Default is False, which saves a lot of memory. However,
+the maximum used memory when using *cors*
+remains the same when processing one graph and
+switching between up to two backends
+out of which one is "numpy".
+
+!!! warning 
+    Enabling cors will not run certain parts of
+    preprocessing, because it performs immediate backend switching
+    with cached version of the adjacency matrix. There is
+    no error checking involved. For this reason:
+    
+    - Remember that the only preprocessor that will actually
+    run computations is the first one that runs. If you
+    are unsure which will run first, set the same arguments
+    to all preprocessors and graph filters you use for
+    safety.
+    - Set `cors=True` to each and every
+    preprocessor and graph filter that will use
+    cors graphs.
+
+    **YOU HAVE BEEN WARNED.**
+
+If *cors* is enabled (set to True), backend primitives
+holding the outcome of graph preprocessing are
+enriched with additional private metadata that enable their
+usage as base graphs when passing through other preprocessors 
+in other backends. There is one main usage pattern:
+obtaining an adjacency
+matrix that represents the graph, but which is a thin wrapper
+around fast-switching backend primitives. That is,
+you need to preprocess your graph per:
+
+```python
+graph = pg.preprocessor(cors=True, ...)(graph)
+```
+
+This is technically an adjacency matrix but has
+all the necessary ducktyping to be considered 
+a graph by `pygrank`. If you plan to stay within
+one backend, you can also run the same command
+without enabling cors anywhere and
+construct signals per normal with 
+`pg.to_signal(graph, personalization_data)`.
+However, enabling cors is mandatory
+when creating or planning to use
+graph signals with the adjacency
+you defined at different backends.
+
+Usefulness of cross-origin resources in demonstrated in the
+following graph neural network example, where its training
+time is sped up by 25% when `cors=True` in the
+constructor of the `GenericGraphFilter`:
+
+```python
+import pygrank as pg
+import tensorflow as tf
+from tensorflow.keras.layers import Dropout, Dense
+from tensorflow.keras.regularizers import L2
+
+
+class APPNP(tf.keras.Sequential):
+    def __init__(self, num_inputs, num_outputs, hidden=64):
+        super().__init__(
+            [
+                Dropout(0.5, input_shape=(num_inputs,)),
+                Dense(hidden, activation="relu", kernel_regularizer=L2(0.005)),
+                Dropout(0.5),
+                Dense(num_outputs),
+            ]
+        )
+        self.ranker = pg.ParameterTuner(
+            lambda par: pg.GenericGraphFilter(
+                [par[0] ** i for i in range(int(10))],
+                error_type="iters",
+                max_iters=10,
+                cors=True,  # DON'T FORGET THIS
+            ),
+            max_vals=[1],
+            min_vals=[0.5],
+            verbose=False,
+            measure=pg.Mabs,
+            deviation_tol=0.01,
+            tuning_backend="numpy",  # TUNING IN NUMPY
+        )
+
+    def call(self, features, graph, training=False):
+        predict = super().call(features, training=training)
+        propagate = self.ranker.propagate(graph, predict, graph_dropout=0.5 * training)
+        return tf.nn.softmax(propagate, axis=1)
+
+from timeit import default_timer as time
+
+
+graph, features, labels = pg.load_feature_dataset("citeseer")
+
+# this is how e cache the cross-origin resource
+pre = pg.preprocessor(renormalize=True, assume_immutability=True, cors=True)
+graph = pre(graph)
+
+
+training, test = pg.split(list(range(len(graph))), 0.8, seed=5)
+training, validation = pg.split(training, 1 - 0.2 / 0.8)
+model = APPNP(features.shape[1], labels.shape[1])
+with pg.Backend("tensorflow"):  # pygrank computations in tensorflow backend
+
+    tic = time()
+    pg.gnn_train(
+        model,
+        features,
+        graph,
+        labels,
+        training,
+        validation,
+        epochs=300,
+        optimizer=tf.optimizers.Adam(learning_rate=0.01),
+        verbose=True,
+        test=test,
+    )
+    print("Accuracy", pg.gnn_accuracy(labels, model(features, graph=graph), test))
+    print("Time", time()-tic)
+```
+

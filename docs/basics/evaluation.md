@@ -31,8 +31,8 @@ measures are callables that output a numeric value given graph signal posteriors
     If None (default) all nodes are included in the evaluation. You can overwrite this value
     at any point with `measure.exclude = ...`.
 
-    Unsupervised measures may also take a *graph* argument to internally convert
-    provided data to a graph signal if needed.
+    Unsupervised measures may also take an optional *graph* argument. This helps convert
+    provided data to a graph signal internally when calling the measure with not a signal.
 
 An example of how to use measures follows. In that we also
 used `Threshold` postprocessor to convert scores to binary values,
@@ -90,6 +90,7 @@ datasets lacking needed information are silently omitted.
 
 | Method                               | Description                                                                                                                                                                                                |
 |--------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `load_one`                           | Gets as an input one dataset name and returns a tuple of that name, the graph, and the first group found by `load_datasets_one_community`.                                                                 |
 | `load_datasets_graph`                | Yields respective dataset graphs.                                                                                                                                                                          |
 | `load_datasets_one_community`        | Yields tuples of dataset names, graphs and node lists, where the lists correspond to one of the (structural or metadata) communities of graph nodes.                                                       |
 | `load_datasets_all_communities`      | Yields the same tuples as before, but also traverses all possible datasets node communities (thus, there are many loading outcomes for each dataset). Community identifiers are appended to dataset names. |
@@ -98,6 +99,8 @@ datasets lacking needed information are silently omitted.
 
 All dataset loading methods admit the following list of keyword parameters:
 
+- *path*: This is directory location (default is `"data"`) to seach for datasets and download them in. 
+Take care to *not* add a trailing slash.
 - *min_group_size:* The minimum number of nodes for each group to accept (default is 0.01). Groups
 with fewer nodes are ignored. If a value less than 1 is provided, it is multiplied with the number of graph nodes.
 - *min_group_id:* The
@@ -105,19 +108,8 @@ with fewer nodes are ignored. If a value less than 1 is provided, it is multipli
 - *prepend_all_nodes:* If True, creates a first community that holds all graph nodes. Default is False.
     graph_api=nx,
 
-    To make sure that any kind of experiment is performed only adequately many data, 
-    communities with less than 1% of graph nodes are omitted from loaders 1-4. Control 
-    this default argument 
-
-
-## Benchmarks
-
-All the above loaders take as an argument a list of datasets and, if convenient,
-a secondary argument of a directory location `path="data"`
-(take care *not* to add a trailing slash) 
-in which to download or load the datasets from. Loaders are iterables and thus they need to be re-defined to traverse
-through datasets again. For example, the following code can be used to load datasets for overlapping community detection
-given that each node community should be experimented on separately.
+ The following code can be used to load datasets for overlapping community detection
+given that each node community should be experimented on separately. 
 
 ```python
 import pygrank as pg
@@ -137,9 +129,12 @@ for dataset, graph, group in pg.load_datasets_all_communities(datasets):
 ```
 
 
+
+
+## Benchmarks
 `pygrank` offers the ability to conduct benchmark experiments that compare
-node ranking algorithms and parameters on a wide range of graphs. For example,
-a simple way to obtain some fastly-running algorithms and small datasets and
+many node ranking algorithms and parameters on a wide range of graphs. 
+A simple way to obtain some fastly-running algorithms and small datasets and
 compare them under the AUC measure would be per:
 
 ```python
@@ -166,16 +161,35 @@ pg.benchmark_print(pg.benchmark(algorithms, loader, pg.AUC))
 # REQUIRED CITATION: Please visit the url https://github.com/maniospas/pygrank-datasets for instructions on how to cite the dataset bigraph in your research
 ```
 
-Custom algorithms could also be added
+You can apply a postprocessor to a dictionary of node ranking algorithms like below.
+You can apply several postprocessors at once, for example if the end-goal is to compare between them.
+When apply prostprocessors an masse, a prefix is declared to prepend to algorithm names 
+(e.g., the HK5Sweep variation of HK5 will be created).
+
+```python
+sweeps = pg.create_variations(algorithms, {"Sweep": pg.Sweep})
+algorithms = algorithms | sweeps  # merge old and new algorithms
+```
+
+For massive experimentation, generate many algorithms and variations with the following
+methods:
+
+```python
+postprocessors = pg.create_many_variation_types()
+filters = pg.create_many_filters()
+algorithms = pg.create_variations(filters, postprocessors)
+```
+
+Specific algorithms can also be added
 or used in place of the `algorithms` dictionary.
-For example, we could add an automatically-tuned
+For example, add an automatically-tuned
 algorithm (more on these later) with default parameters per the following code and
-then re-run experiments to add it to the comparison.
+then re-run experiments to see how well it fares..
 
 ```python
 algorithms["Tuned"] = pg.ParameterTuner()
 ```
 
 !!! warning
-    To run a new series of experiments, the loader needs to be called anew.
+    To run a new series of experiments, the loader needs to be called anew (it is an iterator).
 

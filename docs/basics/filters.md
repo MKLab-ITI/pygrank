@@ -53,6 +53,15 @@ discussion on convergence management strategies is presented [here](../advanced/
 
 ```python
 import pygrank as pg
+import networkx as nx
+
+graph = nx.Graph()
+graph.add_edge('A', 'B')
+graph.add_edge('A', 'C')
+graph.add_edge('C', 'D')
+graph.add_edge('D', 'E')
+signal = pg.to_signal(graph, {'A': 3, 'C': 2})
+
 algorithm = pg.PageRank(alpha=0.99, normalization="col", tol=1.E-9, max_iters=2000)
 ```
 
