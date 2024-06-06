@@ -29,6 +29,7 @@ jobs:
           pip install numpy
           pip install networkx
           pip install matvec
+          pip install dask[distributed]
           pip install mkl
           pip install sparse_dot_mkl
           pip install wget

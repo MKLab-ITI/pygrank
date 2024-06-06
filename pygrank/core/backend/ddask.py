@@ -1,0 +1,134 @@
+import numpy as np
+from numpy import abs, sum, exp, log, copy, repeat, min, max, dot, mean, diag, ones
+from scipy.sparse import eye as _eye
+import dask as dsk
+import dask.distributed
+
+
+__splits = 8
+__client = None
+
+
+def cast(x):
+    return x
+
+
+def backend_init(*args, splits=8, **kwargs):
+    global __client
+    global __splits
+    __splits = splits
+    if __client is None:
+        __client = dsk.distributed.Client(*args, **kwargs)
+    return __client
+
+
+def graph_dropout(M, _):
+    return M
+
+
+def separate_cols(x):
+    return [x[:, col_num] for col_num in range(x.shape[1])]
+
+
+def combine_cols(cols):
+    return np.column_stack(cols)
+
+
+def backend_name():
+    return "dask"
+
+def eye(*args):
+    return scipy_sparse_to_backend(_eye(*args))
+
+def scipy_sparse_to_backend(M):
+    M = M.tocsc()
+    rows = M.shape[0]
+    split_size = rows // __splits
+    splits = []
+    for i in range(__splits):
+        start_index = i * split_size
+        if i == __splits - 1:  # last split includes the remaining rows
+            end_index = rows
+        else:
+            end_index = (i + 1) * split_size
+        splits.append(M[:, start_index:end_index])
+    #return splits
+    return __client.scatter(splits)
+
+
+def to_array(obj, copy_array=False):
+    if isinstance(obj, np.ndarray):
+        obj = np.asarray(obj)
+        if copy_array:
+            return np.copy(obj).squeeze()
+        if len(obj.shape) > 1:
+            return obj.squeeze()
+        return obj
+    if obj.__class__.__module__ == "tensorflow.python.framework.ops":
+        return obj.numpy()
+    if obj.__class__.__module__ == "torch":
+        return obj.detach().numpy()
+    return np.array(obj)
+
+
+def to_primitive(obj):
+    return np.array(obj, copy=False)
+
+
+def is_array(obj):
+    return (
+        isinstance(obj, list)
+        or isinstance(obj, np.ndarray)
+        or obj.__class__.__module__ == "tensorflow.python.framework.ops"
+        or obj.__class__.__module__ == "torch"
+    )
+
+
+def self_normalize(obj):
+    np_sum = obj.__abs__().sum()
+    if np_sum != 0:
+        obj = obj / np_sum
+    return obj
+
+"""
+def conv(signal, M):
+    results = []
+    for split in M:
+        result = signal @ split
+        results.append(result)
+    final_result = np.concatenate(results)
+    return final_result
+"""
+
+
+def conv(signal, M_splits):
+    def multiply_and_collect(signal, split):
+        return signal @ split
+
+    # Use Dask to parallelize the multiplication
+    futures = [__client.submit(multiply_and_collect, signal, split) for split in M_splits]
+    results = __client.gather(futures)
+
+    final_result = np.concatenate(results, axis=0)
+    return final_result
+
+
+def length(x):
+    if isinstance(x, np.ndarray):
+        if len(x.shape) > 1:
+            return x.shape[0] * x.shape[1]
+        return x.shape[0]
+    return len(x)
+
+
+def degrees(M):
+    return np.asarray(sum(M, axis=1)).ravel()
+
+
+def filter_out(x, exclude):
+    return x[exclude == 0]
+
+
+def epsilon():
+    # return np.finfo(np.float32).eps
+    return np.finfo(float).eps

@@ -12,6 +12,7 @@ def supported_backends():
         "torch_sparse",
         "sparse_dot_mkl",
         "numpy",
+        "dask"
     ]:
         pg.load_backend(backend)
         yield backend

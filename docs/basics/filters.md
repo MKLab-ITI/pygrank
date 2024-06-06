@@ -15,7 +15,7 @@ applies a graph filter, potentially postprocesses its outcome, and eventually ar
 Filters are created based on a constructor that takes as input several keyword
 arguments affecting how they work. An exhaustive list of ready-to-use graph filters 
 and their constructors
-found [here](../generated/filters.md).
+found [here](../generated/graph_filters.md).
 More complicated node ranking algorithms can be obtained by applying postprocessors on
 filters. This is covered in the [next section](postprocessors.md).
 After its initialization, a filter `alg` can run

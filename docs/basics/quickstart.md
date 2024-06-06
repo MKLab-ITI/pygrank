@@ -4,7 +4,7 @@
 and construct a node ranking algorithm
 (incrementally apply postprocessors with `>>`). 
 There are many components and parameters to find 
-good configurations; [autotuning](advanced/autotuning.md) may be helpful.
+good configurations; [autotuning](../advanced/autotuning.md) may be helpful.
 
 ```python
 import pygrank as pg
@@ -19,7 +19,7 @@ Then run the algorithm to get a graph signal that maps nodes to scores, where sc
 structural proximity to community members.
 
 ```python
-_, graph, community = next(pg.load_datasets_one_community(["EUCore"]))
+_, graph, community = next(pg.load_datasets_one_community(["eucore"]))
 personalization = {node: 1.0 for node in community}  # binary or stochastic membership, missing scores are zero
 
 scores = hk5_advanced(graph, personalization)  # returns a dict-like pg.GraphSignal
