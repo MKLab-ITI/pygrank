@@ -1,30 +1,26 @@
-# Basics
-
-<img src="../architecture.png" alt="architecture" style="width: 40%;float: right;">
+# The Basics
 
 At the core of `pygrank` lies the concept of *graph signals*, which map graph nodes to numerical scores. 
 Supervised and unsupervised measures evaluate the predictive/ranking quality
-of graph signals. 
+of graph signals. The library's main purpose
+is to define and efficiently run node ranking algorithms. These start from *graph filters*, 
+which iteratively diffuse the scores of nodes to neighbors that are connected to them. 
+The output of filters can be processed with additional components.
+Below we present a typical node ranking pipeline that starts from a known personalization,
+applies a graph filter, potentially postprocesses its outcome, and eventually arrives at new node values.
 
-Node ranking algorithms can be defined. These start from *graph filters*, 
-which diffuse the scores of nodes to neighbors that are connected to them. 
-The output of these filters can be processed further with additional components. 
-Finally, benchmarking experiments compare algorithms.
+<img src="../pipeline.png" alt="pipeline" style="width: 60%;">
 
 ## Graph Signals
-
-<img src="../graph_signal.png" alt="graph signal" style="width: 40%;float: right;">
 
 A *graph signal* is a way to organize numerical values 
 that correspond to the nodes of a graph. Signals are used as the
 inputs and outputs of node ranking algorithms, though calls to
 the latter are for convenience overloaded to automatically 
 construct signals if different arguments are provided.
-
-Here is a simple graph that includes nodes
-'A' and 'C' with values of 3 and 2 respectively.
-A signal that includes these values and sets 0 
-to all other nodes can be created as:
+Here is how to create a simple signal that includes nodes
+'A' and 'C' with values of 3 and 2 respectively
+sets 0 to all other nodes:
 
 ```python
 import pygrank as pg
@@ -40,9 +36,12 @@ signal = pg.to_signal(graph, {'A': 3, 'C': 2})
 print(signal['A'], signal['B'])  # 3.0 0.0
 ```
 
-Formats to indicate the node values with which to construct signals per `pg.to_signal(graph, obj)` are:
+In general, graph signals can be constructed with the
+expression, `pg.to_signal(graph, obj)` that takes
+as input a graph and some data. These data can be
+in various convenient formats listed below:
 
-| Format Type                                               | Description                                                                                                                                                                                        | Example                      |
+| Format                                                    | Description                                                                                                                                                                                        | Example data                 |
 |-----------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------|
 | Maps of node values                                       | Assume all other missing elements to represent zero values.                                                                                                                                        | `obj={'A': 3, 'C': 2}`       |
 | Numpy arrays, lists or tensors.                           | Represent numerical values for each graph node, where nodes are organized per their traversal order in the graph's iterator. If tensors are provided, most computations remain backpropagate-able. | `obj=np.array([3, 0, 2, 0])` |
@@ -50,12 +49,16 @@ Formats to indicate the node values with which to construct signals per `pg.to_s
 | `None`                                                    | Interpreted as a signal of ones.                                                                                                                                                                   | `obj=None`                   |
 
 
-!!! info
-    Signal values can be accessed 
-    through the `signal.np` attribute, which out-of-the-box holds a `numpy` array.
-    Different data types may be held, depending on the *current*
-    backend; switching backends after a signal is obtained will yield
-    a representation in the new backend's preferred format. 
+An internal representation of signal
+values in the second of the above formats
+can be accessed through the `signal.np` attribute. 
+Out-of-the-box, your running backend will be 
+`"numpy"` and therefore this will also be numpy array.
+However,
+different data types may be held, depending on the *current*
+backend; switching backends after a signal is defined
+or computed will yield
+a representation in the new backend's preferred format. 
 
 Arithmetic operations defined by the running backend
 are also directly applicable to signals by implying the `np` attribute,
@@ -76,10 +79,6 @@ the *personalization*, and often
 indicates the likelihood that nodes have a certain property, such as being members
 of a structural or metadata community. Graph filters refine these
 initial estimates by providing improved (probability) scores for all nodes.
-Below we present a typical node ranking pipeline that starts from a known personalization,
-applies a graph filter, potentially postprocesses its outcome, and eventually arrives at new node values.
-
-<img src="../pipeline.png" alt="pipeline" style="width: 60%;">
 
 Filters are created based on a constructor that takes as input several keyword
 arguments affecting how they work. An exhaustive list of ready-to-use graph filters 

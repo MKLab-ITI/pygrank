@@ -1,6 +1,6 @@
 site_name: pygrank
 site_author: Emmanouil (Manios) Krasanakis
-repo_url: https://github.com/MKLab-ITI/pygrank
+#repo_url: https://github.com/MKLab-ITI/pygrank
 copyright: Copyright &copy; 2024 Emmanouil Krasanakis
 
 nav:
@@ -49,20 +49,13 @@ theme:
   name: mkdocs
   logo: logo.ico
   favicon: logo.ico
-  color_mode: dark
+  color_mode: auto
   user_color_mode_toggle: True
   nav_style: dark
 
   features:
-    - navigation.instant
-    - navigation.instant.loading_indicator
-    - navigation.scroll
-    - content.tabs.link
     - search.suggest
-    - toc.integrate
-    - toc.follow
-    - navigation.top
-    #- navigation.footer
+    - navigation.scroll
 
 extra_css:
   - theme_extend.css

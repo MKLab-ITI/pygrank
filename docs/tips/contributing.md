@@ -40,7 +40,7 @@ you are required to also update the library's [citations](docs/tips/citations.md
 *lower_case_with_underscores* for methods and variables.
 4. New files should be placed in appropriate modules and new methods and classes
 can be accessed from the top level.
-5. Module dependencies should comply on the above-described architecture.
+5. Module dependencies should comply to the library's architecture.
 6. **[optional]** Algorithms should exhibit near-linear
 (e.g. polylog-linear) running times and memory allocation with respect to
 the number of edges, to scale well to large graphs.
@@ -56,6 +56,10 @@ is mandatory).
 
 
 ## Implementation instructions
+
+
+<img src="../architecture.png" alt="architecture" style="width: 40%;float: right;">
+
 
 `pygrank` adheres to a hierarchical architecture to manage inter-module dependencies,
 which new code should maintain for import statements to work.
