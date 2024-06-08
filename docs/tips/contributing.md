@@ -8,7 +8,7 @@ You can also contribute through the [issue tracker](https://github.com/MKLab-ITI
 Pull requests that address unassigned issues in the tracker are welcome.
 Many thanks to all existing and future contributors for their participation.
 
-# :hammer_and_wrench: Workflow
+## Workflow
 The typical workflow for `pygrank` contributions comprises the following steps:
 1. **Fork** the master branch from the GitHub repository.
 2. **Clone** the fork locally (recommended: also copy the *pre-commit* file to *.git/hooks*).
@@ -27,30 +27,13 @@ as well as `tensorflow`, `torch`, `matvec`, `torch-sparse`
 unit testing for the respective backends)
 are installed and upgraded to their latest versions.
 
-# :hammer_and_wrench: Architecture
-`pygrank` adheres to a hierarchical architecture to manage inter-module dependencies,
-which new code should maintain for import statements to work.
-For example, do not design evaluation measures that depend on algorithms.
-Rather, such components should be delegated to some of the other modules.
-For reference, we re-iterate here the project's architecture. For more details,
-please refer to the [documentation](documentation/documentation.md).
+## Pull Checklist
 
-![architecture](docs/userguide/architecture.png)
-
-We ask that, when contributing new code, you try to import methods and 
-classes through the highest-level 
-architectural component they belong to that does not conflict with the code.
-For example, to design a new filter you need import utility methods
-from `pygrank.algorithms.utils`, since a higher-level import would create
-self-recursions by trying to import all sub-modules. On the other hand,
-in the same module you can safely import classes from `pygrank.measures`.
-
-
-# :white_check_mark: Pull Checklist
 Before creating a pull request, make sure that your submission checks the following points:
 1. Class and method docstrings should adhere to [Google's docstring conventions](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings).
 Additionally, code examples should be prefaced by a line starting with the word
 `Example ` and ending in `:` and their code lines start with `>>>`.
+
 2. When implementing new or existing research (we are more than happy to accomodate this),
 you are required to also update the library's [citations](docs/tips/citations.md).
 3. New code should maintain *CamelCase* notation for classes and 
@@ -72,8 +55,26 @@ is mandatory).
 9. **[github actions]** Unit tests should provide near-100% code coverage.
 
 
-# :pencil2: Implementing New Node Ranking Algorithms
-##### Which classes to subclass?
+## Implementation instructions
+
+`pygrank` adheres to a hierarchical architecture to manage inter-module dependencies,
+which new code should maintain for import statements to work.
+For example, do not design evaluation measures that depend on algorithms.
+Rather, such components should be delegated to some of the other modules.
+
+We ask that, when contributing new code, try to import methods and 
+classes through the highest-level 
+architectural component they belong to that does not conflict with the code.
+For example, to design a new filter you need import utility methods
+from `pygrank.algorithms.utils`, since a higher-level import would create
+self-recursions by trying to import all sub-modules. On the other hand,
+in the same module you can safely import classes from `pygrank.measures`.
+
+
+### <span class="component">New filters</span>
+
+**Which classes to subclass?**
+
 To create a new node ranking algorithm, you are required to subclass one of the
 classes found in `pygrank.algorithms.filters.abstract_filters`:
 * `GraphFilter` identifies generic graph filters (is subclassed by the next two)
@@ -82,7 +83,8 @@ classes found in `pygrank.algorithms.filters.abstract_filters`:
 
 Please extend this documentation if a new family of node ranking algorithms is implemented.
 
-##### Where to write code?
+**Where to write code?**
+
 * New abstract graph filter classes (e.g. that define families of new algorithms) should be placed
 in the module `pygrank.algorithms.filters.abstract_filters`.
 * New graph filters should be placed in modules
@@ -93,7 +95,8 @@ their classes through `pygrank.algorithms.filters.__init__.py`
 (this is **important**, as it helps `docgenerator.py` automatically create
 documentation for new algorithms).
 
-##### Which method(s) to override?
+**Which method(s) to override?**
+
 Depending on which class you subclass, you need to override and implement a
 different method; more general `GraphFilter` classes need to implement at
 least a step `_step(M, personalization, ranks, *args, **kwargs)`
@@ -124,7 +127,8 @@ easier to use `n = self.convergence.iteration-1` to explicitly calculate the
 returned value.
 
 
-##### How to structure constructors?
+**How to structure constructors?**
+
 Constructors of graph filters should pass extra arguments to parent classes.
 This ensures that new algorithms share the same breadth of customization
 as parent classes. Only additional arguments not parsed by parent classes
@@ -158,7 +162,8 @@ class NewAlgorithm(ClosedFormGraphFilter):
     ...
 ```
 
-##### How to expose algorithm citations?
+**How to expose algorithm citations?**
+
 Exposing citations for your algorithm can be achieved by updating the list of references that would be generated 
 by the inheriting graph filters. The list of references may already inherit properties of the algorithm's
 family (e.g. from `ClosedFormGraphFilter` in the previous example) and thus only the first one holding the 
@@ -179,17 +184,19 @@ class NewAlgorithm(ClosedFormGraphFilter):
     ...
 ```
 
+!!! warning
+    Do not forget to follow the pull checklist.
 
+### <span class="component">New postprocessors</span>
 
-:warning: Do not forget to follow the pull checklist.
+**Which class to subclass?**
 
-# :pencil2: Implementing New Postprocessors
-#### Which class to subclass?
 Postprocessors need to subclass the abstract
 `pygrank.algorithms.postprocess.Postprocessor`
 class.
 
-#### Which method to override?
+**Which method to override?**
+
 Postprocessors need to subclass the method `_transform(self, ranks)`
 where `ranks` is a graph signal -typically the outcome of some other
 node ranking algorithm (e.g. a graph filter). Implementations of this
@@ -199,18 +206,23 @@ such as dictionaries or backend primitives. When possible, use the latter
 to ensure faster computations through the graph filter pipeline, for example
 when iterative postprocessors are applied afterwards.
 
-# :pencil2: Implementing New Measures
-TODO
+### <span class="component">New measures</span>
+
+!!! info
+    Section under construction
 
 
-# :pencil2: Implementing New Tuners
-#### Which class to subclass?
+### <span class="component">New tuners</span>
+
+**Which class to subclass?**
+
 Tuners need to subclass the abstract
 `pygrank.algorithms.autotune.tuning.Tuner`
 class.
 
 
-### Which method to override?
+**Which method to override?**
+
 Tuners need to override the method `_tune(self, graph, personalization, *args, **kwargs)` .
 This method's arguments and keyword arguments need to be passed to node ranking algorithm candidates
 and it shoul'd return a tuple `tuned_algorithm, personalization`,
@@ -222,7 +234,8 @@ At worst, return a `Tautology()` and the desired tuning outcome for the given pe
 but try to avoid this if possible. Do note, that this could be a necessary evil if Arnoldi or Lanczos
 decompositions are supported, but prefer returning meaningful algorithms when possible.
 
-### What to place in tuner constructors?
+**What to place in tuner constructors?**
+
 Ideally, new tuners should be able to obtain a preferred backend in which to perform tuning.
 Refer to the implementation of existing tuners as a guideline of how to switch between backends.
 Switching to different backends should ideally support backpropagation on the original signal;

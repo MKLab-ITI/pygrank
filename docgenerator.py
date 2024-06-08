@@ -102,12 +102,14 @@ def combine_attributes(text, descriptions):
         if line == "Attributes: " or line == "Args: ":
             in_attributes = True
             line = '<br><b class="parameters">Parameters</b>\n'
-        if line not in ret:
+        if line not in ret or len(line.strip()) < 10:
             ret += line + "\n"
     if in_attributes:
         for desc in descriptions:
             to_add = extract_attributes(desc)
-            if to_add.strip() not in ret:  # handles case of inherited constructors
+            if (
+                to_add.strip() not in ret or len(to_add.strip()) < 10
+            ):  # handles case of inherited constructors
                 ret += to_add
 
     return ret

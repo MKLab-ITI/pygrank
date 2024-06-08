@@ -4,7 +4,7 @@
 that can assess node ranking algorithms, as well as comprehensive
 code interfaces with which to quickly set up experiments at scale to compare algorithms.
 An offshoot of these capabilities is autotuning, which is very useful in practice
-and covered as an advanced concept [here](../advanced/autotuning.md).
+and covered [here](autotuning.md).
 
 ## Measures
 
@@ -193,3 +193,11 @@ algorithms["Tuned"] = pg.ParameterTuner()
 !!! warning
     To run a new series of experiments, the loader needs to be called anew (it is an iterator).
 
+## Combining Measures
+
+Multiple measures can be aggregated through the `pygrank.AM` and 
+`pygrank.GM` classes, which respectively perform arithmetic and geometric
+averaging of measure outcomes.
+
+!!! info
+    This section is under construction.

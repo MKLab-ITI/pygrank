@@ -1,5 +1,5 @@
 # pygrank 
-**Fast node ranking algorithms on large graphs.**
+Fast node ranking algorithms on large graphs.
 
 <div class="card-container" style="display: flex;gap: 10px;">
 

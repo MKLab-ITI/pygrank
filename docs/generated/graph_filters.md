@@ -31,8 +31,11 @@ from pygrank.algorithms import AbsorbingWalks
 algorithm = AbsorbingWalks(1-1.E-6, tol=1.E-9) # tol passed to the ConvergenceManager 
 graph, seed_nodes = ... 
 ranks = algorithm(graph, {v: 1 for v in seed_nodes}) 
+```
 Example (same outcome, explicit absorption rate definition):
+```python 
 ranks = algorithm(graph, {v: 1 for v in seed_nodes}, absorption={v: 1 for v in graph}) 
+```
 ## <span class="component">DijkstraRank</span>
 <b class="parameters">Extends</b><br> *RecursiveGraphFilter*<br><b class="parameters">About</b><br>
 A ranking algorithm that assigns node ranks loosely increasing with the minimum distance from a seed.
@@ -64,6 +67,7 @@ Defines a graph filter via its hop weight parameters. The constructor initialize
 ```python 
 from pygrank import GenericGraphFilter 
 algorithm = GenericGraphFilter([0.5, 0.25, 0.125], tol=1.E-9) # tol passed to ConvergenceManager 
+```
 ## <span class="component">HeatKernel</span>
 <b class="parameters">Extends</b><br> *ClosedFormGraphFilter*<br><b class="parameters">About</b><br>
 Heat kernel filter. The constructor initializes filter parameters. 
@@ -94,6 +98,7 @@ from pygrank.algorithms import HeatKernel
 algorithm = HeatKernel(t=3, tol=1.E-9) # tol passed to the ConvergenceManager 
 graph, seed_nodes = ... 
 ranks = algorithm(graph, {v: 1 for v in seed_nodes}) 
+```
 ## <span class="component">ImpulseGraphFilter</span>
 <b class="parameters">Extends</b><br> *GraphFilter*<br><b class="parameters">About</b><br>
 Defines a graph filter with a specific vector of impulse response parameters. The constructor initializes the graph filter. 
@@ -119,6 +124,7 @@ Defines a graph filter with a specific vector of impulse response parameters. Th
 ```python 
 from pygrank import GenericGraphFilter 
 algorithm = ImpulseGraphFilter([0.5, 0.5, 0.5], tol=None)  # tol=None runs all iterations 
+```
 ## <span class="component">LowPassRecursiveGraphFilter</span>
 <b class="parameters">Extends</b><br> *GraphFilter*<br><b class="parameters">About</b><br>
 Defines a low-pass graph filter with specific yet changing recursive terms. The constructor initializes the graph filter. 
@@ -144,6 +150,7 @@ Defines a low-pass graph filter with specific yet changing recursive terms. The 
 ```python 
 from pygrank import LowPassRecursiveGraphFilter 
 algorithm = LowPassRecursiveGraphFilter([0.9]*10, tol=None)  # tol=None runs all iterations 
+```
 ## <span class="component">PageRank</span>
 <b class="parameters">Extends</b><br> *RecursiveGraphFilter*<br><b class="parameters">About</b><br>
 A Personalized PageRank power method algorithm. The constructor initializes the PageRank scheme parameters. 
@@ -172,6 +179,7 @@ import pygrank as pg
 algorithm = pg.PageRank(alpha=0.99, tol=1.E-9) # tol passed to the ConvergenceManager 
 graph, seed_nodes = ... 
 ranks = algorithm(graph, {v: 1 for v in seed_nodes}) 
+```
 ## <span class="component">PageRankClosed</span>
 <b class="parameters">Extends</b><br> *ClosedFormGraphFilter*<br><b class="parameters">About</b><br>
 PageRank closed filter. The constructor initializes the PageRank scheme parameters. 
@@ -202,6 +210,7 @@ import pygrank as pg
 algorithm = pg.PageRankClosed(alpha=0.99, tol=1.E-9) # tol passed to the ConvergenceManager 
 graph, seed_nodes = ... 
 ranks = algorithm(graph, {v: 1 for v in seed_nodes}) 
+```
 ## <span class="component">SymmetricAbsorbingRandomWalks</span>
 <b class="parameters">Extends</b><br> *RecursiveGraphFilter*<br><b class="parameters">About</b><br>
 Implementation of partial absorbing random walks for *Lambda = (1-alpha)/alpha diag(absorption vector)*. The constructor initializes the symmetric random walk strategy for appropriate parameter values. 
@@ -230,8 +239,11 @@ from pygrank.algorithms import AbsorbingWalks
 algorithm = AbsorbingWalks(1-1.E-6, tol=1.E-9) 
 graph, seed_nodes = ... 
 ranks = algorithm(graph, {v: 1 for v in seed_nodes}) 
+```
 Example (same outcome, explicit absorption rate definition):
+```python 
 ranks = algorithm(graph, {v: 1 for v in seed_nodes}, absorption={v: 1 for v in graph}) 
+```
 ## <span class="component">GenericGraphFilter</span>
 <b class="parameters">Extends</b><br> *ClosedFormGraphFilter*<br><b class="parameters">About</b><br>
 Defines a graph filter via its hop weight parameters. The constructor initializes the graph filter. 
@@ -260,6 +272,7 @@ Defines a graph filter via its hop weight parameters. The constructor initialize
 ```python 
 from pygrank import GenericGraphFilter 
 algorithm = GenericGraphFilter([0.5, 0.25, 0.125], tol=1.E-9) # tol passed to ConvergenceManager 
+```
 ## <span class="component">HeatKernel</span>
 <b class="parameters">Extends</b><br> *ClosedFormGraphFilter*<br><b class="parameters">About</b><br>
 Heat kernel filter. The constructor initializes filter parameters. 
@@ -290,6 +303,7 @@ from pygrank.algorithms import HeatKernel
 algorithm = HeatKernel(t=3, tol=1.E-9) # tol passed to the ConvergenceManager 
 graph, seed_nodes = ... 
 ranks = algorithm(graph, {v: 1 for v in seed_nodes}) 
+```
 ## <span class="component">PageRankClosed</span>
 <b class="parameters">Extends</b><br> *ClosedFormGraphFilter*<br><b class="parameters">About</b><br>
 PageRank closed filter. The constructor initializes the PageRank scheme parameters. 
@@ -320,6 +334,7 @@ import pygrank as pg
 algorithm = pg.PageRankClosed(alpha=0.99, tol=1.E-9) # tol passed to the ConvergenceManager 
 graph, seed_nodes = ... 
 ranks = algorithm(graph, {v: 1 for v in seed_nodes}) 
+```
 ## <span class="component">AbsorbingWalks</span>
 <b class="parameters">Extends</b><br> *RecursiveGraphFilter*<br><b class="parameters">About</b><br>
 Implementation of partial absorbing random walks for Lambda = (1-alpha)/alpha diag(absorption vector). 
@@ -350,8 +365,11 @@ from pygrank.algorithms import AbsorbingWalks
 algorithm = AbsorbingWalks(1-1.E-6, tol=1.E-9) # tol passed to the ConvergenceManager 
 graph, seed_nodes = ... 
 ranks = algorithm(graph, {v: 1 for v in seed_nodes}) 
+```
 Example (same outcome, explicit absorption rate definition):
+```python 
 ranks = algorithm(graph, {v: 1 for v in seed_nodes}, absorption={v: 1 for v in graph}) 
+```
 ## <span class="component">DijkstraRank</span>
 <b class="parameters">Extends</b><br> *RecursiveGraphFilter*<br><b class="parameters">About</b><br>
 A ranking algorithm that assigns node ranks loosely increasing with the minimum distance from a seed.
@@ -383,6 +401,7 @@ import pygrank as pg
 algorithm = pg.PageRank(alpha=0.99, tol=1.E-9) # tol passed to the ConvergenceManager 
 graph, seed_nodes = ... 
 ranks = algorithm(graph, {v: 1 for v in seed_nodes}) 
+```
 ## <span class="component">SymmetricAbsorbingRandomWalks</span>
 <b class="parameters">Extends</b><br> *RecursiveGraphFilter*<br><b class="parameters">About</b><br>
 Implementation of partial absorbing random walks for *Lambda = (1-alpha)/alpha diag(absorption vector)*. The constructor initializes the symmetric random walk strategy for appropriate parameter values. 
@@ -411,5 +430,8 @@ from pygrank.algorithms import AbsorbingWalks
 algorithm = AbsorbingWalks(1-1.E-6, tol=1.E-9) 
 graph, seed_nodes = ... 
 ranks = algorithm(graph, {v: 1 for v in seed_nodes}) 
+```
 Example (same outcome, explicit absorption rate definition):
+```python 
 ranks = algorithm(graph, {v: 1 for v in seed_nodes}, absorption={v: 1 for v in graph}) 
+```

@@ -1,10 +1,10 @@
 # Quickstart
 
-1.&nbsp;Install the library with `pip install pygrank`, import it,
-and construct a node ranking algorithm
-(incrementally apply postprocessors with `>>`). 
-There are many components and parameters to find 
-good configurations; [autotuning](../advanced/autotuning.md) may be helpful.
+1.&nbsp;Install the library with `pip install pygrank` and import it.
+Construct a node ranking algorithm from a 
+graph filter by incrementally applying postprocessors with `>>`. 
+There are many components and parameters, and
+[autotuning](autotuning.md) may find good configurations.
 
 ```python
 import pygrank as pg
@@ -26,8 +26,8 @@ scores = hk5_advanced(graph, personalization)  # returns a dict-like pg.GraphSig
 print(scores)  # {'0': 0.3154503251398683, '1': 0.26661671252340463, '2': 0.03700150026429704, ... }
 ```
 
-3.&nbsp;Evaluate scores; here we use a stochastic generalization of the unsupervised Conductance measure (that
-can parse scores).
+3.&nbsp;Evaluate scores; here we use a stochastic generalization of the unsupervised conductance measure 
+that can parse scores.
 
 ```python
 measure = pg.Conductance()  # an evaluation measure

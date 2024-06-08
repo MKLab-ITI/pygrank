@@ -25,8 +25,11 @@ auc = pg.AUC(known_scores, exclude=personalization)
 prule = pg.pRule(sensitivity_scores, exclude=personalization) 
 measure = pg.AM([auc, prule], weights=[1., 10.], thresholds=[(0,1), (0, 0.8)]) 
 print(measure(algorithm(personalization))) 
+```
 Example (same result):
+```python 
 measure = pg.AM().add(auc, weight=1., max_val=1).add(prule, weight=1., max_val=0.8) 
+```
 ## <span class="component">Disparity</span>
 <b class="parameters">Extends</b><br> *MeasureCombination*<br><b class="parameters">About</b><br>
 Combines measures by calculating the absolute value of their weighted differences. 
@@ -47,8 +50,11 @@ auc = pg.AUC(known_scores, exclude=personalization)
 prule = pg.pRule(sensitivity_scores, exclude=personalization) 
 measure = pg.AM([auc, prule], weights=[1., 10.], thresholds=[(0,1), (0, 0.8)]) 
 print(measure(algorithm(personalization))) 
+```
 Example (same result):
+```python 
 measure = pg.AM().add(auc, weight=1., max_val=1).add(prule, weight=1., max_val=0.8) 
+```
 ## <span class="component">GM</span>
 <b class="parameters">Extends</b><br> *MeasureCombination*<br><b class="parameters">About</b><br>
 Combines several measures through their geometric mean. The constructor instantiates a combination of several measures. More measures with their own weights and threhsolded range 
@@ -68,8 +74,11 @@ auc = pg.AUC(known_scores, exclude=personalization)
 prule = pg.pRule(sensitivity_scores, exclude=personalization) 
 measure = pg.AM([auc, prule], weights=[1., 10.], thresholds=[(0,1), (0, 0.8)]) 
 print(measure(algorithm(personalization))) 
+```
 Example (same result):
+```python 
 measure = pg.AM().add(auc, weight=1., max_val=1).add(prule, weight=1., max_val=0.8) 
+```
 ## <span class="component">Parity</span>
 <b class="parameters">Extends</b><br> *MeasureCombination*<br><b class="parameters">About</b><br>
 Combines measures by calculating the absolute value of their weighted differences subtracted from 1. 
@@ -90,8 +99,11 @@ auc = pg.AUC(known_scores, exclude=personalization)
 prule = pg.pRule(sensitivity_scores, exclude=personalization) 
 measure = pg.AM([auc, prule], weights=[1., 10.], thresholds=[(0,1), (0, 0.8)]) 
 print(measure(algorithm(personalization))) 
+```
 Example (same result):
+```python 
 measure = pg.AM().add(auc, weight=1., max_val=1).add(prule, weight=1., max_val=0.8) 
+```
 ## <span class="component">AUC</span>
 <b class="parameters">Extends</b><br> *Supervised*<br><b class="parameters">About</b><br>
 Wrapper for sklearn.metrics.auc evaluation. The constructor initializes the supervised measure with desired graph signal outcomes. 
@@ -227,6 +239,7 @@ ranker = pg.LFPR()
 measure = pg.Mistreatment(known_scores, exclude=train, measure=pg.AUC) 
 scores = ranker(train, sensitive=sensitive_signal) 
 print(measure(scores)) 
+```
 ## <span class="component">NDCG</span>
 <b class="parameters">Extends</b><br> *Supervised*<br><b class="parameters">About</b><br>
 Provides evaluation of NDCG@k score between given and known scores. The constructor initializes the supervised measure with desired graph signal outcomes and the number of top scores. 
@@ -311,8 +324,11 @@ graph, seed_nodes, algorithm = ...
 algorithm = pg.Normalize(algorithm) 
 scores = algorithm.rank(graph, seed_nodes) 
 conductance = pg.Conductance().evaluate(scores) 
+```
 Example (same conductance):
+```python 
 conductance = pg.Conductance(autofix=True).evaluate(scores) 
+```
 ## <span class="component">Density</span>
 <b class="parameters">Extends</b><br> *Unsupervised*<br><b class="parameters">About</b><br>
 Extension of graph density that accounts for node scores. 
@@ -331,6 +347,7 @@ import pygrank as pg
 graph, seed_nodes, algorithm = ... 
 scores = algorithm.rank(graph, seed_nodes) 
 density = pg.Density().evaluate(scores) 
+```
 ## <span class="component">Modularity</span>
 <b class="parameters">Extends</b><br> *Unsupervised*<br><b class="parameters">About</b><br>
 Extension of modularity that accounts for node scores. The constructor initializes the Modularity measure with a sampling strategy that speeds up normal computations. 
@@ -348,3 +365,4 @@ import pygrank as pg
 graph, seed_nodes, algorithm = ... 
 scores = algorithm.rank(graph, seed_nodes) 
 modularity = pg.Modularity(max_positive_samples=int(graph.number_of_edges()**0.5)).evaluate(scores) 
+```

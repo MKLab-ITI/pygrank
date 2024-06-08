@@ -134,15 +134,14 @@ out of which one is "numpy".
 !!! warning 
     Enabling cors will not run certain parts of
     preprocessing, because it performs immediate backend switching
-    with cached version of the adjacency matrix. There is
+    with cached versions of the adjacency matrix. There is
     no error checking involved. For this reason:
     
     - Remember that the only preprocessor that will actually
     run computations is the first one that runs. If you
-    are unsure which will run first, set the same arguments
-    to all preprocessors and graph filters you use for
-    safety.
-    - Set `cors=True` to each and every
+    are unsure, either set the same arguments or generate
+    the preprocessor first and share it between all algorithms.
+    - Make sure that `cors=True` holds for every
     preprocessor and graph filter that will use
     cors graphs.
 
@@ -175,7 +174,7 @@ graph signals with the adjacency
 you defined at different backends.
 
 Usefulness of cross-origin resources in demonstrated in the
-following graph neural network example, where its training
+following graph neural network example, where training
 time is sped up by 25% when `cors=True` in the
 constructor of the `GenericGraphFilter`:
 
