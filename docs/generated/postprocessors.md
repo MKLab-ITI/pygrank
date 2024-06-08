@@ -27,7 +27,6 @@ import pygrank as pg
 graph, seed_nodes = ... 
 algorithm = pg.BoostedSeedOversampling(pg.PageRank(alpha=0.99)) 
 ranks = algorithm.rank(graph, personalization={1 for v in seed_nodes}) 
-```
 ## <span class="component">FairPersonalizer</span>
 <b class="parameters">Extends</b><br> *Postprocessor*<br><b class="parameters">About</b><br>
 A personalization editing scheme that aims to edit graph signal priors (i.e. personalization) to produce 
@@ -51,14 +50,9 @@ import pygrank as pg
 graph, personalization, sensitive, algorithm = ... # sensitive is a second graph signal 
 algorithm = pg.FairPersonalizer(algorithm, .8, pRule_weight=10) # tries to force (weight 10) pRule to be at least 80% 
 ranks = algorithm.rank(graph, personalization, sensitive=sensitive) 
-```
 Example (treats class imbalanace):
-```python 
-import pygrank as pg 
 graph, personalization, algorithm = ... 
-algorithm = pg.FairPersonalizer(algorithm, .8, pRule_weight=10) 
 ranks = algorithm.rank(graph, personalization, sensitive=personalization) 
-```
 ## <span class="component">FairWalk</span>
 <b class="parameters">Extends</b><br> *Postprocessor*<br><b class="parameters">About</b><br>
 Adjusting graph convolutions to perform fair random walking [rahman2019fairwalk]. The constructor initializes Fairwalk given a base ranker. **This explicitly assumes immutability** of graphs. If you edit 
@@ -80,20 +74,13 @@ import pygrank as pg
 graph, personalization, algorithm = ... 
 algorithm = pg.LinearSweep(algorithm) # subtracts from node scores a uniform ranker's non-personalized outcome 
 ranks = algorithm.rank(graph, personalization 
-```
 Example with different rankers:
-```python 
-import pygrank as pg 
 graph, personalization, algorithm, uniform_ranker = ... 
 algorithm = pg.LinearSweep(algorithm, uniform_ranker=uniform_ranker) 
 ranks = algorithm.rank(graph, personalization) 
-```
 Example (same outcome):
-```python 
-import pygrank as pg 
 graph, personalization, uniform_ranker, algorithm = ... 
 ranks = pg.Threshold(uniform_ranker).transform(algorithm.rank(graph, personalization)) 
-```
 ## <span class="component">MabsMaintain</span>
 <b class="parameters">Extends</b><br> *Postprocessor*<br><b class="parameters">About</b><br>
 Forces node ranking posteriors to have the same mean absolute value as prior inputs. The constructor initializes the postprocessor with a base ranker instance. 
@@ -115,13 +102,8 @@ import pygrank as pg
 graph, personalization, algorithm = ... 
 algorithm = pg.Normalize(0.5, algorithm) # sets ranks >= 0.5 to 1 and lower ones to 0 
 ranks = algorithm.rank(graph, personalization) 
-```
 Example (same outcome, simpler one-liner):
-```python 
-import pygrank as pg 
-graph, personalization, algorithm = ... 
 ranks = pg.Normalize(0.5).transform(algorithm.rank(graph, personalization)) 
-```
 ## <span class="component">Ordinals</span>
 <b class="parameters">Extends</b><br> *Postprocessor*<br><b class="parameters">About</b><br>
 Converts ranking outcome to ordinal numbers. 
@@ -136,13 +118,8 @@ import pygrank as pg
 graph, personalization, algorithm = ... 
 algorithm = pg.Ordinals(algorithm) 
 ranks = algorithm.rank(graph, personalization) 
-```
 Example (same outcome, simpler one-liner):
-```python 
-import pygrank as pg 
-graph, personalization, algorithm = ... 
 ranks = pg.Ordinals().transform(algorithm.rank(graph, personalization)) 
-```
 ## <span class="component">SeedOversampling</span>
 <b class="parameters">Extends</b><br> *Postprocessor*<br><b class="parameters">About</b><br>
 Performs seed oversampling on a base ranker to improve the quality of predicted seeds. The constructor initializes the class with a base ranker. 
@@ -157,7 +134,6 @@ import pygrank as pg
 graph, seed_nodes = ... 
 algorithm = pg.SeedOversampling(pg.PageRank(alpha=0.99)) 
 ranks = algorithm.rank(graph, personalization={1 for v in seed_nodes}) 
-```
 ## <span class="component">SeparateNormalization</span>
 <b class="parameters">Extends</b><br> *Postprocessor*<br><b class="parameters">About</b><br>
 Performs different normalizations between two different groups of nodes. 
@@ -181,14 +157,8 @@ import pygrank as pg
 graph, personalization, algorithm = ... 
 algorithm = pg.Subgraph(pg.Top(algorithm, 10)) 
 top_10_subgraph = algorithm(graph, personalization).graph 
-```
 Example (same result):
-```python 
-import pygrank as pg 
-graph, personalization, algorithm = ... 
 algorithm = algorithm >> pg.Top(10) >> pg.Subgraph() 
-top_10_subgraph = algorithm(graph, personalization).graph 
-```
 ## <span class="component">Supergraph</span>
 <b class="parameters">Extends</b><br> *Postprocessor*<br><b class="parameters">About</b><br>
 Reverts to full graphs from which `Subgraph` departed. The constructor initializes the postprocessor with a base ranker. 
@@ -203,7 +173,6 @@ graph, personalization, algorithm, test = ...
 algorithm = algorithm >> pg.Top(10) >> pg.Threshold() >> pg.Subgraph() >> pg.PageRank() >> pg.Supergraph() 
 top_10_reranked = algorithm(graph, personalization)  # top 10 non-zeroes ranked in their induced subgraph 
 print(pg.AUC(pg.to_signal(graph, test))(top_10_reranked))  # supergraph has returned to the original graph 
-```
 ## <span class="component">Sweep</span>
 <b class="parameters">Extends</b><br> *Postprocessor*<br><b class="parameters">About</b><br>
 Applies a sweep procedure that divides personalized node ranks by corresponding non-personalized ones. The constructor initializes the sweep procedure. 
@@ -218,20 +187,13 @@ import pygrank as pg
 graph, personalization, algorithm = ... 
 algorithm = pg.Sweep(algorithm) # divides node scores by a uniform ranker's non-personalized outcome 
 ranks = algorithm.rank(graph, personalization 
-```
 Example with different rankers:
-```python 
-import pygrank as pg 
 graph, personalization, algorithm, uniform_ranker = ... 
 algorithm = pg.Sweep(algorithm, uniform_ranker=uniform_ranker) 
 ranks = algorithm.rank(graph, personalization) 
-```
 Example (same outcome):
-```python 
-import pygrank as pg 
 graph, personalization, uniform_ranker, algorithm = ... 
 ranks = pg.Threshold(uniform_ranker).transform(algorithm.rank(graph, personalization)) 
-```
 ## <span class="component">Tautology</span>
 <b class="parameters">Extends</b><br> *Postprocessor*<br><b class="parameters">About</b><br>
 Returns ranks as-are. 
@@ -254,19 +216,11 @@ import pygrank as pg
 graph, personalization, algorithm = ... 
 algorithm = pg.Threshold(algorithm, 0.5) # sets ranks >= 0.5 to 1 and lower ones to 0 
 ranks = algorithm.rank(graph, personalization) 
-```
 Example (same outcome):
-```python 
-import pygrank as pg 
-graph, personalization, algorithm = ... 
 ranks = pg.Threshold(0.5).transform(algorithm.rank(graph, personalization)) 
-```
 Example (binary conversion):
-```python 
-import pygrank as pg 
 graph = ... 
 binary = pg.Threshold(0).transform(pg.to_signal(graph, [0, 0.1, 0, 1]))  # creates [0, 1, 0, 1] ranks 
-```
 ## <span class="component">Top</span>
 <b class="parameters">Extends</b><br> *Postprocessor*<br><b class="parameters">About</b><br>
 Keeps the top ranks as are and converts other ranks to zero. The constructor initializes the class with a  base ranker instance and number of top examples. 
@@ -284,7 +238,6 @@ ranks = pg.Normalize(algorithm, "sum").rank(training)
 ranks = ranks*(1-training) 
 top5 = pg.Threshold(pg.Top(5))(ranks)  # top5 ranks converted to 1, others to 0 
 print(pg.TPR(test, exclude=training)(top5)) 
-```
 ## <span class="component">Transformer</span>
 <b class="parameters">Extends</b><br> *Postprocessor*<br><b class="parameters">About</b><br>
 Applies an element-by-element transformation on a graph signal based on a given expression. The constructor initializes the class with a base ranker instance. Args are automatically filled in and 
@@ -301,4 +254,3 @@ graph, personalization, algorithm = ...
 r1 = pg.Normalize(algorithm, "sum").rank(graph, personalization) 
 r2 = pg.Transformer(algorithm, lambda x: x/pg.sum(x)).rank(graph, personalization) 
 print(pg.Mabs(r1)(r2)) 
-```

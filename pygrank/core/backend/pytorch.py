@@ -118,3 +118,7 @@ def filter_out(x, exclude):
 
 def epsilon():
     return torch.finfo(torch.float32).eps
+
+
+def shape0(M) -> int:
+    return M.shape[0]

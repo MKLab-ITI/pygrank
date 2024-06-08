@@ -28,6 +28,10 @@ def test_filter_invalid_parameters():
         pg.HeatKernel(normalization="unknown").rank(graph)
     with pytest.raises(Exception):
         pg.HeatKernel(coefficient_type="unknown").rank(graph)
+    with pytest.raises(Exception):
+        pg.HeatKernel() >> pg.preprocessor()  # this is invalid
+    assert isinstance(pg.HeatKernel() + pg.preprocessor(), pg.HeatKernel)
+    assert isinstance(pg.HeatKernel() + pg.ConvergenceManager(), pg.HeatKernel)
 
 
 def test_convergence_string_conversion():
@@ -60,6 +64,17 @@ def test_non_convergence():
     graph = next(pg.load_datasets_graph(["graph9"]))
     with pytest.raises(Exception):
         pg.PageRank(max_iters=5).rank(graph)
+
+
+def test_end_modulo():
+    graph = next(pg.load_datasets_graph(["graph9"]))
+    # use end modulo to run for a specific multiple of iterations
+    # (though usually this can be used for alternating operations)
+    # graph9 converges in 26 iterations normally, add normalization postprocessor
+    algorithm = pg.PageRank(max_iters=100, end_modulo=50) >> pg.Normalize()
+    algorithm.rank(graph)
+    assert algorithm.preprocessor.__name__ == "preprocess"
+    assert algorithm.convergence.iteration == 50
 
 
 def test_custom_runs():
@@ -218,6 +233,30 @@ def test_lowpass_vs_pagerank():
         ).rank(graph, personalization)
         absorbing_result = pg.LowPassRecursiveGraphFilter().rank(graph, personalization)
         assert pg.Mabs(pagerank_result)(absorbing_result) < pg.epsilon()
+
+
+def test_impulse_vs_pagerank():
+    graph = next(pg.load_datasets_graph(["graph9"]))
+    personalization = {"A": 1, "B": 1}
+    for _ in supported_backends():
+        pagerank_result = pg.PageRank(alpha=0.9).rank(graph, personalization)
+        impulse_result = pg.ImpulseGraphFilter().rank(graph, personalization)
+        assert pg.Conductance()(pagerank_result) < pg.Conductance()(impulse_result)
+
+
+def test_closed_pagerank_vs_pagerank():
+    graph = next(pg.load_datasets_graph(["graph9"]))
+    personalization = {"A": 1, "B": 1}
+    for _ in supported_backends():
+        pagerank_result = pg.PageRank(alpha=0.9, tol=1.0e-9, max_iters=1000).rank(
+            graph, personalization
+        )
+        closed_result = pg.PageRankClosed(alpha=0.9, tol=1.0e-9, max_iters=1000).rank(
+            graph, personalization
+        )
+        pagerank_result = pagerank_result >> pg.Normalize()
+        closed_result = closed_result >> pg.Normalize()
+        assert pg.Mabs(pagerank_result)(closed_result) < 1.0e-4  # loose approximation
 
 
 def test_kernel_locality():

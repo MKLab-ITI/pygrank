@@ -11,8 +11,8 @@ def supported_backends():
         "tensorflow",
         "torch_sparse",
         "sparse_dot_mkl",
+        "dask",
         "numpy",
-        "dask"
     ]:
         pg.load_backend(backend)
         yield backend
@@ -82,16 +82,18 @@ def test_fastgraph():
 
 def test_wrapgraph():
     graph = next(pg.load_datasets_graph(["graph5"], graph_api=nx))
-    adj = pg.preprocessor(normalization="none")(graph)
-    assert (
-        pg.sum(
-            pg.abs(
-                pg.PageRank(normalization="symmetric")(graph).np
-                - pg.PageRank(normalization="symmetric")(pg.AdjacencyWrapper(adj)).np
+    ad = pg.preprocessor(normalization="none")(graph)
+    adj = pg.AdjacencyWrapper(ad)
+    for _ in supported_backends():
+        assert (
+            pg.sum(
+                pg.abs(
+                    pg.PageRank(normalization="symmetric")(graph).np
+                    - pg.PageRank(normalization="symmetric")(adj).np
+                )
             )
+            < 1.0e-6
         )
-        == 0
-    )
 
 
 def test_signal_init():

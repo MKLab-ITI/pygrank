@@ -52,6 +52,8 @@ def test_edge_cases():
     assert pg.pRule([0])([0]) == 0
     assert pg.Cos([0])([0]) == 0
     with pytest.raises(Exception):
+        pg.Measure().best_direction()
+    with pytest.raises(Exception):
         pg.Measure()([0, 1, 0])
     with pytest.raises(Exception):
         pg.AUC([0, 0, 0])([0, 1, 0])
@@ -71,9 +73,18 @@ def test_edge_cases():
         )  # this is indeed correct in python
         assert pg.Density(nx.Graph())([]) == 0
         assert pg.Modularity(nx.Graph())([]) == 0
+        assert pg.L1([])([]) == 0
+        assert pg.L1([0, 1, 0])([0, 1, 0]) == 0
+        assert pg.RMabs([])([]) == 0
+        assert pg.MaxDifference([])([]) == 0
+        assert abs(pg.MaxDifference([0, 50, 0])([0, -50, 0]) - 100) < pg.epsilon()
         assert pg.KLDivergence([0, 1, 0])([0, 1, 0]) == 0
         assert pg.MKLDivergence([0, 1, 0])([0, 1, 0]) == 0
         assert pg.KLDivergence([0])([-1]) == 0
+        assert (
+            pg.KLDivergence([0, 1, 0]).as_immutable_method()([0.5, 0.5, 0.5])([0, 1, 0])
+            == 0
+        )
 
 
 def test_strange_input_types():

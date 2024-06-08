@@ -2,7 +2,6 @@ from pygrank.measures.supervised.supervised import Supervised
 from pygrank.core import backend, GraphSignalData, BackendPrimitive
 
 
-
 class L1(Supervised):
     """Computes the L1 norm on the difference between scores and known scores."""
 

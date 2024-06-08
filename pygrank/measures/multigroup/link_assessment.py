@@ -1,7 +1,10 @@
 import numpy as np
 import warnings
 from pygrank.measures import AUC
-from pygrank.measures.multigroup.clustering_coefficient import _cos_similarity, _dot_similarity
+from pygrank.measures.multigroup.clustering_coefficient import (
+    _cos_similarity,
+    _dot_similarity,
+)
 
 
 class LinkAssessment:

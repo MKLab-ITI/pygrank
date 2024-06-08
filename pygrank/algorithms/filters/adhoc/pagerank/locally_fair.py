@@ -154,4 +154,3 @@ class LFPR(RecursiveGraphFilter):
         )
         refs.insert(2, f"{redistributor} rank redistribution strategy")
         return refs
-

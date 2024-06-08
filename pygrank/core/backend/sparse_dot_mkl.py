@@ -11,7 +11,7 @@ if "MKL_NUM_THREADS" not in os.environ:
 __pygrank_sparse_dot_mkl_warning = False
 try:
     import sparse_dot_mkl
-except Exception as e:
+except ImportError as e:
     __pygrank_sparse_dot_mkl_warning = True
     warnings.warn(
         "sparse_dot_mkl could not be imported.\n"
@@ -46,7 +46,7 @@ def backend_name():
 
 
 def scipy_sparse_to_backend(M):
-    return M.to_csr()
+    return M.tocsr()
 
 
 def to_array(obj, copy_array=False):
@@ -98,6 +98,7 @@ def conv(signal, M):
                 "Please check your environment setup.\n"
                 "Falling back to numpy implementation for this backend."
             )
+            raise e
             warnings.warn(str(e))
         return signal @ M
 
@@ -121,3 +122,7 @@ def filter_out(x, exclude):
 def epsilon():
     # return np.finfo(np.float32).eps
     return np.finfo(float).eps
+
+
+def shape0(M) -> int:
+    return M.shape[0]

@@ -136,3 +136,7 @@ def filter_out(x, exclude):
 
 def epsilon():
     return np.finfo(np.float64).eps * 4
+
+
+def shape0(M) -> int:
+    return len(M)

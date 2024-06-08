@@ -140,3 +140,5 @@ def test_postprocessor_citations():
             pg.PageRank(), oversample_from_iteration="original"
         ).cite()
     )
+    assert "PageRank" in pg.LinearSweep(pg.PageRank(), pg.HeatKernel()).cite()
+    assert "HeatKernel" in pg.LinearSweep(pg.PageRank(), pg.HeatKernel()).cite()

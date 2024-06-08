@@ -138,3 +138,7 @@ def filter_out(
 
 def epsilon() -> float:  # pragma: no cover
     pass
+
+
+def shape0(M: BackendPrimitive) -> int:  # pragma: no cover
+    pass

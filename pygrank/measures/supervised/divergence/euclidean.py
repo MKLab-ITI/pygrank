@@ -8,4 +8,3 @@ class Euclidean(Supervised):
     def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
         known_scores, scores = self.to_numpy(scores)
         return backend.sum((known_scores - scores) * (known_scores - scores)) ** 0.5
-

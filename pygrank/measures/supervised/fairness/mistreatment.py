@@ -5,7 +5,6 @@ from typing import Callable
 from pygrank.measures.supervised.ranking.auc import AUC
 
 
-
 class Mistreatment(Supervised):
     """Computes a disparate mistreatment assessment to test the fairness of given scores given
     that they are similarly evaluated by a measure of choice."""

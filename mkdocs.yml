@@ -12,7 +12,7 @@ nav:
         - 'basics/filters.md'
         - 'basics/postprocessors.md'
         - 'basics/evaluation.md'
-    - Advanced features:
+    - Advanced:
         - 'advanced/autotuning.md'
         - 'advanced/backends.md'
         - 'advanced/convergence.md'

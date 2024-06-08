@@ -114,6 +114,12 @@ def test_separate_normalization():
         )
         ranks = algorithm(graph, {"A": 2})
         assert abs(ranks["A"] + ranks["B"] - 1) < pg.epsilon()
+        # redu with a different pattern of constructing the normalization
+        algorithm = pg.SeparateNormalization(
+            pg.PageRank(preserve_norm=False), ["A", "B"]
+        )
+        ranks = algorithm(graph, {"A": 2})
+        assert abs(ranks["A"] + ranks["B"] - 1) < pg.epsilon()
 
 
 def test_sequential():
@@ -165,6 +171,11 @@ def test_transform():
         assert pg.Mabs(r1)(r2) < pg.epsilon()
         r1 = pg.Transformer(math.exp).transform(pg.PageRank()(graph))
         r2 = pg.Transformer(pg.PageRank(), pg.exp).rank(graph)
+        assert pg.Mabs(r1)(r2) < pg.epsilon() * 2.5
+        r1 = pg.Transformer(lambda x: x / pg.sum(x * x) ** 0.5).transform(
+            pg.PageRank()(graph)
+        )
+        r2 = pg.Normalize(pg.PageRank(), "L2").rank(graph)
         assert pg.Mabs(r1)(r2) < pg.epsilon() * 2.5
 
 
@@ -235,9 +246,15 @@ def test_threshold():
         cond3 = pg.Conductance().evaluate(
             pg.Threshold(1).transform(algorithm.rank(graph, {v: 1 for v in training}))
         )  # should yield infinite conductance
+        cond4 = pg.Conductance().evaluate(
+            pg.Threshold(pg.Sweep(algorithm), "gap", inclusive=True).rank(
+                graph, {v: 1 for v in training}
+            )
+        )
         # TODO: find an algorithm other than gap to outperform 0.2 threshold too
         assert cond1 <= cond2
         assert cond2 <= cond3
+        assert cond1 != cond4
 
 
 def test_subgraph():

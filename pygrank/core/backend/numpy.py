@@ -89,3 +89,7 @@ def filter_out(x, exclude):
 def epsilon():
     # return np.finfo(np.float32).eps
     return np.finfo(float).eps
+
+
+def shape0(M) -> int:
+    return M.shape[0]

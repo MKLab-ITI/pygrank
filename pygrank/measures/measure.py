@@ -19,7 +19,7 @@ class Measure(object):
         Returns:
             1 if higher values of the measure are better, -1 otherwise.
         """
-        return 1  # TODO: automatically detect unsupervised direction
+        raise Exception("Measure should implement a best_direction method")
 
     def as_supervised_method(self):
         def dummy_constructor(known_scores, exclude=None):
@@ -44,4 +44,3 @@ class Measure(object):
 
         dummy_constructor.__name__ = self.__class__.__name__
         return dummy_constructor
-

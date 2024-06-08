@@ -20,15 +20,9 @@ import pygrank as pg
 graph, personalization = ... 
 tuner = pg.AlgorithmSelection(pg.create_demo_filters().values(), measure=pg.AUC, deviation_tol=0.01) 
 ranks = tuner.rank(graph, personalization) 
-```
 Example (with more filters):
-```python 
-import pygrank as pg 
-graph, personalization = ... 
 algorithms = pg.create_variations(pg.create_many_filters(tol=1.E-9), pg.create_many_variation_types()) 
 tuner = pg.AlgorithmSelection(algorithms.values(), measure=pg.AUC, deviation_tol=0.01) 
-ranks = tuner.rank(graph, personalization) 
-```
 ## <span class="component">HopTuner</span>
 <b class="parameters">Extends</b><br> *Tuner*<br><b class="parameters">About</b><br>
 Tunes a GenericGraphFilter specific measure by splitting the personalization 
@@ -49,7 +43,6 @@ import pygrank as pg
 graph, personalization = ... 
 tuner = pg.HopTuner(measure=AUC) 
 ranks = tuner.rank(graph, personalization) 
-```
 ## <span class="component">ParameterTuner</span>
 <b class="parameters">Extends</b><br> *Tuner*<br><b class="parameters">About</b><br>
 Tunes a parameterized version of node ranking algorithms under a specific measure by splitting the personalization 
@@ -71,12 +64,6 @@ import pygrank as pg
 graph, personalization = ... 
 tuner = pg.ParameterTuner(measure=AUC, deviation_tol=0.01) 
 ranks = tuner.rank(graph, personalization) 
-```
 Example to tune pagerank'personalization float parameter alpha in the range [0.5, 0.99]:
-```python 
-import pygrank as pg 
-graph, personalization = ... 
 tuner = pg.ParameterTuner(lambda params: pg.PageRank(alpha=params[0]), 
 measure=AUC, deviation_tol=0.01, max_vals=[0.99], min_vals=[0.5]) 
-ranks = tuner.rank(graph, personalization) 
-```

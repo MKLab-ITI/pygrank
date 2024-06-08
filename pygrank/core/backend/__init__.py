@@ -35,8 +35,8 @@ class Backend:
         return _imported_mods[self.mod_name]
 
     def __exit__(self, *args, **kwargs):
-        if self.closeable is not None:
-            self.closeable.close()
+        # if self.closeable is not None:
+        #    self.closeable.close()
         load_backend(self._previous_backend)
         return False
 
@@ -113,18 +113,10 @@ def load_backend(mod_name, *args, **kwargs):
                     raise Exception("Missing implementation for " + str(api))
     return mod.backend_init(*args, **kwargs)
 
-def _is_inside_dask_worker():  # pragma: no cover
-    try:
-        from dask.distributed import get_worker
-        print(get_worker())
-        return True
-    except ValueError as e:
-        return False
-
 
 def get_backend_preference():  # pragma: no cover
-    if _is_inside_dask_worker():
-        return "numpy"
+    # if _is_inside_dask_worker():
+    #    return "numpy"
     config_path = os.path.join(os.path.expanduser("~"), ".pygrank", "config.json")
     mod_name = None
     remind_where_to_find = False

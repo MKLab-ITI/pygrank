@@ -87,10 +87,10 @@ def combine_attributes(text, descriptions):
             continue
         if line.strip().startswith("Example"):
             if hasexample:
-                line = "E"+line.strip()[1:]
+                line = "E" + line.strip()[1:]
             else:
                 hasexample = True
-                ret += "\n<b class=\"parameters\">Example</b>\n"
+                ret += '\n<b class="parameters">Example</b>\n'
                 continue
         if not line.startswith("* "):
             if in_attributes:
@@ -101,12 +101,13 @@ def combine_attributes(text, descriptions):
             in_attributes = False
         if line == "Attributes: " or line == "Args: ":
             in_attributes = True
-            line = "<br><b class=\"parameters\">Parameters</b>\n"
-        ret += line + "\n"
+            line = '<br><b class="parameters">Parameters</b>\n'
+        if line not in ret:
+            ret += line + "\n"
     if in_attributes:
         for desc in descriptions:
             to_add = extract_attributes(desc)
-            if to_add not in ret:  # handles case of inherited constructors
+            if to_add.strip() not in ret:  # handles case of inherited constructors
                 ret += to_add
 
     return ret
@@ -115,9 +116,13 @@ def combine_attributes(text, descriptions):
 def base_description(obj, abstract):
     extends = [cls.__name__ for cls in inspect.getmro(obj)][1]
     class_text = (
-        f"\n## <span class=\"component\">{obj.__name__}</span>\n"
-        + ("*This is an abstract class*" if abstract else f"<b class=\"parameters\">Extends</b><br> *{extends}*")
-        + "<br><b class=\"parameters\">About</b><br>"
+        f'\n## <span class="component">{obj.__name__}</span>\n'
+        + (
+            "*This is an abstract class*"
+            if abstract
+            else f'<b class="parameters">Extends</b><br> *{extends}*'
+        )
+        + '<br><b class="parameters">About</b><br>'
         + format(obj.__doc__)[:-1]
     )
     for name, method in inspect.getmembers(obj):
@@ -139,8 +144,8 @@ def generate_filter_docs():
     base_descriptions = dict()
     abstract = dict()
 
-    base_descriptions[pygrank.algorithms.abstract.GraphFilter] = (
-        base_description(pygrank.algorithms.abstract.GraphFilter, True)
+    base_descriptions[pygrank.algorithms.abstract.GraphFilter] = base_description(
+        pygrank.algorithms.abstract.GraphFilter, True
     )
     abstract[pygrank.algorithms.abstract.GraphFilter] = True
     for name, obj in inspect.getmembers(sys.modules["pygrank.algorithms"]):

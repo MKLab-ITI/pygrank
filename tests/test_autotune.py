@@ -148,6 +148,26 @@ def test_optimizer():
     assert abs(p[0] - 3) < 0.1
     assert abs(p[1] - 0.5) < 0.1
 
+    # noisy Beale function, with solution coarseness that snaps solution params to the correct multiples
+    seed(0)
+    noisy_beale = (
+        lambda p: (1.5 - p[0] + p[0] * p[1]) ** 2
+        + (2.25 - p[0] + p[0] * p[1] ** 2) ** 2
+        + (2.625 - p[0] + p[0] * p[1] ** 3) ** 2
+        + random()
+    )
+    p = pg.optimize(
+        loss=noisy_beale,
+        validation_loss=beale,
+        max_vals=[4.5, 4.5],
+        min_vals=[-4.5, -4.5],
+        parameter_tol=1.0e-8,
+        verbose=False,
+        coarse=0.05,
+    )
+    assert abs(p[0] - 3) == 0
+    assert abs(p[1] - 0.5) == 0
+
     # Beale function with nelder mead
     p = pg.nelder_mead(
         loss=beale,

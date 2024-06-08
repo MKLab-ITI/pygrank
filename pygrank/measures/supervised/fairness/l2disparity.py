@@ -22,4 +22,3 @@ class L2Disparity(Supervised):
         # else:
         #    return 0
         return backend.abs(p1 - p2) ** 2
-

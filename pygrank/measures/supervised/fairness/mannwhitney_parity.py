@@ -2,6 +2,7 @@ from pygrank.measures.supervised.supervised import Supervised
 from pygrank.core import backend, GraphSignalData, BackendPrimitive
 import scipy.stats
 
+
 class MannWhitneyParity(Supervised):
     """
     Performs a two-tailed Mann-Whitney U-test to check that the scores of sensitive-attributed nodes (ground truth)

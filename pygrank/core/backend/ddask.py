@@ -37,8 +37,11 @@ def combine_cols(cols):
 def backend_name():
     return "dask"
 
+
 def eye(*args):
-    return scipy_sparse_to_backend(_eye(*args))
+    # return scipy_sparse_to_backend(_eye(*args))  # this creates an error for lanczos methods
+    return _eye(*args)
+
 
 def scipy_sparse_to_backend(M):
     M = M.tocsc()
@@ -52,7 +55,7 @@ def scipy_sparse_to_backend(M):
         else:
             end_index = (i + 1) * split_size
         splits.append(M[:, start_index:end_index])
-    #return splits
+    # return splits
     return __client.scatter(splits)
 
 
@@ -90,6 +93,7 @@ def self_normalize(obj):
         obj = obj / np_sum
     return obj
 
+
 """
 def conv(signal, M):
     results = []
@@ -106,7 +110,9 @@ def conv(signal, M_splits):
         return signal @ split
 
     # Use Dask to parallelize the multiplication
-    futures = [__client.submit(multiply_and_collect, signal, split) for split in M_splits]
+    futures = [
+        __client.submit(multiply_and_collect, signal, split) for split in M_splits
+    ]
     results = __client.gather(futures)
 
     final_result = np.concatenate(results, axis=0)
@@ -114,6 +120,8 @@ def conv(signal, M_splits):
 
 
 def length(x):
+    if isinstance(x, list) and len(x) > 0 and isinstance(x[0], dask.distributed.Future):
+        return sum(block.get().shape[0] * block.get().shape[1] for block in x)
     if isinstance(x, np.ndarray):
         if len(x.shape) > 1:
             return x.shape[0] * x.shape[1]
@@ -122,7 +130,16 @@ def length(x):
 
 
 def degrees(M):
-    return np.asarray(sum(M, axis=1)).ravel()
+    def degs(block):
+        return np.asarray(sum(block, axis=1)).ravel()
+
+    futures = [__client.submit(degs, block) for block in M]
+    results = __client.gather(futures)
+
+    ret = 0
+    for result in results:
+        ret = result + ret
+    return ret
 
 
 def filter_out(x, exclude):
@@ -132,3 +149,7 @@ def filter_out(x, exclude):
 def epsilon():
     # return np.finfo(np.float32).eps
     return np.finfo(float).eps
+
+
+def shape0(M) -> int:
+    return M[0].get().shape[0]

@@ -10,4 +10,3 @@ class MSQ(Supervised):
         return backend.sum(
             (known_scores - scores) * (known_scores - scores)
         ) / backend.length(scores)
-

@@ -4,6 +4,7 @@ from pygrank.core import GraphSignal, to_signal, GraphSignalData
 from typing import Mapping, Union
 import networkx as nx
 
+
 def split(
     groups: Union[GraphSignalData, Mapping[str, GraphSignalData]],
     training_samples: float = 0.8,

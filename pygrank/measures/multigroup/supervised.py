@@ -1,4 +1,3 @@
-
 class MultiSupervised:
     def __init__(self, metric_type, ground_truth, exclude=None):
         self.metrics = {

@@ -16,10 +16,6 @@ can be added with the `add(measure, weight=1, min_val=-inf, max_val=inf)` method
  * *weights:* Optional. A iterable of floats with which to weight the measures provided by the previous argument. The concept of weighting depends on how measures are aggregated, but it corresponds to an importance value placed on each measure. If None (default), provided measures are all weighted by 1. 
  * *thresholds:* Optional. A tuple of [min_val, max_val] with which to bound measure outcomes. If None (default) provided measures 
  * *differentiable:* Optional. If True, a differentiable hinge loss is used to approximate max and min. Default is False. 
- * *measures:* Optional. An iterable of measures to combine. If None (default) no new measure is added. 
- * *weights:* Optional. A iterable of floats with which to weight the measures provided by the previous argument. The concept of weighting depends on how measures are aggregated, but it corresponds to an importance value placed on each measure. If None (default), provided measures are all weighted by 1. 
- * *thresholds:* Optional. A tuple of [min_val, max_val] with which to bound measure outcomes. If None (default) provided measures 
- * *differentiable:* Optional. If True, a differentiable hinge loss is used to approximate max and min. Default is False. 
 
 <b class="parameters">Example</b>
 ```python 
@@ -29,16 +25,8 @@ auc = pg.AUC(known_scores, exclude=personalization)
 prule = pg.pRule(sensitivity_scores, exclude=personalization) 
 measure = pg.AM([auc, prule], weights=[1., 10.], thresholds=[(0,1), (0, 0.8)]) 
 print(measure(algorithm(personalization))) 
-```
 Example (same result):
-```python 
-import pygrank as pg 
-known_scores, algorithm, personalization, sensitivity_scores = ... 
-auc = pg.AUC(known_scores, exclude=personalization) 
-prule = pg.pRule(sensitivity_scores, exclude=personalization) 
 measure = pg.AM().add(auc, weight=1., max_val=1).add(prule, weight=1., max_val=0.8) 
-print(measure(algorithm(personalization))) 
-```
 ## <span class="component">Disparity</span>
 <b class="parameters">Extends</b><br> *MeasureCombination*<br><b class="parameters">About</b><br>
 Combines measures by calculating the absolute value of their weighted differences. 
@@ -50,10 +38,6 @@ can be added with the `add(measure, weight=1, min_val=-inf, max_val=inf)` method
  * *weights:* Optional. A iterable of floats with which to weight the measures provided by the previous argument. The concept of weighting depends on how measures are aggregated, but it corresponds to an importance value placed on each measure. If None (default), provided measures are all weighted by 1. 
  * *thresholds:* Optional. A tuple of [min_val, max_val] with which to bound measure outcomes. If None (default) provided measures 
  * *differentiable:* Optional. If True, a differentiable hinge loss is used to approximate max and min. Default is False. 
- * *measures:* Optional. An iterable of measures to combine. If None (default) no new measure is added. 
- * *weights:* Optional. A iterable of floats with which to weight the measures provided by the previous argument. The concept of weighting depends on how measures are aggregated, but it corresponds to an importance value placed on each measure. If None (default), provided measures are all weighted by 1. 
- * *thresholds:* Optional. A tuple of [min_val, max_val] with which to bound measure outcomes. If None (default) provided measures 
- * *differentiable:* Optional. If True, a differentiable hinge loss is used to approximate max and min. Default is False. 
 
 <b class="parameters">Example</b>
 ```python 
@@ -63,16 +47,8 @@ auc = pg.AUC(known_scores, exclude=personalization)
 prule = pg.pRule(sensitivity_scores, exclude=personalization) 
 measure = pg.AM([auc, prule], weights=[1., 10.], thresholds=[(0,1), (0, 0.8)]) 
 print(measure(algorithm(personalization))) 
-```
 Example (same result):
-```python 
-import pygrank as pg 
-known_scores, algorithm, personalization, sensitivity_scores = ... 
-auc = pg.AUC(known_scores, exclude=personalization) 
-prule = pg.pRule(sensitivity_scores, exclude=personalization) 
 measure = pg.AM().add(auc, weight=1., max_val=1).add(prule, weight=1., max_val=0.8) 
-print(measure(algorithm(personalization))) 
-```
 ## <span class="component">GM</span>
 <b class="parameters">Extends</b><br> *MeasureCombination*<br><b class="parameters">About</b><br>
 Combines several measures through their geometric mean. The constructor instantiates a combination of several measures. More measures with their own weights and threhsolded range 
@@ -83,10 +59,6 @@ can be added with the `add(measure, weight=1, min_val=-inf, max_val=inf)` method
  * *weights:* Optional. A iterable of floats with which to weight the measures provided by the previous argument. The concept of weighting depends on how measures are aggregated, but it corresponds to an importance value placed on each measure. If None (default), provided measures are all weighted by 1. 
  * *thresholds:* Optional. A tuple of [min_val, max_val] with which to bound measure outcomes. If None (default) provided measures 
  * *differentiable:* Optional. If True, a differentiable hinge loss is used to approximate max and min. Default is False. 
- * *measures:* Optional. An iterable of measures to combine. If None (default) no new measure is added. 
- * *weights:* Optional. A iterable of floats with which to weight the measures provided by the previous argument. The concept of weighting depends on how measures are aggregated, but it corresponds to an importance value placed on each measure. If None (default), provided measures are all weighted by 1. 
- * *thresholds:* Optional. A tuple of [min_val, max_val] with which to bound measure outcomes. If None (default) provided measures 
- * *differentiable:* Optional. If True, a differentiable hinge loss is used to approximate max and min. Default is False. 
 
 <b class="parameters">Example</b>
 ```python 
@@ -96,16 +68,8 @@ auc = pg.AUC(known_scores, exclude=personalization)
 prule = pg.pRule(sensitivity_scores, exclude=personalization) 
 measure = pg.AM([auc, prule], weights=[1., 10.], thresholds=[(0,1), (0, 0.8)]) 
 print(measure(algorithm(personalization))) 
-```
 Example (same result):
-```python 
-import pygrank as pg 
-known_scores, algorithm, personalization, sensitivity_scores = ... 
-auc = pg.AUC(known_scores, exclude=personalization) 
-prule = pg.pRule(sensitivity_scores, exclude=personalization) 
 measure = pg.AM().add(auc, weight=1., max_val=1).add(prule, weight=1., max_val=0.8) 
-print(measure(algorithm(personalization))) 
-```
 ## <span class="component">Parity</span>
 <b class="parameters">Extends</b><br> *MeasureCombination*<br><b class="parameters">About</b><br>
 Combines measures by calculating the absolute value of their weighted differences subtracted from 1. 
@@ -117,10 +81,6 @@ can be added with the `add(measure, weight=1, min_val=-inf, max_val=inf)` method
  * *weights:* Optional. A iterable of floats with which to weight the measures provided by the previous argument. The concept of weighting depends on how measures are aggregated, but it corresponds to an importance value placed on each measure. If None (default), provided measures are all weighted by 1. 
  * *thresholds:* Optional. A tuple of [min_val, max_val] with which to bound measure outcomes. If None (default) provided measures 
  * *differentiable:* Optional. If True, a differentiable hinge loss is used to approximate max and min. Default is False. 
- * *measures:* Optional. An iterable of measures to combine. If None (default) no new measure is added. 
- * *weights:* Optional. A iterable of floats with which to weight the measures provided by the previous argument. The concept of weighting depends on how measures are aggregated, but it corresponds to an importance value placed on each measure. If None (default), provided measures are all weighted by 1. 
- * *thresholds:* Optional. A tuple of [min_val, max_val] with which to bound measure outcomes. If None (default) provided measures 
- * *differentiable:* Optional. If True, a differentiable hinge loss is used to approximate max and min. Default is False. 
 
 <b class="parameters">Example</b>
 ```python 
@@ -130,23 +90,13 @@ auc = pg.AUC(known_scores, exclude=personalization)
 prule = pg.pRule(sensitivity_scores, exclude=personalization) 
 measure = pg.AM([auc, prule], weights=[1., 10.], thresholds=[(0,1), (0, 0.8)]) 
 print(measure(algorithm(personalization))) 
-```
 Example (same result):
-```python 
-import pygrank as pg 
-known_scores, algorithm, personalization, sensitivity_scores = ... 
-auc = pg.AUC(known_scores, exclude=personalization) 
-prule = pg.pRule(sensitivity_scores, exclude=personalization) 
 measure = pg.AM().add(auc, weight=1., max_val=1).add(prule, weight=1., max_val=0.8) 
-print(measure(algorithm(personalization))) 
-```
 ## <span class="component">AUC</span>
 <b class="parameters">Extends</b><br> *Supervised*<br><b class="parameters">About</b><br>
 Wrapper for sklearn.metrics.auc evaluation. The constructor initializes the supervised measure with desired graph signal outcomes. 
 <br><b class="parameters">Parameters</b>
 
- * *known_scores:* The desired graph signal outcomes. 
- * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 ## <span class="component">Accuracy</span>
@@ -156,15 +106,11 @@ Computes the accuracy as 1- mean absolute differences between given and known sc
 
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
- * *known_scores:* The desired graph signal outcomes. 
- * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 ## <span class="component">BinaryCrossEntropy</span>
 <b class="parameters">Extends</b><br> *Supervised*<br><b class="parameters">About</b><br>
 Computes a cross-entropy loss of given vs known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
 <br><b class="parameters">Parameters</b>
 
- * *known_scores:* The desired graph signal outcomes. 
- * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 ## <span class="component">Cos</span>
@@ -174,15 +120,11 @@ Computes the cosine similarity between given and known scores. The constructor i
 
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
- * *known_scores:* The desired graph signal outcomes. 
- * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 ## <span class="component">CrossEntropy</span>
 <b class="parameters">Extends</b><br> *Supervised*<br><b class="parameters">About</b><br>
 Computes the KL-divergence of given vs known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
 <br><b class="parameters">Parameters</b>
 
- * *known_scores:* The desired graph signal outcomes. 
- * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 ## <span class="component">Dot</span>
@@ -192,15 +134,11 @@ Computes the dot similarity between given and known scores. The constructor init
 
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
- * *known_scores:* The desired graph signal outcomes. 
- * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 ## <span class="component">Euclidean</span>
 <b class="parameters">Extends</b><br> *Supervised*<br><b class="parameters">About</b><br>
 Computes the Euclidean distance between scores and known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
 <br><b class="parameters">Parameters</b>
 
- * *known_scores:* The desired graph signal outcomes. 
- * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 ## <span class="component">KLDivergence</span>
@@ -210,8 +148,6 @@ Computes the KL-divergence of given vs known scores. The constructor initializes
 
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
- * *known_scores:* The desired graph signal outcomes. 
- * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 ## <span class="component">L1</span>
 <b class="parameters">Extends</b><br> *Supervised*<br><b class="parameters">About</b><br>
 Computes the mean absolute error between scores and known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
@@ -219,15 +155,11 @@ Computes the mean absolute error between scores and known scores. The constructo
 
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
- * *known_scores:* The desired graph signal outcomes. 
- * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 ## <span class="component">L2</span>
 <b class="parameters">Extends</b><br> *Supervised*<br><b class="parameters">About</b><br>
 Computes the L2 norm on the difference between scores and known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
 <br><b class="parameters">Parameters</b>
 
- * *known_scores:* The desired graph signal outcomes. 
- * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 ## <span class="component">L2Disparity</span>
@@ -239,15 +171,11 @@ Computes the mean KL-divergence of given vs known scores. The constructor initia
 
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
- * *known_scores:* The desired graph signal outcomes. 
- * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 ## <span class="component">MSQ</span>
 <b class="parameters">Extends</b><br> *Supervised*<br><b class="parameters">About</b><br>
 Computes the mean absolute error between scores and known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
 <br><b class="parameters">Parameters</b>
 
- * *known_scores:* The desired graph signal outcomes. 
- * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 ## <span class="component">MSQRT</span>
@@ -257,15 +185,11 @@ Computes the mean absolute error between scores and known scores. The constructo
 
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
- * *known_scores:* The desired graph signal outcomes. 
- * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 ## <span class="component">Mabs</span>
 <b class="parameters">Extends</b><br> *Supervised*<br><b class="parameters">About</b><br>
 Computes the mean absolute error between scores and known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
 <br><b class="parameters">Parameters</b>
 
- * *known_scores:* The desired graph signal outcomes. 
- * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 ## <span class="component">MannWhitneyParity</span>
@@ -280,15 +204,11 @@ Known scores correspond to the binary sensitive attribute checking whether nodes
 
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
- * *known_scores:* The desired graph signal outcomes. 
- * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 ## <span class="component">MaxDifference</span>
 <b class="parameters">Extends</b><br> *Supervised*<br><b class="parameters">About</b><br>
 Computes the mean absolute error between scores and known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
 <br><b class="parameters">Parameters</b>
 
- * *known_scores:* The desired graph signal outcomes. 
- * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 ## <span class="component">Mistreatment</span>
@@ -307,7 +227,6 @@ ranker = pg.LFPR()
 measure = pg.Mistreatment(known_scores, exclude=train, measure=pg.AUC) 
 scores = ranker(train, sensitive=sensitive_signal) 
 print(measure(scores)) 
-```
 ## <span class="component">NDCG</span>
 <b class="parameters">Extends</b><br> *Supervised*<br><b class="parameters">About</b><br>
 Provides evaluation of NDCG@k score between given and known scores. The constructor initializes the supervised measure with desired graph signal outcomes and the number of top scores. 
@@ -323,15 +242,11 @@ Computes the positive predictive value (precision). The constructor initializes 
 
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
- * *known_scores:* The desired graph signal outcomes. 
- * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 ## <span class="component">PearsonCorrelation</span>
 <b class="parameters">Extends</b><br> *Supervised*<br><b class="parameters">About</b><br>
 Computes the Pearson correlation coefficient between given and known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
 <br><b class="parameters">Parameters</b>
 
- * *known_scores:* The desired graph signal outcomes. 
- * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 ## <span class="component">RMabs</span>
@@ -341,15 +256,11 @@ Computes the mean absolute error between scores and known scores. The constructo
 
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
- * *known_scores:* The desired graph signal outcomes. 
- * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 ## <span class="component">SpearmanCorrelation</span>
 <b class="parameters">Extends</b><br> *Supervised*<br><b class="parameters">About</b><br>
 Computes the Spearman correlation coefficient between given and known scores. The constructor initializes the supervised measure with desired graph signal outcomes. 
 <br><b class="parameters">Parameters</b>
 
- * *known_scores:* The desired graph signal outcomes. 
- * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 ## <span class="component">TNR</span>
@@ -359,15 +270,11 @@ Computes the false negative rate. The constructor initializes the supervised mea
 
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
- * *known_scores:* The desired graph signal outcomes. 
- * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 ## <span class="component">TPR</span>
 <b class="parameters">Extends</b><br> *Supervised*<br><b class="parameters">About</b><br>
 Computes the true positive rate (recall). The constructor initializes the supervised measure with desired graph signal outcomes. 
 <br><b class="parameters">Parameters</b>
 
- * *known_scores:* The desired graph signal outcomes. 
- * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 ## <span class="component">pRule</span>
@@ -379,8 +286,6 @@ Known scores correspond to the binary sensitive attribute checking whether nodes
 Usually, pRule > 80% is considered fair. The constructor initializes the supervised measure with desired graph signal outcomes. 
 <br><b class="parameters">Parameters</b>
 
- * *known_scores:* The desired graph signal outcomes. 
- * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 ## <span class="component">Conductance</span>
@@ -406,14 +311,8 @@ graph, seed_nodes, algorithm = ...
 algorithm = pg.Normalize(algorithm) 
 scores = algorithm.rank(graph, seed_nodes) 
 conductance = pg.Conductance().evaluate(scores) 
-```
 Example (same conductance):
-```python 
-import pygrank as pg 
-graph, seed_nodes, algorithm = ... 
-scores = algorithm.rank(graph, seed_nodes) 
 conductance = pg.Conductance(autofix=True).evaluate(scores) 
-```
 ## <span class="component">Density</span>
 <b class="parameters">Extends</b><br> *Unsupervised*<br><b class="parameters">About</b><br>
 Extension of graph density that accounts for node scores. 
@@ -425,7 +324,6 @@ If scores assume binary values, E[.] becomes set size and this calculates the in
 
  * *graph:* Optional. The graph on which to calculate the measure. If None (default) it is automatically extracted from graph signals passed for evaluation. 
  * *preprocessor:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor, setting no normalization. 
- * *graph:* Optional. The graph on which to calculate the measure. If None (default) it is automatically extracted from graph signals passed for evaluation. 
 
 <b class="parameters">Example</b>
 ```python 
@@ -433,7 +331,6 @@ import pygrank as pg
 graph, seed_nodes, algorithm = ... 
 scores = algorithm.rank(graph, seed_nodes) 
 density = pg.Density().evaluate(scores) 
-```
 ## <span class="component">Modularity</span>
 <b class="parameters">Extends</b><br> *Unsupervised*<br><b class="parameters">About</b><br>
 Extension of modularity that accounts for node scores. The constructor initializes the Modularity measure with a sampling strategy that speeds up normal computations. 
@@ -441,7 +338,6 @@ Extension of modularity that accounts for node scores. The constructor initializ
 
  * *graph:* Optional. The graph on which to calculate the measure. If None (default) it is automatically extracted from graph signals passed for evaluation. 
  * *preprocessor:* Optional. Method to extract a scipy sparse matrix from a networkx graph. If None (default), pygrank.algorithms.utils.preprocessor is used with keyword arguments automatically extracted from the ones passed to this constructor, setting no normalization. 
- * *graph:* Optional. The graph on which to calculate the measure. If None (default) it is automatically extracted from graph signals passed for evaluation. 
  * *max_rank:* Optional. Default is 1. 
  * *max_positive_samples:* Optional. The number of nodes with which to compute modularity. These are sampled uniformly from all graph nodes. If this is greater than the number of graph nodes, all nodes are used and the measure is deterministic. However, calculation time is O(max_positive_samples<sup>2</sup>) and thus a trade-off needs to be determined of time vs approximation quality. Effectively, the value should be high enough for max_positive_samples<sup>2</sup> to be comparable to the number of graph edges. Default is 2000. 
  * *seed:* Optional. Makes the evaluation seeded, for example to use in tuning. Default is 0. 
@@ -452,4 +348,3 @@ import pygrank as pg
 graph, seed_nodes, algorithm = ... 
 scores = algorithm.rank(graph, seed_nodes) 
 modularity = pg.Modularity(max_positive_samples=int(graph.number_of_edges()**0.5)).evaluate(scores) 
-```

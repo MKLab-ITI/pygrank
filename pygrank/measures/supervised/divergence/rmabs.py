@@ -7,6 +7,7 @@ class RMabs(Supervised):
 
     def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
         known_scores, scores = self.to_numpy(scores)
-        return backend.sum(backend.abs(known_scores - scores)) / backend.sum(
-            backend.abs(known_scores)
+        return backend.safe_div(
+            backend.sum(backend.abs(known_scores - scores)),
+            backend.sum(backend.abs(known_scores)),
         )

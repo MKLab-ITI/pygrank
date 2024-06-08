@@ -84,10 +84,11 @@ distributed works), and keyword arguments to pass to the instantiated dask clien
     Under development.
 
 
-## <span class="component">mkl</span>
-<b class="parameters">About</b><br>Running computations on the Intel® Distribution for Python.
+## <span class="component">sparse_dot_mkl</span>
+<b class="parameters">About</b><br>Running computations on parallelized scipy multiplications.
+If you use Intel's Python distribution, this is only marginally faster than `"numpy"`.
 <br>
-<b class="parameters">Installation</b><br> --- <br>
+<b class="parameters">Installation</b><br> `pip install sparse_dot_mkl` <br>
 <b class="parameters">Links</b><br> [mkl](https://www.intel.com/content/www/us/en/developer/tools/oneapi/distribution-for-python.html)
 
 !!! warning

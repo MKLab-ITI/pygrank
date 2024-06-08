@@ -116,3 +116,7 @@ def filter_out(x, exclude):
 
 def epsilon():
     return tf.keras.backend.epsilon()
+
+
+def shape0(M) -> int:
+    return M.shape[0]

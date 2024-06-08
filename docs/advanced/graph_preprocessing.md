@@ -16,20 +16,24 @@ can have the following values:
 | `"auto"`      | The above-described default behavior.                                                                                                                                                           |
 | `"col"`       | Column-wise normalization.                                                                                                                                                                      |
 | `"symmetric"` | Symmetric normalization.                                                                                                                                                                        |
+| `"laplacian"` | Generates the Laplacian of the graph.                                                                                                                                                           |                                                                                                                                                             |
+| `"salsa"`     | The row-wise normalization employed by the salsa algorithm.                                                                                                                                     | 
 | `"none"`      | (A string with text "none".) Avoids any normalization, for example, because edge weights already hold the normalization.                                                                        |
 | callable      | A callable applied to a `scipy` sparse adjacency matrix of the "numpy" backend (irrespective of the actually active backend). When applied, it ignores the preprocessor's *reduction* argument. |
 
-Additionally, a *renormalization* argument may be provided
+Additionally, a *transform_adjacency* method can be provided
+to modify the final adjacency matrix after all computations conclude.
+This method runs within the currently active backend.
+By default this is a tautology `lambda x: x`.
+To create smoother versions of adjacency matrices,
+*renormalization* argument may be provided
 to add a multiple of the unit matrix to the adjacency matrix,
 a concept called the renormalization trick.
-This by default 0, but can help shrink the spectrum.
-Furthermore, a *transform_adjacency* method can be provided
-to modify the final adjacency matrix. For example,
-you can use these arguments to use the Laplacian matrix
-instead of the adjacency for an algorithm class:
+This by default 0, but can help shrink the spectrum.For example,
+you can create a strongly local version of the adjacency matrix like this:
 
 ```python
-alg = Algorithm(transform_adjacency=lambda x:-x, renormalization=-1)
+alg = Algorithm(renormalization=2)
 ```
 
 
@@ -51,13 +55,13 @@ normalization if it points at a different memory location.
 
 !!! warning
     Do not alter graph objects after passing them to
-    `rank(...)` methods of algorithms with
-    `assume_immutability=True` for the first time. If altering the
+    calls of node ranking algorithms for the first time
+    if you set `assume_immutability=True`. If altering the
     graph is necessary midway through your code, create a copy
-    instance with one of *networkx*'s in-built methods and
+    instance, for example with one of *networkx*'s in-built methods and
     edit that one.
 
-For example, hashing the outcome of graph normalization to
+Hashing the outcome of graph normalization to
 speed up multiple calls to the same graph can be achieved
 as per the following code:
 

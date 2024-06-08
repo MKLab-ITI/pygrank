@@ -35,7 +35,7 @@ class Adjacency:
         return self._array.tocoo()
 
     def __len__(self):
-        return self._array.shape[0]
+        return backend.shape0(self._array)  # self._array.shape[0]
 
 
 def eigdegree(M):
@@ -122,6 +122,19 @@ def to_sparse_matrix(
             if isinstance(G, fastgraph.Graph)
             else nx.to_scipy_sparse_array(G, weight=weight, dtype=float)
         )
+        if not hasattr(M, "tocsr"):
+            raise Exception(
+                "Undefined behavior that tries to convert an adjacency matrix from a backend to numpy."
+            )
+        M = M.tocsr()
+        """elif hasattr(M, "numpy"):
+            indices = M.indices().numpy()
+            values = M.values().numpy()
+            M = scipy.sparse.coo_matrix((values, (indices[0, :], indices[1, :])), shape=M.shape)
+        else:  # TODO: this is a hack on top of matvec - remove the if-else by improving matvec
+            n = len(M)
+            M = scipy.sparse.coo_matrix((M.get_values().np(), (M.get_rows().np(), M.get_cols().np())), shape=(n, n)).tocsr()
+        """
         renormalize = float(renormalize)
         left_reduction = reduction  # (lambda x: backend.degrees(x)) if reduction == "sum" else reduction
         right_reduction = lambda x: left_reduction(x.T)

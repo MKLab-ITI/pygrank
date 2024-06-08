@@ -255,8 +255,10 @@ def load_datasets_graph(datasets: Union[Iterable[str], str], **kwargs):
         graph, _ = import_snap_format_dataset(dataset, max_group_number=0, **kwargs)
         yield graph
 
+
 def load_one(dataset: str, **kwargs):
     return next(load_datasets_one_community([dataset]), **kwargs)
+
 
 def load_datasets_one_community(datasets: Iterable[str], **kwargs):
     """
@@ -277,7 +279,9 @@ def load_datasets_one_community(datasets: Iterable[str], **kwargs):
         >>> for graph, group in pg.load_datasets_one_community(pg.downloadable_datasets()):
         >>>     ...
     """
-    assert not isinstance(datasets, str), "You called load_datasets_one_community with a string argument instead of list of strings. Maybe you meant to call load_one."
+    assert not isinstance(
+        datasets, str
+    ), "You called load_datasets_one_community with a string argument instead of list of strings. Maybe you meant to call load_one."
     datasets = [(dataset, 0) if len(dataset) != 2 else dataset for dataset in datasets]
     last_loaded_dataset = None
     for dataset, group_id in datasets:

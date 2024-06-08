@@ -34,6 +34,7 @@ class APPNP(tf.keras.Sequential):
         propagate = self.ranker.propagate(graph, predict, graph_dropout=0.5 * training)
         return tf.nn.softmax(propagate, axis=1)
 
+
 from timeit import default_timer as time
 
 
@@ -59,4 +60,4 @@ with pg.Backend("tensorflow"):  # pygrank computations in tensorflow backend
         test=test,
     )
     print("Accuracy", pg.gnn_accuracy(labels, model(features, graph=graph), test))
-    print("Time", time()-tic)
+    print("Time", time() - tic)

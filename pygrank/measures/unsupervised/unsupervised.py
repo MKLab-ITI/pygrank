@@ -33,7 +33,10 @@ class Unsupervised(Measure):
         graph = (
             scores.graph
         )  # if None original graph this will end up obtaining the signal's graph
-        return self.preprocessor(graph), scores.np
+        adj = self.preprocessor(graph)
+        # if adj.__class__.__name__ == "Adjacency":
+        #    adj = adj._array
+        return adj, scores.np
 
     def get_graph(self, scores: GraphSignalData = None):
         if scores is not None and isinstance(scores, GraphSignal):
