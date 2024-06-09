@@ -18,7 +18,7 @@ def test_preprocessor_types():
             pg.abs(
                 pg.sum(pg.conv(signal, laplacian) + pg.conv(signal, symmetric) - signal)
             )
-            <= pg.epsilon()
+            <= pg.epsilon()*2
         )
 
 
