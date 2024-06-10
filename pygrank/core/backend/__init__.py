@@ -150,7 +150,7 @@ def get_backend_preference():  # pragma: no cover
             file=sys.stderr,
         )
         set_backend_preference("numpy")
-        return "numpy"
+        return {"mod_name": "numpy"}
 
     if remind_where_to_find:
         _notify_load(mod_name)
