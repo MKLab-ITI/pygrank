@@ -1,7 +1,11 @@
 import torch
 import numpy as np
-from torch import abs, exp, eye, clone as copy, log, ones
+from torch import abs, exp, clone as copy, log
 import torch_sparse
+import warnings
+
+
+__pygrank_torch_sparse_config= {"device": "auto"}
 
 
 class TorchSparseGraphData:
@@ -9,6 +13,17 @@ class TorchSparseGraphData:
         self.index = index
         self.values = values
         self.shape = shape
+
+    def to(self, device):
+        return TorchSparseGraphData(self.index.to(device), self.values.to(device), self.shape)
+
+
+def ones(*args):
+    return torch.ones(*args, device=__pygrank_torch_sparse_config["device"])
+
+
+def eye(*args):
+    return torch.eye(*args, device=__pygrank_torch_sparse_config["device"])
 
 
 def cast(x):
@@ -32,11 +47,22 @@ def mean(x, axis=None):
 
 
 def diag(x, offset=0):
-    return torch.diagflat(x, offset=offset)
+    return torch.diagflat(x, offset=offset).to(__pygrank_torch_sparse_config["device"])
 
 
-def backend_init():
-    pass
+def backend_init(device="auto"):
+    if device is not None and device == "auto":
+        if not isinstance(__pygrank_torch_sparse_config["device"], str) or __pygrank_torch_sparse_config["device"] != "auto":
+            return
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        warnings.warn(f"[pygrank.backend.torch_sparse] Automatically detected device to run on {device}: {torch.cuda.get_device_name(device)}")
+    if device is not None and isinstance(device, str):
+        device = torch.device(device)
+    __pygrank_torch_sparse_config["device"] = device
+
+
+def backend_config():
+    return __pygrank_torch_sparse_config
 
 
 def graph_dropout(M, dropout):
@@ -74,8 +100,8 @@ def repeat(value, times):
 def scipy_sparse_to_backend(M):
     coo = M.tocoo()
     index, values = torch_sparse.coalesce(
-        torch.LongTensor(np.vstack((coo.col, coo.row))),
-        torch.FloatTensor(coo.data),
+        torch.LongTensor(np.vstack((coo.col, coo.row))).to(__pygrank_torch_sparse_config["device"]),
+        torch.FloatTensor(coo.data).to(__pygrank_torch_sparse_config["device"]),
         coo.shape[0],
         coo.shape[1],
     )
@@ -86,15 +112,16 @@ def to_array(obj, copy_array=False):
     if isinstance(obj, torch.Tensor):
         if len(obj.shape) == 1 or obj.shape[1] == 1:
             if copy_array:
-                return torch.clone(obj)
-            return obj
-    return torch.ravel(torch.FloatTensor(np.array([v for v in obj])))
+                return torch.clone(obj).to(__pygrank_torch_sparse_config["device"])
+            return obj.to(__pygrank_torch_sparse_config["device"])
+        return torch.ravel(obj).to(__pygrank_torch_sparse_config["device"])
+    return torch.ravel(torch.FloatTensor(np.array([v for v in obj]))).to(__pygrank_torch_sparse_config["device"])
 
 
 def to_primitive(obj):
     if isinstance(obj, float):
-        return torch.tensor(obj, dtype=torch.float32)
-    return torch.FloatTensor(obj)
+        return torch.tensor(obj, dtype=torch.float32).to(__pygrank_torch_sparse_config["device"])
+    return torch.FloatTensor(obj).to(__pygrank_torch_sparse_config["device"])
 
 
 def is_array(obj):
@@ -122,7 +149,7 @@ def length(x):
 
 
 def degrees(M):
-    signal = torch.reshape(torch.ones(M.shape[0]), (-1, 1))
+    signal = torch.reshape(torch.ones(M.shape[0], device=__pygrank_torch_sparse_config["device"]), (-1, 1))
     index, values = torch_sparse.transpose(M.index, M.values, M.shape[0], M.shape[1])
     return torch.ravel(torch_sparse.spmm(index, values, M.shape[1], M.shape[0], signal))
 

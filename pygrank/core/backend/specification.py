@@ -10,6 +10,10 @@ def backend_init():  # pragma: no cover
     pass
 
 
+def backend_config():  # pragma: no cover
+    pass
+
+
 def graph_dropout(
     M: BackendGraph, dropout: BackendPrimitive
 ) -> BackendPrimitive:  # pragma: no cover

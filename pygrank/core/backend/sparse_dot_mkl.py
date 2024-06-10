@@ -25,8 +25,13 @@ def cast(x):
     return x
 
 
-def backend_init():
-    pass
+def backend_init(warning: bool = True):
+    global __pygrank_sparse_dot_mkl_warning
+    __pygrank_sparse_dot_mkl_warning = warning
+
+
+def backend_config():
+    return {"warning": __pygrank_sparse_dot_mkl_warning}
 
 
 def graph_dropout(M, _):

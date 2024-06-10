@@ -30,6 +30,7 @@ class Backend:
         self.kwargs = kwargs
 
     def __enter__(self):
+        self._previous_backend_params = backend_config()
         self._previous_backend = backend_name()
         self.closeable = load_backend(self.mod_name, *self.args, **self.kwargs)
         return _imported_mods[self.mod_name]
@@ -37,7 +38,7 @@ class Backend:
     def __exit__(self, *args, **kwargs):
         # if self.closeable is not None:
         #    self.closeable.close()
-        load_backend(self._previous_backend)
+        load_backend(self._previous_backend, **self._previous_backend_params)
         return False
 
 
@@ -127,6 +128,7 @@ def get_backend_preference():  # pragma: no cover
             config_dict = json.load(config_file)
             mod_name = config_dict.get("backend", "").lower()
             remind_where_to_find = config_dict.get("reminder", "true").lower() == "true"
+            init_parameters = config_dict.get("init", dict())
 
     if mod_name not in [
         "tensorflow",
@@ -152,10 +154,12 @@ def get_backend_preference():  # pragma: no cover
 
     if remind_where_to_find:
         _notify_load(mod_name)
-    return mod_name
+    return {"mod_name": mod_name, **init_parameters}
 
 
-def set_backend_preference(mod_name, remind_where_to_find=True):  # pragma: no cover
+def set_backend_preference(mod_name: str ,
+                           remind_where_to_find: bool = True,
+                           **kwargs):  # pragma: no cover
     default_dir = os.path.join(os.path.expanduser("~"), ".pygrank")
     if not os.path.exists(default_dir):
         os.makedirs(default_dir)
@@ -165,6 +169,7 @@ def set_backend_preference(mod_name, remind_where_to_find=True):  # pragma: no c
             {
                 "backend": mod_name.lower(),
                 "reminder": str(remind_where_to_find).lower(),
+                "init": {str(k): str(v) for k, v in kwargs.items()}
             },
             config_file,
         )
@@ -184,4 +189,4 @@ def _notify_load(mod_name):
     )
 
 
-load_backend(get_backend_preference())
+load_backend(**get_backend_preference())

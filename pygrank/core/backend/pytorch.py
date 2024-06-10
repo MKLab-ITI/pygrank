@@ -1,6 +1,10 @@
 import torch
 import numpy as np
-from torch import abs, eye, clone as copy, ones, log, exp
+from torch import abs, clone as copy, log, exp
+import warnings
+
+
+__pygrank_torch_config = {"device": "auto", "mode": "dense"}
 
 
 def cast(x):
@@ -24,16 +28,30 @@ def mean(x, axis=None):
 
 
 def diag(x, offset=0):
-    return torch.diagflat(x, offset=offset)
+    return torch.diagflat(x, offset=offset).to(__pygrank_torch_config["device"])
 
 
-def backend_init():
-    pass
+def backend_init(mode="dense", device=None):
+    __pygrank_torch_config["mode"] = mode
+    if device is not None and device == "auto":
+        if not isinstance(__pygrank_torch_config["device"], str) or __pygrank_torch_config["device"] != "auto":
+            return
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        warnings.warn(f"[pygrank.backend.pytorch] Automatically detected device to run on {device}: {torch.cuda.get_device_name(device)}")
+    if device is not None and isinstance(device, str):
+        device = torch.device(device)
+    __pygrank_torch_config["device"] = device
+
+
+def backend_config():
+    return __pygrank_torch_config
 
 
 def graph_dropout(M, dropout):
     if dropout == 0:
         return M
+    if not M.is_sparse:
+        return torch.nn.functional.dropout(M, dropout)
     # TODO: change based on future sparse matrix support: https://github.com/pytorch/pytorch/projects/24#card-59611437
     return torch.sparse_coo_tensor(
         M.indices(), torch.nn.functional.dropout(M.values(), dropout), M.shape
@@ -58,32 +76,48 @@ def dot(x, y):
     return torch.sum(x * y)
 
 
+def ones(*args):
+    return torch.ones(*args, device=__pygrank_torch_config["device"])
+
+
+def eye(*args):
+    return torch.eye(*args, device=__pygrank_torch_config["device"])
+
+
 def repeat(value, times):
-    return torch.ones(times) * value
+    return torch.ones(times, device=__pygrank_torch_config["device"]) * value
 
 
 def scipy_sparse_to_backend(M):
+    if __pygrank_torch_config["mode"] == "dense":
+        try:
+            return torch.FloatTensor(M.todense()).to(__pygrank_torch_config["device"])
+        except MemoryError:
+            warnings.warn(
+                f"[pygrank.backend.pytorch] Not enough memory to convert a scipy sparse matrix with shape {M.shape} to a numpy dense matrix before moving it to your device.\nWill create a torch.sparse_coo_tensor instead.\nAdd the option mode=\"sparse\" to the backend's initialization to hide this message,\nbut prefer switching to the torch_sparse backend for a performant implementation.")
+
     coo = M.tocoo()
     return torch.sparse_coo_tensor(
         torch.LongTensor(np.vstack((coo.col, coo.row))),
         torch.FloatTensor(coo.data),
         coo.shape,
-    ).coalesce()
+    ).coalesce().to(__pygrank_torch_config["device"])
 
 
 def to_array(obj, copy_array=False):
     if isinstance(obj, torch.Tensor):
         if len(obj.shape) == 1 or obj.shape[1] == 1:
             if copy_array:
-                return torch.clone(obj)
-            return obj
-    return torch.ravel(torch.FloatTensor(np.array([v for v in obj], dtype=np.float32)))
+                return torch.clone(obj).to(__pygrank_torch_config["device"])
+            return obj.to(__pygrank_torch_config["device"])
+        return torch.ravel(obj).to(__pygrank_torch_config["device"])
+    return torch.ravel(torch.FloatTensor(np.array([v for v in obj], dtype=np.float32))).to(__pygrank_torch_config["device"])
 
 
 def to_primitive(obj):
     if isinstance(obj, float):
-        return torch.tensor(obj, dtype=torch.float32)
-    return torch.FloatTensor(obj)
+        return torch.tensor(obj, dtype=torch.float32).to(__pygrank_torch_config["device"])
+    return torch.FloatTensor(obj).to(__pygrank_torch_config["device"])
 
 
 def is_array(obj):
@@ -98,7 +132,9 @@ def self_normalize(obj):
 
 
 def conv(signal, M):
+    #if M.is_sparse:
     return torch.mv(M, signal)
+    #return M@signal.reshape((-1,1))
 
 
 def length(x):
@@ -109,7 +145,9 @@ def length(x):
 
 def degrees(M):
     # this sparse sum creates sparse matrices that need to be converted to dense to use in Hadamard products
-    return torch.sparse.sum(M, dim=0).to_dense()
+    if M.is_sparse:
+        return torch.sparse.sum(M, dim=0).to_dense()
+    return torch.sum(M, dim=1)
 
 
 def filter_out(x, exclude):

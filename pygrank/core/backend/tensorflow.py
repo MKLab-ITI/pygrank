@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+import warnings
 from tensorflow import (
     abs,
     reduce_sum as sum,
@@ -12,14 +13,20 @@ from tensorflow import (
     ones,
 )
 
+__pygrank_tf_config = {"mode": "dense"}
 
 def cast(x):
     return tf.cast(x, dtype=tf.float32)
 
 
-def backend_init():
+def backend_init(mode="dense"):
+    __pygrank_tf_config["mode"] = mode
     # print('Enabling float32 in keras backend')
     tf.keras.backend.set_floatx("float32")
+
+
+def backend_config():
+    return __pygrank_tf_config
 
 
 def log(x):
@@ -29,7 +36,9 @@ def log(x):
 def graph_dropout(M, dropout):
     if dropout == 0:
         return M
-    return tf.SparseTensor(M.indices, tf.nn.dropout(M.values, dropout), M.shape)
+    if isinstance(M, tf.SparseTensor):
+        return tf.SparseTensor(M.indices, tf.nn.dropout(M.values, dropout), M.shape)
+    return tf.nn.dropout(M, dropout)
 
 
 def separate_cols(x):
@@ -61,6 +70,13 @@ def repeat(value, times):
 
 
 def scipy_sparse_to_backend(M):
+    if __pygrank_tf_config["mode"] == "dense":
+        try:
+            return tf.convert_to_tensor(M.todense(), dtype=tf.float32)
+        except MemoryError:
+            warnings.warn(f"[pygrank.backend.tensorflow] Not enough memory to convert a scipy sparse matrix with shape {M.shape} to a numpy dense matrix before moving it to your device.\nWill create a tensorflow.SparseTensor instead.\nAdd the option mode=\"sparse\" to the backend's initialization to hide this message.")
+        except tf.errors.ResourceExhaustedError:
+            warnings.warn(f"[pygrank.backend.tensorflow] Not enough memory to move a numpy dense matrix with shape {M.shape} to the backend's device.\nWill create a tensorflow.SparseTensor instead.\nAdd the option mode=\"sparse\" to the backend's initialization to hide this message.")
     coo = M.tocoo()
     return tf.SparseTensor(
         [[coo.col[i], coo.row[i]] for i in range(len(coo.col))],
@@ -95,9 +111,11 @@ def self_normalize(obj):
 
 
 def conv(signal, M):
-    return tf.reshape(
-        tf.sparse.sparse_dense_matmul(M, tf.reshape(signal, (-1, 1))), (-1,)
-    )
+    if isinstance(M, tf.SparseTensor):
+        return tf.reshape(
+            tf.sparse.sparse_dense_matmul(M, tf.reshape(signal, (-1, 1))), (-1,)
+        )
+    return M @ tf.reshape(signal, (-1, 1))
 
 
 def length(x):

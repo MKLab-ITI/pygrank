@@ -11,6 +11,10 @@ def backend_init():
     pass
 
 
+def backend_config():
+    return {}
+
+
 def graph_dropout(M, _):
     return M
 

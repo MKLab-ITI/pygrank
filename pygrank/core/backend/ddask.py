@@ -5,21 +5,26 @@ import dask as dsk
 import dask.distributed
 
 
-__splits = 8
-__client = None
+__pygrank_dask_config = {"splits": 0, "client": None}
 
 
 def cast(x):
     return x
 
 
-def backend_init(*args, splits=8, **kwargs):
-    global __client
-    global __splits
-    __splits = splits
-    if __client is None:
-        __client = dsk.distributed.Client(*args, **kwargs)
-    return __client
+def backend_init(*args, splits: int = 8, client=None, **kwargs):
+    __pygrank_dask_config["splits"] = splits
+    if __pygrank_dask_config["client"] is None:
+        if client is None:
+            client = dsk.distributed.Client(*args, **kwargs)
+        __pygrank_dask_config["client"] = client
+    else:
+        __pygrank_dask_config["client"] = client
+    return __pygrank_dask_config["client"]
+
+
+def backend_config():
+    return __pygrank_dask_config
 
 
 def graph_dropout(M, _):
@@ -46,17 +51,18 @@ def eye(*args):
 def scipy_sparse_to_backend(M):
     M = M.tocsc()
     rows = M.shape[0]
-    split_size = rows // __splits
+    splt = __pygrank_dask_config["splits"]
+    split_size = rows // splt
     splits = []
-    for i in range(__splits):
+    for i in range(splt):
         start_index = i * split_size
-        if i == __splits - 1:  # last split includes the remaining rows
+        if i == splt - 1:  # last split includes the remaining rows
             end_index = rows
         else:
             end_index = (i + 1) * split_size
         splits.append(M[:, start_index:end_index])
     # return splits
-    return __client.scatter(splits)
+    return __pygrank_dask_config["client"].scatter(splits)
 
 
 def to_array(obj, copy_array=False):
@@ -111,9 +117,9 @@ def conv(signal, M_splits):
 
     # Use Dask to parallelize the multiplication
     futures = [
-        __client.submit(multiply_and_collect, signal, split) for split in M_splits
+        __pygrank_dask_config["client"].submit(multiply_and_collect, signal, split) for split in M_splits
     ]
-    results = __client.gather(futures)
+    results = __pygrank_dask_config["client"].gather(futures)
 
     final_result = np.concatenate(results, axis=0)
     return final_result
@@ -133,8 +139,8 @@ def degrees(M):
     def degs(block):
         return np.asarray(sum(block, axis=1)).ravel()
 
-    futures = [__client.submit(degs, block) for block in M]
-    results = __client.gather(futures)
+    futures = [__pygrank_dask_config["client"].submit(degs, block) for block in M]
+    results = __pygrank_dask_config["client"].gather(futures)
 
     ret = 0
     for result in results:

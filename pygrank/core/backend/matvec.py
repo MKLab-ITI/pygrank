@@ -1,9 +1,14 @@
 import warnings
 
+import matvec
 import matvec as mv
 import numpy as np
 from matvec import dot, max, min, mean, repeat
 from scipy.sparse import eye
+import os
+
+
+__pygrank_matvec_config = {"threads": 0}
 
 
 def cast(x):
@@ -46,8 +51,16 @@ def copy(x):
     return x.copy()
 
 
-def backend_init():
-    pass  # warnings.warn("Matvec is an experimental backend")
+def backend_init(threads: int = None):
+    if threads is None:
+        threads = os.cpu_count()
+    if __pygrank_matvec_config["threads"] != threads:
+        matvec.set_number_of_threads(threads)
+    __pygrank_matvec_config["threads"] = threads
+
+
+def backend_config():
+    return __pygrank_matvec_config
 
 
 def graph_dropout(M, _):
