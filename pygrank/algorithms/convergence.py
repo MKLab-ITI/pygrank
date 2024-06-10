@@ -141,7 +141,7 @@ class RankOrderConvergenceManager:
 
     def has_converged(self, new_ranks: BackendPrimitive) -> bool:
         # TODO: convert to any backend
-        new_ranks = np.array(new_ranks).squeeze()
+        new_ranks = backend.to_numpy(new_ranks).squeeze()
         self.accumulated_ranks = (
             self.accumulated_ranks * self.iteration + new_ranks
         ) / (self.iteration + 1)

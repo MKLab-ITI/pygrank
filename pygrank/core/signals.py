@@ -367,7 +367,7 @@ def to_signal(graph: GraphSignalGraph, obj: GraphSignalData) -> GraphSignal:
     elif isinstance(graph, GraphSignal):
         known_node2id = graph.node2id
         graph = graph.graph
-    elif backend.is_array(graph):
+    elif backend.is_array(graph) and not graph.__class__.__name__ == "Adjacency":
         raise Exception("Graph cannot be an array")
     if (isinstance(obj, list) or isinstance(obj, set)) and len(obj) != len(graph):
         obj = {v: 1 for v in obj}

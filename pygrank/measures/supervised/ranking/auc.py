@@ -12,6 +12,6 @@ class AUC(Supervised):
         if backend.min(known_scores) == backend.max(known_scores):
             raise Exception("Cannot evaluate AUC when all labels are the same")
         fpr, tpr, _ = sklearn.metrics.roc_curve(
-            np.array(known_scores, copy=False), np.array(scores, copy=False)
+            backend.to_numpy(known_scores), backend.to_numpy(scores)
         )
         return sklearn.metrics.auc(fpr, tpr)

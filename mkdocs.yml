@@ -13,8 +13,10 @@ nav:
         - 'userguide/autotuning.md'
         - 'userguide/preprocessing.md'
     - Applications:
+        - 'advanced/ranking.md'
         - 'advanced/community.md'
         - 'advanced/gnn.md'
+        - 'advanced/fairness.md'
     - R&D:
         - 'tips/citations.md'
         - 'tips/big.md'

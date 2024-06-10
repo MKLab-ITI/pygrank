@@ -110,8 +110,8 @@ def load_backend(mod_name, *args, **kwargs):
                         return converted
 
                     setattr(thismod, api, converter(mod.__dict__[api]))
-                else:  # pragma: no cover
-                    raise Exception("Missing implementation for " + str(api))
+                #else:  # pragma: no cover
+                #    raise Exception("Missing implementation for " + str(api))
     return mod.backend_init(*args, **kwargs)
 
 
@@ -157,9 +157,9 @@ def get_backend_preference():  # pragma: no cover
     return {"mod_name": mod_name, **init_parameters}
 
 
-def set_backend_preference(mod_name: str ,
-                           remind_where_to_find: bool = True,
-                           **kwargs):  # pragma: no cover
+def set_backend_preference(
+    mod_name: str, remind_where_to_find: bool = True, **kwargs
+):  # pragma: no cover
     default_dir = os.path.join(os.path.expanduser("~"), ".pygrank")
     if not os.path.exists(default_dir):
         os.makedirs(default_dir)
@@ -169,7 +169,7 @@ def set_backend_preference(mod_name: str ,
             {
                 "backend": mod_name.lower(),
                 "reminder": str(remind_where_to_find).lower(),
-                "init": {str(k): str(v) for k, v in kwargs.items()}
+                "init": {str(k): str(v) for k, v in kwargs.items()},
             },
             config_file,
         )

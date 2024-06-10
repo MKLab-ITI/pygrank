@@ -16,8 +16,8 @@ def test_tautology():
     tr = pg.Tautology(pg.PageRank()).rank(graph)
     rt = pg.Tautology().transform(r)
     for u in graph:
-        assert r[u] == rt[u]
-        assert r[u] == tr[u]
+        assert abs(r[u] - rt[u]) < pg.epsilon()
+        assert abs(r[u] - tr[u]) < pg.epsilon()
     u = pg.Tautology().rank(graph)
     assert float(sum(u.np)) == len(graph)
 

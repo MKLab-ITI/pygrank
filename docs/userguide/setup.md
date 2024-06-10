@@ -7,6 +7,17 @@ and install or upgrade to the latest version of `pygrank` with:
 pip install --upgrade pygrank
 ```
 
+## Creating graphs
+
+When working n practical problems,
+use `networkx` to construct graphs
+by adding edges between Python objects.
+ `pygrank` also provides its own `pygrank.Graph` class
+that implements a subset of `networkx.Graph` operations
+to gain several optimizations; it tends to be faster for the
+construction of large graphs and consumes
+only a fraction of the memory.
+
 ## Backends
 
 Several popular computational backends are supported.
@@ -41,12 +52,13 @@ The same message points to a configuration file stored under *home/.pygrank*.
 In addition to automatically downloaded content, there is a JSON configuration 
 file specifying the default backend to be set upon first import and the option 
 to silence the reminder message. The configuration looks like this and can either be 
-edited directly or programmatically set with `pg.set_backend_preference(name, reminder=True)`):
+edited directly or programmatically set with `pg.set_backend_preference(name, reminder=True, **init)`):
 
 ```json
 {
   "backend": "numpy", 
-  "reminder": "true"
+  "reminder": "true",
+  "init": {}
 }
 ```
 
@@ -64,18 +76,18 @@ necessarily be the fastest option for dense or very sparse graphs.
 
 ### <span class="component">tensorflow</span>
 <b class="parameters">About</b><br>Performs computations within the `tensorflow` execution environment.
-The latter is an open-source platform for machine learning developed by the Google Brain team. 
-It allows for efficient computation across multiple CPUs and GPUs, making it suitable for 
-performant large-scale data processing and deep learning applications.
+The latter is an open-source platform for machine learning developed by the Google Brain team.
 There 
 are two modes in which this backend can be executed: `"dense"` (default) and `"sparse"`.
 The mode may be provided as additional arguments to the
-`pg.set_backend("tensorflow", mode=...)` call.
+`pg.set_backend("tensorflow", mode="dense" device="auto")` call.
 In dense mode, the tensorflow backend attempts to store graphs in dense square
 matrices that take full advantage of tensorflow's parallelization.
 If there is not enough memory to allocate a sparse adjacency matrix,
 the backend generates a sparse version and creates a warning.
-<br>
+The backend's initialization also accepts a device string or object to
+which computations should be internally transferred. This needs to
+be one among tensorflow's available devices.
 <br>
 <b class="parameters">Installation</b><br> `pip install tensorflow[and-cuda]`<br>On Windows install WSL2 (Windows Subsystem for Linux) first.<br>
 <b class="parameters">Links</b><br> [tensorflow](https://www.tensorflow.org/install)
@@ -83,9 +95,7 @@ the backend generates a sparse version and creates a warning.
 
 ### <span class="component">pytorch</span>
 <b class="parameters">About</b><br>Performs computations within the `pytorch` execution environment.
-The latter is an open-source platform for machine learning developed by Meta's AI Research lab. 
- It is known for its flexibility, ease of use, and dynamic computation graph, which makes it popular 
-in research and production.
+The latter is an open-source platform for machine learning developed by Meta's AI Research lab.
 Similarly to `"tensorflow"`, 
 are two modes in which this backend can be executed: `"dense"` (default) and `"sparse"`.
 The mode may be provided as additional arguments to the
@@ -94,9 +104,26 @@ In dense mode, the pytorch backend attempts to store graphs in dense square
 matrices that take full advantage of tensorflow's parallelization.
 If there is not enough memory to allocate a sparse adjacency matrix,
 the backend generates a sparse version and creates a warning.
+The backend's initialization also accepts a device string or object to
+which computations should be internally transferred. This needs to
+be one among pytorch's available devices (typically `"cuda"` or `"cpu"`).
 <br>
-<br>
-<br>
+<b class="parameters">Installation</b><br> For full installation instructions visit pytorch's website in the links below.<br>
+<b class="parameters">Links</b><br> [pytorch](https://pytorch.org/get-started/locally)
+
+### <span class="component">torch_sparse</span>
+<b class="parameters">About</b><br>Performs computations within the `pytorch` execution environment,
+but contrary to the `"pytorch` backend uses the sparse computations of the `torch_sparse` library.
+The latter is an open-source platform for machine learning developed by Meta's AI Research lab.
+Similarly to `"tensorflow"`, 
+are two modes in which this backend can be executed: `"dense"` (default) and `"sparse"`.
+The backend's initialization only accepts a device string or object to
+which computations should be internally transferred. This needs to
+be one among pytorch's available devices (typically `"cuda"` or `"cpu"`).
+!!! info
+    `"torch_sparse"` is much more computationally efficient than `"pytorch"`
+    for computations with sparse data structures.
+
 <b class="parameters">Installation</b><br> For full installation instructions visit pytorch's website in the links below.<br>
 <b class="parameters">Links</b><br> [pytorch](https://pytorch.org/get-started/locally) <br>
 [torch_sparse](https://github.com/rusty1s/pytorch_sparse)

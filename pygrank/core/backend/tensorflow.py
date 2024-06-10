@@ -15,6 +15,7 @@ from tensorflow import (
 
 __pygrank_tf_config = {"mode": "dense"}
 
+
 def cast(x):
     return tf.cast(x, dtype=tf.float32)
 
@@ -74,9 +75,13 @@ def scipy_sparse_to_backend(M):
         try:
             return tf.convert_to_tensor(M.todense(), dtype=tf.float32)
         except MemoryError:
-            warnings.warn(f"[pygrank.backend.tensorflow] Not enough memory to convert a scipy sparse matrix with shape {M.shape} to a numpy dense matrix before moving it to your device.\nWill create a tensorflow.SparseTensor instead.\nAdd the option mode=\"sparse\" to the backend's initialization to hide this message.")
+            warnings.warn(
+                f'[pygrank.backend.tensorflow] Not enough memory to convert a scipy sparse matrix with shape {M.shape} to a numpy dense matrix before moving it to your device.\nWill create a tensorflow.SparseTensor instead.\nAdd the option mode="sparse" to the backend\'s initialization to hide this message.'
+            )
         except tf.errors.ResourceExhaustedError:
-            warnings.warn(f"[pygrank.backend.tensorflow] Not enough memory to move a numpy dense matrix with shape {M.shape} to the backend's device.\nWill create a tensorflow.SparseTensor instead.\nAdd the option mode=\"sparse\" to the backend's initialization to hide this message.")
+            warnings.warn(
+                f"[pygrank.backend.tensorflow] Not enough memory to move a numpy dense matrix with shape {M.shape} to the backend's device.\nWill create a tensorflow.SparseTensor instead.\nAdd the option mode=\"sparse\" to the backend's initialization to hide this message."
+            )
     coo = M.tocoo()
     return tf.SparseTensor(
         [[coo.col[i], coo.row[i]] for i in range(len(coo.col))],
@@ -115,7 +120,7 @@ def conv(signal, M):
         return tf.reshape(
             tf.sparse.sparse_dense_matmul(M, tf.reshape(signal, (-1, 1))), (-1,)
         )
-    return M @ tf.reshape(signal, (-1, 1))
+    return tf.reshape(M @ tf.reshape(signal, (-1, 1)), (-1,))
 
 
 def length(x):
@@ -125,7 +130,9 @@ def length(x):
 
 
 def degrees(M):
-    return tf.reshape(tf.sparse.reduce_sum(M, axis=0), (-1,))
+    if isinstance(M, tf.SparseTensor):
+        return tf.reshape(tf.sparse.reduce_sum(M, axis=0), (-1,))
+    return tf.reshape(tf.reduce_sum(M, axis=1), (-1,))  # TODO: investigate why different reduction axis is needed
 
 
 def filter_out(x, exclude):

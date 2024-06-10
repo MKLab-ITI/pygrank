@@ -8,4 +8,4 @@ class PearsonCorrelation(Supervised):
 
     def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
         known_scores, scores = self.to_numpy(scores)
-        return scipy.stats.pearsonr(known_scores, scores)[0]
+        return scipy.stats.pearsonr(backend.to_numpy(known_scores), backend.to_numpy(scores))[0]

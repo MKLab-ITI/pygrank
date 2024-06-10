@@ -146,3 +146,13 @@ def epsilon() -> float:  # pragma: no cover
 
 def shape0(M: BackendPrimitive) -> int:  # pragma: no cover
     pass
+
+
+def to_numpy(obj):
+    import numpy as np
+
+    if obj.__class__.__module__ == "tensorflow.python.framework.ops":
+        return obj.numpy()
+    if obj.__class__.__module__ == "torch":
+        return obj.detach().cpu().numpy()
+    return np.array(obj)

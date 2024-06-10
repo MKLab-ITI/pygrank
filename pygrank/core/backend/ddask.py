@@ -18,7 +18,7 @@ def backend_init(*args, splits: int = 8, client=None, **kwargs):
         if client is None:
             client = dsk.distributed.Client(*args, **kwargs)
         __pygrank_dask_config["client"] = client
-    else:
+    elif client is not None:
         __pygrank_dask_config["client"] = client
     return __pygrank_dask_config["client"]
 
@@ -117,7 +117,8 @@ def conv(signal, M_splits):
 
     # Use Dask to parallelize the multiplication
     futures = [
-        __pygrank_dask_config["client"].submit(multiply_and_collect, signal, split) for split in M_splits
+        __pygrank_dask_config["client"].submit(multiply_and_collect, signal, split)
+        for split in M_splits
     ]
     results = __pygrank_dask_config["client"].gather(futures)
 

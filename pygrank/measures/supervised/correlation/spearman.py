@@ -8,4 +8,4 @@ class SpearmanCorrelation(Supervised):
 
     def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
         known_scores, scores = self.to_numpy(scores)
-        return scipy.stats.spearmanr(known_scores, scores)[0]
+        return scipy.stats.spearmanr(backend.to_numpy(known_scores), backend.to_numpy(scores))[0]

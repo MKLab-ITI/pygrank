@@ -46,7 +46,7 @@ def to_array(obj, copy_array=False):
     if obj.__class__.__module__ == "tensorflow.python.framework.ops":
         return obj.numpy()
     if obj.__class__.__module__ == "torch":
-        return obj.detach().numpy()
+        return obj.detach().cpu().numpy()
     return np.array(obj)
 
 

@@ -34,10 +34,15 @@ def diag(x, offset=0):
 def backend_init(mode="dense", device=None):
     __pygrank_torch_config["mode"] = mode
     if device is not None and device == "auto":
-        if not isinstance(__pygrank_torch_config["device"], str) or __pygrank_torch_config["device"] != "auto":
+        if (
+            not isinstance(__pygrank_torch_config["device"], str)
+            or __pygrank_torch_config["device"] != "auto"
+        ):
             return
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        warnings.warn(f"[pygrank.backend.pytorch] Automatically detected device to run on {device}: {torch.cuda.get_device_name(device)}")
+        warnings.warn(
+            f"[pygrank.backend.pytorch] Automatically detected device to run on {device}: {torch.cuda.get_device_name(device)}"
+        )
     if device is not None and isinstance(device, str):
         device = torch.device(device)
     __pygrank_torch_config["device"] = device
@@ -94,14 +99,22 @@ def scipy_sparse_to_backend(M):
             return torch.FloatTensor(M.todense()).to(__pygrank_torch_config["device"])
         except MemoryError:
             warnings.warn(
-                f"[pygrank.backend.pytorch] Not enough memory to convert a scipy sparse matrix with shape {M.shape} to a numpy dense matrix before moving it to your device.\nWill create a torch.sparse_coo_tensor instead.\nAdd the option mode=\"sparse\" to the backend's initialization to hide this message,\nbut prefer switching to the torch_sparse backend for a performant implementation.")
+                f"[pygrank.backend.pytorch] Not enough memory to convert a scipy sparse matrix with shape {M.shape} "
+                f"to a numpy dense matrix before moving it to your device.\nWill create a torch.sparse_coo_tensor instead."
+                f'\nAdd the option mode="sparse" to the backend\'s initialization to hide this message,'
+                f"\nbut prefer switching to the torch_sparse backend for a performant implementation."
+            )
 
     coo = M.tocoo()
-    return torch.sparse_coo_tensor(
-        torch.LongTensor(np.vstack((coo.col, coo.row))),
-        torch.FloatTensor(coo.data),
-        coo.shape,
-    ).coalesce().to(__pygrank_torch_config["device"])
+    return (
+        torch.sparse_coo_tensor(
+            torch.LongTensor(np.vstack((coo.col, coo.row))),
+            torch.FloatTensor(coo.data),
+            coo.shape,
+        )
+        .coalesce()
+        .to(__pygrank_torch_config["device"])
+    )
 
 
 def to_array(obj, copy_array=False):
@@ -111,12 +124,16 @@ def to_array(obj, copy_array=False):
                 return torch.clone(obj).to(__pygrank_torch_config["device"])
             return obj.to(__pygrank_torch_config["device"])
         return torch.ravel(obj).to(__pygrank_torch_config["device"])
-    return torch.ravel(torch.FloatTensor(np.array([v for v in obj], dtype=np.float32))).to(__pygrank_torch_config["device"])
+    return torch.ravel(
+        torch.FloatTensor(np.array([v for v in obj], dtype=np.float32))
+    ).to(__pygrank_torch_config["device"])
 
 
 def to_primitive(obj):
     if isinstance(obj, float):
-        return torch.tensor(obj, dtype=torch.float32).to(__pygrank_torch_config["device"])
+        return torch.tensor(obj, dtype=torch.float32).to(
+            __pygrank_torch_config["device"]
+        )
     return torch.FloatTensor(obj).to(__pygrank_torch_config["device"])
 
 
@@ -132,9 +149,9 @@ def self_normalize(obj):
 
 
 def conv(signal, M):
-    #if M.is_sparse:
+    # if M.is_sparse:
     return torch.mv(M, signal)
-    #return M@signal.reshape((-1,1))
+    # return M@signal.reshape((-1,1))
 
 
 def length(x):

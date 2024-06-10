@@ -5,16 +5,18 @@ import pytest
 
 
 def supported_backends():
-    for backend in [
-        "matvec",
-        "pytorch",
-        "tensorflow",
-        "torch_sparse",
-        "sparse_dot_mkl",
-        "dask",
-        "numpy",
+    for backend, kwargs in [
+        ("matvec", {}),
+        ( "pytorch", {"mode": "dense"}),
+        ( "pytorch", {"mode": "sparse"}),
+        ("tensorflow", {"mode": "dense"}),
+        ("tensorflow", {"mode": "sparse"}),
+        ("torch_sparse", {}),
+        ("sparse_dot_mkl", {}),
+        ("dask", {}),
+        ("numpy", {}),
     ]:
-        pg.load_backend(backend)
+        pg.load_backend(backend, **kwargs)
         yield backend
 
 
