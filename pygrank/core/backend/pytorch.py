@@ -41,7 +41,7 @@ def backend_init(mode="dense", device=None):
             return
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         warnings.warn(
-            f"[pygrank.backend.pytorch] Automatically detected device to run on {device}: {torch.cuda.get_device_name(device)}"
+            f"[pygrank.backend.pytorch] Automatically detected device to run on {device}: {torch.get_device(device)}"
         )
     if device is not None and isinstance(device, str):
         device = torch.device(device)

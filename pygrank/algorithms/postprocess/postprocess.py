@@ -375,7 +375,7 @@ class Sweep(Postprocessor):
     Applies a sweep procedure that divides personalized node ranks by corresponding non-personalized ones.
     """
 
-    def __init__(self, ranker: NodeRanking = None, uniform_ranker: NodeRanking = None):
+    def __init__(self, ranker: NodeRanking = None, uniform_ranker: NodeRanking = None, assume_immutability: bool = True):
         """
         Initializes the sweep procedure.
 
@@ -404,7 +404,7 @@ class Sweep(Postprocessor):
         super().__init__(ranker)
         self.uniform_ranker = ranker if uniform_ranker is None else uniform_ranker
         self.centrality = MethodHasher(
-            lambda graph: self.uniform_ranker.rank(graph), assume_immutability=True
+            lambda graph: self.uniform_ranker.rank(graph), assume_immutability=assume_immutability
         )
 
     def _transform(self, ranks: GraphSignal, **kwargs):
