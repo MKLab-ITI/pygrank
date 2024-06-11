@@ -102,18 +102,18 @@ def scipy_sparse_to_backend(M):
                 f"[pygrank.backend.pytorch] Not enough memory to convert a scipy sparse matrix with shape {M.shape} "
                 f"to a numpy dense matrix before moving it to your device.\nWill create a torch.sparse_coo_tensor instead."
                 f'\nAdd the option mode="sparse" to the backend\'s initialization to hide this message,'
-                f"\nbut prefer switching to the torch_sparse backend for a performant implementation."
+                f"\nbut prefer switching to the torch_sparse backend for faster preprocessing."
             )
 
     coo = M.tocoo()
     return (
         torch.sparse_coo_tensor(
-            torch.LongTensor(np.vstack((coo.col, coo.row))),
-            torch.FloatTensor(coo.data),
+            torch.vstack((torch.LongTensor(coo.col).to(__pygrank_torch_config["device"]),
+                          torch.LongTensor(coo.row).to(__pygrank_torch_config["device"]))),
+            torch.FloatTensor(coo.data).to(__pygrank_torch_config["device"]),
             coo.shape,
         )
-        .coalesce()
-        .to(__pygrank_torch_config["device"])
+        .coalesce()  # THIS IS MANDATORY TO GET FAST MULTIPLICATIONS
     )
 
 
@@ -124,8 +124,11 @@ def to_array(obj, copy_array=False):
                 return torch.clone(obj).to(__pygrank_torch_config["device"])
             return obj.to(__pygrank_torch_config["device"])
         return torch.ravel(obj).to(__pygrank_torch_config["device"])
+    if not isinstance(obj, np.ndarray):
+        from pygrank.core.backend import to_numpy
+        obj = to_numpy(obj)
     return torch.ravel(
-        torch.FloatTensor(np.array([v for v in obj], dtype=np.float32))
+        torch.FloatTensor(np.array(obj, dtype=np.float32))
     ).to(__pygrank_torch_config["device"])
 
 

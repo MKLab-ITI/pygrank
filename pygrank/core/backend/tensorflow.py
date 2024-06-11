@@ -97,7 +97,10 @@ def to_array(obj, copy_array=False):
         if copy_array:
             return tf.identity(obj)
         return obj
-    return tf.convert_to_tensor([v for v in obj], dtype=tf.float32)
+    if not isinstance(obj, np.ndarray):
+        from pygrank.core.backend import to_numpy
+        obj = to_numpy(obj)
+    return tf.convert_to_tensor(obj, dtype=tf.float32)
 
 
 def to_primitive(obj):

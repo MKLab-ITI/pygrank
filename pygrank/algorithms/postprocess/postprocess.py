@@ -412,8 +412,8 @@ class Sweep(Postprocessor):
 
     def _transform(self, ranks: GraphSignal, **kwargs):
         ensure_used_args(kwargs)
-        uniforms = self.centrality(ranks.graph).np
-        return ranks.np / (1.0e-12 + uniforms)
+        uniforms = self.centrality(ranks.graph)#.np
+        return ranks / (1.0e-12 + uniforms)
 
     def _reference(self):
         if self.uniform_ranker != self.ranker:

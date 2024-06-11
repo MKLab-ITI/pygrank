@@ -56,6 +56,8 @@ and enable the rest below.
 
 !!! info
     First-time users can stick to the default and skip the rest of this section.
+    However, setting up graph analysis on GPU with respective backends
+    can be hundreds of times faster.
 
 To switch between backends, either use the `load_backend(name)`
 command or define an execution context that temporarily switches
@@ -98,8 +100,8 @@ Below is a list of supported backends with installation instructions and comment
 it employs `scipy` for sparse-dense matrix operations. All other backends rely on `scipy` sparse matrices
 as an intermediate step when creating their own sparse matrix types. It is
 best suited to general-purpose numerical computations and
-handling very large graphs with memory efficiency, but may not
-necessarily be the fastest option for dense or very sparse graphs.
+handling very large graphs with memory efficiency, but is not
+the fastest option for fast computing.
 <br>
 <b class="parameters">Links</b><br> [numpy](https://numpy.org/)<br>[scipy](https://scipy.org/)
 
@@ -115,7 +117,7 @@ matrices that take full advantage of tensorflow's parallelization.
 If there is not enough memory to allocate a sparse adjacency matrix,
 the backend generates a sparse version and creates a warning.
 The backend's initialization also accepts a device string or object to
-which computations should be internally transferred. This needs to
+which computations should be internally transferred. If provided, this needs to
 be one among tensorflow's available devices.
 <br>
 <b class="parameters">Installation</b><br> `pip install tensorflow[and-cuda]`<br>On Windows install WSL2 (Windows Subsystem for Linux) first.<br>
@@ -128,13 +130,13 @@ The latter is an open-source platform for machine learning developed by Meta's A
 Similarly to `"tensorflow"`, 
 are two modes in which this backend can be executed: `"dense"` (default) and `"sparse"`.
 The mode may be provided as additional arguments to the
-`pg.set_backend("pytorch", mode=...)` call.
+`pg.set_backend("pytorch", mode="dense", device="auto")` call.
 In dense mode, the pytorch backend attempts to store graphs in dense square
-matrices that take full advantage of tensorflow's parallelization.
+matrices that take full advantage of pytorch's device parallelization.
 If there is not enough memory to allocate a sparse adjacency matrix,
 the backend generates a sparse version and creates a warning.
 The backend's initialization also accepts a device string or object to
-which computations should be internally transferred. This needs to
+which computations should be internally transferred. If provided, this needs to
 be one among pytorch's available devices (typically `"cuda"` or `"cpu"`).
 <br>
 <b class="parameters">Installation</b><br> For full installation instructions visit pytorch's website in the links below.<br>
@@ -150,8 +152,8 @@ The backend's initialization only accepts a device string or object to
 which computations should be internally transferred. This needs to
 be one among pytorch's available devices (typically `"cuda"` or `"cpu"`).
 !!! info
-    `"torch_sparse"` is much more computationally efficient than `"pytorch"`
-    for computations with sparse data structures.
+    `"torch_sparse"` is effectively the same as `"pytorch"`
+    in sparse mode but is faster in preprocessing the graph.
 
 <b class="parameters">Installation</b><br> For full installation instructions visit pytorch's website in the links below.<br>
 <b class="parameters">Links</b><br> [pytorch](https://pytorch.org/get-started/locally) <br>
