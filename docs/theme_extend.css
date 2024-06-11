@@ -82,3 +82,15 @@
 .card-link:hover {
   background-color: #0056b3;
 }
+
+@media (max-width: 768px) {
+    .card-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .card {
+        width: 90%; /* Adjust width as needed */
+        margin-bottom: 10px;
+    }
+}
