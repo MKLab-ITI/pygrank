@@ -1,5 +1,6 @@
 # pygrank 
-Fast node ranking algorithms on large graphs.
+Fast node ranking algorithms on large graphs. If you like this library,
+consider starring it on [github](https://github.com/MKLab-ITI/pygrank).
 
 <div class="card-container" style="display: flex;gap: 10px;">
 

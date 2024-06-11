@@ -10,7 +10,7 @@ Fast node ranking algorithms on large graphs.
 [![Downloads](https://static.pepy.tech/personalized-badge/pygrank?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads)](https://pepy.tech/project/pygrank)
 
 # :hammer_and_wrench: Installation
-`pygrank` requires Python 3.9 or later. Get the latest version per:
+This library requires Python 3.9 or later. Get the latest version per:
 
 ```bash
 pip install --upgrade pygrank
@@ -39,6 +39,7 @@ If so, make sure to **follow the pull checklist** described in the guidelines.
  
 # :notebook: Citation
 If `pygrank` has been useful in your research and you would like to cite it in a scientific publication, please refer to the following paper:
+
 ```
 @article{krasanakis2022pygrank,
   author       = {Emmanouil Krasanakis, Symeon Papadopoulos, Ioannis Kompatsiaris, Andreas Symeonidis},
@@ -50,5 +51,6 @@ If `pygrank` has been useful in your research and you would like to cite it in a
   url          = {https://doi.org/10.1016/j.softx.2022.101227}
 }
 ```
+
 To publish research that makes use of provided implementations,
 please cite their [relevant publications](docs/tips/citations.md).
