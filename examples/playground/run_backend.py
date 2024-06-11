@@ -9,13 +9,16 @@ _, graph, community = next(
 )
 print(f"Nodes {len(graph)}, edges {graph.number_of_edges()}")
 
-ppr = pg.HeatKernel(
-    t=10,
-    normalization="symmetric",
-    assume_immutability=True,
-    max_iters=20,
-    error_type="iters",
-) >> pg.Sweep()
+ppr = (
+    pg.HeatKernel(
+        t=10,
+        normalization="symmetric",
+        assume_immutability=True,
+        max_iters=20,
+        error_type="iters",
+    )
+    >> pg.Sweep()
+)
 signal = pg.to_signal(graph, {node: 1.0 for node in community})
 preprocessor = ppr.preprocessor
 
