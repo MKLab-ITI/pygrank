@@ -110,8 +110,12 @@ def repeat(value, times):
 def scipy_sparse_to_backend(M):
     coo = M.tocoo()
     index, values = torch_sparse.coalesce(
-        torch.vstack((torch.LongTensor(coo.col).to(__pygrank_torch_sparse_config["device"]),
-                      torch.LongTensor(coo.row).to(__pygrank_torch_sparse_config["device"]))),
+        torch.vstack(
+            (
+                torch.LongTensor(coo.col).to(__pygrank_torch_sparse_config["device"]),
+                torch.LongTensor(coo.row).to(__pygrank_torch_sparse_config["device"]),
+            )
+        ),
         torch.FloatTensor(coo.data).to(__pygrank_torch_sparse_config["device"]),
         coo.shape[0],
         coo.shape[1],
@@ -128,10 +132,11 @@ def to_array(obj, copy_array=False):
         return torch.ravel(obj).to(__pygrank_torch_sparse_config["device"])
     if not isinstance(obj, np.ndarray):
         from pygrank.core.backend import to_numpy
+
         obj = to_numpy(obj)
-    return torch.ravel(
-        torch.FloatTensor(np.array(obj, dtype=np.float32))
-    ).to(__pygrank_torch_sparse_config["device"])
+    return torch.ravel(torch.FloatTensor(np.array(obj, dtype=np.float32))).to(
+        __pygrank_torch_sparse_config["device"]
+    )
 
 
 def to_primitive(obj):
@@ -139,7 +144,9 @@ def to_primitive(obj):
         return torch.tensor(obj, dtype=torch.float32).to(
             __pygrank_torch_sparse_config["device"]
         )
-    return torch.tensor(obj, dtype=torch.float32).to(__pygrank_torch_sparse_config["device"])
+    return torch.tensor(obj, dtype=torch.float32).to(
+        __pygrank_torch_sparse_config["device"]
+    )
 
 
 def is_array(obj):

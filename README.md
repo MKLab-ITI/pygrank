@@ -2,7 +2,7 @@
 
 Fast node ranking algorithms on large graphs.
 <br>
-<sup><sub>Node score diffusion · Recommendation and ranking · Community structure · Link prediction · Graph signal processing</sub></sup>
+Node score diffusion · Recommendation and ranking · Community structure · Link prediction · Graph signal processing
 <br>
 
 **License:** Apache Software License

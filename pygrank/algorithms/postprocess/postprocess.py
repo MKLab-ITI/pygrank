@@ -13,6 +13,7 @@ class Postprocessor(NodeRanking):
 
     def rank(self, *args, **kwargs):
         from timeit import default_timer as time
+
         tic = time()
         ranks = self.ranker.rank(*args, **kwargs)
         kwargs = remove_used_args(self.ranker.rank, kwargs)
@@ -378,7 +379,12 @@ class Sweep(Postprocessor):
     Applies a sweep procedure that divides personalized node ranks by corresponding non-personalized ones.
     """
 
-    def __init__(self, ranker: NodeRanking = None, uniform_ranker: NodeRanking = None, assume_immutability: bool = True):
+    def __init__(
+        self,
+        ranker: NodeRanking = None,
+        uniform_ranker: NodeRanking = None,
+        assume_immutability: bool = True,
+    ):
         """
         Initializes the sweep procedure.
 
@@ -407,12 +413,13 @@ class Sweep(Postprocessor):
         super().__init__(ranker)
         self.uniform_ranker = ranker if uniform_ranker is None else uniform_ranker
         self.centrality = MethodHasher(
-            lambda graph: self.uniform_ranker.rank(graph), assume_immutability=assume_immutability
+            lambda graph: self.uniform_ranker.rank(graph),
+            assume_immutability=assume_immutability,
         )
 
     def _transform(self, ranks: GraphSignal, **kwargs):
         ensure_used_args(kwargs)
-        uniforms = self.centrality(ranks.graph)#.np
+        uniforms = self.centrality(ranks.graph)  # .np
         return ranks / (1.0e-12 + uniforms)
 
     def _reference(self):

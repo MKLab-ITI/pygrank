@@ -7,8 +7,8 @@ import pytest
 def supported_backends():
     for backend, kwargs in [
         ("matvec", {}),
-        ( "pytorch", {"mode": "dense"}),
-        ( "pytorch", {"mode": "sparse"}),
+        ("pytorch", {"mode": "dense"}),
+        ("pytorch", {"mode": "sparse"}),
         ("tensorflow", {"mode": "dense"}),
         ("tensorflow", {"mode": "sparse"}),
         ("torch_sparse", {}),

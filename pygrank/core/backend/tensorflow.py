@@ -99,6 +99,7 @@ def to_array(obj, copy_array=False):
         return obj
     if not isinstance(obj, np.ndarray):
         from pygrank.core.backend import to_numpy
+
         obj = to_numpy(obj)
     return tf.convert_to_tensor(obj, dtype=tf.float32)
 
@@ -135,7 +136,9 @@ def length(x):
 def degrees(M):
     if isinstance(M, tf.SparseTensor):
         return tf.reshape(tf.sparse.reduce_sum(M, axis=0), (-1,))
-    return tf.reshape(tf.reduce_sum(M, axis=1), (-1,))  # TODO: investigate why different reduction axis is needed
+    return tf.reshape(
+        tf.reduce_sum(M, axis=1), (-1,)
+    )  # TODO: investigate why different reduction axis is needed
 
 
 def filter_out(x, exclude):

@@ -110,7 +110,7 @@ def load_backend(mod_name, *args, **kwargs):
                         return converted
 
                     setattr(thismod, api, converter(mod.__dict__[api]))
-                #else:  # pragma: no cover
+                # else:  # pragma: no cover
                 #    raise Exception("Missing implementation for " + str(api))
     return mod.backend_init(*args, **kwargs)
 
