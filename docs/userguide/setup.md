@@ -12,11 +12,38 @@ pip install --upgrade pygrank
 When working n practical problems,
 use `networkx` to construct graphs
 by adding edges between Python objects.
- `pygrank` also provides its own `pygrank.Graph` class
-that implements a subset of `networkx.Graph` operations
-to gain several optimizations; it tends to be faster for the
-construction of large graphs and consumes
-only a fraction of the memory.
+For example, you can construct a graph
+that `pygrank` can process with the
+following pattern, which we use throughout
+our documentation for ease of development:
+
+```python
+import networkx as nx
+
+graph = nx.Graph(directed=False)  # undirected is also the default
+graph.add_edge('A', 'B')
+graph.add_edge('A', 'C')
+```
+
+Graphs like the above require a lot of memory to keep track of relations
+between data,
+which can be an issue when processing large graphs.
+On the other hand,
+`pygrank` is typically interested in 
+converting those graphs to sparse matrices of respective
+backends. For this reason, the library provides its own
+trimmed down `pygrank.Graph` class that implements a subset of 
+of graph operations needed for node ranking algorithms
+and speeds up the `add_edge method`. Instances of this class
+can be created with the pattern:
+
+```python
+import pygrank as pg
+
+graph = pg.Graph(directed=False)  # undirected is also the default
+graph.add_edge('A', 'B')
+graph.add_edge('A', 'C')
+```
 
 ## Backends
 
@@ -52,7 +79,9 @@ The same message points to a configuration file stored under *home/.pygrank*.
 In addition to automatically downloaded content, there is a JSON configuration 
 file specifying the default backend to be set upon first import and the option 
 to silence the reminder message. The configuration looks like this and can either be 
-edited directly or programmatically set with `pg.set_backend_preference(name, reminder=True, **init)`):
+edited directly or programmatically set with 
+`pg.set_backend_preference(name, reminder=True, **init)`), where the `init`
+dictionary holds configurations passed to backend initialization:
 
 ```json
 {

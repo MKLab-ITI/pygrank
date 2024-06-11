@@ -21,9 +21,11 @@ A *graph signal* is a way to organize numerical values that correspond
 to the nodes of a graph. Signals are used as the inputs and outputs 
 of node ranking algorithms, although calls to the latter are 
 overloaded to automatically construct signals if different arguments 
-are provided. Here is how to create a simple signal that includes 
+are provided. Below is how to create a simple signal attached on
+a `nextoworkx` graph that includes 
 nodes 'A' and 'C' with values of 3 and 2 respectively and sets 0 
-to all other nodes:
+to all other nodes. Learn about different graph types you can
+work with in the setup guide [here](setup.md).
 
 
 ```python
@@ -53,14 +55,15 @@ in various formats listed below:
 | `None`                                                    | Interpreted as a signal of ones.                                                                                                                                                                   | `None`                   |
 
 
-An internal representation of signal
-values in the second of the above formats
+Internally, signal
+values are converted to second of the above formats
+for fast computations. These values
 can be accessed through the `signal.np` attribute. 
-By default your running backend will be 
+For example, by default the running backend will be 
 `"numpy"`, in which case the internal representation
 will be numpy array.
-However, different data types may be held, depending on the *current*
-backend; switching backends after a signal is defined
+Different data types may be held, depending on the *current*
+backend, whereas switching backends after a signal is defined
 or computed will convert
 representations to the new backend's preferred format
 if needed. 
@@ -79,23 +82,28 @@ print([(k,v) for k,v in signal.items()])  # [('A', 0.6), ('B', 0.0), ('C', 0.4),
 ## Graph Filters
 
 Graph filters are algorithms that spread the node values stored in graph signals
-through graphs by diffusing them through edges for several hops of different weights.
-This process produces new *posterior* signals. The original signal is called 
+through graphs by diffusing them through edges. The original signal is called 
 the *personalization*, and its values
 indicates the likelihood of respective nodes obtaining a certain property, 
 such as being members
 of a structural or metadata community. Graph filters refine these
 initial estimates by providing improved (probability) scores for all nodes.
+Their outcomes are new *posterior* signals
+whose scores can be thought of a weighted gathering of scores
+from a different number of hops away.
 
-Filters are callables that are defined by instantiating respective classe.
-Filter constructors takes as input several keyword
-arguments affecting how they work. An exhaustive list of ready-to-use graph filters 
+Filters are callables (after defining them, use them
+as functions) that are instantiated by respective classes;
+their constructors takes as input several keyword
+arguments affecting how they work, so that you can reuse the same
+filter configurations in your code. 
+Find an exhaustive list of ready-to-use graph filters 
 and their constructors
 found [here](../generated/graph_filters.md).
 More complicated node ranking algorithms can be obtained by applying postprocessors on
 filters, which is covered [later](#postprocessors).
-After its initialization with chosen parameters, a filter `alg` can run
-with one of the following three patterns (the first two are interchangeable):
+After initialization with chosen parameters, a filter `alg` can run
+with one of the following three patterns, where the first two are interchangeable:
 
 | Pattern                                              | Description                                                                                                                                               |
 |------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -103,7 +111,7 @@ with one of the following three patterns (the first two are interchangeable):
 | `scores = alg(graph, personalization)`               | Internally calls the `to_signal` method. Faster code writing.                                                                                             |
 | `scores = alg(graph)`                                | Computes non-personalized node scores by setting the personalization value to 1 for each node. This turns the algorithm's outcome into centrality scores. |
 
-As an example, let us define an personalized PageRank filter. If the personalization is
+As an example, let us define a personalized PageRank filter. If the personalization is
 binary (meaning that all nodes have initial scores either 0 or 1) this algorithm
 is equivalent to a stochastic Markov process where it starts from the nodes
 with initial scores 1, iteratively jumps to neighbors randomly, and has

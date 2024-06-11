@@ -101,7 +101,10 @@ def dot(x, y):
 
 
 def repeat(value, times):
-    return torch.ones(times) * value
+    ret = torch.ones(times, device=__pygrank_torch_sparse_config["device"])
+    if value != 1:
+        ret *= value
+    return ret
 
 
 def scipy_sparse_to_backend(M):

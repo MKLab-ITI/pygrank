@@ -12,9 +12,12 @@ class Postprocessor(NodeRanking):
         return to_signal(ranks, call(self._transform, kwargs, [ranks]))
 
     def rank(self, *args, **kwargs):
+        from timeit import default_timer as time
+        tic = time()
         ranks = self.ranker.rank(*args, **kwargs)
         kwargs = remove_used_args(self.ranker.rank, kwargs)
-        return to_signal(ranks, call(self._transform, kwargs, [ranks]))
+        ret = to_signal(ranks, call(self._transform, kwargs, [ranks]))
+        return ret
 
     def _transform(self, ranks: GraphSignal, **kwargs):
         raise Exception(

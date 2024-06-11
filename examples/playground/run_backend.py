@@ -4,27 +4,39 @@ from timeit import default_timer as time
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-_, graph, community = next(pg.load_datasets_one_community(["youtube"], graph_api=pg, min_group_size=50))
+_, graph, community = next(pg.load_datasets_one_community(["amazon"], graph_api=pg, min_group_size=50))
 print(f"Nodes {len(graph)}, edges {graph.number_of_edges()}")
 
 ppr = pg.HeatKernel(
+    t=10,
     normalization="symmetric",
-    assume_immutability=True
-)
+    assume_immutability=True,
+    max_iters=20,
+    error_type="iters"
+) >> pg.Sweep()
 signal = pg.to_signal(graph, {node: 1.0 for node in community})
 preprocessor = ppr.preprocessor
 #ppr = pg.ParameterTuner(preprocessor=preprocessor)
-"""
-with pg.Backend("numpy"):
-    preprocessor(graph)
-    torch.cuda.synchronize()  # correct timing
-    tic = time()
-    scores = ppr(signal)
-    print("numpy", ppr.convergence, "actual time", time()-tic)"""
 
-with pg.Backend("torch_sparse", device=device):
-    preprocessor(graph)
-    torch.cuda.synchronize()  # correct timing
-    tic = time()
-    scores = ppr(signal)
-    print("torch_sparse", ppr.convergence, "actual time", time()-tic)
+for _ in range(2):
+    print("-----------------------------------------------")
+    with pg.Backend("numpy"):
+        preprocessor(graph)
+        tic = time()
+        scores = ppr(signal)
+        print(pg.sum(scores))
+        print("numpy", ppr.convergence, "actual time", time()-tic)
+
+    with pg.Backend("pytorch", device=device):
+        preprocessor(graph)
+        tic = time()
+        scores = ppr(signal)
+        print(pg.sum(scores))
+        print("pytorch", ppr.convergence, "actual time", time() - tic)
+
+    with pg.Backend("torch_sparse", device=device):
+        preprocessor(graph)
+        tic = time()
+        scores = ppr(signal)
+        print(pg.sum(scores))
+        print("torch_sparse", ppr.convergence, "actual time", time()-tic)
