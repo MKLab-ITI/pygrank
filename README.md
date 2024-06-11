@@ -1,24 +1,25 @@
 ![pygrank](docs/pygrank.png)
 
 Fast node ranking algorithms on large graphs.
-<br>
-Node score diffusion · Recommendation and ranking · Community structure · Link prediction · Graph signal processing
-<br>
 
-**License:** Apache Software License
-<br>**Author:** Emmanouil (Manios) Krasanakis
-<br>**Dependencies:** `networkx`,`numpy`,`scipy`,`sklearn`,`wget`
-<br>**Backends (optional):** `numpy`,`tensorflow`,`pytorch`,`torch_sparse`,`matvec` 
-<br><sup><sub>*Externally install non-numpy backends before using them.*</sub></sup>
+**Author:** Emmanouil (Manios) Krasanakis
+<br>**License:** Apache 2.0
 
 ![build](https://github.com/MKLab-ITI/pygrank/actions/workflows/tests.yml/badge.svg)
 ![coverage](coverage.svg)
 [![Downloads](https://static.pepy.tech/personalized-badge/pygrank?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads)](https://pepy.tech/project/pygrank)
 
 # :hammer_and_wrench: Installation
-`pygrank` works with Python 3.9 or later. The latest version can be installed with pip per:
+`pygrank` requires Python 3.9 or later. Get the latest version per:
+
+```bash
+pip install --upgrade pygrank
+```
+
+Also install any of these optional dependencies to use the respective backend: `tensorflow`,`pytorch`,`torch_sparse`,`matvec`
 
 # :link: Documentation
+
 **https://pygrank.readthedocs.io**
 
 # :brain: Overview
