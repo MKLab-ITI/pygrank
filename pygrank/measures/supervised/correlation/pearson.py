@@ -1,6 +1,5 @@
 from pygrank.measures.supervised.supervised import Supervised
 from pygrank.core import backend, GraphSignalData, BackendPrimitive
-import scipy.stats
 
 
 class PearsonCorrelation(Supervised):
@@ -8,9 +7,7 @@ class PearsonCorrelation(Supervised):
 
     def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
         known_scores, scores = self.to_numpy(scores)
-        # return scipy.stats.pearsonr(
-        #    backend.to_numpy(known_scores), backend.to_numpy(scores)
-        # )[0]
+
         mean_known_scores = backend.safe_div(
             backend.sum(known_scores), backend.length(known_scores)
         )

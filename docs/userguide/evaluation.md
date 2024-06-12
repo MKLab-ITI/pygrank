@@ -60,8 +60,75 @@ print(supervised(scores))  # 0.6666666666666667
 
 unsupervised = pg.Density()  # lower is better
 print(unsupervised(scores))  # 0.5
-
 ```
+
+
+In addition to base measures, there also exist c) variants
+that combine them, and d) evaluation that runs on multiple communities.
+To begin with, multiple measures can be aggregated through the `pg.AM` and 
+`pg.GM` classes, which respectively perform arithmetic and geometric
+averaging of measure outcomes. These can be constructed and measures
+can be added to them with a function chain of `.add` calls. 
+They also accept optional weights and saturation
+thresholds. When such thresholds are provided,
+the constructor of the measure combination mechanism
+can be annotated with `differentiable=True` to indicate that
+a differentiable relaxation of saturation should be 
+applied. Here is an example:
+
+```python
+import pygrank as pg
+
+known_scores, algorithm, personalization, sensitivity_scores = ...
+auc = pg.AUC(known_scores, exclude=personalization)
+prule = pg.pRule(sensitivity_scores, exclude=personalization)
+measure = pg.AM(differentiable=True).add(auc).add(prule, weight=10., max_val=0.8)
+```
+
+Extension of base measures to multiple communities can be obtained from the
+`pg.MultiSupervised` and `pg.MultiUnsupervised` classes. These take as arguments
+the *classes* of base measures and any keyword arguments
+needed to construct them. In case of the *exclude* attribute of
+supervised measures a dictionary from community
+identifiers (e.g., strings with community names) to
+graph signals/signal data should be provided to the `pg.MultiSupervised`. 
+When called, these measures process and output dictionaries from community
+identifiers to create an assessment value for each of those communities.
+Values are also returned as a similar dictionary. Practical code
+using these classes may look like this:
+
+```python
+import pygrank as pg
+
+_, graph, communities = next(pg.load_datasets_multiple_communities(["dblp"]))
+algorithm = pg.PageRank(alpha=0.9, assume_immutability=True)  # cache graph preprocessing
+algorithm = algorithm >> pg.Normalize("max")
+comm_scores = {name: algorithm(graph, members) for name, members in communities.items()}
+
+measure = pg.MultiUnsupervised(pg.Conductance)
+print(measure(comm_scores))
+```
+
+In case of unsupervised evaluation that is needed
+when there are too few example members, 
+you may also be interested in computing link-based
+unsupervised measures. This is done with the
+`pg.LinkAssessmen` class; this needs the graph
+as a constructor argument and can only be computed
+when multiple communities are analysed together.
+However, it often performs a qualitative evaluation
+closer to supervised assessment [krasanakis2020unsupervised].
+Continuing from the
+previous snippet, evaluation of scores with this
+strategy can be performed like so:
+
+```python
+import tqdm  # install this to be able to set it as a progress bar argument below
+
+measure = pg.LinkAssessment(graph, progress=tqdm.tqdm)  # graph argument mandatory
+print(measure(comm_scores))
+```
+
 
 ## Datasets
 
@@ -192,12 +259,3 @@ algorithms["Tuned"] = pg.ParameterTuner()
 
 !!! warning
     To run a new series of experiments, the loader needs to be called anew (it is an iterator).
-
-## Combining Measures
-
-Multiple measures can be aggregated through the `pygrank.AM` and 
-`pygrank.GM` classes, which respectively perform arithmetic and geometric
-averaging of measure outcomes.
-
-!!! info
-    This section is under construction.

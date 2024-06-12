@@ -1,6 +1,6 @@
 class MultiUnsupervised:
-    def __init__(self, metric_type, G, **kwargs):
-        self.metric = metric_type(G, **kwargs)
+    def __init__(self, metric_type, **kwargs):
+        self.metric = metric_type(**kwargs)
 
     def evaluate(self, scores):
         evaluations = [
