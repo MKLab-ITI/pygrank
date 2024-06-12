@@ -10,6 +10,7 @@ Many thanks to all existing and future contributors for their participation.
 
 ## Workflow
 The typical workflow for `pygrank` contributions comprises the following steps:
+
 1. **Fork** the master branch from the GitHub repository.
 2. **Clone** the fork locally (recommended: also copy the *pre-commit* file to *.git/hooks*).
 3. **Edit** the library.
@@ -22,8 +23,8 @@ such as conda or venv (provided by PyCharm).
 The environment should come with Python 3.9 or later installed.
 Make sure that both base library dependencies 
 `networkx`, `numpy`, `scipy`, `sklearn` (scikit-learn), `wget`, 
-as well as `tensorflow`, `torch`, `matvec`, `torch-sparse`
-(the last three needed support
+as well as `tensorflow`, `torch`, `matvec`, `torch-sparse`, `dask[distributed]`
+(the last five are needed support
 unit testing for the respective backends)
 are installed and upgraded to their latest versions.
 
@@ -80,7 +81,7 @@ in the same module you can safely import classes from `pygrank.measures`.
 **Which classes to subclass?**
 
 To create a new node ranking algorithm, you are required to subclass one of the
-classes found in `pygrank.algorithms.filters.abstract_filters`:
+classes found in `pygrank.algorithms.filters.abstract`:
 * `GraphFilter` identifies generic graph filters (is subclassed by the next two)
 * `RecursiveGraphFilter` identifies graph filters that can be described with a recursive formula
 * `ClosedFormGraphFilter` identifies graph filers that can be described in closed form
