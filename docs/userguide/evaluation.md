@@ -67,14 +67,10 @@ In addition to base measures, there also exist c) variants
 that combine them, and d) evaluation that runs on multiple communities.
 To begin with, multiple measures can be aggregated through the `pg.AM` and 
 `pg.GM` classes, which respectively perform arithmetic and geometric
-averaging of measure outcomes. These can be constructed and measures
-can be added to them with a function chain of `.add` calls. 
-They also accept optional weights and saturation
-thresholds. When such thresholds are provided,
-the constructor of the measure combination mechanism
-can be annotated with `differentiable=True` to indicate that
-a differentiable relaxation of saturation should be 
-applied. Here is an example:
+averaging of assessment values. After instantiateing these
+classes, measures can be added to them with a chain of `.add` method calls 
+that also accept optional weights and saturation
+thresholds. Here is an example:
 
 ```python
 import pygrank as pg
@@ -85,12 +81,19 @@ prule = pg.pRule(sensitivity_scores, exclude=personalization)
 measure = pg.AM(differentiable=True).add(auc).add(prule, weight=10., max_val=0.8)
 ```
 
+!!! info
+    When working on autodifferntiation backends,
+    the constructor of the measure combination mechanism
+    can be annotated with `differentiable=True`. This indicates that,
+    when thresholds are provided, a differentiable relaxation of saturation 
+    should be applied instead of a simple min or max. 
+
 Extension of base measures to multiple communities can be obtained from the
 `pg.MultiSupervised` and `pg.MultiUnsupervised` classes. These take as arguments
 the *classes* of base measures and any keyword arguments
 needed to construct them. In case of the *exclude* attribute of
 supervised measures a dictionary from community
-identifiers (e.g., strings with community names) to
+identifiers (like strings with community names) to
 graph signals/signal data should be provided to the `pg.MultiSupervised`. 
 When called, these measures process and output dictionaries from community
 identifiers to create an assessment value for each of those communities.
@@ -109,8 +112,7 @@ measure = pg.MultiUnsupervised(pg.Conductance)
 print(measure(comm_scores))
 ```
 
-In case of unsupervised evaluation that is needed
-when there are too few example members, 
+In case of unsupervised evaluation 
 you may also be interested in computing link-based
 unsupervised measures. This is done with the
 `pg.LinkAssessmen` class; this needs the graph
@@ -128,6 +130,15 @@ import tqdm  # install this to be able to set it as a progress bar argument belo
 measure = pg.LinkAssessment(graph, progress=tqdm.tqdm)  # graph argument mandatory
 print(measure(comm_scores))
 ```
+
+!!! info
+    Link-based evaluation or, in general,
+    some kind of unsupervised evaluation is needed 
+    when there are only a few community
+    members that serve as examples towards which to
+    score proximity. In this case, splitting example members to
+    training and test sets risks degrading supervised
+    evaluation quality.
 
 
 ## Datasets
