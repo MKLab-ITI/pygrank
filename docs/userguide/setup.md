@@ -3,7 +3,7 @@
 Create a (virtual) environment with Python 3.9 or later
 and install or upgrade to the latest version of `pygrank` with:
 
-```
+```bash
 pip install --upgrade pygrank
 ```
 
@@ -77,13 +77,19 @@ print(scores.np)  # an array now that we switched back
 ```
 
 When importing `pygrank` a message appears indicating  that `"numpy"` is the default backend.
-The same message points to a configuration file stored under *home/.pygrank*. 
-In addition to automatically downloaded content, there is a JSON configuration 
-file specifying the default backend to be set upon first import and the option 
-to silence the reminder message. The configuration looks like this and can either be 
-edited directly or programmatically set with 
-`pg.set_backend_preference(name, reminder=True, **init)`), where the `init`
-dictionary holds configurations passed to backend initialization:
+The same message points to a JSON configuration file stored under *home/.pygrank*,
+alongside any automatically downloaded content. The configuration 
+file specifies the default backend to be set upon the library's
+first import, initialization parameters for that backend, and the option 
+to silence the reminder message. These options can either be 
+edited directly on the file or programmatically set with:
+
+```python
+pg.set_backend_preference(name, reminder=True, **init)  # essentially call pg.load_backend(name, **init) on pygrank's first import
+```
+
+The `init` dictionary holds parameters passed to backend initialization.
+The configuration file's contents looks like this:
 
 ```json
 {
@@ -98,10 +104,10 @@ Below is a list of supported backends with installation instructions and comment
 ### <span class="component">numpy</span>
 <b class="parameters">About</b><br>This is the default backend and is enabled by default. Internally,
 it employs `scipy` for sparse-dense matrix operations. All other backends rely on `scipy` sparse matrices
-as an intermediate step when creating their own sparse matrix types. It is
+as an intermediate step when initializing their own sparse matrix types. This backend is
 best suited to general-purpose numerical computations and
 handling very large graphs with memory efficiency, but is not
-the fastest option for fast computing.
+the fastest option.
 <br>
 <b class="parameters">Links</b><br> [numpy](https://numpy.org/)<br>[scipy](https://scipy.org/)
 
@@ -110,15 +116,21 @@ the fastest option for fast computing.
 The latter is an open-source platform for machine learning developed by the Google Brain team.
 There 
 are two modes in which this backend can be executed: `"dense"` (default) and `"sparse"`.
-The mode may be provided as additional arguments to the
-`pg.set_backend("tensorflow", mode="dense" device="auto")` call.
+The mode may be provided as additional arguments to the backend loading call like this:
+
+```python
+import pygrank as pg
+with pg.Backend("tensorflow", mode="dense", device="auto"):
+    ... # code to run on pytorch here
+```
+
 In dense mode, the tensorflow backend attempts to store graphs in dense square
 matrices that take full advantage of tensorflow's parallelization.
 If there is not enough memory to allocate a sparse adjacency matrix,
 the backend generates a sparse version and creates a warning.
 The backend's initialization also accepts a device string or object to
 which computations should be internally transferred. If provided, this needs to
-be one among tensorflow's available devices.
+be a tensorflow device name.
 <br>
 <b class="parameters">Installation</b><br> `pip install tensorflow[and-cuda]`<br>On Windows install WSL2 (Windows Subsystem for Linux) first.<br>
 <b class="parameters">Links</b><br> [tensorflow](https://www.tensorflow.org/install)
@@ -129,8 +141,14 @@ be one among tensorflow's available devices.
 The latter is an open-source platform for machine learning developed by Meta's AI Research lab.
 Similarly to `"tensorflow"`, 
 are two modes in which this backend can be executed: `"dense"` (default) and `"sparse"`.
-The mode may be provided as additional arguments to the
-`pg.set_backend("pytorch", mode="dense", device="auto")` call.
+The mode may be provided as additional arguments to the backend loading call like this:
+
+```python
+import pygrank as pg
+with pg.Backend("pytorch", mode="dense", device="auto"):
+    ... # code to run on pytorch
+```
+
 In dense mode, the pytorch backend attempts to store graphs in dense square
 matrices that take full advantage of pytorch's device parallelization.
 If there is not enough memory to allocate a sparse adjacency matrix,
@@ -138,6 +156,10 @@ the backend generates a sparse version and creates a warning.
 The backend's initialization also accepts a device string or object to
 which computations should be internally transferred. If provided, this needs to
 be one among pytorch's available devices (typically `"cuda"` or `"cpu"`).
+If not provided, the device will be the same as the one selected during the 
+last time this backend was loaded. If this is the first time,
+the device will be automatically selected to be `"cuda"`
+if the latter is properly integrated, and `"cpu"` otherwise.
 <br>
 <b class="parameters">Installation</b><br> For full installation instructions visit pytorch's website in the links below.<br>
 <b class="parameters">Links</b><br> [pytorch](https://pytorch.org/get-started/locally)
@@ -146,14 +168,24 @@ be one among pytorch's available devices (typically `"cuda"` or `"cpu"`).
 <b class="parameters">About</b><br>Performs computations within the `pytorch` execution environment,
 but contrary to the `"pytorch` backend uses the sparse computations of the `torch_sparse` library.
 The latter is an open-source platform for machine learning developed by Meta's AI Research lab.
-Similarly to `"tensorflow"`, 
-are two modes in which this backend can be executed: `"dense"` (default) and `"sparse"`.
-The backend's initialization only accepts a device string or object to
-which computations should be internally transferred. This needs to
-be one among pytorch's available devices (typically `"cuda"` or `"cpu"`).
+This backend always executes on sparse mode
+and its initialization accepts a device string or object to
+which computations should be internally transferred. This follows the
+same conventions as `"pytorch"` to determine the employed device. For example,
+use this backend like this:
+
+```python
+import pygrank as pg
+import torch
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+with pg.Backend("torch_sparse", device=device): 
+    ...  # code to run on torch_sparse 
+```
+
 !!! info
-    `"torch_sparse"` is effectively the same as `"pytorch"`
-    in sparse mode but is faster in preprocessing the graph.
+    `"torch_sparse"` is near-identical as `"pytorch"`
+    in sparse mode but is much faster in preprocessing adjacency matrices.
 
 <b class="parameters">Installation</b><br> For full installation instructions visit pytorch's website in the links below.<br>
 <b class="parameters">Links</b><br> [pytorch](https://pytorch.org/get-started/locally) <br>
@@ -188,4 +220,4 @@ Best suited when Intel's hardware and software stack are available.
 <b class="parameters">Links</b><br> [mkl](https://www.intel.com/content/www/us/en/developer/tools/oneapi/distribution-for-python.html)
 
 !!! info
-    If you use Intel's Python distribution, this is only marginally faster than `"numpy"`.
+    If you use Intel's Python distribution, `"sparse_dot_mkl"` is only marginally faster than `"numpy"`.

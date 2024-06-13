@@ -15,6 +15,7 @@ nav:
     - Applications:
         - 'advanced/ranking.md'
         - 'advanced/community.md'
+        - 'advanced/links.md'
         - 'advanced/gnn.md'
         - 'advanced/fairness.md'
     - R&D:
@@ -32,17 +33,16 @@ nav:
 markdown_extensions:
   - admonition
   - mkautodoc
-  - codehilite
   - attr_list
   - pymdownx.betterem:
       smart_enable: all
   - pymdownx.smartsymbols
   - pymdownx.inlinehilite
-  - pymdownx.extra
   - pymdownx.arithmatex:
       generic: true
   - pymdownx.highlight:
       use_pygments: true
+      pygments_style: friendly
   - pymdownx.emoji:
       emoji_index: !!python/name:pymdownx.emoji.gemoji
       emoji_generator: !!python/name:pymdownx.emoji.to_svg
@@ -76,4 +76,4 @@ extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/maniospas
-      name: Emmanouil (Manios) Krasanakis on GitHub
+      name: Emmanouil (Manios) Krasanakis

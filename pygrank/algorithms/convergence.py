@@ -4,6 +4,7 @@ from timeit import default_timer as time
 from pygrank.measures import Supervised, Mabs
 from pygrank.core import backend, BackendPrimitive
 from typing import Union
+import warnings
 
 
 class ConvergenceManager:
@@ -48,7 +49,7 @@ class ConvergenceManager:
             iter_exception: Optional. The type of exception class to be thrown if max iterations are reached (when
                 *error_type* is not "iters"). If *None*, this quietly closes the iterations as if convergence
                 is reached. *Avoid* changing this argument for deployment-ready systems, as performing a fixed number
-                of iteration should be a preferred practice compared to stopping either there or at a fixed numerical
+                of iterations should be a preferred practice compared to stopping either there or at a fixed numerical
                 tolerance. Default is *Exception*.
         """
         self.tol = tol
@@ -98,7 +99,8 @@ class ConvergenceManager:
             else self._has_converged(self.last_ranks, new_ranks)
         )
         self.last_ranks = new_ranks
-        self.elapsed_time = time() - self._start_time
+        if converged:
+            self.elapsed_time = time() - self._start_time
         return converged
 
     def _has_converged(
@@ -108,9 +110,11 @@ class ConvergenceManager:
             return False
         if self.iteration % self.end_modulo != 0:
             return False
-        return self.error_type(prev_ranks)(ranks) <= (
-            0 if self.tol is None else max(self.tol, backend.epsilon())
-        )
+        err = self.error_type(prev_ranks)
+        tol = 0 if self.tol is None else max(self.tol, backend.epsilon())
+        if err.best_direction() <= 0:
+            return err(ranks) <= tol
+        return err(ranks) >= 1 - tol
 
     def __str__(self):
         return str(self.iteration) + " iterations (" + str(self.elapsed_time) + " sec)"
@@ -127,61 +131,113 @@ class RankOrderConvergenceManager:
         self.iteration = 0
         self._start_time = None
         self.elapsed_time = None
-        self.accumulated_ranks = None
+        self._accumulated_ranks = None
         self.pagerank_alpha = pagerank_alpha
         self.confidence = confidence
         self.criterion = criterion
+        self._power = 1
+        self._sup_of_series_sum = -np.log(1 - self.pagerank_alpha)
+        self._series_sum = 0
+        self._warned = False
+        self._conf_ppf = norm.ppf(self.confidence)
+        self._targeting_fraction = 0
 
     def start(self, restart_timer: bool = True):
         if restart_timer or self._start_time is None:
             self._start_time = time()
             self.elapsed_time = None
             self.iteration = 0
-            self.accumulated_ranks = 0
+            self._accumulated_ranks = 0
+            self._sup_of_series_sum = -np.log(1 - self.pagerank_alpha)
+            self._series_sum = 0
+            self._power = 1
+            self._warned = False
+            self._conf_ppf = norm.ppf(self.confidence)
+            self._targeting_fraction = 0
 
     def has_converged(self, new_ranks: BackendPrimitive) -> bool:
-        # TODO: convert to any backend
-        new_ranks = backend.to_numpy(new_ranks).squeeze()
-        self.accumulated_ranks = (
-            self.accumulated_ranks * self.iteration + new_ranks
-        ) / (self.iteration + 1)
+
         self.iteration += 1
-        converged = (
-            self.current_fraction_of_random_walks()
-            >= self.needed_fraction_of_random_walks(new_ranks)
-        )
-        self.elapsed_time = time() - self._start_time
+        self._power *= self.pagerank_alpha
+        self._series_sum += self._power / self.iteration
+
+        current_fraction_random_walks = self.current_fraction_of_random_walks()
+
+        if self.iteration < 5:
+            converged = False
+        elif (
+            current_fraction_random_walks >= self._targeting_fraction
+            or self.iteration % 10 == 0
+        ):
+            new_ranks = backend.to_numpy(new_ranks)
+            # TODO: convert to any backend
+            self._targeting_fraction = self.needed_fraction_of_random_walks(new_ranks)
+            converged = current_fraction_random_walks >= self._targeting_fraction
+        else:
+            converged = False
+        if converged:
+            self.elapsed_time = time() - self._start_time
         return converged
 
     def needed_fraction_of_random_walks(self, ranks: BackendPrimitive) -> float:
-        if self.criterion == "rank_gap":
-            a = [rank for rank in ranks]
-            order = np.argsort(a, kind="quicksort")
-            gaps = [
-                a[order[i + 1]] - a[order[i]]
-                for i in range(len(order) - 1)
-                if a[order[i + 1]] != a[order[i]]
-            ]
+        criterion = self.criterion
+        if backend.length(ranks) < 30 and (
+            isinstance(self.criterion, int) or self.criterion != "fraction_of_walks"
+        ):
+            if not self._warned:
+                self._warned = True
+                warnings.warn(
+                    f"Inapplicable convergence criterion."
+                    f"\n  Description: "
+                    f"\n    RankOrderConvergenceManager was initialized with criterion='{self.criterion}'"
+                    f"\n    but this is applicable only if the central limit theorem "
+                    f"\n    can assume normal distribution for a random variable over {len(ranks)} nodes."
+                    f"\n  How to avoid this warning:"
+                    f"\n    Supply a graph with at least 30 nodes or use criterion='fraction_of_walks'."
+                    f"\n  Temporary fix:"
+                    f"\n    Using criterion='fraction_of_walks' for this round of convergence."
+                )
+            criterion = "fraction_of_walks"
+        if isinstance(criterion, int) or criterion == "clever_gap":
+            n_gap = (
+                self.criterion
+                if isinstance(self.criterion, int)
+                else int(backend.length(ranks) ** 0.5)
+            )
+            a = np.random.choice(ranks, n_gap)
+            a.sort()
+            gaps = np.diff(a)
+            gaps = gaps[gaps != 0]
             if len(gaps) < 2:
                 return 1
-            return 1 - (max(gaps) - min(gaps)) / (
-                norm.ppf(self.confidence) * np.std(gaps) * len(gaps)
+            return 1 - np.quantile(gaps, 1 - self.confidence) / (
+                self._conf_ppf * np.std(gaps)
             )
-        elif self.criterion == "fraction_of_walks":
+        elif criterion == "rank_gap":
+            """a = ranks
+            order = np.sort(a, kind="quicksort")
+            gaps = np.diff(order)
+            gaps = gaps[gaps != 0]
+            if len(gaps) < 2:
+                return 1
+            return 1 - (np.max(a) - np.min(a)) / (
+                norm.ppf(self.confidence) * np.std(gaps) * len(gaps)
+            )"""
+            a = np.sort(ranks, kind="quicksort")
+            gaps = np.diff(a)
+            gaps = gaps[gaps != 0]
+            if len(gaps) < 2:
+                return 1
+            return 1 - np.quantile(gaps, 1 - self.confidence) / (
+                self._conf_ppf * np.std(gaps)
+            )
+        elif criterion == "fraction_of_walks":
             return self.confidence
         else:
             raise Exception("criterion can only be 'rank_gap' or 'fraction_of_walks'")
 
     def current_fraction_of_random_walks(self) -> float:
-        sup_of_series_sum = -np.log(1 - self.pagerank_alpha)
-        series_sum = 0
-        power = 1
-        for n in range(1, self.iteration + 1):
-            power *= self.pagerank_alpha
-            series_sum += (
-                power / n
-            )  # this is faster than np.power(self.pagerank_alpha, n) / n
-        return series_sum / sup_of_series_sum
+        return self._series_sum / self._sup_of_series_sum
 
     def __str__(self):
         return str(self.iteration) + " iterations (" + str(self.elapsed_time) + " sec)"

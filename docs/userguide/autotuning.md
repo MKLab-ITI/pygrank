@@ -69,7 +69,7 @@ algorithm = pg.ParameterTuner(custom_algorithm,
 ```
 
 
-In the above snippet, we used the NDCG as the measure of choice for tuning.
+The above snippet used NDCG as the measure of choice for tuning.
 If no measure is provided, AUC is the default. If the application calls
 for it and you want to create a measure that is tied to a specific graph signal
 with the `as_supervised_method` like below, set *fraction_of_training=1* for the tuner. This
@@ -85,7 +85,7 @@ signal = pg.to_signal(graph, group)
 train, test = pg.split(signal, training_samples=0.5)
 train, valid = pg.split(train, training_samples=0.5)
 
-tuner = pg.ParameterTuner(lambda params: pg.PageRank(alpha=params[0]),
+tuner = pg.ParameterTuner(lambda params: pg.PageRank(alpha=params[0]),  # simpler than declaring a method
                              max_vals=[0.99],
                              min_vals=[0.5],
                              fraction_of_training=1,
@@ -131,10 +131,10 @@ scores = tuner(graph, personalization)
 !!! warning
     Similarly to the `assume_immutability=True` option
     for preprocessors, the optimization dictionary requires that graphs signals are not altered in
-    the interim, although it is possible to clear signal values.
-    Furthermore, using optimization dictionaries multiplies (e.g. at least doubles)
-    the amount of used memory, which the system may run out of for large graphs.
-    To remove allocated memory, keep a reference to the dictionary and clear
+    the interim. Furthermore, it multiplies (e.g. at least doubles)
+    the amount of used memory, which may be problematic for big graphs.
+    To remove allocated memory (and allow signals to be edited), 
+    keep a reference to the dictionary and clear
     it afterwards with `optimization_dict.clear()`.
 
 !!! info

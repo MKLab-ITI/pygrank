@@ -216,8 +216,7 @@ like this one supply a method to transform graph signals like so:
 ```python
 scores = alg(graph, signal)
 normalized_scores = pg.Normalize("max").transform(scores)
-print(list(normalized_scores.items()))
-# [('A', 1.0), ('B', 0.4950000024069947), ('C', 0.9828783455187619), ('D', 0.9540636897749238), ('E', 0.472261528845582)]
+print(list(normalized_scores.items()))  # [('A', 1.0), ('B', 0.4950000024069947), ('C', 0.9828783455187619), ('D', 0.9540636897749238), ('E', 0.472261528845582)]
 ```
 
 The pattern that works for **all** postprocessors
@@ -227,8 +226,7 @@ is to wrap base algorithms, like in the following equivalent example:
 ```python
 nalg = alg >> pg.Normalize("max")  # also valid pg.Normalize("max", alg) or pg.Normalize(alg, "max")
 nscores = nalg(graph, signal)
-print(nscores)
-# [('A', 1.0), ('B', 0.4950000024069947), ('C', 0.9828783455187619), ('D', 0.9540636897749238), ('E', 0.472261528845582)]
+print(nscores)  # [('A', 1.0), ('B', 0.4950000024069947), ('C', 0.9828783455187619), ('D', 0.9540636897749238), ('E', 0.472261528845582)]
 ```
 
 We can add more steps, such as
@@ -238,8 +236,7 @@ before normalization:
 ```python
 nealg = alg >> pg.Transformer(pf.exp) >> pg.Normalize("max")
 nescores = nealg(graph, signal)
-print(nescores)
-# [('A', 1.0), ('B', 0.8786683440755908), ('C', 0.9956241609824301), ('D', 0.9883030876536782), ('E', 0.8735657648099558)]
+print(nescores)  # [('A', 1.0), ('B', 0.8786683440755908), ('C', 0.9956241609824301), ('D', 0.9883030876536782), ('E', 0.8735657648099558)]
 ```
 
 ## Convergence

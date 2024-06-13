@@ -127,7 +127,7 @@ strategy can be performed like so:
 ```python
 import tqdm  # install this to be able to set it as a progress bar argument below
 
-measure = pg.LinkAssessment(graph, progress=tqdm.tqdm)  # graph argument mandatory
+measure = pg.LinkAssessment(graph, progress=tqdm.tqdm)  # graph argument is mandatory
 print(measure(comm_scores))
 ```
 
@@ -193,23 +193,22 @@ given that each node community should be experimented on separately.
 import pygrank as pg
 
 datasets = pg.downloadable_small_datasets()
-print(datasets)
+print(datasets)  # ['bigraph', 'blockmodel', 'citeseer', 'eucore', 'graph5', 'graph9']
 
-# ['citeseer', 'eucore', 'graph5', 'graph9', 'bigraph']
 for dataset, graph, group in pg.load_datasets_all_communities(datasets):
     print(dataset, ":", len(group), "community members", len(graph), "nodes",  graph.number_of_edges(), "edges")
 
-# REQUIRED CITATION: Please visit the url https://linqs.soe.ucsc.edu/data for instructions on how to cite the dataset citeseer in your research
-# citeseer0 : 596 community members 3327 nodes 4676 edges
-# citeseer1 : 668 community members 3327 nodes 4676 edges
-# citeseer2 : 701 community members 3327 nodes 4676 edges
-...
+# REQUIRED CITATION: Please visit the url https://github.com/maniospas/pygrank-datasets for instructions on how to cite the dataset bigraph in your research
+# bigraph0 : 300 community members 600 nodes 27092.0 edges
+# bigraph1 : 300 community members 600 nodes 27092.0 edges
+# ...
 ```
 
 
 
 
 ## Benchmarks
+
 `pygrank` offers the ability to conduct benchmark experiments that compare
 many node ranking algorithms and parameters on a wide range of graphs. 
 A simple way to obtain some fastly-running algorithms and small datasets and
@@ -224,9 +223,9 @@ print(dataset_names)  # ['citeseer', 'eucore']
 algorithms = pg.create_demo_filters()
 print(algorithms.keys())  # dict_keys(['PPR.85', 'PPR.9', 'PPR.99', 'HK3', 'HK5', 'HK7'])
 
-
 loader = pg.load_datasets_one_community(dataset_names)
 pg.benchmark_print(pg.benchmark(algorithms, loader, pg.AUC))
+
 #                	 PPR.85  	 PPR.9  	 PPR.99  	 HK3  	 HK5  	 HK7 
 # citeseer       	 .89     	 .89    	 .89     	 .89  	 .89  	 .89 
 # eucore         	 .85     	 .71    	 .71     	 .91  	 .89  	 .83 

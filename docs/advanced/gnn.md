@@ -1,4 +1,4 @@
-# Node Classification
+# Classification
 
 To support Graph Neural Network architectures, `pygrank` provides a mechanism
 for propagating latent representations through graph filters. This takes as

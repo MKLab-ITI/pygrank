@@ -248,6 +248,13 @@ Provides evaluation of NDCG@k score between given and known scores. The construc
  * *known_scores:* The desired graph signal outcomes. 
  * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
  * *k:* Optional. Calculates NDCG@k. If None (default), len(known_scores) is used.
+## <span class="component">OrderAccuracy</span>
+<b class="parameters">Extends</b><br> *Supervised*<br><b class="parameters">About</b><br>
+Computes the order of the base scores and then checks whether new ones maintain it. The constructor initializes the supervised measure with desired graph signal outcomes. 
+<br><b class="parameters">Parameters</b>
+
+ * *known_scores:* The desired graph signal outcomes. 
+ * *exclude:* Optional. An iterable (e.g. list, map, networkx graph, graph signal) whose items/keys are traversed to determine which nodes to omit from the evaluation, for example because they were used for training. If None (default) the measure is evaluated on all graph nodes. You can safely set the `self.exclude` property at any time to alter this original value. Prefer using this behavior to avoid overfitting measure assessments.
 ## <span class="component">PPV</span>
 <b class="parameters">Extends</b><br> *Supervised*<br><b class="parameters">About</b><br>
 Computes the positive predictive value (precision). The constructor initializes the supervised measure with desired graph signal outcomes. 
