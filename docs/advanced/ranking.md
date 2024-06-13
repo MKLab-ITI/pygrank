@@ -1,7 +1,7 @@
 # Ranking
 
-## A ranking algorithm
-In ranking tasks
+## Node ranking
+In ranking tasks,
 nodes obtain ordinal values 1,2,3,... based on their
 importance in the graph structure (1 is the most 
 important node). To see how ranks can be obtained,

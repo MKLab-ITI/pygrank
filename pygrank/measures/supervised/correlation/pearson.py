@@ -7,6 +7,8 @@ class PearsonCorrelation(Supervised):
 
     def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
         known_scores, scores = self.to_numpy(scores)
+        if len(known_scores) == 0:
+            return 1
 
         mean_known_scores = backend.safe_div(
             backend.sum(known_scores), backend.length(known_scores)

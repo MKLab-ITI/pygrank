@@ -68,6 +68,9 @@ def test_edge_cases():
     import networkx as nx
 
     for _ in supported_backends():
+        assert pg.PearsonCorrelation([])([]) == 1
+        assert pg.SpearmanCorrelation([])([]) == 1
+        assert pg.OrderAccuracy([1])([1]) == 1
         assert pg.Conductance(nx.Graph())([]) == float(
             "inf"
         )  # this is indeed correct in python
@@ -111,6 +114,16 @@ def test_correlation_compliance():
     )
     spearman = pg.SpearmanCorrelation(alg1(graph))(alg2(graph))
     assert pearson_ordinals == spearman
+
+
+def test_rank_order_Accuracy():
+    graph = next(pg.load_datasets_graph(["blockmodel"]))
+    alg1 = pg.PageRank(alpha=0.5)
+    alg2 = pg.PageRank(alpha=0.99)
+    rank1 = alg1(graph)
+    rank2 = alg2(graph)
+    # order accuracy is stricter
+    assert pg.SpearmanCorrelation(rank1)(rank2) > pg.OrderAccuracy(rank1)(rank2)
 
 
 def test_best_direction():

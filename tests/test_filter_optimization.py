@@ -31,13 +31,21 @@ def test_rank_order_convergence():
             convergence=pg.RankOrderConvergenceManager(0.85, 0.99, "fraction_of_walks"),
         )
     )
+    algorithm4 = pg.Ordinals(
+        pg.PageRank(
+            0.85,
+            convergence=pg.RankOrderConvergenceManager(0.85, 0.99, len(graph)),
+        )
+    )
     for _ in supported_backends():
         ranks1 = algorithm1.rank(graph, {"A": 1})
         ranks2 = algorithm2.rank(graph, {"A": 1})
         ranks3 = algorithm3.rank(graph, {"A": 1})
+        ranks4 = algorithm4.rank(graph, {"A": 1})
         assert pg.SpearmanCorrelation(ranks1)(ranks2) > 0.95
         assert pg.SpearmanCorrelation(ranks1)(ranks3) > 0.95
         assert pg.SpearmanCorrelation(ranks3)(ranks2) > 0.95
+        assert pg.SpearmanCorrelation(ranks3)(ranks4) > 0.95
         assert "17 iterations" in str(algorithm3.ranker.convergence)
         with pytest.raises(Exception):
             algorithm = pg.Ordinals(
@@ -47,6 +55,43 @@ def test_rank_order_convergence():
                 )
             )
             algorithm.rank(graph, {"A": 1})
+        with pytest.raises(Exception):
+            algorithm = pg.Ordinals(
+                pg.PageRank(
+                    0.85,
+                    convergence=pg.RankOrderConvergenceManager(0.85, 0.99, 0),
+                )
+            )
+            algorithm.rank(graph, {"A": 1})
+
+def test_rank_order_convergence_large():
+    graph = next(pg.load_datasets_graph(["blockmodel"]))
+    algorithm1 = pg.Ordinals(pg.PageRank(0.85, tol=1.0e-20, max_iters=1000))
+    algorithm2 = pg.Ordinals(
+        pg.PageRank(0.85, convergence=pg.RankOrderConvergenceManager(0.85))
+    )
+    algorithm3 = pg.Ordinals(
+        pg.PageRank(
+            0.85,
+            convergence=pg.RankOrderConvergenceManager(0.85, 0.99, "fraction_of_walks"),
+        )
+    )
+    algorithm4 = pg.Ordinals(
+        pg.PageRank(
+            0.85,
+            convergence=pg.RankOrderConvergenceManager(0.85, 0.99, "clever_gap"),
+        )
+    )
+    for _ in supported_backends():
+        ranks1 = algorithm1.rank(graph)
+        ranks2 = algorithm2.rank(graph)
+        ranks3 = algorithm3.rank(graph)
+        ranks4 = algorithm4.rank(graph)
+        assert pg.SpearmanCorrelation(ranks1)(ranks2) > 0.95
+        assert pg.SpearmanCorrelation(ranks1)(ranks3) > 0.95
+        assert pg.SpearmanCorrelation(ranks3)(ranks2) > 0.95
+        assert pg.SpearmanCorrelation(ranks3)(ranks4) > 0.95
+        assert "17 iterations" in str(algorithm3.ranker.convergence)
 
 
 def test_krylov_space():

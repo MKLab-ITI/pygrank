@@ -8,9 +8,11 @@ class OrderAccuracy(Supervised):
 
     def evaluate(self, scores: GraphSignalData) -> BackendPrimitive:
         known_scores, scores = self.to_numpy(scores)
+        n = len(known_scores) - 1
+        if n <= 0:
+            return 1
         known_order = np.argsort(backend.to_numpy(known_scores))
         correct = 0
-        n = len(known_order) - 1
         irrelevant = 0
         for i in range(len(known_order) - 1):
             u = known_order[i]
