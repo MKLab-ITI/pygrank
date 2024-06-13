@@ -142,13 +142,17 @@ class RankOrderConvergenceManager:
         self._conf_ppf = norm.ppf(self.confidence)
         self._targeting_fraction = 0
         if isinstance(criterion, int):
-            if criterion<4:
-                raise Exception(f"When initializing `clever_gap` with the number of node samples, "
-                                f"provide at least 2 node samples instead of {criterion}")
+            if criterion < 4:
+                raise Exception(
+                    f"When initializing `clever_gap` with the number of node samples, "
+                    f"provide at least 2 node samples instead of {criterion}"
+                )
         elif criterion not in ["fraction_of_walks", "clever_gap", "rank_gap"]:
-            raise Exception(f"RankOrderConvergenceManager got argument criterion='{criterion}'"
-                            f"but one of 'fraction_of_walks', 'clever_gap', 'rank_gap' or an int"
-                            f"should be provided")
+            raise Exception(
+                f"RankOrderConvergenceManager got argument criterion='{criterion}'"
+                f"but one of 'fraction_of_walks', 'clever_gap', 'rank_gap' or an int"
+                f"should be provided"
+            )
 
     def start(self, restart_timer: bool = True):
         if restart_timer or self._start_time is None:

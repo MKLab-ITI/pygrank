@@ -64,6 +64,7 @@ def test_rank_order_convergence():
             )
             algorithm.rank(graph, {"A": 1})
 
+
 def test_rank_order_convergence_large():
     graph = next(pg.load_datasets_graph(["blockmodel"]))
     algorithm1 = pg.Ordinals(pg.PageRank(0.85, tol=1.0e-20, max_iters=1000))
