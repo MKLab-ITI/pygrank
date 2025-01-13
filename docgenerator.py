@@ -150,10 +150,12 @@ def generate_filter_docs():
         pygrank.algorithms.abstract.GraphFilter, True
     )
     abstract[pygrank.algorithms.abstract.GraphFilter] = True
+    has_been_added = set()
     for name, obj in inspect.getmembers(sys.modules["pygrank.algorithms"]):
         if inspect.isclass(obj) and issubclass(
             obj, pygrank.algorithms.abstract.GraphFilter
-        ):
+        ) and name not in has_been_added:
+            has_been_added.add(name)
             abstract[obj] = is_abstract(obj)
             base_descriptions[obj] = base_description(obj, abstract[obj])
 

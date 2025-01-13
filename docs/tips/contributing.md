@@ -35,7 +35,7 @@ Before creating a pull request, make sure that your submission checks the follow
 Additionally, code examples should be prefaced by a line starting with the word
 `Example ` and ending in `:` and their code lines start with `>>>`.
 
-2. When implementing new or existing research (we are more than happy to accomodate this),
+2. When implementing new or existing research (we are more than happy to accommodate this),
 you are required to also update the library's [citations](citations.md).
 3. New code should maintain *CamelCase* notation for classes and 
 *lower_case_with_underscores* for methods and variables.

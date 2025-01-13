@@ -10,7 +10,7 @@ with open("README.md", "r") as file:
 
 setuptools.setup(
     name="pygrank",
-    version="0.2.14",
+    version="0.2.15",
     author="Emmanouil (Manios) Krasanakis",
     author_email="maniospas@hotmail.com",
     description="Recommendation algorithms for large graphs",

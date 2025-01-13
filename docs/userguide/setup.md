@@ -9,13 +9,14 @@ pip install --upgrade pygrank
 
 ## Creating graphs
 
-When working n practical problems,
-use `networkx` to construct graphs
-by adding edges between Python objects.
-For example, you can construct a graph
+When working in practical problems,
+use the [networkx](https://networkx.org/) 
+library to construct graphs
+by adding edges between objects.
+For example, create a graph
 that `pygrank` can process with the
-following pattern, which we use throughout
-our documentation for ease of development:
+following pattern, which is used 
+in most documentation examples.
 
 ```python
 import networkx as nx
@@ -26,16 +27,15 @@ graph.add_edge('A', 'C')
 ```
 
 Graphs like the above require a lot of memory to keep track of relations
-between data,
-which can be an issue when processing large graphs.
-On the other hand,
-`pygrank` is typically interested in 
+between datam which can be an issue when processing large graphs.
+On the other hand, 
+we are typically interested in 
 converting those graphs to sparse matrices of respective
-backends. For this reason, the library provides its own
-trimmed down `pygrank.Graph` class that implements a subset of 
-of graph operations needed for node ranking algorithms
-and speeds up the `add_edge method`. Instances of this class
-can be created with the pattern:
+backends. For this reason, we provide our own
+trimmed down graph class that speeds up the `add_edge` method
+and implements only a subset of 
+of operations needed for node ranking algorithms. 
+Create instances of this class like so:
 
 ```python
 import pygrank as pg
@@ -50,14 +50,12 @@ graph.add_edge('A', 'C')
 Several popular computational backends are supported.
 To avoid bloat of the main package,
 these should be installed separately as needed.
-Only `"numpy"` can be used immediately out-of-the box as
-the default. Find instructions on how to install 
-and enable the rest below.
+Only the default`"numpy"` can be used out-of-the box.
+Find instructions on how to install and enable the rest below.
 
 !!! info
-    First-time users can stick to the default and skip the rest of this section.
-    However, setting up graph analysis on GPU with respective backends
-    can be hundreds of times faster.
+    First-time users can stick to the default backend and skip the rest of this section.
+    However, setting up graph analysis on GPUs with other backends can be hundreds of times faster.
 
 To switch between backends, either use the `load_backend(name)`
 command or define an execution context that temporarily switches
@@ -184,7 +182,7 @@ with pg.Backend("torch_sparse", device=device):
 ```
 
 !!! info
-    `"torch_sparse"` is near-identical as `"pytorch"`
+    `"torch_sparse"` is near-identical to `"pytorch"`
     in sparse mode but is much faster in preprocessing adjacency matrices.
 
 <b class="parameters">Installation</b><br> For full installation instructions visit pytorch's website in the links below.<br>

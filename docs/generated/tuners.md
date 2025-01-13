@@ -34,7 +34,7 @@ away. <br>:warning: **This is an experimental approach.**<br> The constructor in
 <br><b class="parameters">Parameters</b>
 
  * *ranker_generator:* A callable that constructs a ranker based on a list of parameters. If None (default) then a pygrank.algorithms.learnable.GenericGraphFilter is constructed with automatic normalization and assuming immutability (this is the most common setting). These parameters can be overriden and other ones can be passed to the algorithm'personalization constructor simply by including them in kwargs. 
- * *measure:* Callable to constuct a supervised measure with given known node scores. 
+ * *measure:* Callable to construct a supervised measure with given known node scores. 
  * *basis:* Can use either the "Krylov" or the "Arnoldi" orthonormal basis of the krylov space. The latter does not produce a ranking algorithm. 
  * *tuning_backend:* Specifically switches to a designted backend for the tuning process before restoring the previous one to perform the actual ranking. If None (default), this functionality is ignored. 
  * *tunable_offset:* If None, no offset is added to estimated parameters. Otherwise, a supervised measure generator (e.g. a supervised measure class) can be passed. Default is `pygrank.AUC`. 
@@ -55,7 +55,7 @@ in training and test sets. The tuning mechanism is fully described in [krasanaki
 
  * *ranker_generator:* A callable that constructs a ranker based on a list of parameters. If None (default) then a pygrank.algorithms.learnable.GenericGraphFilter is constructed with automatic normalization and assuming immutability (this is the most common setting). These parameters can be overriden and other ones can be passed to the algorithm'personalization constructor by including them in kwargs. 
  * *measure:* Callable to constuct a supervised measure with given known node scores and an iterable of excluded scores. 
- * *fraction_of_training:* A number in (0,1) indicating how to split provided graph signals into training and validaton ones by randomly sampling training nodes to meet the required fraction of all graph nodes. Numbers outside this range can also be used (not recommended without specific reason) per the conventions of `pygrank.split(...)`. Default is 0.5. 
+ * *fraction_of_training:* A number in (0,1) indicating how to split provided graph signals into training and validation ones by randomly sampling training nodes to meet the required fraction of all graph nodes. Numbers outside this range can also be used (not recommended without specific reason) per the conventions of `pygrank.split(...)`. Default is 0.5. 
  * *cross_validate:* Averages the optimal parameters along a specified number of validation splits. Default is 1. 
  * *combined_prediction:* If True (default), after the best version of algorithms is determined, the whole personalization is used to produce the end-result. Otherwise, only the training portion of the training-validation split is used. 
  * *tuning_backend:* Specifically switches to a designted backend for the tuning process before restoring the previous one to perform the actual ranking. If None (default), this functionality is ignored. 

@@ -29,7 +29,7 @@ However, they tend to work well in big graphs. As a little explanation on
 the choices, personalized PageRank is equivalent to stochastic random
 walks with average length *1/(1-alpha)* hops away from
 seed nodes. At the same time, you need a small enough 
-numerical tolerance to make sure that your numer of seeds
+numerical tolerance to make sure that your number of seeds
 divided by your number of nodes is not immediately
 smaller than that. Finally, higher diffusion parameters *alpha* and
 lower numerical tolerances increase the number of

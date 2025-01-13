@@ -16,7 +16,7 @@ algorithms = pg.create_variations(pg.create_demo_filters(), pg.Normalize)
 ```
 
 We can now define two graph filters that automtatically select the best method with an
-AUC-based supervised evalutation and a modularity-based unsupervised evaluation respectively.
+AUC-based supervised evaluation and a modularity-based unsupervised evaluation respectively.
 In the second case, we set `fraction_of_training=1` to not withhold validation data from
 the compared node ranking algorithms. It is important to note that algorithm normalization
 helps modularity create comparable assessments between different algorithms.
@@ -26,7 +26,7 @@ supervised_algorithm = pg.AlgorithmSelection(algorithms.values(), measure=pg.AUC
 modularity_algorithm = pg.AlgorithmSelection(algorithms.values(), fraction_of_training=1, measure=pg.Modularity().as_supervised_method())
 ```
 
-We now run the aglorithms for all communities to report the average AUC on the test sets.
+We now run the algorithms for all communities to report the average AUC on the test sets.
 Testing is made to exclude original seed nodes to ensure that results are not biased.
 
 ```python
